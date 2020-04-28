@@ -1,0 +1,1 @@
+ Estimates of the reproductive number for a particular day represent the state of the epidemic on that day, i.e. reflects the number of new infections that occurred on that day. The statistical method thus incorporates the time delay between the infection and a confirmed test result, a hospitalisation, or a death, and in particular incorporates the incubation period.
