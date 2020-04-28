@@ -1,3 +1,6 @@
+### This script gets data and saves it to /data
+
+
 ### Function made to account for missing entries in data
 ## 
 ## Makes linear interpolation of missing values
