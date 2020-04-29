@@ -6,4 +6,4 @@ library(reshape2)
 library(compare)
 
 # data functions
-source("otherScripts/dataScripts.R")
+source("otherScripts/dataScript.R")
