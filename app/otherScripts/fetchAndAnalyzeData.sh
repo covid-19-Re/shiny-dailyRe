@@ -7,11 +7,11 @@ cd "../../../ch-hospital-data"
 git pull
 
 cd "$parent_path"
-RScript --vanilla --verbose getRawData.R > getRawData.Rout 2>&1
-RScript --vanilla --verbose getInfectionIncidence.R > getInfectionIncidence.Rout 2>&1
-RScript --vanilla --verbose doReEstimates.R > doReEstimates.Rout 2>&1
+Rscript --vanilla --verbose getRawData.R > getRawData.Rout 2>&1
+Rscript --vanilla --verbose getInfectionIncidence.R > getInfectionIncidence.Rout 2>&1
+Rscript --vanilla --verbose doReEstimates.R > doReEstimates.Rout 2>&1
 # format data in seperate process to avoid C stack limit
-RScript --vanilla --verbose doReEstimatesFormat.R > doReEstimatesFormat.Rout 2>&1
+Rscript --vanilla --verbose doReEstimatesFormat.R > doReEstimatesFormat.Rout 2>&1
 
 # crontab settings
 # run everyday at 9am and 9pm
