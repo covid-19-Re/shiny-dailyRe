@@ -21,13 +21,13 @@ dashboardPage(
       tabItem(tabName = "overview",
         h2(HTML("Estimation of effective R<sub>0</sub>")),
         fluidRow(
-          column(width = 3,
-            infoBoxOutput("lastUpdateBox", width = 12) %>% withSpinner()
-          ),
           column(width = 9,
             box(title = "Methods", width = 12,
               includeMarkdown("md/methodsShort.md"),
               actionLink("methodsLink", "more Details..."))
+          ),
+          column(width = 3,
+            infoBoxOutput("lastUpdateBox", width = 12) %>% withSpinner()
           )
         ),
         fluidRow(
