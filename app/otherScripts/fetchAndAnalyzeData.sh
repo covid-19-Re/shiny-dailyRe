@@ -15,4 +15,4 @@ Rscript --vanilla --verbose doReEstimatesFormat.R > doReEstimatesFormat.Rout 2>&
 
 # crontab settings
 # run everyday at 9am and 9pm
-# 0 9,21 * * * /home/covid-19-re/covid-19-re-shiny-app/app/otherScripts/fetchAndAnalyzeData.sh
+# 0 0,8,16 * * * /home/covid-19-re/covid-19-re-shiny-app/app/otherScripts/fetchAndAnalyzeData.sh
