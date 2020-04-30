@@ -1,3 +1,5 @@
+print(paste("starting getInfectinoIncidence.R:", Sys.time()))
+
 library("lubridate")
 library("readr")
 library("gridExtra")
@@ -165,8 +167,8 @@ drawAllInfectionDates <- function(data, data_type="confirmed", numberOfReplicate
 ####################
 
 outputDir <- here("app/data")
-pathToRawDataSave <- file.path(outputDir, paste0("Raw_data_",Sys.Date(), ".Rdata"))
-pathToSampledInfectDataSave <- file.path(outputDir, paste0("Sampled_infect_data_",Sys.Date(), ".Rdata"))
+pathToRawDataSave <- file.path(outputDir, "Raw_data.Rdata")
+pathToSampledInfectDataSave <- file.path(outputDir, "Sampled_infect_data.Rdata")
 
 ### Waiting time distributions ##
 ## hardcoded for now, but to be taken outside of script
@@ -212,3 +214,5 @@ sampledInfectData <- drawAllInfectionDates(rawData, data_type=c("confirmed", "de
                                               shapeOnsetToCount=shapeOnsetToCount, scaleOnsetToCount=scaleOnsetToCount)
 
 save(sampledInfectData, file=pathToSampledInfectDataSave)
+
+print(paste("Done getInfectinoIncidence.R: ", Sys.time()))

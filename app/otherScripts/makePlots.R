@@ -272,7 +272,7 @@ makeWebsitePlotAndFiles <- function(data, estimates, cantonList=c("AG", "BE", "B
 ###### Input #######
 ####################
 
-outputDir <- "/Users/scirej/Documents/nCov19/Incidence_analysis/data"
+outputDir <- here("app/data")
 pathToEstimatesReSave <- file.path(outputDir, paste0("Estimates_Re_",Sys.Date(), ".Rdata"))
 pathToRawDataSave <- file.path(outputDir, paste0("Raw_data_",Sys.Date(), ".Rdata"))
 

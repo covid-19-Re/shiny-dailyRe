@@ -1,3 +1,5 @@
+print(paste("starting getRawData.R:", Sys.time()))
+
 library("lubridate")
 library("readr")
 library("gridExtra")
@@ -9,6 +11,7 @@ library("cbsodataR")
 library("tidyverse")
 library("here")
 
+cantonList <- c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "LU", "NE", "SG", "TI", "VD", "VS", "ZH", "CH")
 
 ###############################################
 ################ Utilities ####################
@@ -120,19 +123,22 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() -1)) {
 }
 
 ## Include hospitalization counts from local csv files
-getHospitalData <- function(region="CH", basePathToCSV="./data/Hospital_cases_") {
-  filePath <- paste0(basePathToCSV, region, ".csv")
-  cumData <- read_csv(filePath)
+getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases_") {
+  filePath <- file.path(path, str_c(csvBaseName, region, ".csv"))
+  cumData <- read_csv(filePath,
+    col_types = cols(
+      Date = col_date(format = ""),
+      Incidence = col_double(),
+      CH = col_double()))
   cumData <- cumData[,c(1,3)]
   return(meltCumulativeData(cumData, dataType="hospitalized", country="CH", dataSource="BAG"))
 }
 
 ## Combine openZH data with hospitalization data
-getAllSwissData <- function(stoppingAfter = (Sys.Date() -1), pathToHospData, regions=c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "LU", "NE", "SG", "TI", "VD", "VS", "ZH", "CH")){
-  openZHData <- getSwissDataFromOpenZH(stopAfter=stoppingAfter)
-  # hospitalData <- rbind(getHospitalData("CH", pathToHospData)) 
-  # swissData <- subset(rbind(openZHData, hospitalData), region %in% regions)
-  swissData <- subset(openZHData, region %in% regions)
+getAllSwissData <- function(stoppingAfter = (Sys.Date() - 1), pathToHospData, regions = cantonList){
+  openZHData <- getSwissDataFromOpenZH(stopAfter = stoppingAfter)
+  hospitalData <- rbind(getHospitalData(path = pathToHospData, region = "CH"))
+  swissData <- subset(rbind(openZHData, hospitalData), region %in% regions)
   return(swissData)
 }
 
@@ -179,7 +185,7 @@ getLongECDCData <- function(countries = NULL){
 ###### Input #######
 ####################
 
-dataCHHospitalPath <- here("../ch-hospital-data/")
+dataCHHospitalPath <- here("../ch-hospital-data/data")
 
 outputDir <- here("app/data")
 
@@ -188,7 +194,22 @@ outputDir <- here("app/data")
 
 ### just an example here with keeping all the data from different sources/countries in one dataframe and saving into one file
 # rawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath), getLongECDCData())
-rawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath))
+rawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath, regions = cantonList))
 
-pathToRawDataSave <- file.path(outputDir, paste0("Raw_data_",Sys.Date(), ".Rdata"))
+# format data
+rawData <- tibble::as_tibble(rawData)
+# save data
+pathToRawDataSave <- file.path(outputDir, paste0("Raw_data.Rdata"))
 save(rawData, file = pathToRawDataSave)
+
+lastDataDate <- rawData %>% 
+  group_by(source) %>%
+  summarize(date = max(date))
+
+pathTolastDataDateSave <- file.path(outputDir, paste0("lastDataDate.Rdata"))
+save(lastDataDate, file = pathTolastDataDateSave)
+
+pathToCantonListSave <- file.path(outputDir, paste0("cantonList.Rdata"))
+save(cantonList, file = pathToCantonListSave)
+
+print(paste("Done getRawData.R:", Sys.time()))
