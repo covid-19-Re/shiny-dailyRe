@@ -51,3 +51,18 @@ plotTheme <- theme_bw() +
     legend.text = element_text(size = 12),
     legend.position = "bottom"
   )
+
+plotColoursCases <- c("confirmed" = "black", "hospitalized" = "#619CFF", "deaths" = "#F8766D")
+plotColoursEstimates <- c("infection_confirmed" = "black", "infection_hospitalized" = "#619CFF", "infection_deaths" = "#F8766D")
+
+colourScaleCases <- scale_colour_manual(
+        values = plotColoursCases,
+        name  = "Data source",
+        labels = c("Confirmed cases", "Hospitalizations", "Deaths"),
+        aesthetics = c("colour", "fill"))
+
+colourScaleEstimates <- scale_colour_manual(
+        values = plotColoursEstimates,
+        labels = c("infection_confirmed" = "Confirmed cases", "infection_hospitalized" = "Hospitalizations", "infection_deaths" = "Deaths"),
+        name = "Data source",
+        aesthetics = c("fill", "color"))

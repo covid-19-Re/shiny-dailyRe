@@ -25,7 +25,8 @@ server <- function(input, output, session) {
   })
 
   cumulativePlotData <- reactive({
-    out <- filter(rawData, !(region!="CH" & data_type=="deaths")) %>%
+    out <- filter(rawData, !(region != "CH" & data_type == "deaths")) %>%
+      mutate(data_type = factor(data_type, levels = c("confirmed", "hospitalized", "deaths"))) %>%
       pivot_wider(names_from = "variable", values_from = "value") %>%
       filter(region %in% input$canton)
     return(out)
@@ -53,11 +54,7 @@ server <- function(input, output, session) {
       scale_y_log10() +
       ylab("Cumulative (line) and daily (bars) numbers") +
       xlab("") +
-      scale_colour_manual(
-        values = c("black", ggColor(3)[c(1,3)]),
-        labels = c("Confirmed cases", "Hospitalizations", "Deaths"),
-        breaks = c("confirmed", "hospitalized", "deaths"),
-        aesthetics = c("colour", "fill")) +
+      colourScaleCases +
       labs(title = "Daily and cumulative Incidence", caption = dataUpdatesString(lastDataDate)) +
       plotTheme
 
@@ -104,20 +101,16 @@ server <- function(input, output, session) {
         xmin = as.Date("2020-03-14"),
         xmax = as.Date("2020-03-17"),
         ymin = -1, ymax = Inf, alpha = 0.45, fill = "grey") +
-      scale_colour_manual(
-        values = c(ggColor(3)[c(1,3)], "black"),
-        labels = c("Confirmed cases",  "Deaths", "Hospitalized"),
-        breaks = c("infection_confirmed", "infection_deaths", "infection_hospitalized"),
-        name  = "Data source",
-        aesthetics = c("fill", "color")) +
+      colourScaleEstimates +
       xlab("") +
       ylab("Reproductive number") +
       labs(title = "Sliding Window Estimation", caption = dataUpdatesString(lastDataDate)) +
       plotTheme
 
     return(pRe)
-  }, height = function(){350 + 150 * (length(input$canton) - 1)}
+  }, height = function(){350 + 150 * (length(input$canton) - 1) }
   )
+
   rEffPlotStepData <- reactive({
     out <- filter(estimatesRePlot,
       estimate_type == "Cori_step",
@@ -158,12 +151,7 @@ server <- function(input, output, session) {
         xmin = as.Date("2020-03-14"),
         xmax = as.Date("2020-03-17"),
         ymin = -1, ymax = Inf, alpha = 0.45, fill = "grey") +
-      scale_colour_manual(
-        values = c(ggColor(3)[c(1,3)], "black"),
-        labels = c("Confirmed cases",  "Deaths", "Hospitalized"),
-        breaks = c("infection_confirmed", "infection_deaths", "infection_hospitalized"),
-        name  = "Data source",
-        aesthetics = c("fill", "color")) +
+      colourScaleEstimates +
       xlab("") +
       ylab("Reproductive number") +
       labs(title = "Step-wise estimation", caption = dataUpdatesString(lastDataDate)) +

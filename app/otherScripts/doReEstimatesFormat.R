@@ -19,7 +19,7 @@ estimatesRe <- as_tibble(estimatesReRaw) %>%
   pivot_wider(names_from = "variable", values_from = "value") %>%
   mutate(
     replicate = as_factor(replicate),
-    data_type = factor(data_type, levels = c("infection_deaths", "infection_hospitalized","infection_confirmed")),
+    data_type = factor(data_type, levels = c("infection_confirmed", "infection_hospitalized", "infection_deaths")),
     region = factor(region, levels = cantonList))
 
 save(estimatesRe, file = pathToEstimatesReSave)
