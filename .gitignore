@@ -1,2 +1,4 @@
 dev.R
+app/data/*.Rdata
 app/data/*.Rd
+app/otherScripts/*.Rout
