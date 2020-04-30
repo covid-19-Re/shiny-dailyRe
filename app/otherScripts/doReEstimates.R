@@ -6,6 +6,7 @@ library("reshape")
 library("plyr")
 library("utils")
 library("cbsodataR")
+library("EpiEstim")
 library("tidyverse")
 
 
