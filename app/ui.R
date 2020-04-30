@@ -3,15 +3,17 @@ library(shinydashboard)
 library(shinycssloaders)
 
 
-dashboardPage(
-  dashboardHeader(title = "COVID-19 R eff"),
+dashboardPage(title = "COVID-19 Reff",
+  dashboardHeader(title = HTML("COVID-19 R<sub>effective</sub>")),
   dashboardSidebar(
-    sidebarMenu(
-      id = "tabs",
-      menuItem(HTML("effective R<sub>0</sub>"), tabName = "overview", icon = icon("chart-area")),
-      selectInput("canton", "Cantons", choices = "CH", selected = "CH",
-        multiple = TRUE, selectize = TRUE, width = NULL, size = NULL),
-      actionLink("selectAllCantons", "select all"),
+    sidebarMenu(id = "tabs",
+      menuItem(HTML("Estimating R<sub>effective</sub>"),
+        tabName = "overview", icon = icon("chart-area"), startExpanded = TRUE,
+        menuSubItem("Options", selected = TRUE, tabName = "overview", icon = icon("cogs")),
+        selectInput("canton", "Cantons", choices = "CH", selected = "CH",
+          multiple = TRUE, selectize = TRUE, width = NULL, size = NULL),
+        actionLink("selectAllCantons", "select all")
+      ),
       menuItem("Methodology", tabName = "methods", icon = icon("calculator")),
       menuItem("About", tabName = "about", icon = icon("question-circle"))
     )
@@ -19,7 +21,7 @@ dashboardPage(
   dashboardBody(
     tabItems(
       tabItem(tabName = "overview",
-        h2(HTML("Estimation of effective R<sub>0</sub>")),
+        h2(HTML("Estimating R<sub>effective</sub>")),
         fluidRow(
           column(width = 9,
             box(title = "Methods", width = 12,
