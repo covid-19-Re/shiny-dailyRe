@@ -7,6 +7,7 @@ library("plyr")
 library("utils")
 library("cbsodataR")
 library("tidyverse")
+library("here")
 
 
 ###############################################
@@ -129,8 +130,9 @@ getHospitalData <- function(region="CH", basePathToCSV="./data/Hospital_cases_")
 ## Combine openZH data with hospitalization data
 getAllSwissData <- function(stoppingAfter = (Sys.Date() -1), pathToHospData, regions=c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "LU", "NE", "SG", "TI", "VD", "VS", "ZH", "CH")){
   openZHData <- getSwissDataFromOpenZH(stopAfter=stoppingAfter)
-  hospitalData <- rbind(getHospitalData("CH", pathToHospData)) 
-  swissData <- subset(rbind(openZHData, hospitalData), region %in% regions)
+  # hospitalData <- rbind(getHospitalData("CH", pathToHospData)) 
+  # swissData <- subset(rbind(openZHData, hospitalData), region %in% regions)
+  swissData <- subset(openZHData, region %in% regions)
   return(swissData)
 }
 
@@ -177,9 +179,9 @@ getLongECDCData <- function(countries = NULL){
 ###### Input #######
 ####################
 
-dataCHHospitalPath <- "/Users/scirej/Documents/nCov19/Incidence_analysis/data/Hospital_cases_"
+dataCHHospitalPath <- here("../ch-hospital-data/")
 
-outputDir <- "/Users/scirej/Documents/nCov19/Incidence_analysis/data"
+outputDir <- here("app/data")
 
 
 ##### Pull data
@@ -189,4 +191,4 @@ outputDir <- "/Users/scirej/Documents/nCov19/Incidence_analysis/data"
 rawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath))
 
 pathToRawDataSave <- file.path(outputDir, paste0("Raw_data_",Sys.Date(), ".Rdata"))
-save(rawData, file=pathToRawDataSave)
+save(rawData, file = pathToRawDataSave)

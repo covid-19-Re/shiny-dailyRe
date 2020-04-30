@@ -7,6 +7,7 @@ library("plyr")
 library("utils")
 library("cbsodataR")
 library("tidyverse")
+library("here")
 
 
 ###### Utilities #########
@@ -163,7 +164,7 @@ drawAllInfectionDates <- function(data, data_type="confirmed", numberOfReplicate
 ###### Input #######
 ####################
 
-outputDir <- "/Users/scirej/Documents/nCov19/Incidence_analysis/data"
+outputDir <- here("app/data")
 pathToRawDataSave <- file.path(outputDir, paste0("Raw_data_",Sys.Date(), ".Rdata"))
 pathToSampledInfectDataSave <- file.path(outputDir, paste0("Sampled_infect_data_",Sys.Date(), ".Rdata"))
 

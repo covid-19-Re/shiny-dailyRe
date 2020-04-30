@@ -8,6 +8,7 @@ library("utils")
 library("cbsodataR")
 library("EpiEstim")
 library("tidyverse")
+library("here")
 
 
 ### Apply EpiEstim R estimation method to 'incidenceData' timeseries with 'dates' the dates associated
@@ -248,7 +249,7 @@ doAllReEstimations <- function(data, slidingWindow=3 ,methods=c("Cori", "Walling
 ###### Input #######
 ####################
 
-outputDir <- "/Users/scirej/Documents/nCov19/Incidence_analysis/data"
+outputDir <- here("app/data")
 pathToSampledInfectDataSave <- file.path(outputDir, paste0("Sampled_infect_data_",Sys.Date(), ".Rdata"))
 pathToEstimatesReSave <- file.path(outputDir, paste0("Estimates_Re_",Sys.Date(), ".Rdata"))
 
