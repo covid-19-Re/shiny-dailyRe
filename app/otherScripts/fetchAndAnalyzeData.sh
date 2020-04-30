@@ -3,8 +3,10 @@ parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
 cd "$parent_path"
 
-git -C ../../../ch-hospital-data pull
+cd "../../../ch-hospital-data"
+git pull
 
+cd "$parent_path"
 RScript --vanilla --verbose getRawData.R > getRawData.Rout 2>&1
 RScript --vanilla --verbose getInfectionIncidence.R > getInfectionIncidence.Rout 2>&1
 RScript --vanilla --verbose doReEstimates.R > doReEstimates.Rout 2>&1
