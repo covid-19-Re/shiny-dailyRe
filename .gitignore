@@ -1,4 +1,4 @@
-dev*.R
+dev-*
 app/data/*.txt
 app/data/*.Rdata
 app/data/*.Rd
