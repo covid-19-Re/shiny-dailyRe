@@ -30,11 +30,11 @@ save(estimatesRe, file = pathToEstimatesReSave)
 estimatesRePlot <- estimatesRe %>%
   filter(
     # exclude infection_deaths in CH
-    !(region != "CH" & data_type == "infection_deaths"),
+    !(region != "CH" & data_type == "Deaths"),
     # exclude infection deaths newer than 16 days ago
-    !(data_type == "infection_deaths" & date > (Sys.Date() - 16)),
+    !(data_type == "Deaths" & date > (Sys.Date() - 16)),
     # exclude infection hospitalized data not provided by BAF
-    !(data_type == "infection_hospitalized" & date > filter(lastDataDate, source == "BAG")$date))
+    !(data_type == "Hospitalized patients" & date > filter(lastDataDate, source == "BAG")$date))
 
 estimatesRePlot$median_R_mean <- with(estimatesRePlot,
   ave(R_mean, date, region, data_type, source, estimate_type,
