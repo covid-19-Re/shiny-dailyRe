@@ -25,12 +25,12 @@ dashboardPage(title = "COVID-19 Reff",
           plotlyOutput("CHinteractivePlot", height = "700px")
         ),
         fluidRow(
-          column(width = 9,
+          column(width = 8,
             box(title = "Methods", width = 12,
               includeMarkdown("md/methodsShort.md"),
               actionLink("methodsLink", "more Details..."))
           ),
-          column(width = 3,
+          column(width = 4,
             infoBoxOutput("lastUpdateBox", width = 12) %>% withSpinner()
           )
         )
