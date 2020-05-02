@@ -86,7 +86,7 @@ server <- function(input, output, session) {
       # confirmed: delay 10 days
       !(data_type == "Confirmed cases" & date > (lastDataDate[lastDataDate$source == "openZH",]$date - 10)),
       # hospitalized
-      !(data_type == "Hospitalized patients" & date > (lastDataDate[lastDataDate$source == "BAG",]$date - 10)),
+      !(data_type == "Hospitalized patients" & date > (lastDataDate[lastDataDate$source == "FOPH",]$date - 10)),
       # deaths: delay 16 days
       !(data_type == "Deaths" & date > (lastDataDate[lastDataDate$source == "openZH",]$date - 15))
     )
@@ -203,162 +203,13 @@ server <- function(input, output, session) {
   )
 
   output$CHinteractivePlot <- renderPlotly({
-    # prepare Data
-    caseData <- cumulativePlotData() %>% filter(region == "CH")
-
-    startDate <- min(caseData$date) - 1
-    endDate <- Sys.Date()
-    lastDate <- max(caseData$date)
-    minEstimateDate <- as.Date("2020-03-07")
-
-    rEffWindowData <- rEffPlotWindowData() %>%
-      filter(
-        region == "CH",
-        date >= minEstimateDate,
-        replicate == 1) %>%
-      select(-replicate)
-
-    estimatesEndPoint <- rEffWindowData %>%
-      group_by(data_type) %>%
-      filter(date == max(date))
-
-    pCases <- plot_ly(data = caseData) %>%
-      add_bars(x = ~date, y = ~incidence, color = ~data_type,
-        colors = plotColoursNamed,
-        text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>", incidence," ", data_type, "<extra></extra>"),
-        hovertemplate = "%{text}",
-        legendgroup = ~data_type) %>%
-      layout(
-        xaxis = list(title = "",
-          type = "date",
-          range = c(startDate, endDate),
-          tick0 = startDate,
-          dtick = 3 * 86400000,
-          tickformat = "%b-%d",
-          tickangle = 45,
-          showgrid = TRUE,
-          fixedrange = TRUE),
-        yaxis = list(
-          fixedrange = TRUE,
-          title = "Daily Incidence"),
-        legend = list(title = list(text = "<b> Data Type </b>")))
-
-    pReSlidingWindow <- plot_ly(data = rEffWindowData) %>%
-      add_trace(
-        x = ~date, y = ~median_R_mean, color = ~data_type, colors = plotColoursNamed,
-        type = "scatter", mode = "lines",
-        legendgroup = ~data_type, showlegend = FALSE,
-        text = ~str_c("<i>", format(date, "%d.%m.%y"),
-        "</i> <br> R<sub>eff</sub>: ", signif(median_R_mean, 3),
-        " (", signif(median_R_lowHPD, 3),"-", signif(median_R_highHPD, 3),")",
-        " <br>(", data_type, ")<extra></extra>"),
-        hovertemplate = "%{text}") %>%
-      add_ribbons(
-        x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
-        color = ~data_type, colors = plotColoursNamed,
-        line = list(color = "transparent"), opacity = 0.5,
-        legendgroup = ~data_type, showlegend = FALSE,
-        hoverinfo = "none") %>%
-      add_markers(
-        data = estimatesEndPoint,
-        x = ~date + 1, y = ~median_R_mean,
-        legendgroup = ~data_type,
-        marker = list(color = "black", symbol = "asterisk-open"),
-        hoverinfo = "none",
-        # text =  ~str_c("<i>", format(date, "%d.%m.%y"),
-        #   " </i>R<sub>eff</sub>: ", signif(median_R_mean, 3),
-        #   "(", signif(median_R_lowHPD, 3),"-", signif(median_R_highHPD, 3),")<br>",
-        #   "<b>*</b>&nbsp;This is the most recent <br>",
-        #   "R<sub>e</sub> estimate due to delays<br>",
-        #   "between infection and</br>",
-        #   "the last observation"),
-        # hovertemplate = "%{text}",
-        inherit = FALSE, showlegend = FALSE) %>%
-      add_annotations(
-        text = c("exponential <br> increase", "decrease"),
-        font = list(color = "red"),
-        x = startDate,
-        y = c(1.5, 0.5),
-        textangle = -90,
-        xanchor = "left",
-        yanchor = "middle",
-        showarrow = FALSE,
-        inherit = FALSE) %>%
-      layout(
-        xaxis = list(title = "",
-          type = "date",
-          range = c(startDate, endDate),
-          tick0 = startDate,
-          dtick = 3 * 86400000,
-          tickformat = "%b-%d",
-          tickangle = 45,
-          showgrid = TRUE,
-          fixedrange = TRUE),
-        yaxis = list(
-          range = c(0, 2),
-          fixedrange = TRUE,
-          title = "Reproductive Number R<sub>eff</sub>",
-          zeroline = TRUE),
-        legend = list(title = list(text = "<b>Data Type</b>")),
-        shapes = list(
-          list(
-            type = "line", 
-            x0 = startDate, x1 = endDate,
-            y0 = 1, y1 = 1,
-            line = list(color = "red", width = 0.5)
-          )
-        )
-      )
-
-    pIntervention <- plot_ly(data = interventions) %>%
-      add_trace(
-        x = ~date, y = ~y, color = ~name,
-        type = "scatter", mode = "markers+lines",
-        colors = rep("black", length(interventions$date)),
-        showlegend = FALSE,
-        text = ~tooltip,
-        hoveron = "points",
-        hoverinfo = "text") %>%
-      add_text(x = ~date, y = ~y, color = ~name, text = ~text,
-        textposition = ~plotTextPosition, showlegend = FALSE) %>%
-      layout(
-        xaxis = list(title = "",
-          type = "date",
-          range = c(startDate, endDate),
-          tick0 = startDate,
-          dtick = 3 * 86400000,
-          tickformat = "%b-%d",
-          tickangle = 45,
-          showgrid = TRUE,
-          fixedrange = TRUE),
-        yaxis = list(visible = FALSE, fixedrange = TRUE)) 
-    
-    plotlist <- list(pCases, pReSlidingWindow, pIntervention)
-    plot <- subplot(plotlist, nrows = 3, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
-      layout(annotations = list(
-        list(
-          x = 1, y = -0.1, xref = "paper", yref = "paper",
-          text = dataUpdatesString(lastDataDate),
-          showarrow = FALSE,
-          xanchor = "right", yanchor = "auto", xshift = 0, yshift = 0,
-          font = list(size = 10, color = "black")),
-        list(
-          x = 1, y = 0.35, xref = "paper", yref = "paper",
-          text = str_c("<b>*</b>&nbsp;This is the most recent <br>",
-            "R<sub>e</sub> estimate due to delays<br>",
-            "between infection and</br>",
-            "the last observation"),
-          showarrow = FALSE,
-          xanchor = "left", yanchor = "bottom", align = "left",
-          xshift = 10, yshift = 0,
-          font = list(size = 11, color = "black")))) %>%
-      config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
-        modeBarButtonsToRemove = c("pan2d", "lasso2d", "select2d", "autoScale2d"),
-        toImageButtonOptions = list(
-          filename = str_c(format(Sys.time(), "%Y%m%d"), "-rEffEstimationPlot"),
-          format = "png",
-          width = 1000,
-          height = 1000))
+    plot <- rEffPlotly(
+      cumulativePlotData(),
+      rEffPlotWindowData(),
+      interventions,
+      plotColoursNamed,
+      lastDataDate,
+      widgetID = NULL)
     return(plot)
   })
 }

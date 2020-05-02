@@ -131,7 +131,7 @@ getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases_") 
       Incidence = col_double(),
       CH = col_double()))
   cumData <- cumData[,c(1,3)]
-  return(meltCumulativeData(cumData, dataType="hospitalized", country="CH", dataSource="BAG"))
+  return(meltCumulativeData(cumData, dataType="hospitalized", country="CH", dataSource="FOPH"))
 }
 
 ## Combine openZH data with hospitalization data

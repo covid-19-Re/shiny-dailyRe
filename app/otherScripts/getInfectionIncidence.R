@@ -180,7 +180,7 @@ sdIncubation <- 3.2
 meanOnsetToTest <- 5.6
 sdOnsetToTest <- 4.2
 
-# onset to hospitalization report: pooled CH data from BAG (17/04/20 update)
+# onset to hospitalization report: pooled CH data from FOPH (17/04/20 update)
 meanOnsetToHosp <- 6.6
 sdOnsetToHosp <- 5.1
 

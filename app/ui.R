@@ -2,14 +2,14 @@ library(magrittr)
 library(shinydashboard)
 library(shinycssloaders)
 
-dashboardPage(title = "COVID-19 Reff",
-  dashboardHeader(title = HTML("COVID-19 R<sub>effective</sub>")),
+dashboardPage(title = "COVID-19 Re",
+  dashboardHeader(title = HTML("COVID-19 R<sub>e</sub>")),
   dashboardSidebar(
     sidebarMenu(id = "tabs",
-      menuItem(HTML("R in Switzerland"), tabName = "interactive", icon = icon("chart-area")),
+      menuItem(HTML("R<sub>e</sub> in Switzerland"), tabName = "interactive", icon = icon("chart-area")),
       menuItem(HTML("Additional plots"),
         tabName = "overview", startExpanded = FALSE,
-        menuSubItem(HTML("R by canton"), selected = FALSE, tabName = "overview", icon = icon("chart-area")),
+        menuSubItem(HTML("R<sub>e</sub> by canton"), selected = FALSE, tabName = "overview", icon = icon("chart-area")),
         selectInput("canton", "Cantons", choices = "CH", selected = "CH",
           multiple = TRUE, selectize = TRUE, width = NULL, size = NULL),
         actionLink("selectAllCantons", "select all")
@@ -21,7 +21,7 @@ dashboardPage(title = "COVID-19 Reff",
   dashboardBody(
     tabItems(
       tabItem(tabName = "interactive",
-        box(title = HTML("Estimating effective R in Switzerland"), width = 12,
+        box(title = HTML("Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland"), width = 12,
           plotlyOutput("CHinteractivePlot", height = "700px")
         ),
         fluidRow(
