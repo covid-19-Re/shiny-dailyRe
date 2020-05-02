@@ -73,7 +73,7 @@ interventions <- read_csv(pathToInterventionData,
     type = col_character(),
     date = col_date(format = "")))
 
-source("app/otherScripts/ReffPlotly.R")
+source(here("app", "otherScripts", "ReffPlotly.R"))
 
 plot <- rEffPlotly(
   cumulativePlotData,
