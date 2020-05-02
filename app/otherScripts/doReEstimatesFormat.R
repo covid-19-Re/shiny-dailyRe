@@ -31,9 +31,7 @@ estimatesRePlot <- estimatesRe %>%
   filter(
     # exclude infection_deaths in CH
     !(region != "CH" & data_type == "Deaths"),
-    # exclude infection deaths newer than 16 days ago
-    !(data_type == "Deaths" & date > (Sys.Date() - 16)),
-    # exclude infection hospitalized data not provided by BAF
+    # exclude infection hospitalized data not provided by BAG
     !(data_type == "Hospitalized patients" & date > filter(lastDataDate, source == "BAG")$date))
 
 estimatesRePlot$median_R_mean <- with(estimatesRePlot,

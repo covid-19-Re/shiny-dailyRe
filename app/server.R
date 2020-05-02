@@ -78,8 +78,19 @@ server <- function(input, output, session) {
       return(pCases)
   }, height = function(){350 + 150 * (length(input$canton) - 1)})
 
+  estimatesRePlotFiltered <- reactive({
+    estimatesRePlotFiltered <- filter(estimatesRePlot,
+      # confirmed: delay 10 days
+      !(data_type == "Confirmed cases" & date > (lastDataDate[lastDataDate$source == "openZH",]$date - 10)),
+      # hospitalized
+      !(data_type == "Hospitalized patients" & date > (lastDataDate[lastDataDate$source == "BAG",]$date - 10)),
+      # deaths: delay 16 days
+      !(data_type == "Deaths" & date > (lastDataDate[lastDataDate$source == "openZH",]$date - 15))
+    )
+  })
+
   rEffPlotWindowData <- reactive({
-    rEffPlotWindowData <- filter(estimatesRePlot,
+    rEffPlotWindowData <- filter(estimatesRePlotFiltered(),
       estimate_type == "Cori_slidingWindow")
     return(rEffPlotWindowData)
   })
@@ -92,7 +103,7 @@ server <- function(input, output, session) {
   
   output$rEffPlotWindow <- renderPlot({
     startDateB <- as.Date("2020-03-07")
-    endDateB <- (Sys.Date() - 11)
+    endDateB <- max(rEffPlotWindowDataFiltered()$date)
 
     pRe <- ggplot(
         data = rEffPlotWindowDataFiltered(),
@@ -134,7 +145,7 @@ server <- function(input, output, session) {
   )
 
   rEffPlotStepData <- reactive({
-    rEffPlotStepData <- filter(estimatesRePlot,
+    rEffPlotStepData <- filter(estimatesRePlotFiltered(),
       estimate_type == "Cori_step")
     return(rEffPlotStepData)
   })
@@ -147,7 +158,7 @@ server <- function(input, output, session) {
   
   output$rEffPlotStep <- renderPlot({
     startDateB <- as.Date("2020-03-07")
-    endDateB <- (Sys.Date() - 11)
+    endDateB <- max(rEffPlotStepDataFiltered()$date)
 
     pRe <- ggplot(
         data = rEffPlotStepDataFiltered(),
