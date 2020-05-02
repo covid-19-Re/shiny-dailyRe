@@ -10,13 +10,14 @@ pathToEstimatesRe <- file.path(dataDir, "Estimates_Re.Rdata")
 pathToEstimatesRePlot <- file.path(dataDir, "Estimates_Re_plot.Rdata")
 pathToCantonList <- file.path(dataDir, "cantonList.Rdata")
 pathTolastDataDate <- file.path(dataDir, "lastDataDate.Rdata")
+pathToLastCheck <- file.path(dataDir, "lastCheck.txt")
 pathToInterventionData <- file.path("../../ch-hospital-data/data/interventions.csv")
 
 load(pathToCantonList)
 
 # helpers
 
-dataUpdatesTable <- function(lastDataDate){
+dataUpdatesTable <- function(lastDataDate, lastCheck){
   outList <- list("<table style=\"width:100%\">")
   for (i in 1:dim(lastDataDate)[1]) {
     outList[[i + 1]] <- str_c(
@@ -25,7 +26,9 @@ dataUpdatesTable <- function(lastDataDate){
       "</td></tr>")
   }
   outList[[i + 2]] <- "</table>"
-  return(str_c(outList, collapse = ""))
+  out <- str_c(outList, collapse = "")
+  out <- str_c(out, "<small style=\"font-weight: normal\">", lastCheck, "</small>")
+  return(out)
 }
 
 dataUpdatesString <- function(lastDataDate){

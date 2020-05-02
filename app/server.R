@@ -5,6 +5,8 @@ server <- function(input, output, session) {
   load(pathToEstimatesRePlot)
   load(pathTolastDataDate)
   load(pathToCantonList)
+
+  lastCheck <- readLines(pathToLastCheck)
   
   interventions <- read_csv(pathToInterventionData,
     col_types = cols(
@@ -29,7 +31,7 @@ server <- function(input, output, session) {
   output$lastUpdateBox <- renderInfoBox({
     infoBox(
       "Last Data Updates",
-      HTML(dataUpdatesTable(lastDataDate)), icon = icon("exclamation-circle"),
+      HTML(dataUpdatesTable(lastDataDate, lastCheck)), icon = icon("exclamation-circle"),
       color = "purple"
     )
   })

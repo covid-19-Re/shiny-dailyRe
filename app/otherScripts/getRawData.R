@@ -199,17 +199,19 @@ rawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath, regions = 
 # format data
 rawData <- tibble::as_tibble(rawData)
 # save data
-pathToRawDataSave <- file.path(outputDir, paste0("Raw_data.Rdata"))
+pathToRawDataSave <- file.path(outputDir, "Raw_data.Rdata")
 save(rawData, file = pathToRawDataSave)
 
 lastDataDate <- rawData %>% 
   group_by(source) %>%
   summarize(date = max(date))
 
-pathTolastDataDateSave <- file.path(outputDir, paste0("lastDataDate.Rdata"))
+pathTolastDataDateSave <- file.path(outputDir, "lastDataDate.Rdata")
 save(lastDataDate, file = pathTolastDataDateSave)
 
-pathToCantonListSave <- file.path(outputDir, paste0("cantonList.Rdata"))
+pathToCantonListSave <- file.path(outputDir, "cantonList.Rdata")
 save(cantonList, file = pathToCantonListSave)
+
+writeLines(str_c("last check: ", Sys.time()), file.path(outputDir, "lastCheck.txt"))
 
 print(paste("Done getRawData.R:", Sys.time()))
