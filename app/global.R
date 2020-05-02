@@ -1,5 +1,6 @@
 library(tidyverse)
 library(plotly)
+library(viridisLite)
 
 dataDir <- "data"
 
@@ -49,17 +50,21 @@ plotTheme <- theme_bw() +
     legend.position = "bottom"
   )
 
-plotColoursNamed <-  c(
-  "Confirmed cases" = "#000000",
-  "Hospitalized patients" = "#619CFF",
-  "Deaths" = "#F8766D",
-  "asymptomatic" = "#ADADAD",
-  "symptoms" = "#747474",
-  "lastData" = "#222222")
+allCols <- viridis(6)
+allColsTransparent <- viridis(6, 0.5)
 
+plotColoursNamed <-  c(
+  "Confirmed cases" = allCols[1],
+  "Hospitalized patients" = allCols[3],
+  "Deaths" = allCols[5])
+
+plotColoursNamedT <-  c(
+  "Confirmed cases" = allColsTransparent[1],
+  "Hospitalized patients" = allColsTransparent[3],
+  "Deaths" = allColsTransparent[5])
 
 colorScale <- scale_colour_manual(
-        values = plotColoursNamed[1:3],
+        values = plotColoursNamed,
         name  = "",
         aesthetics = c("colour", "fill"))
 
