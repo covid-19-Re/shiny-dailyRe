@@ -13,7 +13,8 @@ server <- function(input, output, session) {
       text = col_character(),
       tooltip = col_character(),
       type = col_character(),
-      date = col_date(format = "")))
+      date = col_date(format = ""),
+      plotTextPosition = col_character()))
 
   updateSelectInput(session, "canton", choices = cantonList, selected = cantonList)
 
@@ -306,7 +307,7 @@ server <- function(input, output, session) {
         hoveron = "points",
         hoverinfo = "text") %>%
       add_text(x = ~date, y = ~y, color = ~name, text = ~text,
-        textposition = "top right", showlegend = FALSE) %>%
+        textposition = ~plotTextPosition, showlegend = FALSE) %>%
       layout(
         xaxis = list(title = "",
           type = "date",
