@@ -234,7 +234,8 @@ server <- function(input, output, session) {
           dtick = 3 * 86400000,
           tickformat = "%b-%d",
           tickangle = 45,
-          showgrid = TRUE),
+          showgrid = TRUE,
+          fixedrange = TRUE),
         yaxis = list(
           fixedrange = TRUE,
           title = "Daily Incidence"),
@@ -289,7 +290,8 @@ server <- function(input, output, session) {
           dtick = 3 * 86400000,
           tickformat = "%b-%d",
           tickangle = 45,
-          showgrid = TRUE),
+          showgrid = TRUE,
+          fixedrange = TRUE),
         yaxis = list(
           range = c(0, 2),
           fixedrange = TRUE,
@@ -325,7 +327,8 @@ server <- function(input, output, session) {
           dtick = 3 * 86400000,
           tickformat = "%b-%d",
           tickangle = 45,
-          showgrid = TRUE),
+          showgrid = TRUE,
+          fixedrange = TRUE),
         yaxis = list(visible = FALSE, fixedrange = TRUE)) 
     
     plotlist <- list(pCases, pReSlidingWindow, pIntervention)
