@@ -2,14 +2,14 @@ library(magrittr)
 library(shinydashboard)
 library(shinycssloaders)
 
-
 dashboardPage(title = "COVID-19 Reff",
   dashboardHeader(title = HTML("COVID-19 R<sub>effective</sub>")),
   dashboardSidebar(
     sidebarMenu(id = "tabs",
-      menuItem(HTML("Estimating R<sub>effective</sub>"),
-        tabName = "overview", icon = icon("chart-area"), startExpanded = TRUE,
-        menuSubItem("Options", selected = TRUE, tabName = "overview", icon = icon("cogs")),
+      menuItem(HTML("R<sub>0</sub> in Switzerland"), tabName = "interactive", icon = icon("chart-area")),
+      menuItem(HTML("Additional plots"),
+        tabName = "overview", startExpanded = FALSE,
+        menuSubItem(HTML("R<sub>0</sub> by canton"), selected = FALSE, tabName = "overview", icon = icon("chart-area")),
         selectInput("canton", "Cantons", choices = "CH", selected = "CH",
           multiple = TRUE, selectize = TRUE, width = NULL, size = NULL),
         actionLink("selectAllCantons", "select all")
@@ -20,8 +20,10 @@ dashboardPage(title = "COVID-19 Reff",
   ),
   dashboardBody(
     tabItems(
-      tabItem(tabName = "overview",
-        h2(HTML("Estimating R<sub>effective</sub>")),
+      tabItem(tabName = "interactive",
+        box(title = HTML("Estimating effective R<sub>0</sub> in Switzerland"), width = 12,
+          plotlyOutput("CHinteractivePlot", height = "700px")
+        ),
         fluidRow(
           column(width = 9,
             box(title = "Methods", width = 12,
@@ -31,10 +33,12 @@ dashboardPage(title = "COVID-19 Reff",
           column(width = 3,
             infoBoxOutput("lastUpdateBox", width = 12) %>% withSpinner()
           )
-        ),
+        )
+      ),
+      tabItem(tabName = "overview",
         fluidRow(
           column(width = 12,
-            box(title = HTML("effective R<sub>0</sub>"), width = 12, height = 2600,
+            box(title = HTML("effective R<sub>0</sub> by canton"), width = 12, height = 2600,
               fluidRow(
                 column(width = 4,
                   plotOutput("cumulativePlot") %>% withSpinner()

@@ -1,4 +1,5 @@
 library(tidyverse)
+library(plotly)
 
 dataDir <- "data"
 
@@ -8,6 +9,7 @@ pathToEstimatesRe <- file.path(dataDir, "Estimates_Re.Rdata")
 pathToEstimatesRePlot <- file.path(dataDir, "Estimates_Re_plot.Rdata")
 pathToCantonList <- file.path(dataDir, "cantonList.Rdata")
 pathTolastDataDate <- file.path(dataDir, "lastDataDate.Rdata")
+pathToInterventionData <- file.path("../../ch-hospital-data/data/interventions.csv")
 
 load(pathToCantonList)
 
@@ -35,11 +37,6 @@ dataUpdatesString <- function(lastDataDate){
   return(str_sub(str_c(outList, collapse = ""), end = -3))
 }
 
-ggColor <- function(n) {
-  hues <- seq(15, 375, length = n + 1)
-  hcl(h = hues, l = 65, c = 100)[1:n]
-}
-
 plotTheme <- theme_bw() +
   theme(
     strip.background = element_blank(),
@@ -52,17 +49,17 @@ plotTheme <- theme_bw() +
     legend.position = "bottom"
   )
 
-plotColoursCases <- c("confirmed" = "black", "hospitalized" = "#619CFF", "deaths" = "#F8766D")
-plotColoursEstimates <- c("infection_confirmed" = "black", "infection_hospitalized" = "#619CFF", "infection_deaths" = "#F8766D")
+plotColoursNamed <-  c(
+  "Confirmed cases" = "#000000",
+  "Hospitalized patients" = "#619CFF",
+  "Deaths" = "#F8766D",
+  "asymptomatic" = "#ADADAD",
+  "symptoms" = "#747474",
+  "lastData" = "#222222")
 
-colourScaleCases <- scale_colour_manual(
-        values = plotColoursCases,
-        name  = "Data source",
-        labels = c("Confirmed cases", "Hospitalizations", "Deaths"),
+
+colorScale <- scale_colour_manual(
+        values = plotColoursNamed[1:3],
+        name  = "",
         aesthetics = c("colour", "fill"))
 
-colourScaleEstimates <- scale_colour_manual(
-        values = plotColoursEstimates,
-        labels = c("infection_confirmed" = "Confirmed cases", "infection_hospitalized" = "Hospitalizations", "infection_deaths" = "Deaths"),
-        name = "Data source",
-        aesthetics = c("fill", "color"))
