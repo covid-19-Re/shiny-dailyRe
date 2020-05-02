@@ -253,6 +253,12 @@ server <- function(input, output, session) {
         " (", signif(median_R_lowHPD, 3),"-", signif(median_R_highHPD, 3),")",
         " <br>(", data_type, ")<extra></extra>"),
         hovertemplate = "%{text}") %>%
+      add_ribbons(
+        x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
+        color = ~data_type, colors = plotColoursNamed,
+        line = list(color = "transparent"), opacity = 0.5,
+        legendgroup = ~data_type, showlegend = FALSE,
+        hoverinfo = "none") %>%
       add_markers(
         data = estimatesEndPoint,
         x = ~date + 1, y = ~median_R_mean,
@@ -268,12 +274,6 @@ server <- function(input, output, session) {
         #   "the last observation"),
         # hovertemplate = "%{text}",
         inherit = FALSE, showlegend = FALSE) %>%
-      add_ribbons(
-        x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
-        color = ~data_type, colors = plotColoursNamed,
-        line = list(color = "transparent"), opacity = 0.5,
-        legendgroup = ~data_type, showlegend = FALSE,
-        hoverinfo = "none") %>%
       add_annotations(
         text = c("exponential <br> increase", "decrease"),
         font = list(color = "red"),
