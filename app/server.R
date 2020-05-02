@@ -255,6 +255,15 @@ server <- function(input, output, session) {
         x = ~date + 1, y = ~median_R_mean,
         legendgroup = ~data_type,
         marker = list(color = "black", symbol = "asterisk-open"),
+        hoverinfo = "none",
+        # text =  ~str_c("<i>", format(date, "%d.%m.%y"),
+        #   " </i>R<sub>eff</sub>: ", signif(median_R_mean, 3),
+        #   "(", signif(median_R_lowHPD, 3),"-", signif(median_R_highHPD, 3),")<br>",
+        #   "<b>*</b>&nbsp;This is the most recent <br>",
+        #   "R<sub>e</sub> estimate due to delays<br>",
+        #   "between infection and</br>",
+        #   "the last observation"),
+        # hovertemplate = "%{text}",
         inherit = FALSE, showlegend = FALSE) %>%
       add_ribbons(
         x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
