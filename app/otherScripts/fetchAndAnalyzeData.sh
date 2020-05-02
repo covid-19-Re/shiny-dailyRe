@@ -12,6 +12,7 @@ Rscript --vanilla --verbose getInfectionIncidence.R > getInfectionIncidence.Rout
 Rscript --vanilla --verbose doReEstimates.R > doReEstimates.Rout 2>&1
 # format data in seperate process to avoid C stack limit
 Rscript --vanilla --verbose doReEstimatesFormat.R > doReEstimatesFormat.Rout 2>&1
+Rscript --vanilla --verbose makeReffPlotly.R > makeReffPlotly.Rout 2>&1
 
 # crontab settings
 # run everyday at 9am and 9pm
