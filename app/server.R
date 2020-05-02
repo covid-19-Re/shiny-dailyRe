@@ -206,36 +206,18 @@ server <- function(input, output, session) {
     startDate <- min(caseData$date) - 1
     endDate <- Sys.Date()
     lastDate <- max(caseData$date)
-    maxEstimateDate <- max(caseData$date) - 10
     minEstimateDate <- as.Date("2020-03-07")
 
     rEffWindowData <- rEffPlotWindowData() %>%
       filter(
         region == "CH",
-        date <= maxEstimateDate,
         date >= minEstimateDate,
         replicate == 1) %>%
       select(-replicate)
 
-    annotateShapes <- tribble(
-              ~name,            ~x, ~y,                                          ~text,                               ~tooltip,    ~lineColor, ~lineWidth,
-      "asymptomatic", lastDate - 10,  0,    "~ 5 days from infection <br> to symptoms",    "R<sub>eff</sub> can only be estimated with a delay <br> because case confirmation and reporting is on <br> average 10 days after infection", "transparent",          0,
-      "asymptomatic", lastDate - 10,  5,    "~ 5 days from infection <br> to symptoms",                                     NA, "transparent",          0,
-      "asymptomatic",  lastDate - 5,  5,    "~ 5 days from infection <br> to symptoms",                                     NA, "transparent",          0,
-      "asymptomatic",  lastDate - 5,  0,    "~ 5 days from infection <br> to symptoms",                                     NA, "transparent",          0,
-          "symptoms",  lastDate - 5,  0, "~ 5 days from symptoms <br> to confirmation",    "R<sub>eff</sub> can only be estimated with a delay <br> because case confirmation and reporting is on <br> average 10 days after infection", "transparent",          0,
-          "symptoms",  lastDate - 5,  5, "~ 5 days from symptoms <br> to confirmation",                                     NA, "transparent",          0,
-          "symptoms",      lastDate,  5, "~ 5 days from symptoms <br> to confirmation",                                     NA, "transparent",          0,
-          "symptoms",      lastDate,  0, "~ 5 days from symptoms <br> to confirmation",                                     NA, "transparent",          0,
-    )
-    
-    annotateShapesText <- annotateShapes %>%
-      group_by(name) %>%
-      filter(row_number() == 1) %>%
-      ungroup() %>%
-      add_row(
-        name = "lastData", x = lastDate, y = 1, text = "Most Recent Data", tooltip = str_c("Most Recent Data <br>",lastDate), lineColor = "transparent", lineWidth = 0
-      )
+    estimatesEndPoint <- rEffWindowData %>%
+      group_by(data_type) %>%
+      filter(date == max(date))
 
     pCases <- plot_ly(data = caseData) %>%
       add_bars(x = ~date, y = ~incidence, color = ~data_type,
@@ -253,7 +235,6 @@ server <- function(input, output, session) {
           tickangle = 45,
           showgrid = TRUE),
         yaxis = list(
-          # type = "log",
           fixedrange = TRUE,
           title = "Daily Incidence"),
         legend = list(title = list(text = "<b> Data Type </b>")))
@@ -262,42 +243,34 @@ server <- function(input, output, session) {
       add_trace(
         x = ~date, y = ~median_R_mean, color = ~data_type, colors = plotColoursNamed,
         type = "scatter", mode = "lines",
-        legendgroup = ~data_type, showlegend = F,
+        legendgroup = ~data_type, showlegend = FALSE,
         text = ~str_c("<i>", format(date, "%d.%m.%y"),
         "</i> <br> R<sub>eff</sub>: ", signif(median_R_mean, 3),
         " (", signif(median_R_lowHPD, 3),"-", signif(median_R_highHPD, 3),")",
         " <br>(", data_type, ")<extra></extra>"),
         hovertemplate = "%{text}") %>%
+      add_markers(
+        data = estimatesEndPoint,
+        x = ~date + 1, y = ~median_R_mean,
+        legendgroup = ~data_type,
+        marker = list(color = "black", symbol = "asterisk-open"),
+        inherit = FALSE, showlegend = FALSE) %>%
       add_ribbons(
         x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
         color = ~data_type, colors = plotColoursNamed,
         line = list(color = "transparent"), opacity = 0.5,
-        legendgroup = ~data_type, showlegend = F,
+        legendgroup = ~data_type, showlegend = FALSE,
         hoverinfo = "none") %>%
-      add_polygons(
-        x = annotateShapes$x, y = annotateShapes$y, color = annotateShapes$name,
-        fill = "toself", showlegend = FALSE, opacity = 0.5,
-        line = list(color = annotateShapes$lineColor, width = annotateShapes$lineWidth),
-        text = annotateShapes$tooltip,
-        hoveron = "fills",
-        hoverinfo = "text") %>%
       add_annotations(
-        text = annotateShapesText$text,
-        x = annotateShapesText$x, y = 1,
-        textangle = -90,
-        xanchor = "left",
-        yanchor = "middle",
-        showarrow = FALSE) %>%
-      add_annotations(
-        text = c("exponential <br> increase","decrease"),
+        text = c("exponential <br> increase", "decrease"),
         font = list(color = "red"),
-        x = 0,
-        xrev = "paper",
+        x = startDate,
         y = c(1.5, 0.5),
         textangle = -90,
         xanchor = "left",
         yanchor = "middle",
-        showarrow = FALSE) %>%
+        showarrow = FALSE,
+        inherit = FALSE) %>%
       layout(
         xaxis = list(title = "",
           type = "date",
@@ -316,15 +289,9 @@ server <- function(input, output, session) {
         shapes = list(
           list(
             type = "line", 
-            x0 = startDate, x1 = maxEstimateDate,
+            x0 = startDate, x1 = endDate,
             y0 = 1, y1 = 1,
             line = list(color = "red", width = 0.5)
-          ),
-          list(
-            type = "line", 
-            x0 = lastDate, x1 = lastDate,
-            y0 = 0, y1 = 1, yref = "paper",
-            line = list(color = "black", width = 4)
           )
         )
       )
@@ -354,12 +321,23 @@ server <- function(input, output, session) {
     plotlist <- list(pCases, pReSlidingWindow, pIntervention)
     plot <- subplot(plotlist, nrows = 3, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
       layout(annotations = list(
-          x = 1, y = -0.1,
+        list(
+          x = 1, y = -0.1, xref = "paper", yref = "paper",
           text = dataUpdatesString(lastDataDate),
-          showarrow = FALSE, xref = "paper", yref = "paper",
+          showarrow = FALSE,
           xanchor = "right", yanchor = "auto", xshift = 0, yshift = 0,
-          font = list(size = 10, color = "black"))) %>%
-      config(doubleClick = "reset", displaylogo = FALSE,
+          font = list(size = 10, color = "black")),
+        list(
+          x = 1, y = 0.35, xref = "paper", yref = "paper",
+          text = str_c("<b>*</b>&nbsp;This is the most recent <br>",
+            "R<sub>e</sub> estimate due to delays<br>",
+            "between infection and</br>",
+            "the last observation"),
+          showarrow = FALSE,
+          xanchor = "left", yanchor = "bottom", align = "left",
+          xshift = 10, yshift = 0,
+          font = list(size = 11, color = "black")))) %>%
+      config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
         modeBarButtonsToRemove = c("pan2d", "lasso2d", "select2d", "autoScale2d"),
         toImageButtonOptions = list(
           filename = str_c(format(Sys.time(), "%Y%m%d"), "-rEffEstimationPlot"),
