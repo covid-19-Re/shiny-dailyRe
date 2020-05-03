@@ -84,8 +84,8 @@ plot <- rEffPlotly(
   widgetID = "rEffplots")
 
 outputDir <- here("app/www")
-htmlwidgets::saveWidget(plot, file.path(outputDir,"rEffplotly_selfContained.html"), selfcontained = TRUE, libdir = "lib")
-htmlwidgets::saveWidget(plot, file.path(outputDir,"rEffplotly.html"), selfcontained = FALSE, libdir = "lib")
+#htmlwidgets::saveWidget(plot, file.path(outputDir,"rEffplotly_selfContained.html"), selfcontained = TRUE, libdir = "lib")
+#htmlwidgets::saveWidget(plot, file.path(outputDir,"rEffplotly.html"), selfcontained = FALSE, libdir = "lib")
 write_lines(htmlwidgetsExtended::exportWidgetJson(plot), file.path(outputDir,"rEffplotly_data.json"))
 
 
