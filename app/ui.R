@@ -26,9 +26,10 @@ dashboardPage(title = "COVID-19 Re",
         ),
         fluidRow(
           column(width = 8,
-            box(title = "Methods", width = 12,
+            box(width = 12,
               includeMarkdown("md/methodsShort.md"),
-              actionLink("methodsLink", "more Details..."))
+              #actionLink("methodsLink", "more Details...")
+              )
           ),
           column(width = 4,
             infoBoxOutput("lastUpdateBox", width = 12) %>% withSpinner()
@@ -54,9 +55,9 @@ dashboardPage(title = "COVID-19 Re",
           )
         )
       ),
-      tabItem(tabName = "methods",
-        includeMarkdown("md/methodsLong.md")
-      ),
+      #tabItem(tabName = "methods",
+      #  includeMarkdown("md/methodsLong.md")
+      #),
       tabItem(tabName = "about",
         includeMarkdown("md/about.md")
       )
