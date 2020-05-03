@@ -90,7 +90,7 @@ rEffPlotly <- function(
     #   hoverinfo = "none"
     # ) %>%
     add_annotations(
-      text = c("↑ exponential increase <br>&nbsp;&nbsp;in number of new cases", "↓ decrease in number of new cases"),
+      text = c("↑ exponential increase<br>in number of new cases", "↓ decrease in number of new cases"),
       font = list(color = "red"),
       x = startDate,
       y = c(1.2, 0.9),
@@ -134,7 +134,7 @@ rEffPlotly <- function(
       type = "scatter", mode = "markers+lines",
       colors = rep("#505050", length(interventions$date)),
       showlegend = FALSE,
-      text = ~tooltip,
+      text = ~str_c("<i>", date, "</i><br>", tooltip),
       hoveron = "points",
       hoverinfo = "text") %>%
     add_text(x = ~date, y = ~y, color = ~name, text = ~text,
@@ -171,7 +171,7 @@ rEffPlotly <- function(
         xshift = 10, yshift = 0,
         font = list(size = 11, color = "black")),
       list(
-        x = 1, y = 0, xref = "paper", yref = "paper",
+        x = 1, y = 0.8, xref = "paper", yref = "paper",
         width = 174,
         height = 90,
         bgcolor = "#eeeeee",
@@ -185,7 +185,7 @@ rEffPlotly <- function(
         ),
         valign = "top",
         showarrow = FALSE,
-        xanchor = "left", yanchor = "bottom", align = "left",
+        xanchor = "left", yanchor = "top", align = "left",
         xshift = 10, yshift = 0,
         font = list(size = 11, color = "black")
       )
