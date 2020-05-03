@@ -14,7 +14,7 @@ dashboardPage(title = "COVID-19 Re",
           multiple = TRUE, selectize = TRUE, width = NULL, size = NULL),
         actionLink("selectAllCantons", "select all")
       ),
-      menuItem("Methodology", tabName = "methods", icon = icon("calculator")),
+      # menuItem("Methodology", tabName = "methods", icon = icon("calculator")),
       menuItem("About", tabName = "about", icon = icon("question-circle"))
     )
   ),
