@@ -7,21 +7,17 @@ library(viridisLite)
 
 # load data
 dataDir <- here("app/data")
-
 pathToEstimatesRePlot <- file.path(dataDir, "Estimates_Re_plot.Rdata")
 pathTolastDataDate <- file.path(dataDir, "lastDataDate.Rdata")
 pathToRawData <- file.path(dataDir, "Raw_data.Rdata")
-pathToInterventionData <- here("../ch-hospital-data/data/interventions.csv")
-
 
 load(pathToRawData)
 load(pathToEstimatesRePlot)
 load(pathTolastDataDate)
 
 # common functions
-
-dataUpdatesString <- function(lastDataDate){
-  outList <- list("Data Source: ")
+dataUpdatesString <- function(lastDataDate, name = "Data Source") {
+  outList <- list(str_c(name, ": "))
   for (i in 1:dim(lastDataDate)[1]) {
     outList[[i+1]] <- str_c(
       lastDataDate[i,]$source, " (", as.character(lastDataDate[i,2]$date),
@@ -32,7 +28,6 @@ dataUpdatesString <- function(lastDataDate){
 
 # colours
 allCols <- viridis(6)
-
 plotColoursNamed <-  c(
   "Confirmed cases" = allCols[1],
   "Hospitalized patients" = allCols[3],
@@ -66,45 +61,54 @@ estimatesRePlotFiltered <- filter(estimatesRePlot,
 rEffPlotWindowData <- filter(estimatesRePlotFiltered,
   estimate_type == "Cori_slidingWindow")
 
-interventions <- read_csv(pathToInterventionData,
-  col_types = cols(
-    name = col_character(),
-    y = col_double(),
-    text = col_character(),
-    tooltip = col_character(),
-    type = col_character(),
-    date = col_date(format = "")))
-
 source(here("app", "otherScripts", "ReffPlotly.R"))
 
-plotlyPlotV <- rEffPlotly(
-  cumulativePlotData,
-  rEffPlotWindowData,
-  interventions,
-  plotColoursNamed,
-  lastDataDate,
-  legendOrientation = "v",
-  widgetID = "rEffplots")
-
-# plotlyPlotSingle <- rEffPlotlySingle(
-#   rEffPlotWindowData,
-#   plotColoursNamed,
-#   lastDataDate,
-#   widgetID = "rEffplotSingle")
+translations <- read_csv(here("app", "data", "translations.csv"), col_types = "ccccc")
+textElements <- list()
+for (i in names(translations)[-1]){
+  textElements[[i]] <- translations[[i]]
+  names(textElements[[i]]) <- translations$element
+}
 
 outputDir <- here("app/www")
 
-plotlyPlotV$sizingPolicy$browser$padding <- 0
-# plotlyPlotSingle$sizingPolicy$browser$padding <- 0
+# i <- names(textElements)[3]
 
+for (i in names(textElements)) {
+  pathToInterventionData <- here(str_c(
+    "../ch-hospital-data/data/interventions_", i, ".csv"))
 
-htmlwidgets::saveWidget(plotlyPlotV,
-  file.path(outputDir, "rEffplotly.html"), selfcontained = FALSE, libdir = "lib",
-  title = "Effective reproductive number (Re) in Switzerland")
-# htmlwidgets::saveWidget(plotlyPlotSingle,
-#   file.path(outputDir,"rEffplotlySingle.html"), selfcontained = FALSE, libdir = "lib",
-#   title = "Effective reproductive number (Re) in Switzerland")
-write_lines(htmlwidgetsExtended::exportWidgetJson(plotlyPlotV), file.path(outputDir,"rEffplotly_data.json"))
-write_lines(htmlwidgetsExtended::exportWidgetJson(plotlyPlotSingle), file.path(outputDir,"rEffplotlySingle_data.json"))
+  interventions <- read_csv(pathToInterventionData,
+    col_types = cols(
+      name = col_character(),
+      y = col_double(),
+      text = col_character(),
+      tooltip = col_character(),
+      type = col_character(),
+      date = col_date(format = "")))
+
+  plotlyPlotV <- rEffPlotly(
+    cumulativePlotData,
+    rEffPlotWindowData,
+    interventions,
+    plotColoursNamed,
+    lastDataDate,
+    legendOrientation = "v",
+    textElements = textElements,
+    language = i,
+    widgetID = "rEffplots")
+
+  plotlyPlotV$sizingPolicy$browser$padding <- 0
+
+  plotlyPlotV
+
+  htmlwidgets::saveWidget(plotlyPlotV,
+    file.path(outputDir, str_c("rEffplotly_", i, ".html")), selfcontained = FALSE, libdir = "lib",
+    title = "Effective reproductive number (Re) in Switzerland")
+
+  write_lines(
+    htmlwidgetsExtended::exportWidgetJson(plotlyPlotV),
+    file.path(outputDir, str_c("rEffplotly_data_", i, ".json")))
+}
 
 print(paste("Done makeReffPlotly.R:", Sys.time()))

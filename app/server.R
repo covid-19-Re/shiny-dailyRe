@@ -7,7 +7,7 @@ server <- function(input, output, session) {
   load(pathToCantonList)
 
   lastCheck <- readLines(pathToLastCheck)
-  
+
   interventions <- read_csv(pathToInterventionData,
     col_types = cols(
       name = col_character(),
@@ -210,6 +210,8 @@ server <- function(input, output, session) {
       plotColoursNamed,
       lastDataDate,
       legendOrientation = "v",
+      language = "en-gb",
+      textElements = textElements,
       widgetID = NULL)
     return(plot)
   })

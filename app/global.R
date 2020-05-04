@@ -13,9 +13,16 @@ pathToEstimatesRePlot <- file.path(dataDir, "Estimates_Re_plot.Rdata")
 pathToCantonList <- file.path(dataDir, "cantonList.Rdata")
 pathTolastDataDate <- file.path(dataDir, "lastDataDate.Rdata")
 pathToLastCheck <- file.path(dataDir, "lastCheck.txt")
-pathToInterventionData <- file.path("../../ch-hospital-data/data/interventions.csv")
-
+pathToInterventionData <- file.path("../../ch-hospital-data/data/interventions_en-gb.csv")
+pathToTranslations <- file.path(dataDir, "translations.csv")
 load(pathToCantonList)
+
+translations <- read_csv(here("app", "data", "translations.csv"), col_types = "ccccc")
+textElements <- list()
+for (i in names(translations)[-1]){
+  textElements[[i]] <- translations[[i]]
+  names(textElements[[i]]) <- translations$element
+}
 
 # helpers
 
@@ -33,8 +40,8 @@ dataUpdatesTable <- function(lastDataDate, lastCheck){
   return(out)
 }
 
-dataUpdatesString <- function(lastDataDate){
-  outList <- list("Data Source: ")
+dataUpdatesString <- function(lastDataDate, name = "Data Source") {
+  outList <- list(str_c(name, ": "))
   for (i in 1:dim(lastDataDate)[1]) {
     outList[[i+1]] <- str_c(
       lastDataDate[i,]$source, " (", as.character(lastDataDate[i,2]$date),
