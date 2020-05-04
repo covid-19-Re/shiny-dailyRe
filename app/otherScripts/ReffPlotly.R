@@ -146,7 +146,7 @@ rEffPlotly <- function(
     #   hoverinfo = "none"
     # ) %>%
     add_annotations(
-      text = c("↑ exponential increase<br>in number of new cases", "↓ decrease in number of new cases"),
+      text = c("exponential increase<br>in number of new cases", "decrease in number of new cases"),
       font = list(color = "red"),
       x = startDate,
       y = c(1.2, 0.9),
