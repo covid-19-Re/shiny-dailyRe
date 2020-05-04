@@ -1,6 +1,7 @@
 print(paste("starting makeReffPlotly.R:", Sys.time()))
 library(tidyverse)
 library(plotly)
+library(htmlwidgets)
 library(here)
 library(viridisLite)
 
@@ -85,15 +86,24 @@ plotlyPlotV <- rEffPlotly(
   legendOrientation = "v",
   widgetID = "rEffplots")
 
-plotlyPlotSingle <- rEffPlotlySingle(
-  rEffPlotWindowData,
-  plotColoursNamed,
-  lastDataDate,
-  widgetID = "rEffplotSingle")
+# plotlyPlotSingle <- rEffPlotlySingle(
+#   rEffPlotWindowData,
+#   plotColoursNamed,
+#   lastDataDate,
+#   widgetID = "rEffplotSingle")
 
 outputDir <- here("app/www")
-htmlwidgets::saveWidget(plotlyPlotV, file.path(outputDir,"rEffplotly.html"), selfcontained = FALSE, libdir = "lib")
-htmlwidgets::saveWidget(plotlyPlotSingle, file.path(outputDir,"rEffplotlySingle.html"), selfcontained = FALSE, libdir = "lib")
+
+plotlyPlotV$sizingPolicy$browser$padding <- 0
+# plotlyPlotSingle$sizingPolicy$browser$padding <- 0
+
+
+htmlwidgets::saveWidget(plotlyPlotV,
+  file.path(outputDir, "rEffplotly.html"), selfcontained = FALSE, libdir = "lib",
+  title = "Effective reproductive number (Re) in Switzerland")
+# htmlwidgets::saveWidget(plotlyPlotSingle,
+#   file.path(outputDir,"rEffplotlySingle.html"), selfcontained = FALSE, libdir = "lib",
+#   title = "Effective reproductive number (Re) in Switzerland")
 write_lines(htmlwidgetsExtended::exportWidgetJson(plotlyPlotV), file.path(outputDir,"rEffplotly_data.json"))
 write_lines(htmlwidgetsExtended::exportWidgetJson(plotlyPlotSingle), file.path(outputDir,"rEffplotlySingle_data.json"))
 
