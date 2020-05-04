@@ -209,6 +209,7 @@ server <- function(input, output, session) {
       interventions,
       plotColoursNamed,
       lastDataDate,
+      legendOrientation = "v",
       widgetID = NULL)
     return(plot)
   })

@@ -1,3 +1,4 @@
+print(paste("starting makeReffPlotly.R:", Sys.time()))
 library(tidyverse)
 library(plotly)
 library(here)
@@ -75,17 +76,25 @@ interventions <- read_csv(pathToInterventionData,
 
 source(here("app", "otherScripts", "ReffPlotly.R"))
 
-plot <- rEffPlotly(
+plotlyPlotV <- rEffPlotly(
   cumulativePlotData,
   rEffPlotWindowData,
   interventions,
   plotColoursNamed,
   lastDataDate,
+  legendOrientation = "v",
   widgetID = "rEffplots")
 
+plotlyPlotSingle <- rEffPlotlySingle(
+  rEffPlotWindowData,
+  plotColoursNamed,
+  lastDataDate,
+  widgetID = "rEffplotSingle")
+
 outputDir <- here("app/www")
-#htmlwidgets::saveWidget(plot, file.path(outputDir,"rEffplotly_selfContained.html"), selfcontained = TRUE, libdir = "lib")
-#htmlwidgets::saveWidget(plot, file.path(outputDir,"rEffplotly.html"), selfcontained = FALSE, libdir = "lib")
-write_lines(htmlwidgetsExtended::exportWidgetJson(plot), file.path(outputDir,"rEffplotly_data.json"))
+htmlwidgets::saveWidget(plotlyPlotV, file.path(outputDir,"rEffplotly.html"), selfcontained = FALSE, libdir = "lib")
+htmlwidgets::saveWidget(plotlyPlotSingle, file.path(outputDir,"rEffplotlySingle.html"), selfcontained = FALSE, libdir = "lib")
+write_lines(htmlwidgetsExtended::exportWidgetJson(plotlyPlotV), file.path(outputDir,"rEffplotly_data.json"))
+write_lines(htmlwidgetsExtended::exportWidgetJson(plotlyPlotSingle), file.path(outputDir,"rEffplotlySingle_data.json"))
 
-
+print(paste("Done makeReffPlotly.R:", Sys.time()))
