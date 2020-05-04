@@ -161,7 +161,7 @@ rEffPlotly <- function(
         type = "date",
         range = c(startDate, endDate),
         #tick0 = startDate,
-        tickvals = c(seq(startDate, endDate, by = 3), endDate),
+        tickvals = seq(startDate, endDate, length.out = 18),
         #dtick = 3 * 86400000,
         tickformat = "%b-%d",
         tickangle = 45,
@@ -325,7 +325,7 @@ rEffPlotlySingle <- function(
     group_by(data_type) %>%
     filter(date == max(date)) %>%
     add_trace(
-      x = ~as.POSIXct(date)+10*60*60, y = ~median_R_mean,
+      x = ~as.POSIXct(date)+ 10 * 60 * 60, y = ~median_R_mean,
       type = "scatter", mode = "markers",
       color = ~data_type, colors = plotColoursNamed,
       legendgroup = ~data_type,
@@ -341,7 +341,7 @@ rEffPlotlySingle <- function(
         type = "date",
         range = c(startDate, endDate),
         #tick0 = startDate,
-        tickvals = c(seq(startDate, endDate, by = 14), endDate),
+        tickvals = seq(startDate, endDate, length.out = 6),
         #dtick = 3 * 86400000,
         tickformat = "%b-%d",
         tickangle = 90,
