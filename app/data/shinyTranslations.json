@@ -61,10 +61,10 @@
       "de-ch": "Schätzung der effektiven Reproduktionszahl (R<sub>e</sub>) in der Schweiz"
     },
     {
-      "en-gb": "Estimating the effective reproductive number (R<sub>e</sub>) for all cantons",
-      "it-ch": "Stima del numero di riproduzione effettivo (R <sub> e </sub>) per tutti i cantoni",
-      "fr-ch": "Estimation du nombre de reproduction effectif (R<sub>e</sub>) pour tous les cantons",
-      "de-ch": "Schätzung der effektiven Reproduktionszahl (R<sub>e</sub>) für alle Kantone"
+      "en-gb": "Estimating the effective reproductive number (R<sub>e</sub>) for cantons",
+      "it-ch": "Stima del numero di riproduzione effettivo (R <sub> e </sub>) per i cantoni",
+      "fr-ch": "Estimation du nombre de reproduction effectif (R<sub>e</sub>) pour les cantons",
+      "de-ch": "Schätzung der effektiven Reproduktionszahl (R<sub>e</sub>) für Kantone"
     }
   ]
 }
