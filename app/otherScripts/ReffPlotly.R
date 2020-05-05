@@ -348,11 +348,16 @@ rEffPlotlyRegion <- function(
   newLevels <- c("Confirmed cases",  "Hospitalized patients", "Deaths")
   names(newLevels) <- newLevelNames
 
+  names(regionColors) <- recode(names(regionColors), CH = textElements[[language]][["totalCH"]])
+
   caseData <- cumulativePlotData %>%
-    mutate(data_type = fct_recode(data_type, !!!newLevels)) %>%
+    mutate(
+      data_type = fct_recode(data_type, !!!newLevels),
+      region = recode(region, CH = textElements[[language]][["totalCH"]])
+      ) %>%
     filter(data_type == textElements[[language]][["confirmedCases"]])
 
-  caseDataCH <- filter(caseData, region == "CH")
+  caseDataCH <- filter(caseData, region == textElements[[language]][["totalCH"]])
 
   startDate <- min(caseData$date) - 1
   endDate <- Sys.Date()
@@ -364,17 +369,20 @@ rEffPlotlyRegion <- function(
       date >= minEstimateDate,
       replicate == 1) %>%
     select(-replicate) %>%
-    mutate(data_type = fct_recode(data_type, !!!newLevels)) %>%
+    mutate(
+      data_type = fct_recode(data_type, !!!newLevels),
+      region = recode(region, CH = textElements[[language]][["totalCH"]])
+      ) %>%
     filter(data_type == textElements[[language]][["confirmedCases"]])
 
-  rEffWindowDataCH <- filter(rEffWindowData, region == "CH")
+  rEffWindowDataCH <- filter(rEffWindowData, region == textElements[[language]][["totalCH"]])
 
   estimatesEndPoint <- rEffWindowData %>%
     group_by(data_type) %>%
     filter(date == max(date))
 
   pCases <- plot_ly(data = caseData) %>%
-    filter(region != "CH") %>%
+    filter(region != textElements[[language]][["totalCH"]]) %>%
     add_bars(x = ~date, y = ~incidence, color = ~region, colors = regionColors,
       legendgroup = ~region, visible = "legendonly",
       text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>",
@@ -401,7 +409,7 @@ rEffPlotlyRegion <- function(
       legend = list(title = list(text = "<b> Data Type </b>")))
 
   pReSlidingWindow <- plot_ly(data = rEffWindowData) %>%
-    filter(region != "CH") %>%
+    filter(region != textElements[[language]][["totalCH"]]) %>%
     add_trace(
       x = ~date, y = ~median_R_mean, color = ~region, colors = regionColors,
       type = "scatter", mode = "lines", showlegend = FALSE,

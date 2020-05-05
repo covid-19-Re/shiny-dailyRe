@@ -168,6 +168,9 @@ server <- function(input, output, session) {
   })
 
   output$cantonInteractivePlot <- renderPlotly({
+    cantonColors <- c(viridis(length(cantonList)-1), "#666666")
+    names(cantonColors) <- cantonList
+
     plot <- rEffPlotlyRegion(
       cumulativePlotData(),
       rEffPlotWindowData(),

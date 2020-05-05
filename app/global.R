@@ -89,6 +89,3 @@ colorScale <- scale_colour_manual(
         values = plotColoursNamed,
         name  = "",
         aesthetics = c("colour", "fill"))
-
-cantonColors <- viridis(length(cantonList))
-names(cantonColors) <- cantonList
