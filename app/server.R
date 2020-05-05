@@ -57,7 +57,7 @@ server <- function(input, output, session) {
 
   output$cantonsPlotUI <- renderUI({
     fluidRow(
-      box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for all cantons")),
+      box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for cantons")),
       width = 12,
           plotlyOutput("cantonInteractivePlot", width = "100%", height = "700px")
       ),
