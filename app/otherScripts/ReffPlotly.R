@@ -49,7 +49,7 @@ rEffPlotly <- function(
     if (language %in% c("fr-ch", "it-ch")) {
       hHelpBox <- 120
     } else if (language == "de-ch") {
-      hHelpBox <- 150
+      hHelpBox <- 130
     }
     helpBoxText <- textElements[[language]][["helpBox"]]
     helpBoxShift <- c(10, 0)
