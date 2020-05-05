@@ -76,8 +76,6 @@ for (i in names(translations)[-1]){
 
 outputDir <- here("app/www")
 
-# i <- names(textElements)[3]
-
 for (i in names(textElements)) {
   pathToInterventionData <- here(str_c(
     "../ch-hospital-data/data/interventions_", i, ".csv"))

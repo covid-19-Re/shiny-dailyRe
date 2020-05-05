@@ -1,0 +1,71 @@
+{
+  "languages": [
+    "en-gb",
+    "it-ch",
+    "fr-ch",
+    "de-ch"
+  ],
+  "translation": [
+    {
+      "en-gb": "R<sub>e</sub> by canton",
+      "it-ch": "R<sub>e</sub> nei cantoni",
+      "fr-ch": "R<sub>e</sub> dans les cantons",
+      "de-ch": "R<sub>e</sub> in den Kantonen"
+    },
+    {
+      "en-gb": "Canton",
+      "it-ch": "Canton",
+      "fr-ch": "Canton",
+      "de-ch": "Kanton"
+    },
+    {
+      "en-gb": "Last Data Updates",
+      "it-ch": "Ultimo aggiornamento",
+      "fr-ch": "Dernières mises à jour",
+      "de-ch": "Letztes Update"
+    },
+    {
+      "en-gb": "R<sub>e</sub> in Switzerland",
+      "it-ch": "R<sub>e</sub> in Svizzera",
+      "fr-ch": "R<sub>e</sub> en Suisse",
+      "de-ch": "R<sub>e</sub> in der Schweiz"
+    },
+    {
+      "en-gb": "About",
+      "it-ch": "Informazioni su questo sito",
+      "fr-ch": "À propos de ce site",
+      "de-ch": "Über diese Seite"
+    },
+    {
+      "en-gb": "Language",
+      "it-ch": "Lingua",
+      "fr-ch": "Langue",
+      "de-ch": "Sprache"
+    },
+    {
+      "en-gb": "%Y-%m-%d",
+      "it-ch": "%d.%m.%Y",
+      "fr-ch": "%d.%m.%Y",
+      "de-ch": "%d.%m.%Y"
+    },
+    {
+      "en-gb": "FOPH",
+      "it-ch": "UFSP",
+      "fr-ch": "OFSP",
+      "de-ch": "BAG"
+    },
+    {
+      "en-gb": "Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland",
+      "it-ch": "Stima del numero di riproduzione effettivo (R <sub> e </sub>) in Svizzera",
+      "fr-ch": "Estimation du nombre de reproduction effectif (R<sub>e</sub>) en Suisse",
+      "de-ch": "Schätzung der effektiven Reproduktionszahl (R<sub>e</sub>) in der Schweiz"
+    },
+    {
+      "en-gb": "Estimating the effective reproductive number (R<sub>e</sub>) for all cantons",
+      "it-ch": "Stima del numero di riproduzione effettivo (R <sub> e </sub>) per tutti i cantoni",
+      "fr-ch": "Estimation du nombre de reproduction effectif (R<sub>e</sub>) pour tous les cantons",
+      "de-ch": "Schätzung der effektiven Reproduktionszahl (R<sub>e</sub>) für alle Kantone"
+    }
+  ]
+}
+

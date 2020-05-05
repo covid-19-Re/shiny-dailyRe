@@ -1,14 +1,96 @@
 server <- function(input, output, session) {
-
   # load data
+  i18n <- reactive({
+    selected <- input$lang
+    if (length(selected) > 0 && selected %in% translator$languages) {
+      translator$set_translation_language(selected)
+    }
+    translator
+  })
+
   load(pathToRawData)
   load(pathToEstimatesRePlot)
-  load(pathTolastDataDate)
   load(pathToCantonList)
-
   lastCheck <- readLines(pathToLastCheck)
 
-  interventions <- read_csv(pathToInterventionData,
+  updateSelectInput(session, "canton", choices = cantonList, selected = cantonList)
+
+  observeEvent(input$selectAllCantons, {
+    updateSelectInput(session, "canton", selected = cantonList)
+  })
+
+  # Render UI
+  output$menu <- renderMenu({
+    sidebarMenu(id = "tabs",
+      menuItem(HTML(i18n()$t("R<sub>e</sub> in Switzerland")), tabName = "chPlot", icon = icon("chart-area")),
+      menuItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantonsPlot", icon = icon("chart-area")),
+      menuItem(i18n()$t("About"), tabName = "about", icon = icon("question-circle")),
+      selectInput("lang", i18n()$t("Language"),
+        languageSelect, selected = input$lang, multiple = FALSE,
+        selectize = TRUE, width = NULL, size = NULL)
+    )
+  })
+
+  output$chPlotUI <- renderUI({
+    fluidRow(
+      box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland")),
+        width = 12,
+        plotlyOutput("CHinteractivePlot", width = "100%", height = "700px")
+      ),
+      fluidRow(
+        column(width = 8,
+          box(width = 12,
+            includeMarkdown("md/methodsShort.md")
+            )
+        ),
+        column(width = 4,
+          infoBox(width = 12,
+            i18n()$t("Last Data Updates"),
+            HTML(dataUpdatesTable(lastDataDateInt(), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+              icon = icon("exclamation-circle"),
+            color = "purple"
+          )
+        )
+      )
+    )
+  })
+
+  output$cantonsPlotUI <- renderUI({
+    fluidRow(
+      box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for all cantons")),
+      width = 12,
+          plotlyOutput("cantonInteractivePlot", width = "100%", height = "700px")
+      ),
+      fluidRow(
+        column(width = 8,
+          box(width = 12,
+            includeMarkdown("md/methodsShort.md")
+            )
+        ),
+        column(width = 4,
+          infoBox(width = 12,
+            i18n()$t("Last Data Updates"),
+            HTML(dataUpdatesTable(lastDataDateInt(), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+              icon = icon("exclamation-circle"),
+            color = "purple"
+          )
+        )
+      )
+    )})
+
+  output$aboutUI <- renderUI({
+    includeMarkdown("md/about.md")
+  })
+
+  load(pathTolastDataDate)
+  lastDataDateInt <- reactive({
+    load(pathTolastDataDate)
+    lastDataDate$source[1] <- i18n()$t("FOPH")
+    return(lastDataDate)
+  })
+
+  interventions <- reactive({
+    interventions <- read_csv(str_c(pathToInterventionData, "_", input$lang,".csv"),
     col_types = cols(
       name = col_character(),
       y = col_double(),
@@ -17,23 +99,7 @@ server <- function(input, output, session) {
       type = col_character(),
       date = col_date(format = ""),
       plotTextPosition = col_character()))
-
-  updateSelectInput(session, "canton", choices = cantonList, selected = cantonList)
-
-  observeEvent(input$selectAllCantons, {
-    updateSelectInput(session, "canton", selected = cantonList)
-  })
-
-  observeEvent(input$methodsLink, {
-    updateTabItems(session, "tabs", selected = "methods")
-  })
-
-  output$lastUpdateBox <- renderInfoBox({
-    infoBox(
-      "Last Data Updates",
-      HTML(dataUpdatesTable(lastDataDate, lastCheck)), icon = icon("exclamation-circle"),
-      color = "purple"
-    )
+    return(interventions)
   })
 
   cumulativePlotData <- reactive({
@@ -51,35 +117,6 @@ server <- function(input, output, session) {
       filter(region %in% input$canton)
     return(cumulativePlotDataFiltered)
   })
-
-  output$cumulativePlot <- renderPlot({
-    startDateA <- as.Date("2020-02-25")
-    endDateA <- Sys.Date() - 1
-
-    pCases <- ggplot(
-        data = cumulativePlotDataFiltered(),
-        mapping = aes(x = date)) +
-      facet_grid(region ~.) +
-      geom_line(
-        mapping = aes(y = cumul, group = data_type, color = data_type),
-        size = 1) + 
-      geom_bar(
-        mapping = aes(y = incidence, fill = data_type),
-        stat = "identity",
-        position = position_dodge(preserve = "single"), width = 1, alpha = 1) +
-      scale_x_date(
-        date_breaks = "6 days",
-        date_labels = "%b-%d",
-        limits = c(startDateA, endDateA)) +
-      scale_y_log10() +
-      ylab("Cumulative (line) and daily (bars) numbers") +
-      xlab("") +
-      colorScale +
-      labs(title = "Daily and cumulative Incidence", caption = dataUpdatesString(lastDataDate)) +
-      plotTheme
-
-      return(pCases)
-  }, height = function(){350 + 150 * (length(input$canton) - 1)})
 
   estimatesRePlotFiltered <- reactive({
     estimatesRePlotFiltered <- filter(estimatesRePlot,
@@ -104,49 +141,6 @@ server <- function(input, output, session) {
     return(rEffPlotWindowData)
   })
   
-  output$rEffPlotWindow <- renderPlot({
-    startDateB <- as.Date("2020-03-07")
-    endDateB <- max(rEffPlotWindowDataFiltered()$date)
-
-    pRe <- ggplot(
-        data = rEffPlotWindowDataFiltered(),
-        mapping = aes(x = date)) +
-      facet_grid(region ~.) +
-      geom_ribbon(
-        mapping = aes(ymin = median_R_lowHPD, ymax = median_R_highHPD, fill = data_type),
-          alpha = 0.7, colour = NA) +
-      geom_ribbon(
-        mapping = aes(ymin = lowQuantile_R_lowHPD, ymax = highQuantile_R_highHPD, fill = data_type),
-        alpha = 0.15, colour = NA) +
-      geom_line(
-        mapping = aes(y = median_R_mean, group = data_type, color = data_type),
-        size = 1.1) +
-      geom_hline(yintercept = 1, linetype = "dashed") +
-      scale_x_date(
-        date_breaks = "4 days",
-        date_labels = "%b%d",
-        limits = c(startDateB, endDateB)) +
-      coord_cartesian(ylim = c(0, 3)) +
-      geom_vline(
-        xintercept = c(as.Date("2020-03-14"), as.Date("2020-03-17"), as.Date("2020-03-20")),
-        linetype = "dotted") +
-      geom_vline(
-        xintercept = c(as.Date("2020-04-13")),
-        linetype = "dashed") +
-      annotate("rect",
-        xmin = as.Date("2020-03-14"),
-        xmax = as.Date("2020-03-17"),
-        ymin = -1, ymax = Inf, alpha = 0.45, fill = "grey") +
-      colorScale +
-      xlab("") +
-      ylab("Reproductive number") +
-      labs(title = "Sliding Window Estimation", caption = dataUpdatesString(lastDataDate)) +
-      plotTheme
-
-    return(pRe)
-  }, height = function(){350 + 150 * (length(input$canton) - 1) }
-  )
-
   rEffPlotStepData <- reactive({
     rEffPlotStepData <- filter(estimatesRePlotFiltered(),
       estimate_type == "Cori_step")
@@ -158,59 +152,30 @@ server <- function(input, output, session) {
       region %in% input$canton)
     return(rEffPlotStepDataFiltered)
   })
-  
-  output$rEffPlotStep <- renderPlot({
-    startDateB <- as.Date("2020-03-07")
-    endDateB <- max(rEffPlotStepDataFiltered()$date)
-
-    pRe <- ggplot(
-        data = rEffPlotStepDataFiltered(),
-        mapping = aes(x = date)) +
-      facet_grid(region ~.) +
-      geom_ribbon(
-        mapping = aes(ymin = median_R_lowHPD, ymax = median_R_highHPD, fill = data_type),
-          alpha = 0.7, colour = NA) +
-      geom_ribbon(
-        mapping = aes(ymin = lowQuantile_R_lowHPD, ymax = highQuantile_R_highHPD, fill = data_type),
-        alpha = 0.15, colour = NA) +
-      geom_line(
-        mapping = aes(y = median_R_mean, group = data_type, color = data_type),
-        size = 1.1) +
-      geom_hline(yintercept = 1, linetype = "dashed") +
-      scale_x_date(
-        date_breaks = "4 days",
-        date_labels = "%b%d",
-        limits = c(startDateB, endDateB)) +
-      coord_cartesian(ylim = c(0, 3)) +
-      geom_vline(
-        xintercept = c(as.Date("2020-03-14"), as.Date("2020-03-17"), as.Date("2020-03-20")),
-        linetype = "dotted") +
-      geom_vline(
-        xintercept = c(as.Date("2020-04-13")),
-        linetype = "dashed") +
-      annotate("rect",
-        xmin = as.Date("2020-03-14"),
-        xmax = as.Date("2020-03-17"),
-        ymin = -1, ymax = Inf, alpha = 0.45, fill = "grey") +
-      colorScale +
-      xlab("") +
-      ylab("Reproductive number") +
-      labs(title = "Step-wise estimation", caption = dataUpdatesString(lastDataDate)) +
-      plotTheme
-
-    return(pRe)
-  }, height = function(){350 + 150 * (length(input$canton) - 1)}
-  )
 
   output$CHinteractivePlot <- renderPlotly({
     plot <- rEffPlotly(
       cumulativePlotData(),
       rEffPlotWindowData(),
-      interventions,
+      interventions(),
       plotColoursNamed,
       lastDataDate,
       legendOrientation = "v",
-      language = "en-gb",
+      language = input$lang,
+      textElements = textElements,
+      widgetID = NULL)
+    return(plot)
+  })
+
+  output$cantonInteractivePlot <- renderPlotly({
+    plot <- rEffPlotlyRegion(
+      cumulativePlotData(),
+      rEffPlotWindowData(),
+      interventions(),
+      lastDataDate,
+      legendOrientation = "v",
+      regionColors = cantonColors,
+      language = input$lang,
       textElements = textElements,
       widgetID = NULL)
     return(plot)
