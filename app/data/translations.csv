@@ -2,8 +2,8 @@
 axisCases,New observations,Neue Beobachtungen,Nouvelles observations,Nuove osservazioni
 axisRe,Reproductive number R<sub>e</sub>,Reproduktionszahl R<sub>e</sub>,Nombre de reproduction R<sub>e</sub>,Numero di riproduzione R<sub>e</sub>
 dataType,Data types,Datentypen,Type de données,Tipo di dati
-confirmedCases,Confirmed cases,bestätigte Fälle,Cas confirmés,Casi confermati
-hospPatients,Hospitalized patients,hospitalisierte Patienten,Patients hospitalisés,Pazienti ospedalizzati
+confirmedCases,Confirmed cases,Bestätigte Fälle,Cas confirmés,Casi confermati
+hospPatients,Hospitalized patients,Hospitalisierte Patienten,Patients hospitalisés,Pazienti ospedalizzati
 deaths,Deaths,Todesfälle,Décès,Decessi
 rLarger1,Exponential increase<br>in number of new cases,Exponentieller Anstieg<br>neuer Fälle,Augmentation exponentielle<br>du nombre de nouveaux cas,Aumento esponenziale<br>di nuovi casi
 rLower1,Decrease in number of new cases,Abnahme neuer Fälle,Diminution du nombre de nouveaux cas,Decremento del numero di nuovi casi

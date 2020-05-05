@@ -1,3 +1,6 @@
+toLowerFirst <- function(string) {
+  str_replace(string, ".{1}", tolower(str_extract(string, ".{1}")))
+}
 
 rEffPlotly <- function(
   cumulativePlotData,
@@ -8,17 +11,22 @@ rEffPlotly <- function(
   legendOrientation = "v", # "v" or "h"
   textElements,
   language,
-  widgetID = "rEffplots"){
+  widgetID = "rEffplots") {
 
   # plot parameter
   if (language %in% c("de-ch", "fr-ch")) {
     locale <- language
-  } else if (language == "en-gb"){
+    dateFormat <- "%d. %b"
+    dateFormatLong <- "%d.%m.%Y"
+  } else if (language == "en-gb") {
     locale <- NULL
-  } else if (language == "it-ch"){
+    dateFormat <- "%b-%d"
+    dateFormatLong <- "%Y-%m-%d"
+  } else if (language == "it-ch") {
     locale <- "it"
+    dateFormat <- "%d. %b"
+    dateFormatLong <- "%d.%m.%Y"
   }
-  
 
   names(plotColoursNamed) <- c(
     textElements[[language]][["confirmedCases"]],
@@ -28,7 +36,7 @@ rEffPlotly <- function(
   lastDataDate$source[1] <- textElements[[language]][["FOPH"]]
 
   axisTitleFontSize <- 14
-  if (legendOrientation == "v"){
+  if (legendOrientation == "v") {
     xrNote <- 1
     yrNote <- 0.35
     rNote <- textElements[[language]][["rEexplanation"]]
@@ -68,9 +76,11 @@ rEffPlotly <- function(
   } else {
     stop("legendOrientation must be either \"v\" or \"h\".")
   }
-  
+
   # prepare Data
-  newLevelNames <- c(textElements[[language]][["confirmedCases"]], textElements[[language]][["hospPatients"]], textElements[[language]][["deaths"]])
+  newLevelNames <- c(textElements[[language]][["confirmedCases"]],
+    textElements[[language]][["hospPatients"]],
+    textElements[[language]][["deaths"]])
   newLevels <- c("Confirmed cases",  "Hospitalized patients", "Deaths")
   names(newLevels) <- newLevelNames
 
@@ -82,8 +92,6 @@ rEffPlotly <- function(
   endDate <- Sys.Date()
   lastDate <- max(caseData$date)
   minEstimateDate <- as.Date("2020-03-07")
-
-
 
   rEffWindowData <- rEffPlotWindowData %>%
     filter(
@@ -100,7 +108,8 @@ rEffPlotly <- function(
   pCases <- plot_ly(data = caseData) %>%
     add_bars(x = ~date, y = ~incidence, color = ~data_type,
       colors = plotColoursNamed,
-      text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>", incidence, " ", data_type, "<extra></extra>"),
+      text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>",
+        incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}",
       legendgroup = ~data_type) %>%
     layout(
@@ -109,7 +118,7 @@ rEffPlotly <- function(
         range = c(startDate, endDate),
         tick0 = startDate,
         dtick = 3 * 86400000,
-        tickformat = "%b-%d",
+        tickformat = dateFormat,
         tickangle = 45,
         showgrid = TRUE,
         fixedrange = TRUE),
@@ -167,7 +176,7 @@ rEffPlotly <- function(
         #tick0 = startDate,
         tickvals = seq(startDate, endDate, length.out = 18),
         #dtick = 3 * 86400000,
-        tickformat = "%b-%d",
+        tickformat = dateFormat,
         tickangle = 45,
         showgrid = TRUE,
         fixedrange = TRUE),
@@ -209,7 +218,7 @@ rEffPlotly <- function(
         range = c(startDate, endDate),
         tick0 = startDate,
         dtick = 3 * 86400000,
-        tickformat = "%b-%d",
+        tickformat = dateFormat,
         tickangle = 45,
         showgrid = TRUE,
         fixedrange = TRUE),
@@ -223,7 +232,7 @@ rEffPlotly <- function(
       annotations = list(
         list(
           x = xDataSource, y = yDataSource, xref = "paper", yref = "paper",
-          text = dataUpdatesString(lastDataDate, name = textElements[[language]][["dataSource"]]),
+          text = dataUpdatesString(lastDataDate, name = textElements[[language]][["dataSource"]], dateFormatLong),
           showarrow = FALSE,
           xanchor = dataSourceAnchors[1], yanchor = dataSourceAnchors[2], xshift = 0, yshift = 0,
           font = list(size = 10, color = "black")),

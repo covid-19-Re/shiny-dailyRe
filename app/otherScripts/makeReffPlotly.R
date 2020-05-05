@@ -16,14 +16,18 @@ load(pathToEstimatesRePlot)
 load(pathTolastDataDate)
 
 # common functions
-dataUpdatesString <- function(lastDataDate, name = "Data Source") {
+dataUpdatesString <- function(lastDataDate, name = "Data Source", dateFormat = "%Y-%m-%d") {
   outList <- list(str_c(name, ": "))
   for (i in 1:dim(lastDataDate)[1]) {
     outList[[i+1]] <- str_c(
-      lastDataDate[i,]$source, " (", as.character(lastDataDate[i,2]$date),
+      lastDataDate[i,]$source, " (", format(lastDataDate[i,2]$date, dateFormat),
       "); ")
   }
   return(str_sub(str_c(outList, collapse = ""), end = -3))
+}
+
+toLowerFirst <- function(string){
+  str_replace(string, ".{1}", tolower(str_extract(string, ".{1}")))
 }
 
 # colours
