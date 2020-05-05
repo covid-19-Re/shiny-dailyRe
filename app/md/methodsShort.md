@@ -3,4 +3,4 @@ The effective reproductive number R<sub>e</sub> quantifies the average number of
 
 #### Methods
 
-The R<sub>e</sub> for a particular day is the average R<sub>e</sub> over the three most recent days. We show estimated median Re together with 95% uncertainty intervals. The method for estimating Re is explained [here (PDF)](https://ethz.ch/content/dam/ethz/special-interest/bsse/cevo/research/COVID-19/ScireEtAl-Covid-Re.pdf).
+The R<sub>e</sub> for a particular day is the average R<sub>e</sub> over the three most recent days. We show estimated median Re together with 95% uncertainty intervals. The method for estimating Re is explained [here](https://smw.ch/article/doi/smw.2020.20271).
