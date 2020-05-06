@@ -89,7 +89,7 @@ rEffPlotly <- function(
     mutate(data_type = fct_recode(data_type, !!!newLevels))
 
   startDate <- min(caseData$date) - 1
-  endDate <- Sys.Date()
+  endDate <- max(caseData$date)
   lastDate <- max(caseData$date)
   minEstimateDate <- as.Date("2020-03-07")
 
@@ -157,7 +157,6 @@ rEffPlotly <- function(
       " <br>(", data_type, ")"),
       hoverinfo = "text",
       showlegend = FALSE) %>%
-
     add_annotations(
       text = c(textElements[[language]][["rLarger1"]], textElements[[language]][["rLower1"]]),
       font = list(color = "red"),
