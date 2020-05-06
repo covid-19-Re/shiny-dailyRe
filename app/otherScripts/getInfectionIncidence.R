@@ -7,7 +7,7 @@ library("reshape2")
 library("reshape")
 library("plyr")
 library("utils")
-library("cbsodataR")
+#library("cbsodataR")
 library("tidyverse")
 library("here")
 
@@ -169,6 +169,8 @@ drawAllInfectionDates <- function(data, data_type="confirmed", numberOfReplicate
 outputDir <- here("app/data")
 pathToRawDataSave <- file.path(outputDir, "Raw_data.Rdata")
 pathToSampledInfectDataSave <- file.path(outputDir, "Sampled_infect_data.Rdata")
+pathToEURawDataSave <- file.path(outputDir, "EU_Raw_data.Rdata")
+pathToEUSampledInfectDataSave <- file.path(outputDir, "EU_Sampled_infect_data.Rdata")
 
 ### Waiting time distributions ##
 ## hardcoded for now, but to be taken outside of script
@@ -192,8 +194,10 @@ sdOnsetToDeath <- 6.9
 shapeIncubation <- meanIncubation^2/(sdIncubation^2)
 scaleIncubation <- (sdIncubation^2)/meanIncubation
 
-meanOnsetToCount <- c("confirmed"= meanOnsetToTest, "deaths"=meanOnsetToDeath, "hospitalized"=meanOnsetToHosp)
-sdOnsetToCount <- c("confirmed"= sdOnsetToTest, "deaths"=sdOnsetToDeath, "hospitalized"=sdOnsetToHosp)
+meanOnsetToCount <- c("confirmed"= meanOnsetToTest, "deaths" = meanOnsetToDeath, "hospitalized" = meanOnsetToHosp,
+                      "excess_deaths" = meanOnsetToDeath)
+sdOnsetToCount <- c("confirmed"= sdOnsetToTest, "deaths" = sdOnsetToDeath, "hospitalized" = sdOnsetToHosp,
+                    "excess_deaths" = sdOnsetToDeath)
 
 ### parameters for gamma distribution between symptom onset and report
 shapeOnsetToCount <- meanOnsetToCount^2/(sdOnsetToCount^2)
@@ -201,7 +205,6 @@ scaleOnsetToCount <- (sdOnsetToCount^2)/meanOnsetToCount
 
 #####
 replicates <- 100
-
 
 ###############
 
@@ -215,4 +218,18 @@ sampledInfectData <- drawAllInfectionDates(rawData, data_type=c("confirmed", "de
 
 save(sampledInfectData, file=pathToSampledInfectDataSave)
 
-print(paste("Done getInfectinoIncidence.R: ", Sys.time()))
+###############
+
+load(file=pathToEURawDataSave)
+
+### Sample infection dates
+EUsampledInfectData <- drawAllInfectionDates(EUrawData, data_type=c("confirmed", "deaths", "hospitalized", "excess_deaths"), 
+                                           numberOfReplicates = replicates, 
+                                           shapeIncubation = shapeIncubation, scaleIncubation = scaleIncubation,
+                                           shapeOnsetToCount=shapeOnsetToCount, scaleOnsetToCount=scaleOnsetToCount)
+
+save(EUsampledInfectData, file=pathToEUSampledInfectDataSave)
+
+###############
+
+print(paste("Done getInfectionIncidence.R: ", Sys.time()))

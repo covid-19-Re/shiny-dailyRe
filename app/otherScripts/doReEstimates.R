@@ -7,7 +7,7 @@ library("reshape2")
 library("reshape")
 library("plyr")
 library("utils")
-library("cbsodataR")
+#library("cbsodataR")
 library("EpiEstim")
 library("here")
 
@@ -255,6 +255,9 @@ pathToSampledInfectDataSave <- file.path(outputDir, paste0("Sampled_infect_data.
 pathToEstimatesReRawSave <- file.path(outputDir, paste0("Estimates_Re_raw.Rdata"))
 pathToCantonListSave <- file.path(outputDir, paste0("cantonList.Rdata"))
 
+pathToEUSampledInfectDataSave <- file.path(outputDir, "EU_Sampled_infect_data.Rdata")
+pathToEUEstimatesReRawSave <- file.path(outputDir, "EU_Estimates_Re_raw.Rdata")
+
 ### Date input
 interval_ends <- c("2020-03-13", "2020-03-16", "2020-03-20")
 window <- 3
@@ -286,4 +289,24 @@ estimatesReRaw <- doAllReEstimations(subset(sampledInfectData, variable=="incide
 
 save(estimatesReRaw, file = pathToEstimatesReRawSave) 
 
+#############################
+load(file = pathToEUSampledInfectDataSave)
+
+all_delays <- c(all_delays, infection_excess_deaths=c(Cori=0, WallingaTeunis=-5),
+                excess_deaths=c(Cori=20, WallingaTeunis=15))
+interval_ends <- Sys.Date()
+
+### Run EpiEstim
+EUestimatesReRaw <- doAllReEstimations(subset(EUsampledInfectData, variable=="incidence"), 
+                                     slidingWindow=window, 
+                                     methods="Cori",
+                                     all_delays=all_delays, 
+                                     truncations=truncations,
+                                     interval_ends = interval_ends)
+
+
+save(EUestimatesReRaw, file = pathToEUEstimatesReRawSave) 
+
+
+#############################
 print(paste("done doReEstimates.R:", Sys.time()))

@@ -3,6 +3,7 @@ print(paste("starting doReEstimatesFormat.R: ", Sys.time()))
 library(tidyverse)
 library(here)
 
+#############################
 dataDir <- here("app/data")
 
 pathToEstimatesReRawSave <- file.path(dataDir, "Estimates_Re_raw.Rdata")
@@ -15,6 +16,7 @@ load(file = pathToEstimatesReRawSave)
 load(file = pathToCantonListSave)
 load(file = pathTolastDataDateSave)
 
+#############################
 estimatesRe <- as_tibble(estimatesReRaw) %>%
   pivot_wider(names_from = "variable", values_from = "value") %>%
   mutate(
@@ -27,6 +29,7 @@ estimatesRe <- as_tibble(estimatesReRaw) %>%
 
 save(estimatesRe, file = pathToEstimatesReSave)
 
+#############################
 estimatesRePlot <- estimatesRe %>%
   filter(
     # exclude infection_deaths in CH
@@ -53,4 +56,6 @@ estimatesRePlot$lowQuantile_R_lowHPD <- with(estimatesRePlot,
 
 save(estimatesRePlot, file = pathToEstimatesRePlotSave)
 
+
+#############################
 print(paste("Done doReEstimatesFormat.R: ", Sys.time()))
