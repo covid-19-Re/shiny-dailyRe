@@ -1,7 +1,9 @@
-<h4>Assessment of epidemiological situation</h4>
+<h4>Valutazione della situazione epidemiologica</h4>
 
-The effective reproductive number R<sub>e</sub> quantifies the average number of infections caused by an infected individual. R<sub>e</sub> dropped below the critical threshold of 1 on March 22, and continues to be significantly below 1 based on  daily confirmed cases and daily hospitalizations. The uncertainty around the estimate that is based on the daily number of deaths is wider. It is important to note that the estimates of R<sub>e</sub> based on daily confirmed cases after April 12 may be biased upward due to a change in the testing strategy after April 22 (confirmed cases after April 22 correspond to new infections after April 12 on average).
+Il numero di riproduzione effettiva R<sub>e</sub> rappresenta il numero medio di infezioni causate da un individuo infetto. 
+ 
+Il valore di R<sub>e</sub> è sceso sotto la soglia critica di 1 il 22 Marzo, e continua tutt’ora ad essere significativamente minore di 1. Queste stime sono basate sul numero di casi confermati giornalmente e sul numero delle ospedalizzazioni giornaliere. L’intervallo di confidenza sulla stima di Re che si basa sul numero giornaliero di decessi risulta essere più ampio. È importante sottolineare che le stime di R<sub>e</sub> basate sui casi confermati giornalmente dopo il 12 Aprile potrebbero risultare sovrastimate. Questo è dovuto ad un cambiamento nella strategia dei test diagnostici avvenuto dopo il 22 Aprile (in media, i casi confermati dopo il 22 Aprile corrispondono a nuove infezioni avvenute dopo il 12 Aprile). 
 
-<h4>Methods</h4>
+<h4>Metodi</h4>
 
-The R<sub>e</sub> for a particular day is the average R<sub>e</sub> over the three most recent days. We show estimated median Re together with 95% uncertainty intervals. The method for estimating Re is explained [here](https://smw.ch/article/doi/smw.2020.20271).
+Il valore di R<sub>e</sub> per un dato giorno G consiste nella media delle stime effettuate per i giorni G-2, G-1 e G. La mediana stimata di R<sub>e</sub> è qui rappresentata con un intervallo di confidenza del 95%. Il metodo usato per stimare R<sub>e</sub> è spiegato in dettaglio nel seguente link. [PDF](https://smw.ch/article/doi/smw.2020.20271).
