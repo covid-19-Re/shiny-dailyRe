@@ -1,4 +1,4 @@
-print(paste("starting getInfectinoIncidence.R:", Sys.time()))
+print(paste("starting getInfectionIncidence.R:", Sys.time()))
 
 library("lubridate")
 library("readr")

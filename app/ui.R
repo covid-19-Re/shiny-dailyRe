@@ -11,6 +11,7 @@ dashboardPage(title = "COVID-19 Re",
     tabItems(
       tabItem(tabName = "chPlot", uiOutput("chPlotUI")),
       tabItem(tabName = "cantonsPlot", uiOutput("cantonsPlotUI")),
+      tabItem(tabName = "euPlot", uiOutput("euPlotUI")),
       tabItem(tabName = "about", uiOutput("aboutUI"))
     )
   )

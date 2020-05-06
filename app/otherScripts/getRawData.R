@@ -12,6 +12,8 @@ library("tidyverse")
 library("here")
 
 cantonList <- c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "LU", "NE", "SG", "TI", "VD", "VS", "ZH", "CH")
+countryList = c("Austria", "Belgium", "France", "Germany", "Italy",
+              "Netherlands", "Spain", "Switzerland", "Sweden", "United Kingdom")
 
 ###############################################
 ################ Utilities ####################
@@ -92,6 +94,17 @@ getCountryData <- function(countries, data = getDataECDC()){
   return(subset_data)
 }
 
+
+getCumulData <- function(data){
+  cumulData <- data %>%
+    group_by(country, data_type) %>%
+    arrange(date) %>%
+    mutate(value = cumsum(value), variable = "cumul") %>%
+    arrange(country)
+  return(cumulData)
+}
+
+
 ########################################
 ############ Data fetching #############
 ########################################
@@ -142,30 +155,222 @@ getAllSwissData <- function(stoppingAfter = (Sys.Date() - 1), pathToHospData, re
   return(swissData)
 }
 
-##### ECDC Confirmed Case Data #########################
-# Differences to John Hopkins: 
-# don't need to clean for NA, because there are none
-# Dates are in dmy instead of mdy
+getExcessDeathCH <- function(startAt = as.Date("2020-02-20")){
+  # urlPastData = 'https://www.bfs.admin.ch/bfsstatic/dam/assets/12607335/master'
+  # pastData <- read_delim(urlPastData, delim = ';', comment = '#')
+  
+  url2020 = 'https://www.bfs.admin.ch/bfsstatic/dam/assets/12727505/master'
+  data2020 <- read_delim(url2020, delim = ';')
+  
+  relevant_weeks <- seq(isoweek(startAt), isoweek(Sys.Date())-2 )
+  
+  tidy_data <- data2020 %>%
+    select(date = Ending, week = Week, age = Age, 
+           avg_deaths = Expected, deaths = extrapol) %>%
+    filter(week %in% relevant_weeks) %>%
+    mutate(date = dmy(date))
+  
+  longData <- tidy_data %>%
+    group_by(date) %>%
+    summarise_at(vars(deaths, avg_deaths), list(total = sum)) %>%
+    mutate(excess_deaths = deaths_total - avg_deaths_total) %>%
+    select(date, excess_deaths) %>%
+    pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
+    mutate(country = "Switzerland", variable = "incidence",
+           region = country, source = 'BFS') %>%
+    mutate(value = ifelse(value < 0, 0, value))
+  
+  cumulData <- getCumulData(longData)
+  longData = rbind.fill(longData, cumulData)
+  
+  return(longData)
+}
 
+##### Dutch Data ##########################################
+getDataNL <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")){
+  baseurl = "https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/rivm_NL_covid19_national_by_date/rivm_NL_covid19_national_by_date_"
+  urlfile=paste0(baseurl, stopAfter, ".csv")
+  
+  raw_data <- read_csv(urlfile)
+  
+  # Could also add data on ICU
+  # https://github.com/J535D165/CoronaWatchNL/blob/master/data/nice_ic_by_day.csv
+  
+  longData <- raw_data %>%
+    select(date = Datum, data_type = Type, value = Aantal) %>%
+    mutate(data_type = recode(data_type, 
+                              "Totaal" = "confirmed", 
+                              "Ziekenhuisopname" = "hospitalized", 
+                              "Overleden"="deaths")) %>%
+    mutate(country = "Netherlands", variable = "incidence",
+           region = country,
+           source = 'RIVM')
+  
+  excessData <- try(getExcessDeathNL(startAt))
+  if (!'try-error' %in% class(excessData)){
+    longData = rbind.fill(longData, excessData)
+  }
+  
+  cumulData <- getCumulData(longData)
+  longData = rbind.fill(longData, cumulData)
+  
+  return(longData)
+}
+
+##### EXCESS Death NL
+# install.packages("cbsodataR")
+# The netherlands has developed an R package 
+# to access their central statistics data
+# https://www.cbs.nl/en-gb/our-services/open-data/statline-as-open-data/quick-start-guide
+#library("cbsodataR")
+
+getDeathNL <- function(){
+  # Death data has the number 70895NED
+  # https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70895ned/table?fromstatweb
+  # unit: X0 is first week of year, may be partial; W1 normal weeks; JJ is whole year summed
+  
+  raw_data <- cbs_get_data("70895NED")  
+  data <- raw_data %>%
+    select(sex = "Geslacht", age = "LeeftijdOp31December",
+           period = "Perioden", deaths = "Overledenen_1") %>%
+    separate(period, c("year", "unit", "week"), sep = c(4,6)) %>%
+    mutate(sex = recode(sex,
+                        "1100" = "all",
+                        "3000" = "men",
+                        "4000" = "women"),
+           age = recode(age,
+                        "10000" = 'all',
+                        "21700" = '0-65',
+                        "41700" = '65-80',
+                        "53950" = '80+'))
+  return(data)
+}
+
+getRawExcessDeathNL <- function(startAt = as.Date("2020-02-20")){
+  
+  relevant_weeks <- sprintf("%02d", seq(isoweek(startAt), isoweek(Sys.Date())-2 ))
+  
+  raw_data <- getDeathNL() 
+  
+  data <- raw_data %>%
+    filter(sex == 'all', age == 'all', unit == 'W1',
+           week %in% relevant_weeks)
+  
+  past_data <- data %>%
+    filter(year %in% seq(2015, 2019))
+  
+  past_mean <- past_data %>%
+    group_by(week) %>%
+    #summarise_at(vars(deaths), mean)
+    summarise_at(vars(deaths), list(avg_deaths = mean, sd_deaths = sd))
+  
+  excess_death <- data %>%
+    filter(year == 2020) %>%
+    select(year, week, deaths) %>%
+    mutate(avg_deaths = past_mean$avg_deaths,
+           sd_deaths = past_mean$sd_deaths,
+           excess_deaths = ceiling(deaths - avg_deaths),
+           perc_excess = 100*(excess_deaths/avg_deaths),
+           date = ymd(parse_date_time(paste(year, week, 'Mon', sep="/"),'Y/W/a'))) %>%
+    select(-year, -week)
+  # this translation to a date associates the last day of the week
+  
+  return(excess_death)
+}
+
+getExcessDeathNL <- function(startAt = as.Date("2020-02-20")){
+  excess_death <- suppressWarnings(getRawExcessDeathNL(startAt))
+  
+  longData <- excess_death %>%
+    select(date, excess_deaths) %>%
+    pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
+    mutate(country = "Netherlands", variable = "incidence",
+           region = country,
+           source = 'CBS') %>%
+    mutate(value = ifelse(value < 0, 0, value))
+  
+  return(longData)
+}
+
+##### UK Excess Deaths ####################################
+
+getRawExcessDeathUK <- function(startAt = as.Date("2020-02-20")){
+  
+  relevant_weeks <- seq(isoweek(startAt), isoweek(Sys.Date())-2 )
+  last_week = isoweek(Sys.Date())-2
+  
+  #url = 'https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales'
+  
+  raw_data <- suppressWarnings(readxl::read_excel(paste0('../data/UK/publishedweek', last_week, '2020.xlsx'), 
+                                                  sheet = "Weekly figures 2020", col_names = F))
+  
+  rowUK <- raw_data[c(5, 6, 9, 11, 19), ] %>%
+    mutate(...1 = coalesce(...1, ...2)) %>%
+    select(-...2)
+  
+  columnUK <- data.frame(tmp = 2:dim(rowUK)[2])
+  for (row in 1:dim(rowUK)[1]){
+    rowdata <- rowUK %>%
+      select(-...1) %>%
+      slice(row) %>% 
+      unlist(., use.names=FALSE)
+    
+    newdata <- data.frame(rowdata) 
+    names(newdata) <- rowUK[[row,"...1"]]
+    
+    columnUK <- cbind(columnUK, newdata)
+  }
+  
+  colnames(columnUK) <- c('tmp', 'week', 'date', 'deaths', 'avg_deaths', 'covid_deaths')
+  
+  excess_deaths <- columnUK %>%
+    select(-tmp) %>%
+    filter(!is.na(deaths), week %in% relevant_weeks) %>%
+    mutate(date = as.Date(date, origin='1899-12-30')) %>%
+    mutate(excess_deaths = deaths - avg_deaths)
+  
+  return(excess_deaths)
+}
+
+getExcessDeathUK <- function(startAt = as.Date("2020-02-20")){
+  excess_death <- getRawExcessDeathUK(startAt)
+  
+  longData <- excess_death %>%
+    select(date, deaths = covid_deaths, excess_deaths) %>%
+    pivot_longer(cols = c(deaths, excess_deaths), names_to = "data_type") %>%
+    mutate(country = "United Kingdom", variable = "incidence",
+           region = country,
+           source = 'ONS') %>%
+    mutate(value = ifelse(value < 0, 0, value))
+  
+  cumulData <- getCumulData(longData)
+  longData = rbind.fill(longData, cumulData)
+  
+  return(longData)
+}
+
+
+##### ECDC Confirmed Case Data #########################
 
 getLongECDCData <- function(countries = NULL){
   urlfile="https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
   
   world_data <- read_csv(urlfile)
   longData <- world_data %>% 
-    select(c(date = 'dateRep', 
-             region = 'countriesAndTerritories',
-             country='countriesAndTerritories',
-             incidence = 'cases', deaths = 'deaths')) %>%
-    mutate(date = dmy(date), source='ECDC') %>%
-    pivot_longer(cols = c(incidence, deaths), names_to = "data_type") %>%
-    mutate(variable = "incidence")
+    select(c(date = 'dateRep', country = 'countriesAndTerritories', 
+             confirmed = 'cases', deaths = 'deaths')) %>%
+    mutate(date = dmy(date)) %>%
+    pivot_longer(cols = c(confirmed, deaths), names_to = "data_type") %>%
+    mutate(variable = "incidence",
+           country = gsub('_', ' ', country),
+           region = country,
+           source = 'ECDC')
   
   cumulData <- longData %>%
-    group_by(region,country,source, data_type) %>%
+    group_by(country, data_type) %>%
     arrange(date) %>%
     mutate(value = cumsum(value), variable = "cumul") %>%
-    arrange(region)
+    arrange(country)
   
   longData = rbind.fill(longData, cumulData)
   
@@ -192,6 +397,7 @@ outputDir <- here("app/data")
 
 ##### Pull data
 
+##### Swiss data
 ### just an example here with keeping all the data from different sources/countries in one dataframe and saving into one file
 # rawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath), getLongECDCData())
 rawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath, regions = cantonList))
@@ -201,6 +407,38 @@ rawData <- tibble::as_tibble(rawData)
 # save data
 pathToRawDataSave <- file.path(outputDir, "Raw_data.Rdata")
 save(rawData, file = pathToRawDataSave)
+
+##### European data
+
+ECDCdata <- getLongECDCData(countryList)
+NLdata <- getDataNL(stopAfter = Sys.Date() -1) %>%
+  filter(data_type %in% c('hospitalized', "excess_deaths"))
+#UKdata <- getExcessDeathUK() %>%
+#  filter(data_type %in% c("excess_deaths"))
+
+# "In England and Wales, 
+# the Covid-19 deaths reflect the revised death 
+# figures from the Office of National Statistics."
+
+swissData <- getAllSwissData(pathToHospData = dataCHHospitalPath, regions = 'CH') %>%
+  mutate(country = recode(country, "CH" = "Switzerland")) %>%
+  filter(data_type %in% c('hospitalized', "excess_deaths"))
+
+swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
+
+EUrawData <- rbind(ECDCdata, swissExcessDeath, NLdata) %>% 
+  mutate(data_type = factor(data_type, levels = c('confirmed', 'hospitalized', 
+                                                  'deaths', 'excess_deaths')))
+
+# format data
+EUrawData <- tibble::as_tibble(EUrawData)
+# save data
+pathToEURawDataSave <- file.path(outputDir, "EU_Raw_data.Rdata")
+save(EUrawData, file = pathToEURawDataSave)
+
+##### Finished pulling data
+
+# Include rbind with EUrawData here!!
 
 lastDataDate <- rawData %>% 
   group_by(source) %>%
@@ -212,6 +450,14 @@ save(lastDataDate, file = pathTolastDataDateSave)
 pathToCantonListSave <- file.path(outputDir, "cantonList.Rdata")
 save(cantonList, file = pathToCantonListSave)
 
+pathToCountryListSave <- file.path(outputDir, "countryList.Rdata")
+save(countryList, file = pathToCountryListSave)
+
 writeLines(str_c("last check: ", Sys.time()), file.path(outputDir, "lastCheck.txt"))
 
 print(paste("Done getRawData.R:", Sys.time()))
+
+
+
+
+

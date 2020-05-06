@@ -24,6 +24,7 @@ server <- function(input, output, session) {
     sidebarMenu(id = "tabs",
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Switzerland")), tabName = "chPlot", icon = icon("chart-area")),
       menuItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantonsPlot", icon = icon("chart-area")),
+      menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")), tabName = "euPlot", icon = icon("chart-area")),
       menuItem(i18n()$t("About"), tabName = "about", icon = icon("question-circle")),
       selectInput("lang", i18n()$t("Language"),
         languageSelect, selected = input$lang, multiple = FALSE,
@@ -31,6 +32,7 @@ server <- function(input, output, session) {
     )
   })
 
+  
   output$chPlotUI <- renderUI({
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland")),
@@ -78,6 +80,31 @@ server <- function(input, output, session) {
       )
     )})
 
+  output$euPlotUI <- renderUI({
+    fluidRow(
+      box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) in selected European countries")),
+          width = 12,
+          p('Placeholder text')
+          #plotlyOutput("CHinteractivePlot", width = "100%", height = "700px")
+      ),
+      fluidRow(
+        column(width = 8,
+               box(width = 12,
+                   includeMarkdown(str_c("md/methodsShort_", input$lang, ".md"))
+               )
+        ),
+        column(width = 4,
+               infoBox(width = 12,
+                       i18n()$t("Last Data Updates"),
+                       HTML(dataUpdatesTable(lastDataDateInt(), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+                       icon = icon("exclamation-circle"),
+                       color = "purple"
+               )
+        )
+      )
+    )
+  })
+  
   output$aboutUI <- renderUI({
     includeMarkdown("md/about.md")
   })
