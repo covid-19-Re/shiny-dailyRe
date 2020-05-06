@@ -12,7 +12,7 @@ library("tidyverse")
 library("here")
 
 cantonList <- c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "LU", "NE", "SG", "TI", "VD", "VS", "ZH", "CH")
-countryList = c("Austria", "Belgium", "France", "Germany", "Italy",
+countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
               "Netherlands", "Spain", "Switzerland", "Sweden", "United Kingdom")
 
 ###############################################
