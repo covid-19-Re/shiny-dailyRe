@@ -186,13 +186,13 @@ pathToEUSampledInfectDataSave <- file.path(outputDir, "EU_Sampled_infect_data.Rd
 meanIncubation <- 5.3
 sdIncubation <- 3.2
 
-# onset to test: data from BL canton
-meanOnsetToTest <- 5.6
-sdOnsetToTest <- 4.2
+# onset to test: pooled CH data from BAG (01/05/20 update)
+meanOnsetToTest <- 4.5
+sdOnsetToTest <- 4.8
 
-# onset to hospitalization report: pooled CH data from FOPH (17/04/20 update)
-meanOnsetToHosp <- 6.6
-sdOnsetToHosp <- 5.1
+# onset to hospitalization report: pooled CH data from BAG (01/05/20 update)
+meanOnsetToHosp <- 6.3
+sdOnsetToHosp <- 5.4
 
 # onset to death: mean =15.0 sd=6.9 (Linton et al. best gamma distr fit)
 meanOnsetToDeath <- 15.0
