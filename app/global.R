@@ -21,7 +21,10 @@ pathTolatestData <- file.path(dataDir, "latestData.Rdata")
 pathToLastCheck <- file.path(dataDir, "lastCheck.txt")
 pathToInterventionData <- file.path("../../ch-hospital-data/data/interventions")
 pathToTranslations <- file.path(dataDir, "translations.csv")
+pathToCountryList <- file.path(dataDir, "countryList.Rdata")
+
 load(pathToCantonList)
+load(pathToCountryList)
 
 translations <- read_csv(here("app", "data", "translations.csv"), col_types = "ccccc")
 textElements <- list()
@@ -79,13 +82,8 @@ plotColoursNamed <-  c(
   "Confirmed cases" = allCols[1],
   "Hospitalized patients" = allCols[3],
   "Deaths" = allCols[5],
-  "Excess Deaths" = allCols[6])
+  "Excess deaths" = allCols[6])
 
-plotColoursNamedT <-  c(
-  "Confirmed cases" = allColsTransparent[1],
-  "Hospitalized patients" = allColsTransparent[3],
-  "Deaths" = allColsTransparent[5],
-  "Excess Deaths" = allCols[6])
 
 colorScale <- scale_colour_manual(
         values = plotColoursNamed,

@@ -6,6 +6,7 @@ canton,Canton,Kanton,Canton,Canton
 confirmedCases,Confirmed cases,Bestätigte Fälle,Cas confirmés,Casi confermati
 hospPatients,Hospitalized patients,Hospitalisierte Patienten,Patients hospitalisés,Pazienti ospedalizzati
 deaths,Deaths,Todesfälle,Décès,Decessi
+excessDeaths, Excess Deaths, Excess Deaths, Excess Deaths, Excess Deaths
 rLarger1,Exponential increase<br>in number of new cases,Exponentieller Anstieg<br>neuer Fälle,Augmentation exponentielle<br>du nombre de nouveaux cas,Aumento esponenziale<br>di nuovi casi
 rLower1,Decrease in number of new cases,Abnahme neuer Fälle,Diminution du nombre de nouveaux cas,Decremento del numero di nuovi casi
 rEexplanation,<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>delays between infection and<br>the last data observation.,<b>*</b>&nbsp;Letzte mögliche Schätzung von <br>R<sub>e</sub> aufgrund von Verzögerungen<br>zwischen Infektion und Beobachtung.,<b>*</b>&nbsp;Ceci est la dernière estimation<br>disponible de R<sub>e</sub> en raison du<br>délai entre l'infection et le<br>moment de sa détection.,<b>*</b>&nbsp;Questo e' la piu' recente<br>possibile stima di R<sub>e</sub> dovuta al<br>ritardo tra l'infezione e l'ultima<br>osservazione dei dati.

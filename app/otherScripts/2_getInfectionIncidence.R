@@ -206,12 +206,12 @@ meanOnsetToCount <- c(
   "Confirmed cases" = meanOnsetToTest,
   "Deaths" = meanOnsetToDeath,
   "Hospitalized patients" = meanOnsetToHosp,
-  "Excess Deaths" = meanOnsetToDeath)
+  "Excess deaths" = meanOnsetToDeath)
 sdOnsetToCount <- c(
   "Confirmed cases" = sdOnsetToTest,
   "Deaths" = sdOnsetToDeath,
   "Hospitalized patients" = sdOnsetToHosp,
-  "Excess Deaths" = sdOnsetToDeath)
+  "Excess deaths" = sdOnsetToDeath)
 
 ### parameters for gamma distribution between symptom onset and report
 shapeOnsetToCount <- meanOnsetToCount^2 / (sdOnsetToCount^2)
@@ -227,7 +227,7 @@ load(file = pathToRawDataSave)
 ### Sample infection dates
 sampledInfectData <- drawAllInfectionDates(
   rawData,
-  data_type = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess Deaths"),
+  data_type = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"),
   numberOfReplicates = replicates,
   shapeIncubation = shapeIncubation,
   scaleIncubation = scaleIncubation,

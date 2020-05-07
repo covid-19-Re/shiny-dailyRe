@@ -309,7 +309,7 @@ all_delays <- list(
   "Deaths" = c(Cori = 20, WallingaTeunis = 15),
   "Hospitalized patients" = c(Cori = 8, WallingaTeunis = 3),
   "infection_Excess Deaths" = c(Cori = 0, WallingaTeunis = -5),
-  "Excess Deaths" = c(Cori = 20, WallingaTeunis = 15))
+  "Excess deaths" = c(Cori = 20, WallingaTeunis = 15))
 
 truncations <- list(
   left = c(Cori = 5, WallingaTeunis = 0),
@@ -336,7 +336,7 @@ estimatesReRaw <- as_tibble(estimatesReRaw_calc) %>%
       data_type,
       levels = c("infection_Confirmed cases", "infection_Hospitalized patients",
         "infection_Deaths", "infection_Excess Deaths"),
-      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess Deaths")),
+      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")),
     country = as_factor(country),
     region = as_factor(region))
 

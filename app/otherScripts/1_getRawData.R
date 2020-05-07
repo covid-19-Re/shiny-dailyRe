@@ -469,7 +469,7 @@ rawData <- bind_rows(CHrawData, EUrawData) %>%
     data_type = factor(
       data_type,
       levels = c("confirmed", "hospitalized", "deaths", "excess_deaths"),
-      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess Deaths")),
+      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")),
     country = as_factor(country),
     region = as_factor(region))
 save(rawData, file = pathToRawDataSave)

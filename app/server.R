@@ -24,15 +24,19 @@ server <- function(input, output, session) {
     sidebarMenu(id = "tabs",
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Switzerland")), tabName = "chPlot", icon = icon("chart-area")),
       menuItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantonsPlot", icon = icon("chart-area")),
-      menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")), tabName = "euPlot", icon = icon("chart-area")),
-      menuItem(i18n()$t("About"), tabName = "about", icon = icon("question-circle")),
+      menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")),
+        lapply(c("Comparison", countryList), function(i) {
+          menuSubItem(i, tabName = str_c(i, "Plot"), icon = icon("chart-area"))
+        })
+      ),
+      menuItem(i18n()$t("About"), tabName = "aboutPlot", icon = icon("question-circle")),
       selectInput("lang", i18n()$t("Language"),
         languageSelect, selected = input$lang, multiple = FALSE,
         selectize = TRUE, width = NULL, size = NULL)
     )
   })
 
-  output$chPlotUI <- renderUI({
+  output$chUI <- renderUI({
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland")),
         width = 12,
@@ -41,7 +45,7 @@ server <- function(input, output, session) {
       fluidRow(
         column(width = 8,
           box(width = 12,
-            includeMarkdown(str_c("md/methodsShort_", input$lang, ".md"))
+            includeMarkdown(str_c("md/methodsCH_", input$lang, ".md"))
             )
         ),
         column(width = 4,
@@ -59,7 +63,7 @@ server <- function(input, output, session) {
     )
   })
 
-  output$cantonsPlotUI <- renderUI({
+  output$cantonsUI <- renderUI({
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for cantons")),
       width = 12,
@@ -68,7 +72,7 @@ server <- function(input, output, session) {
       fluidRow(
         column(width = 8,
           box(width = 12,
-            includeMarkdown("md/methodsShort.md")
+            includeMarkdown(str_c("md/methodsCH_", input$lang, ".md"))
             )
         ),
         column(width = 4,
@@ -84,34 +88,47 @@ server <- function(input, output, session) {
       )
     )})
 
-  output$euPlotUI <- renderUI({
-    fluidRow(
-      box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) ",
-        "in selected European countries"))),
-        width = 12,
-        p("Coming Soon")
-        #plotlyOutput("CHinteractivePlot", width = "100%", height = "700px")
-      ),
-      # fluidRow(
-      #   column(width = 8,
-      #          box(width = 12,
-                   
-      #          )
-      #   ),
-      #   column(width = 4,
-      #     # infoBox(width = 12,
-      #     #   i18n()$t("Last Data Updates"),
-      #     #   HTML(dataUpdatesTable(latestDataInt(), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
-      #     #   icon = icon("exclamation-circle"),
-      #     #   color = "purple"
-      #     # )
-      #   )
-      # )
-    )
-  })
-
   output$aboutUI <- renderUI({
     includeMarkdown("md/about.md")
+  })
+
+  lapply(c("Comparison", countryList), function(i) {
+    output[[str_c(i,"UI")]] <- renderUI({
+      fluidRow(
+        box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) in Europe - ",
+          i))),
+          width = 12,
+          p("Coming Soon")
+          #plotlyOutput("CHinteractivePlot", width = "100%", height = "700px")
+        ),
+        fluidRow(
+          column(width = 8,
+              box(width = 12,
+                includeMarkdown(str_c("md/methodsInt_", input$lang, ".md"))
+              )
+          ),
+          column(width = 4,
+            infoBox(width = 12,
+              i18n()$t("Last Data Updates"),
+              HTML(
+                dataUpdatesTable(filter(latestDataInt(), country == i), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+              icon = icon("exclamation-circle"),
+              color = "purple"
+            )
+          )
+        )
+      )
+    })
+  })
+
+  output$dashboardBodyUI <- renderUI({
+    tabList <- c("ch", "cantons", "Comparison", countryList, "about")
+    tabs <- lapply(
+      tabList,
+      function(i) {
+        tabItem(tabName = str_c(i, "Plot"), uiOutput(str_c(i,"UI")))
+      })
+    return(do.call(tabItems, tabs))
   })
 
   load(pathTolatestData)
@@ -191,7 +208,7 @@ server <- function(input, output, session) {
   })
 
   output$cantonInteractivePlot <- renderPlotly({
-    
+
     rEffData <- estimatesRePlotCH()
 
     cantonColors <- c(viridis(length(levels(rEffData$region)) - 1), "#666666")
