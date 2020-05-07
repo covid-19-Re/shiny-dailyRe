@@ -10,46 +10,43 @@ pathToEstimatesReRawSave <- file.path(dataDir, "Estimates_Re_raw.Rdata")
 pathToEstimatesReSave <- file.path(dataDir, "Estimates_Re.Rdata")
 pathToEstimatesRePlotSave <- file.path(dataDir, "Estimates_Re_plot.Rdata")
 pathToCantonListSave <- file.path(dataDir, "cantonList.Rdata")
-pathTolastDataDateSave <- file.path(dataDir, "lastDataDate.Rdata")
+pathToLatestData <- file.path(dataDir, "latestData.Rdata")
+
 
 load(file = pathToEstimatesReRawSave)
-load(file = pathToCantonListSave)
-load(file = pathTolastDataDateSave)
+load(file = pathToLatestData)
 
 #############################
 estimatesRe <- as_tibble(estimatesReRaw) %>%
-  pivot_wider(names_from = "variable", values_from = "value") %>%
-  mutate(
-    replicate = as_factor(replicate),
-    data_type = factor(
-      data_type,
-      levels = c("infection_confirmed", "infection_hospitalized", "infection_deaths"),
-      labels = c("Confirmed cases", "Hospitalized patients", "Deaths")),
-    region = factor(region, levels = cantonList))
+  pivot_wider(names_from = "variable", values_from = "value")
 
 save(estimatesRe, file = pathToEstimatesReSave)
 
 #############################
+
 estimatesRePlot <- estimatesRe %>%
   filter(
     # exclude infection_deaths in CH
-    !(region != "CH" & data_type == "Deaths"),
+    !(country == "Switzerland" & region != "Switzerland" & data_type == "Deaths"),
     # exclude infection hospitalized data not provided by FOPH
-    !(data_type == "Hospitalized patients" & date > filter(lastDataDate, source == "FOPH")$date))
+    !(country == "Switzerland" & data_type == "Hospitalized patients" &
+      date > filter(latestData, source == "FOPH")$date))
 
 estimatesRePlot$median_R_mean <- with(estimatesRePlot,
-  ave(R_mean, date, region, data_type, source, estimate_type, FUN = median))
+  ave(R_mean, date, country, region, data_type, source, estimate_type, FUN = median))
 estimatesRePlot$median_R_highHPD <- with(estimatesRePlot,
-  ave(R_highHPD, date, region, data_type, source, estimate_type, FUN = median))
+  ave(R_highHPD, date, country, region, data_type, source, estimate_type, FUN = median))
 estimatesRePlot$median_R_lowHPD <- with(estimatesRePlot,
-  ave(R_lowHPD, date, region, data_type, source, estimate_type, FUN = median))
-  
-estimatesRePlot$highQuantile_R_highHPD <- with(estimatesRePlot,
-  ave(R_highHPD, date, region, data_type, source, estimate_type,
-    FUN = function(x) quantile(x, probs = 0.975, na.rm = TRUE)))
-estimatesRePlot$lowQuantile_R_lowHPD <- with(estimatesRePlot,
-  ave(R_lowHPD, date, region, data_type, source, estimate_type,
-    FUN = function(x) quantile(x, probs = 0.025, na.rm = TRUE)))
+  ave(R_lowHPD, date, country, region, data_type, source, estimate_type, FUN = median))
+
+# lets save processing as long as we don't use it
+#
+# estimatesRePlot$highQuantile_R_highHPD <- with(estimatesRePlot,
+#   ave(R_highHPD, date, country, region, data_type, source, estimate_type,
+#     FUN = function(x) quantile(x, probs = 0.975, na.rm = TRUE)))
+# estimatesRePlot$lowQuantile_R_lowHPD <- with(estimatesRePlot,
+#   ave(R_lowHPD, date, country, region, data_type, source, estimate_type,
+#     FUN = function(x) quantile(x, probs = 0.025, na.rm = TRUE)))
 
 save(estimatesRePlot, file = pathToEstimatesRePlotSave)
 

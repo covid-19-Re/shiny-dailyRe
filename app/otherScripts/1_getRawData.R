@@ -1,4 +1,4 @@
-print(paste("starting getRawData.R:", Sys.time()))
+print(paste("starting 1_getRawData.R:", Sys.time()))
 
 library("lubridate")
 library("readr")
@@ -223,7 +223,7 @@ getDataNL <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
       country = "Netherlands",
       variable = "incidence",
       region = country,
-      source = " RIVM")
+      source = "RIVM")
 
   excessData <- try(getExcessDeathNL(startAt))
   if (!"try-error"  %in% class(excessData)) {
@@ -424,13 +424,16 @@ outputDir <- here("app/data")
 ##### Swiss data
 ### just an example here with keeping all the data from different sources/countries in one dataframe and saving into one file
 # rawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath), getLongECDCData())
-rawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath, regions = cantonList))
+CHrawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath, regions = cantonList))
 
 # format data
-rawData <- tibble::as_tibble(rawData)
+CHrawData <- tibble::as_tibble(CHrawData) %>%
+  mutate(
+    region = recode(as.character(region), "CH" = "Switzerland"),
+    country = recode(country, "CH" = "Switzerland"))
 # save data
-pathToRawDataSave <- file.path(outputDir, "Raw_data.Rdata")
-save(rawData, file = pathToRawDataSave)
+# pathToCHRawDataSave <- file.path(outputDir, "CH_Raw_data.Rdata")
+# save(CHrawData, file = pathToCHRawDataSave)
 
 ##### European data
 
@@ -450,26 +453,26 @@ swissData <- getAllSwissData(pathToHospData = dataCHHospitalPath, regions = "CH"
 
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
 
-EUrawData <- rbind(ECDCdata, swissExcessDeath, NLdata) %>% 
-  mutate(data_type = factor(data_type, levels = c("confirmed", "hospitalized", 
-                                                  "deaths", "excess_deaths")))
+EUrawData <- rbind(ECDCdata, swissExcessDeath, NLdata)
 
 # format data
 EUrawData <- tibble::as_tibble(EUrawData)
 # save data
-pathToEURawDataSave <- file.path(outputDir, "EU_Raw_data.Rdata")
-save(EUrawData, file = pathToEURawDataSave)
+# pathToEURawDataSave <- file.path(outputDir, "EU_Raw_data.Rdata")
+# save(EUrawData, file = pathToEURawDataSave)
 
 ##### Finished pulling data
 
-# Include rbind with EUrawData here!!
-
-lastDataDate <- rawData %>% 
-  group_by(source) %>%
-  summarize(date = max(date))
-
-pathTolastDataDateSave <- file.path(outputDir, "lastDataDate.Rdata")
-save(lastDataDate, file = pathTolastDataDateSave)
+pathToRawDataSave <- file.path(outputDir, "Raw_data.Rdata")
+rawData <- bind_rows(CHrawData, EUrawData) %>%
+  mutate(
+    data_type = factor(
+      data_type,
+      levels = c("confirmed", "hospitalized", "deaths", "excess_deaths"),
+      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess Deaths")),
+    country = as_factor(country),
+    region = as_factor(region))
+save(rawData, file = pathToRawDataSave)
 
 pathToCantonListSave <- file.path(outputDir, "cantonList.Rdata")
 save(cantonList, file = pathToCantonListSave)
@@ -477,6 +480,12 @@ save(cantonList, file = pathToCantonListSave)
 pathToCountryListSave <- file.path(outputDir, "countryList.Rdata")
 save(countryList, file = pathToCountryListSave)
 
+pathToLatestData <- file.path(outputDir, "latestData.Rdata")
+latestData <- rawData %>%
+  group_by(country, source) %>%
+  summarize(date = max(date))
+save(latestData, file = pathToLatestData)
+
 writeLines(str_c("last check: ", Sys.time()), file.path(outputDir, "lastCheck.txt"))
 
-print(paste("Done getRawData.R:", Sys.time()))
+print(paste("Done 1_getRawData.R:", Sys.time()))

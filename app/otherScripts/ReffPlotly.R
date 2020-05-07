@@ -57,7 +57,7 @@ rEffPlotly <- function(
     yDataSource <- -0.1
     dataSourceAnchors <- c("right", "auto")
     bottomMargin <- 80
-  } else if (legendOrientation == "h"){
+  } else if (legendOrientation == "h") {
     xrNote <- 0.99
     yrNote <- 0.34
     rNote <- textElements[[language]][["rEexplanation"]]
@@ -85,7 +85,7 @@ rEffPlotly <- function(
   names(newLevels) <- newLevelNames
 
   caseData <- cumulativePlotData %>%
-    filter(region == "CH") %>%
+    filter(region == "Switzerland") %>%
     mutate(data_type = fct_recode(data_type, !!!newLevels))
 
   startDate <- min(caseData$date) - 1
@@ -95,7 +95,7 @@ rEffPlotly <- function(
 
   rEffWindowData <- rEffPlotWindowData %>%
     filter(
-      region == "CH",
+      region == "Switzerland",
       date >= minEstimateDate,
       replicate == 1) %>%
     select(-replicate) %>%
@@ -116,7 +116,7 @@ rEffPlotly <- function(
       xaxis = list(title = "",
         type = "date",
         range = c(startDate, endDate),
-        tick0 = startDate,
+        tickvals = seq(startDate, endDate, length.out = 18),
         dtick = 3 * 86400000,
         tickformat = dateFormat,
         tickangle = 45,
@@ -134,7 +134,7 @@ rEffPlotly <- function(
       legendgroup = ~data_type, showlegend = FALSE,
       text = ~str_c("<i>", format(date, "%d.%m.%y"),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3),"-", signif(median_R_highHPD, 3),")",
+      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", data_type, ")<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_ribbons(
@@ -153,7 +153,7 @@ rEffPlotly <- function(
       marker = list(symbol = "asterisk-open"),
       text = ~str_c("<i>", format(date, "%d.%m.%y"),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3),")",
+      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", data_type, ")"),
       hoverinfo = "text",
       showlegend = FALSE) %>%
@@ -192,7 +192,7 @@ rEffPlotly <- function(
       ),
       shapes = list(
         list(
-          type = "line", 
+          type = "line",
           x0 = startDate, x1 = endDate,
           y0 = 1, y1 = 1,
           line = list(color = "red", width = 0.5)
@@ -221,7 +221,7 @@ rEffPlotly <- function(
         tickangle = 45,
         showgrid = TRUE,
         fixedrange = TRUE),
-      yaxis = list(visible = FALSE, fixedrange = TRUE)) 
+      yaxis = list(visible = FALSE, fixedrange = TRUE))
 
   plotlist <- list(pCases, pReSlidingWindow, pIntervention)
   plot <- subplot(plotlist, nrows = 3, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
@@ -251,7 +251,7 @@ rEffPlotly <- function(
           valign = "top",
           showarrow = FALSE,
           xanchor = helpBoxAnchors[1], yanchor = helpBoxAnchors[2], align = "left",
-          xshift = helpBoxShift[1], yshift = helpBoxShift[2], 
+          xshift = helpBoxShift[1], yshift = helpBoxShift[2],
           font = list(size = 11, color = "black")
         )
     )) %>%
@@ -319,8 +319,8 @@ rEffPlotlyRegion <- function(
     yDataSource <- -0.1
     dataSourceAnchors <- c("right", "auto")
     bottomMargin <- 80
-    rightMargin <- 200 
-  } else if (legendOrientation == "h"){
+    rightMargin <- 200
+  } else if (legendOrientation == "h") {
     xrNote <- 0.99
     yrNote <- 0.60
     rNote <- textElements[[language]][["rEexplanation"]]
@@ -415,7 +415,7 @@ rEffPlotlyRegion <- function(
       legendgroup = ~region, visible = "legendonly",
       text = ~str_c("<i>", format(date, "%d.%m.%y"),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3),")",
+      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", region, ")<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_ribbons(
@@ -433,7 +433,7 @@ rEffPlotlyRegion <- function(
       marker = list(symbol = "asterisk-open"),
       text = ~str_c("<i>", format(date, "%d.%m.%y"),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3),")",
+      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", region, ")"),
       hoverinfo = "text",
       showlegend = FALSE) %>%
@@ -444,7 +444,7 @@ rEffPlotlyRegion <- function(
       legendgroup = ~region,
       text = ~str_c("<i>", format(date, "%d.%m.%y"),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3),")",
+      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", region, ")<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_ribbons(
@@ -463,7 +463,7 @@ rEffPlotlyRegion <- function(
       marker = list(symbol = "asterisk-open"),
       text = ~str_c("<i>", format(date, "%d.%m.%y"),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3),")",
+      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", region, ")"),
       hoverinfo = "text",
       showlegend = FALSE) %>%
@@ -502,7 +502,7 @@ rEffPlotlyRegion <- function(
       ),
       shapes = list(
         list(
-          type = "line", 
+          type = "line",
           x0 = startDate, x1 = endDate,
           y0 = 1, y1 = 1,
           line = list(color = "red", width = 0.5)
@@ -531,7 +531,7 @@ rEffPlotlyRegion <- function(
         tickangle = 45,
         showgrid = TRUE,
         fixedrange = TRUE),
-      yaxis = list(visible = FALSE, fixedrange = TRUE)) 
+      yaxis = list(visible = FALSE, fixedrange = TRUE))
 
   plotlist <- list(pCases, pReSlidingWindow, pIntervention)
   plot <- subplot(plotlist, nrows = 3, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
