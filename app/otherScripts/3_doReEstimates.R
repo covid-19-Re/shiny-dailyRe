@@ -1,6 +1,5 @@
 print(paste("starting 3_doReEstimates.R: ", Sys.time()))
 
-library("tidyverse")
 library("lubridate")
 library("readr")
 library("gridExtra")
@@ -304,10 +303,10 @@ window <- 3
 ### Delays applied
 all_delays <- list(
   "infection_Confirmed cases" = c(Cori = 0, WallingaTeunis = -5),
-  infection_Deaths = c(Cori = 0, WallingaTeunis = -5),
+  "infection_Deaths" = c(Cori = 0, WallingaTeunis = -5),
   "infection_Hospitalized patients" = c(Cori = 0, WallingaTeunis = -5),
   "Confirmed cases" = c(Cori = 10, WallingaTeunis = 5),
-  Deaths = c(Cori = 20, WallingaTeunis = 15),
+  "Deaths" = c(Cori = 20, WallingaTeunis = 15),
   "Hospitalized patients" = c(Cori = 8, WallingaTeunis = 3),
   "infection_Excess Deaths" = c(Cori = 0, WallingaTeunis = -5),
   "Excess Deaths" = c(Cori = 20, WallingaTeunis = 15))
@@ -329,6 +328,7 @@ estimatesReRaw_calc <- doAllReEstimations(
     truncations = truncations,
     interval_ends = interval_ends)
 
+library("tidyverse")
 estimatesReRaw <- as_tibble(estimatesReRaw_calc) %>%
   mutate(
     replicate = as_factor(replicate),

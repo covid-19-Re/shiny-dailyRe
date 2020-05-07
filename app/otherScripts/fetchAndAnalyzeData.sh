@@ -16,4 +16,4 @@ Rscript --vanilla --verbose 5_makeReffPlotly.R > 5_makeReffPlotly.Rout 2>&1
 
 # crontab settings
 # run everyday at 9am and 9pm
-# 0 0,8,16 * * * /home/covid-19-re/covid-19-re-shiny-app/app/otherScripts/fetchAndAnalyzeData.sh
+# 0 1,4,7,10,13,16,19,22 * * * /home/covid-19-re/covid-19-re-shiny-app/app/otherScripts/fetchAndAnalyzeData.sh
