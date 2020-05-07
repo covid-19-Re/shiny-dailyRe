@@ -19,14 +19,14 @@ load(pathTolastDataDate)
 dataUpdatesString <- function(lastDataDate, name = "Data Source", dateFormat = "%Y-%m-%d") {
   outList <- list(str_c(name, ": "))
   for (i in 1:dim(lastDataDate)[1]) {
-    outList[[i+1]] <- str_c(
-      lastDataDate[i,]$source, " (", format(lastDataDate[i,2]$date, dateFormat),
+    outList[[i + 1]] <- str_c(
+      lastDataDate[i, ]$source, " (", format(lastDataDate[i, 2]$date, dateFormat),
       "); ")
   }
   return(str_sub(str_c(outList, collapse = ""), end = -3))
 }
 
-toLowerFirst <- function(string){
+toLowerFirst <- function(string) {
   str_replace(string, ".{1}", tolower(str_extract(string, ".{1}")))
 }
 
@@ -55,11 +55,11 @@ minEstimateDate <- as.Date("2020-03-07")
 
 estimatesRePlotFiltered <- filter(estimatesRePlot,
     # confirmed: delay 10 days
-    !(data_type == "Confirmed cases" & date > (lastDataDate[lastDataDate$source == "openZH",]$date - 10)),
+    !(data_type == "Confirmed cases" & date > (lastDataDate[lastDataDate$source == "openZH", ]$date - 10)),
     # hospitalized
-    !(data_type == "Hospitalized patients" & date > (lastDataDate[lastDataDate$source == "FOPH",]$date - 10)),
+    !(data_type == "Hospitalized patients" & date > (lastDataDate[lastDataDate$source == "FOPH", ]$date - 10)),
     # deaths: delay 16 days
-    !(data_type == "Deaths" & date > (lastDataDate[lastDataDate$source == "openZH",]$date - 15))
+    !(data_type == "Deaths" & date > (lastDataDate[lastDataDate$source == "openZH", ]$date - 15))
   )
 
 rEffPlotWindowData <- filter(estimatesRePlotFiltered,
@@ -69,7 +69,7 @@ source(here("app", "otherScripts", "ReffPlotly.R"))
 
 translations <- read_csv(here("app", "data", "translations.csv"), col_types = "ccccc")
 textElements <- list()
-for (i in names(translations)[-1]){
+for (i in names(translations)[-1]) {
   textElements[[i]] <- translations[[i]]
   names(textElements[[i]]) <- translations$element
 }

@@ -38,21 +38,18 @@ estimatesRePlot <- estimatesRe %>%
     !(data_type == "Hospitalized patients" & date > filter(lastDataDate, source == "FOPH")$date))
 
 estimatesRePlot$median_R_mean <- with(estimatesRePlot,
-  ave(R_mean, date, region, data_type, source, estimate_type,
-    FUN = median))
+  ave(R_mean, date, region, data_type, source, estimate_type, FUN = median))
 estimatesRePlot$median_R_highHPD <- with(estimatesRePlot,
-  ave(R_highHPD, date, region, data_type, source, estimate_type,
-    FUN = median))
+  ave(R_highHPD, date, region, data_type, source, estimate_type, FUN = median))
 estimatesRePlot$median_R_lowHPD <- with(estimatesRePlot,
-  ave(R_lowHPD, date, region, data_type, source, estimate_type,
-    FUN = median))
+  ave(R_lowHPD, date, region, data_type, source, estimate_type, FUN = median))
   
 estimatesRePlot$highQuantile_R_highHPD <- with(estimatesRePlot,
   ave(R_highHPD, date, region, data_type, source, estimate_type,
-    FUN = function(x) quantile(x, probs = 0.975, na.rm=T)))
+    FUN = function(x) quantile(x, probs = 0.975, na.rm = TRUE)))
 estimatesRePlot$lowQuantile_R_lowHPD <- with(estimatesRePlot,
   ave(R_lowHPD, date, region, data_type, source, estimate_type,
-  FUN = function(x) quantile(x, probs = 0.025, na.rm = T)))
+    FUN = function(x) quantile(x, probs = 0.025, na.rm = TRUE)))
 
 save(estimatesRePlot, file = pathToEstimatesRePlotSave)
 
