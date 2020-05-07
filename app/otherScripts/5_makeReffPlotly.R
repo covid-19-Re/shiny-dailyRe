@@ -39,7 +39,7 @@ plotColoursNamed <-  c(
 
 # prepare Data
 cumulativePlotData <- rawData %>%
-  filter(country == "Switzerland", region == "Switzerland",
+  filter(country == "Switzerland",
     source %in% c("openZH", "FOPH"),
     data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
   mutate(
@@ -50,7 +50,7 @@ cumulativePlotData <- rawData %>%
   pivot_wider(names_from = "variable", values_from = "value")
 
 estimatesRePlotFiltered <- estimatesRePlot %>%
-  filter(country == "Switzerland", region == "Switzerland",
+  filter(country == "Switzerland",
     source %in% c("openZH", "FOPH"),
     data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
   mutate(
