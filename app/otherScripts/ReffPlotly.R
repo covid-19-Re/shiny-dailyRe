@@ -347,12 +347,12 @@ rEffPlotlyRegion <- function(
   newLevels <- c("Confirmed cases",  "Hospitalized patients", "Deaths")
   names(newLevels) <- newLevelNames
 
-  names(regionColors) <- recode(names(regionColors), CH = textElements[[language]][["totalCH"]])
+  names(regionColors) <- recode(names(regionColors), Switzerland = textElements[[language]][["totalCH"]])
 
   caseData <- cumulativePlotData %>%
     mutate(
       data_type = fct_recode(data_type, !!!newLevels),
-      region = recode(region, CH = textElements[[language]][["totalCH"]])
+      region = recode(region, Switzerland = textElements[[language]][["totalCH"]])
       ) %>%
     filter(data_type == textElements[[language]][["confirmedCases"]])
 
@@ -370,7 +370,7 @@ rEffPlotlyRegion <- function(
     select(-replicate) %>%
     mutate(
       data_type = fct_recode(data_type, !!!newLevels),
-      region = recode(region, CH = textElements[[language]][["totalCH"]])
+      region = recode(region, Switzerland = textElements[[language]][["totalCH"]])
       ) %>%
     filter(data_type == textElements[[language]][["confirmedCases"]])
 

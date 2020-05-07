@@ -32,7 +32,6 @@ server <- function(input, output, session) {
     )
   })
 
-  
   output$chPlotUI <- renderUI({
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland")),
@@ -48,7 +47,10 @@ server <- function(input, output, session) {
         column(width = 4,
           infoBox(width = 12,
             i18n()$t("Last Data Updates"),
-            HTML(dataUpdatesTable(lastDataDateInt(), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+            HTML(
+              dataUpdatesTable(filter(latestDataInt(),
+                country == "Switzerland", source %in% c("openZH", "FOPH")),
+                lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
               icon = icon("exclamation-circle"),
             color = "purple"
           )
@@ -72,7 +74,9 @@ server <- function(input, output, session) {
         column(width = 4,
           infoBox(width = 12,
             i18n()$t("Last Data Updates"),
-            HTML(dataUpdatesTable(lastDataDateInt(), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+            HTML(dataUpdatesTable(filter(latestDataInt(),
+              country == "Switzerland", source %in% c("openZH", "FOPH")),
+              lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
               icon = icon("exclamation-circle"),
             color = "purple"
           )
@@ -82,42 +86,43 @@ server <- function(input, output, session) {
 
   output$euPlotUI <- renderUI({
     fluidRow(
-      box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) in selected European countries")),
-          width = 12,
-          p('Placeholder text')
-          #plotlyOutput("CHinteractivePlot", width = "100%", height = "700px")
+      box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) ",
+        "in selected European countries"))),
+        width = 12,
+        p("Coming Soon")
+        #plotlyOutput("CHinteractivePlot", width = "100%", height = "700px")
       ),
-      fluidRow(
-        column(width = 8,
-               box(width = 12,
-                   includeMarkdown(str_c("md/methodsShort_", input$lang, ".md"))
-               )
-        ),
-        column(width = 4,
-               infoBox(width = 12,
-                       i18n()$t("Last Data Updates"),
-                       HTML(dataUpdatesTable(lastDataDateInt(), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
-                       icon = icon("exclamation-circle"),
-                       color = "purple"
-               )
-        )
-      )
+      # fluidRow(
+      #   column(width = 8,
+      #          box(width = 12,
+                   
+      #          )
+      #   ),
+      #   column(width = 4,
+      #     # infoBox(width = 12,
+      #     #   i18n()$t("Last Data Updates"),
+      #     #   HTML(dataUpdatesTable(latestDataInt(), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+      #     #   icon = icon("exclamation-circle"),
+      #     #   color = "purple"
+      #     # )
+      #   )
+      # )
     )
   })
-  
+
   output$aboutUI <- renderUI({
     includeMarkdown("md/about.md")
   })
 
-  load(pathTolastDataDate)
-  lastDataDateInt <- reactive({
-    load(pathTolastDataDate)
-    lastDataDate$source[1] <- i18n()$t("FOPH")
-    return(lastDataDate)
+  load(pathTolatestData)
+  latestDataInt <- reactive({
+    load(pathTolatestData)
+    latestData$source[latestData$source == "FOPH"] <- i18n()$t("FOPH")
+    return(latestData)
   })
 
   interventions <- reactive({
-    interventions <- read_csv(str_c(pathToInterventionData, "_", input$lang,".csv"),
+    interventions <- read_csv(str_c(pathToInterventionData, "_", input$lang, ".csv"),
     col_types = cols(
       name = col_character(),
       y = col_double(),
@@ -129,64 +134,55 @@ server <- function(input, output, session) {
     return(interventions)
   })
 
-  cumulativePlotData <- reactive({
-    cumulativePlotData <- filter(rawData, !(region != "CH" & data_type == "deaths")) %>%
-      mutate(data_type = factor(
-        data_type,
-        levels = c("confirmed", "hospitalized", "deaths"),
-        labels = c("Confirmed cases", "Hospitalized patients", "Deaths"))) %>%
+  rawDataCHallCantons <- reactive({
+    rawDataCHallCantons <- rawData %>%
+      filter(country == "Switzerland",
+        source %in% c("openZH", "FOPH"),
+        data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
+      mutate(
+        region = fct_drop(region),
+        country = fct_drop(country),
+        data_type = fct_drop(data_type)
+      ) %>%
       pivot_wider(names_from = "variable", values_from = "value")
-    return(cumulativePlotData)
+    return(rawDataCHallCantons)
   })
 
-  cumulativePlotDataFiltered <- reactive({
-    cumulativePlotDataFiltered <- cumulativePlotData() %>%
-      filter(region %in% input$canton)
-    return(cumulativePlotDataFiltered)
-  })
-
-  estimatesRePlotFiltered <- reactive({
-    estimatesRePlotFiltered <- filter(estimatesRePlot,
-      # confirmed: delay 10 days
-      !(data_type == "Confirmed cases" & date > (lastDataDate[lastDataDate$source == "openZH",]$date - 10)),
-      # hospitalized
-      !(data_type == "Hospitalized patients" & date > (lastDataDate[lastDataDate$source == "FOPH",]$date - 10)),
-      # deaths: delay 16 days
-      !(data_type == "Deaths" & date > (lastDataDate[lastDataDate$source == "openZH",]$date - 15))
-    )
-  })
-
-  rEffPlotWindowData <- reactive({
-    rEffPlotWindowData <- filter(estimatesRePlotFiltered(),
-      estimate_type == "Cori_slidingWindow")
-    return(rEffPlotWindowData)
-  })
-
-  rEffPlotWindowDataFiltered <- reactive({
-    rEffPlotWindowData <- filter(rEffPlotWindowData(),
-      region %in% input$canton)
-    return(rEffPlotWindowData)
-  })
-  
-  rEffPlotStepData <- reactive({
-    rEffPlotStepData <- filter(estimatesRePlotFiltered(),
-      estimate_type == "Cori_step")
-    return(rEffPlotStepData)
-  })
-
-  rEffPlotStepDataFiltered <- reactive({
-    rEffPlotStepDataFiltered <- filter(rEffPlotStepData(),
-      region %in% input$canton)
-    return(rEffPlotStepDataFiltered)
+  estimatesRePlotCH <- reactive({
+    estimatesRePlotCH <- estimatesRePlot %>%
+      filter(country == "Switzerland",
+        source %in% c("openZH", "FOPH"),
+        data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths"),
+        estimate_type == "Cori_slidingWindow") %>%
+      mutate(
+        region = fct_drop(region),
+        country = fct_drop(country),
+        data_type = fct_drop(data_type)
+      ) %>%
+      filter(
+        # confirmed: delay 10 days
+        !(data_type == "Confirmed cases" & date > (latestData[latestData$source == "openZH", ]$date - 10)),
+        # hospitalized
+        !(data_type == "Hospitalized patients" & date > (latestData[latestData$source == "FOPH", ]$date - 10)),
+        # deaths: delay 16 days
+        !(data_type == "Deaths" & date > (latestData[latestData$source == "openZH", ]$date - 15))
+      )
+    return(estimatesRePlotCH)
   })
 
   output$CHinteractivePlot <- renderPlotly({
+
+    rEffData <- estimatesRePlotCH()
+
+    latestDataCH <- filter(latestDataInt(), country == "Switzerland",
+      source %in% unique(rEffData$source))
+
     plot <- rEffPlotly(
-      cumulativePlotData(),
-      rEffPlotWindowData(),
+      rawDataCHallCantons(),
+      rEffData,
       interventions(),
       plotColoursNamed,
-      lastDataDate,
+      latestDataCH,
       legendOrientation = "v",
       language = input$lang,
       textElements = textElements,
@@ -195,14 +191,20 @@ server <- function(input, output, session) {
   })
 
   output$cantonInteractivePlot <- renderPlotly({
-    cantonColors <- c(viridis(length(cantonList)-1), "#666666")
-    names(cantonColors) <- cantonList
+    
+    rEffData <- estimatesRePlotCH()
+
+    cantonColors <- c(viridis(length(levels(rEffData$region)) - 1), "#666666")
+    names(cantonColors) <- levels(rEffData$region)
+
+    latestDataCH <- filter(latestDataInt(), country == "Switzerland",
+      source %in% unique(rEffData$source))
 
     plot <- rEffPlotlyRegion(
-      cumulativePlotData(),
-      rEffPlotWindowData(),
+      rawDataCHallCantons(),
+      rEffData,
       interventions(),
-      lastDataDate,
+      latestDataCH,
       legendOrientation = "v",
       regionColors = cantonColors,
       language = input$lang,
