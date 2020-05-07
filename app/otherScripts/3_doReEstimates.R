@@ -1,4 +1,4 @@
-print(paste("starting doReEstimates.R: ", Sys.time()))
+print(paste("starting 3_doReEstimates.R: ", Sys.time()))
 
 library("lubridate")
 library("readr")
@@ -9,6 +9,7 @@ library("plyr")
 library("utils")
 library("EpiEstim")
 library("here")
+
 
 
 ### Apply EpiEstim R estimation method to 'incidenceData' timeseries with 'dates' the dates associated
@@ -180,7 +181,6 @@ estimateRe <- function(
   return(result)
 }
 
-
 doReEstimation <- function(
   data_subset,
   slidingWindow = 1,
@@ -246,15 +246,15 @@ doAllReEstimations <- function(
   results_list <- list()
 
   for (source_i in unique(data$source)) {
+    cat("estimating Re for data source: ", source_i, "...\n")
     for (region_i in unique(data$region)) {
+      cat("  Region: ", region_i, "\n")
       for (data_type_i in unique(data$data_type)) {
-        print(region_i)
-        print(data_type_i)
         subset_data <- subset(data, region == region_i & source == source_i & data_type == data_type_i)
-
         if (nrow(subset_data) == 0) {
           next
         }
+        cat("    Data type: ", data_type_i, "\n")
 
         delay_i <- all_delays[[data_type_i]]
 
@@ -296,21 +296,20 @@ pathToSampledInfectDataSave <- file.path(outputDir, paste0("Sampled_infect_data.
 pathToEstimatesReRawSave <- file.path(outputDir, paste0("Estimates_Re_raw.Rdata"))
 pathToCantonListSave <- file.path(outputDir, paste0("cantonList.Rdata"))
 
-pathToEUSampledInfectDataSave <- file.path(outputDir, "EU_Sampled_infect_data.Rdata")
-pathToEUEstimatesReRawSave <- file.path(outputDir, "EU_Estimates_Re_raw.Rdata")
-
 ### Date input
 interval_ends <- c("2020-03-13", "2020-03-16", "2020-03-20")
 window <- 3
 
 ### Delays applied
 all_delays <- list(
-  infection_confirmed = c(Cori = 0, WallingaTeunis = -5),
-  infection_deaths = c(Cori = 0, WallingaTeunis = -5),
-  infection_hospitalized = c(Cori = 0, WallingaTeunis = -5),
-  confirmed = c(Cori = 10, WallingaTeunis = 5),
-  deaths = c(Cori = 20, WallingaTeunis = 15),
-  hospitalized = c(Cori = 8, WallingaTeunis = 3))
+  "infection_Confirmed cases" = c(Cori = 0, WallingaTeunis = -5),
+  "infection_Deaths" = c(Cori = 0, WallingaTeunis = -5),
+  "infection_Hospitalized patients" = c(Cori = 0, WallingaTeunis = -5),
+  "Confirmed cases" = c(Cori = 10, WallingaTeunis = 5),
+  "Deaths" = c(Cori = 20, WallingaTeunis = 15),
+  "Hospitalized patients" = c(Cori = 8, WallingaTeunis = 3),
+  "infection_Excess Deaths" = c(Cori = 0, WallingaTeunis = -5),
+  "Excess Deaths" = c(Cori = 20, WallingaTeunis = 15))
 
 truncations <- list(
   left = c(Cori = 5, WallingaTeunis = 0),
@@ -320,39 +319,28 @@ truncations <- list(
 #############################
 load(file = pathToSampledInfectDataSave)
 
-
 ### Run EpiEstim
-estimatesReRaw <- doAllReEstimations(
-  subset(sampledInfectData, variable == "incidence"),
-  slidingWindow = window,
-  methods = "Cori",
-  all_delays = all_delays,
-  truncations = truncations,
-  interval_ends = interval_ends)
+estimatesReRaw_calc <- doAllReEstimations(
+    subset(sampledInfectData, variable == "incidence"),
+    slidingWindow = window,
+    methods = "Cori",
+    all_delays = all_delays,
+    truncations = truncations,
+    interval_ends = interval_ends)
 
+library("tidyverse")
+estimatesReRaw <- as_tibble(estimatesReRaw_calc) %>%
+  mutate(
+    replicate = as_factor(replicate),
+    data_type = factor(
+      data_type,
+      levels = c("infection_Confirmed cases", "infection_Hospitalized patients",
+        "infection_Deaths", "infection_Excess Deaths"),
+      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess Deaths")),
+    country = as_factor(country),
+    region = as_factor(region))
 
 save(estimatesReRaw, file = pathToEstimatesReRawSave)
 
 #############################
-load(file = pathToEUSampledInfectDataSave)
-
-all_delays <- c(
-  all_delays,
-  infection_excess_deaths = c(Cori = 0, WallingaTeunis = -5),
-  excess_deaths = c(Cori = 20, WallingaTeunis = 15))
-interval_ends <- Sys.Date()
-
-### Run EpiEstim
-EUestimatesReRaw <- doAllReEstimations(
-  subset(EUsampledInfectData, variable == "incidence"),
-  slidingWindow = window,
-  methods = "Cori",
-  all_delays = all_delays,
-  truncations = truncations,
-  interval_ends = interval_ends)
-
-
-save(EUestimatesReRaw, file = pathToEUEstimatesReRawSave)
-
-#############################
-print(paste("done doReEstimates.R:", Sys.time()))
+print(paste("done 3_doReEstimates.R:", Sys.time()))

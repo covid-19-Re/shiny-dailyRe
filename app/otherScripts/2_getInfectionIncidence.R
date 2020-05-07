@@ -1,4 +1,4 @@
-print(paste("starting getInfectionIncidence.R:", Sys.time()))
+print(paste("starting 2_getInfectionIncidence.R:", Sys.time()))
 
 library("lubridate")
 library("readr")
@@ -140,7 +140,9 @@ drawAllInfectionDates <- function(
 
   results <- list()
   for (count_type_i in data_type) {
+    cat("draw infections for data type:", count_type_i, "\n")
     for (source_i in unique(data$source)) {
+      cat("   Data source:", source_i, "\n")
       results_list <- lapply(
         unique(data$region),
         function(x) {
@@ -177,8 +179,6 @@ drawAllInfectionDates <- function(
 outputDir <- here("app/data")
 pathToRawDataSave <- file.path(outputDir, "Raw_data.Rdata")
 pathToSampledInfectDataSave <- file.path(outputDir, "Sampled_infect_data.Rdata")
-pathToEURawDataSave <- file.path(outputDir, "EU_Raw_data.Rdata")
-pathToEUSampledInfectDataSave <- file.path(outputDir, "EU_Sampled_infect_data.Rdata")
 
 ### Waiting time distributions ##
 ## hardcoded for now, but to be taken outside of script
@@ -203,15 +203,15 @@ shapeIncubation <- meanIncubation^2 / (sdIncubation^2)
 scaleIncubation <- (sdIncubation^2) / meanIncubation
 
 meanOnsetToCount <- c(
-  "confirmed" = meanOnsetToTest,
-  "deaths" = meanOnsetToDeath,
-  "hospitalized" = meanOnsetToHosp,
-   "excess_deaths" = meanOnsetToDeath)
+  "Confirmed cases" = meanOnsetToTest,
+  "Deaths" = meanOnsetToDeath,
+  "Hospitalized patients" = meanOnsetToHosp,
+  "Excess Deaths" = meanOnsetToDeath)
 sdOnsetToCount <- c(
-  "confirmed" = sdOnsetToTest,
-  "deaths" = sdOnsetToDeath,
-  "hospitalized" = sdOnsetToHosp,
-  "excess_deaths" = sdOnsetToDeath)
+  "Confirmed cases" = sdOnsetToTest,
+  "Deaths" = sdOnsetToDeath,
+  "Hospitalized patients" = sdOnsetToHosp,
+  "Excess Deaths" = sdOnsetToDeath)
 
 ### parameters for gamma distribution between symptom onset and report
 shapeOnsetToCount <- meanOnsetToCount^2 / (sdOnsetToCount^2)
@@ -227,7 +227,7 @@ load(file = pathToRawDataSave)
 ### Sample infection dates
 sampledInfectData <- drawAllInfectionDates(
   rawData,
-  data_type = c("confirmed", "deaths", "hospitalized"),
+  data_type = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess Deaths"),
   numberOfReplicates = replicates,
   shapeIncubation = shapeIncubation,
   scaleIncubation = scaleIncubation,
@@ -238,20 +238,4 @@ save(sampledInfectData, file = pathToSampledInfectDataSave)
 
 ###############
 
-load(file = pathToEURawDataSave)
-
-### Sample infection dates
-EUsampledInfectData <- drawAllInfectionDates(
-  EUrawData,
-  data_type = c("confirmed", "deaths", "hospitalized", "excess_deaths"),
-  numberOfReplicates = replicates,
-  shapeIncubation = shapeIncubation,
-  scaleIncubation = scaleIncubation,
-  shapeOnsetToCount = shapeOnsetToCount,
-  scaleOnsetToCount = scaleOnsetToCount)
-
-save(EUsampledInfectData, file = pathToEUSampledInfectDataSave)
-
-###############
-
-print(paste("Done getInfectionIncidence.R: ", Sys.time()))
+print(paste("Done 2_getInfectionIncidence.R: ", Sys.time()))
