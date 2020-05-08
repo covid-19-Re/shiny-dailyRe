@@ -525,9 +525,6 @@ for (i in unique(estimateDatesDf$country)) {
 pathToEstimateDates <- file.path(dataDir, "estimate_dates.Rdata")
 save(estimatesDates, file = pathToEstimateDates)
 
-pathToEstimateStartDates <- file.path(dataDir, "estimate_start_dates.Rdata")
-save(estimateStartDates, file = pathToEstimateStartDates)
-
 pathToCantonList <- file.path(dataDir, "cantonList.Rdata")
 save(cantonList, file = pathToCantonList)
 
