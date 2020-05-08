@@ -3,6 +3,7 @@ axisCases,New observations,Neue Beobachtungen,Nombre d’observations,Nuove osse
 axisRe,Reproductive number R<sub>e</sub>,Reproduktionszahl R<sub>e</sub>,Nombre de reproduction R<sub>e</sub>,Numero di riproduzione R<sub>e</sub>
 dataType,Data types,Datentypen,Type de données,Tipo di dati
 canton,Canton,Kanton,Canton,Canton
+country,Country,Land,Pays,Paese
 confirmedCases,Confirmed cases,Bestätigte Fälle,Cas confirmés,Casi confermati
 hospPatients,Hospitalized patients,Hospitalisierte Patienten,Patients hospitalisés,Pazienti ospedalizzati
 deaths,Deaths,Todesfälle,Décès,Decessi

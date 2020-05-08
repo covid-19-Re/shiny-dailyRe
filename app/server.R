@@ -117,6 +117,35 @@ server <- function(input, output, session) {
     })
   })
 
+  output$ComparisonUI <- renderUI({
+    fluidRow(
+        box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) in Europe - ",
+          "Comparison"))),
+          width = 12,
+          radioButtons("data_type_select", "Select Data Type to compare",
+            choices = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"),
+            selected = "Confirmed cases", inline = TRUE),
+          plotlyOutput("ComparisonPlot", width = "100%", height = "700px")
+        ),
+        fluidRow(
+          column(width = 8,
+              box(width = 12,
+                includeMarkdown(str_c("md/methodsInt_", input$lang, ".md"))
+              )
+          ),
+          column(width = 4,
+            infoBox(width = 12,
+              i18n()$t("Last Data Updates"),
+              HTML(
+                dataUpdatesTable(latestDataInt(), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+              icon = icon("exclamation-circle"),
+              color = "purple"
+            )
+          )
+        )
+      )
+  })
+
   output$dashboardBodyUI <- renderUI({
     tabList <- c("ch", "cantons", "Comparison", countryList, "about")
     tabs <- lapply(
@@ -180,12 +209,41 @@ server <- function(input, output, session) {
     return(estimatesSwitzerlandFOPH)
   })
 
+  caseDataOverview <- reactive({
+    caseDataOverview <- rawData %>%
+      filter(data_type == input$data_type_select, region %in% countryList,
+        !(country == "Switzerland" & source == "ECDC")
+      ) %>%
+      mutate(
+        data_type = fct_drop(data_type)
+      ) %>%
+      pivot_wider(names_from = "variable", values_from = "value")
+    return(caseDataOverview)
+  })
 
+  estimatesOverview <- reactive({
+    estimatesOverview <- estimatesReSum %>%
+      filter(data_type == input$data_type_select, region %in% countryList,
+      !(country == "Switzerland" & source == "ECDC")) %>%
+      mutate(
+        data_type = fct_drop(data_type)
+      ) %>%
+      group_by(country, data_type) %>%
+      filter(
+        estimate_type == "Cori_slidingWindow",
+        between(date,
+          left = estimatesDates[["Switzerland"]][["start"]][[as.character(data_type[1])]],
+          right = estimatesDates[["Switzerland"]][["end"]][[as.character(data_type[1])]]),
+      ) %>%
+      ungroup()
+
+      return(estimatesOverview)
+  })
 
   # country raw data
   caseDataCountry <- lapply(countryList, function(i) {
     rawDataCountry <- rawData %>%
-      filter(country == i) %>%
+      filter(country == i, region == i) %>%
       pivot_wider(names_from = "variable", values_from = "value")
     if (i == "Switzerland"){
       rawDataCountry <- rawDataCountry %>%
@@ -198,7 +256,7 @@ server <- function(input, output, session) {
   # country estimates
   estimatesCountry <- lapply(countryList, function(i) {
     estimatesCountry <- estimatesReSum %>%
-      filter(country == i) %>%
+      filter(country == i, region == i) %>%
       group_by(data_type) %>%
       filter(
         estimate_type == "Cori_slidingWindow",
@@ -239,8 +297,9 @@ server <- function(input, output, session) {
 
     rEffData <- estimatesSwitzerlandFOPH()
 
-    cantonColors <- c(viridis(length(unique(rEffData$region)) - 1), "#666666")
+    cantonColors <- viridis(length(unique(rEffData$region)))
     names(cantonColors) <- unique(rEffData$region)
+    cantonColors["Switzerland"] <- "#666666"
 
     latestDataCH <- filter(latestDataInt(), country == "Switzerland",
       source %in% unique(rEffData$source))
@@ -256,6 +315,27 @@ server <- function(input, output, session) {
       textElements = textElements,
       widgetID = NULL)
     return(plot)
+  })
+
+  output$ComparisonPlot <- renderPlotly({
+    
+    focusCountry <- "Switzerland"
+    countryColors <- viridis(length(unique(rEffData$region)))
+    names(countryColors) <- countryList
+    countryColors[focusCountry] <- "#666666"
+
+    rEffPlotlyComparison(
+      caseData = caseDataOverview(),
+      estimates = estimatesOverview(),
+      lastDataDate = latestDataInt(),
+      startDate = min(filter(caseDataOverview(), cumul > 0)$date) - 1,
+      focusCountry = focusCountry,
+      legendOrientation = "v", # "v" or "h"
+      countryColors = countryColors,
+      textElements = textElements,
+      language = "en-gb",
+      widgetID = NULL)
+
   })
 
   # country plots
