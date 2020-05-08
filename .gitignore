@@ -5,3 +5,4 @@ app/data/*.Rd
 app/otherScripts/*.Rout
 app/www/*
 !app/www/info.md
+.vscode
