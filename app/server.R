@@ -148,8 +148,8 @@ server <- function(input, output, session) {
     return(interventions)
   })
 
-  rawDataSwitzerlandFOPH <- reactive({
-    rawDataSwitzerlandFOPH <- rawData %>%
+  caseDataSwitzerlandFOPH <- reactive({
+    caseDataSwitzerlandFOPH <- rawData %>%
       filter(country == "Switzerland",
         source %in% c("openZH", "FOPH"),
         data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
@@ -157,7 +157,7 @@ server <- function(input, output, session) {
         data_type = fct_drop(data_type)
       ) %>%
       pivot_wider(names_from = "variable", values_from = "value")
-    return(rawDataSwitzerlandFOPH)
+    return(caseDataSwitzerlandFOPH)
   })
 
   estimatesSwitzerlandFOPH <- reactive({
@@ -180,8 +180,10 @@ server <- function(input, output, session) {
     return(estimatesSwitzerlandFOPH)
   })
 
+  countryOverview
+
   # country raw data
-  countryRawData <- lapply(countryList, function(i) {
+  countryCaseData <- lapply(countryList, function(i) {
     rawDataCountry <- rawData %>%
       filter(country == i) %>%
       pivot_wider(names_from = "variable", values_from = "value")
@@ -191,7 +193,7 @@ server <- function(input, output, session) {
     }
     return(rawDataCountry)
   })
-  names(countryRawData) <- countryList
+  names(countryCaseData) <- countryList
 
   # country estimates
   countryEstimates <- lapply(countryList, function(i) {
@@ -221,7 +223,7 @@ server <- function(input, output, session) {
       source %in% unique(rEffData$source))
 
     plot <- rEffPlotly(
-      rawDataSwitzerlandFOPH(),
+      caseDataSwitzerlandFOPH(),
       rEffData,
       interventions(),
       plotColoursNamed,
@@ -244,7 +246,7 @@ server <- function(input, output, session) {
       source %in% unique(rEffData$source))
 
     plot <- rEffPlotlyRegion(
-      rawDataSwitzerlandFOPH(),
+      caseDataSwitzerlandFOPH(),
       rEffData,
       interventions(),
       latestDataCH,
@@ -268,11 +270,11 @@ server <- function(input, output, session) {
 
       plot <- rEffPlotlyCountry(
         countrySelect = i,
-        caseData = countryRawData[[i]],
+        caseData = countryCaseData[[i]],
         estimates = countryEstimates[[i]],
         plotColoursNamed = plotColoursNamed,
         lastDataDate = latestDataInt,
-        startDate = min(filter(countryRawData[[i]], cumul > 0)$date) - 1,
+        startDate = min(filter(countryCaseData[[i]], cumul > 0)$date) - 1,
         legendOrientation = "v", # "v" or "h"
         textElements = textElements,
         language = "en-gb",
