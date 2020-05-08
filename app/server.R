@@ -321,7 +321,7 @@ server <- function(input, output, session) {
     
     caseData <- caseDataOverview()
     focusCountry <- "Switzerland"
-    countryColors <- viridis(length(unique(caseData$country)))
+    countryColors <- viridis(length(countryList))
     names(countryColors) <- countryList
     countryColors[focusCountry] <- "#666666"
 
