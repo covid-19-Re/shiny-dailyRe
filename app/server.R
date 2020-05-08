@@ -130,7 +130,7 @@ server <- function(input, output, session) {
         fluidRow(
           column(width = 8,
               box(width = 12,
-                includeMarkdown(str_c("md/methodsInt_", input$lang, ".md"))
+                includeMarkdown(str_c("md/methodsInt_en-gb.md"))
               )
           ),
           column(width = 4,
@@ -265,7 +265,7 @@ server <- function(input, output, session) {
           right = estimatesDates[[i]][["end"]][[as.character(data_type[1])]]),
       ) %>%
       ungroup()
-    if (i == "Switzerland"){
+    if (i == "Switzerland") {
       estimatesCountry <- estimatesCountry %>%
         filter(source != "ECDC")
     }
@@ -318,7 +318,7 @@ server <- function(input, output, session) {
   })
 
   output$ComparisonPlot <- renderPlotly({
-    
+
     caseData <- caseDataOverview()
     focusCountry <- "Switzerland"
     countryColors <- viridis(length(countryList))
@@ -341,7 +341,7 @@ server <- function(input, output, session) {
 
   # country plots
   lapply(countryList, function(i) {
-    output[[str_c(str_remove(i," "),"Plot")]] <- renderPlotly({
+    output[[str_c(str_remove(i, " "), "Plot")]] <- renderPlotly({
       
       latestDataInt <-  latestDataInt()
       if (i == "Switzerland") {
