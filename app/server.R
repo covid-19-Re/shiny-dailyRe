@@ -319,16 +319,17 @@ server <- function(input, output, session) {
 
   output$ComparisonPlot <- renderPlotly({
     
+    caseData <- caseDataOverview()
     focusCountry <- "Switzerland"
-    countryColors <- viridis(length(unique(rEffData$region)))
+    countryColors <- viridis(length(unique(caseData$country)))
     names(countryColors) <- countryList
     countryColors[focusCountry] <- "#666666"
 
     rEffPlotlyComparison(
-      caseData = caseDataOverview(),
+      caseData = caseData,
       estimates = estimatesOverview(),
       lastDataDate = latestDataInt(),
-      startDate = min(filter(caseDataOverview(), cumul > 0)$date) - 1,
+      startDate = min(filter(caseData, cumul > 0)$date) - 1,
       focusCountry = focusCountry,
       legendOrientation = "v", # "v" or "h"
       countryColors = countryColors,
