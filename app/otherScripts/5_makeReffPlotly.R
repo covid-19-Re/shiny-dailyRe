@@ -6,7 +6,7 @@ library(here)
 library(viridisLite)
 
 # load data
-dataDir <- here("app/data")
+dataDir <- here("app/data/temp")
 pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.Rdata")
 pathToLatestData <- file.path(dataDir, "latestData.Rdata")
 pathToRawData <- file.path(dataDir, "Raw_data.Rdata")
@@ -80,7 +80,7 @@ for (i in names(translations)[-1]) {
   names(textElements[[i]]) <- translations$element
 }
 
-dataDir <- here("app/www")
+plotOutDir <- here("app/www")
 
 for (i in names(textElements)) {
   pathToInterventionData <- here(str_c(
@@ -111,12 +111,12 @@ for (i in names(textElements)) {
   plotlyPlotV
 
   htmlwidgets::saveWidget(plotlyPlotV,
-    file.path(dataDir, str_c("rEffplotly_", i, ".html")), selfcontained = FALSE, libdir = "lib",
+    file.path(plotOutDir, str_c("rEffplotly_", i, ".html")), selfcontained = FALSE, libdir = "lib",
     title = "Effective reproductive number (Re) in Switzerland")
 
   # write_lines(
   #   htmlwidgetsExtended::exportWidgetJson(plotlyPlotV),
-  #   file.path(dataDir, str_c("rEffplotly_data_", i, ".json")))
+  #   file.path(plotOutDir, str_c("rEffplotly_data_", i, ".json")))
 }
 
 print(paste("Done makeReffPlotly.R:", Sys.time()))

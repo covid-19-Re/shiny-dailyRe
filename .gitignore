@@ -2,6 +2,7 @@ dev-*
 app/data/*.txt
 app/data/*.Rdata
 app/data/*.Rd
+app/data/temp
 app/otherScripts/*.Rout
 app/www/*
 !app/www/info.md

@@ -4,7 +4,7 @@ library(tidyverse)
 library(here)
 
 #############################
-dataDir <- here("app/data")
+dataDir <- here("app/data/temp")
 
 pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.Rdata")
 pathToEstimatesRe <- file.path(dataDir, "Estimates_Re.Rdata")

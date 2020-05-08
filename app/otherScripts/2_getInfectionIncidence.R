@@ -176,7 +176,7 @@ drawAllInfectionDates <- function(
 ###### Input #######
 ####################
 
-dataDir <- here("app/data")
+dataDir <- here("app/data/temp")
 pathToRawDataSave <- file.path(dataDir, "Raw_data.Rdata")
 pathToSampledInfectDataSave <- file.path(dataDir, "Sampled_infect_data.Rdata")
 

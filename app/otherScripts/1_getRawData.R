@@ -417,7 +417,7 @@ getLongECDCData <- function(countries = NULL) {
 
 dataCHHospitalPath <- here("../ch-hospital-data/data")
 
-dataDir <- here("app/data")
+dataDir <- here("app/data/temp")
 
 ##### Pull data
 

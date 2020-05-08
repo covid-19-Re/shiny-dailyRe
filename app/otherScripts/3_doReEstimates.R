@@ -291,7 +291,7 @@ doAllReEstimations <- function(
 ###### Input #######
 ####################
 
-dataDir <- here("app/data")
+dataDir <- here("app/data/temp")
 pathToSampledInfectDataSave <- file.path(dataDir, paste0("Sampled_infect_data.Rdata"))
 pathToEstimatesReRaw <- file.path(dataDir, paste0("Estimates_Re_raw.Rdata"))
 pathToCantonList <- file.path(dataDir, paste0("cantonList.Rdata"))
