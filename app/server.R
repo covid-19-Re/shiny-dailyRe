@@ -180,7 +180,7 @@ server <- function(input, output, session) {
     return(estimatesSwitzerlandFOPH)
   })
 
-  countryOverview
+
 
   # country raw data
   countryCaseData <- lapply(countryList, function(i) {
