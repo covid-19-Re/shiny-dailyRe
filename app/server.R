@@ -183,7 +183,7 @@ server <- function(input, output, session) {
 
 
   # country raw data
-  countryCaseData <- lapply(countryList, function(i) {
+  caseDataCountry <- lapply(countryList, function(i) {
     rawDataCountry <- rawData %>%
       filter(country == i) %>%
       pivot_wider(names_from = "variable", values_from = "value")
@@ -193,11 +193,11 @@ server <- function(input, output, session) {
     }
     return(rawDataCountry)
   })
-  names(countryCaseData) <- countryList
+  names(caseDataCountry) <- countryList
 
   # country estimates
-  countryEstimates <- lapply(countryList, function(i) {
-    countryEstimates <- estimatesReSum %>%
+  estimatesCountry <- lapply(countryList, function(i) {
+    estimatesCountry <- estimatesReSum %>%
       filter(country == i) %>%
       group_by(data_type) %>%
       filter(
@@ -208,12 +208,12 @@ server <- function(input, output, session) {
       ) %>%
       ungroup()
     if (i == "Switzerland"){
-      countryEstimates <- countryEstimates %>%
+      estimatesCountry <- estimatesCountry %>%
         filter(source != "ECDC")
     }
-    return(countryEstimates)
+    return(estimatesCountry)
   })
-  names(countryEstimates) <- countryList
+  names(estimatesCountry) <- countryList
 
   output$CHinteractivePlot <- renderPlotly({
 
@@ -270,11 +270,11 @@ server <- function(input, output, session) {
 
       plot <- rEffPlotlyCountry(
         countrySelect = i,
-        caseData = countryCaseData[[i]],
-        estimates = countryEstimates[[i]],
+        caseData = caseDataCountry[[i]],
+        estimates = estimatesCountry[[i]],
         plotColoursNamed = plotColoursNamed,
         lastDataDate = latestDataInt,
-        startDate = min(filter(countryCaseData[[i]], cumul > 0)$date) - 1,
+        startDate = min(filter(caseDataCountry[[i]], cumul > 0)$date) - 1,
         legendOrientation = "v", # "v" or "h"
         textElements = textElements,
         language = "en-gb",
