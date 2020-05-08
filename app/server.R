@@ -130,7 +130,7 @@ server <- function(input, output, session) {
         fluidRow(
           column(width = 8,
               box(width = 12,
-                includeMarkdown(str_c("md/methodsCountry_en-gb.md"))
+                includeMarkdown(str_c("md/methodsCountry_", input$lang, ".md"))
               )
           ),
           column(width = 4,
