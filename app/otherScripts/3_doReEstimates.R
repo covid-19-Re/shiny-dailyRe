@@ -291,10 +291,10 @@ doAllReEstimations <- function(
 ###### Input #######
 ####################
 
-outputDir <- here("app/data")
-pathToSampledInfectDataSave <- file.path(outputDir, paste0("Sampled_infect_data.Rdata"))
-pathToEstimatesReRawSave <- file.path(outputDir, paste0("Estimates_Re_raw.Rdata"))
-pathToCantonListSave <- file.path(outputDir, paste0("cantonList.Rdata"))
+dataDir <- here("app/data")
+pathToSampledInfectDataSave <- file.path(dataDir, paste0("Sampled_infect_data.Rdata"))
+pathToEstimatesReRaw <- file.path(dataDir, paste0("Estimates_Re_raw.Rdata"))
+pathToCantonList <- file.path(dataDir, paste0("cantonList.Rdata"))
 
 ### Date input
 interval_ends <- c("2020-03-13", "2020-03-16", "2020-03-20")
@@ -308,7 +308,7 @@ all_delays <- list(
   "Confirmed cases" = c(Cori = 10, WallingaTeunis = 5),
   "Deaths" = c(Cori = 20, WallingaTeunis = 15),
   "Hospitalized patients" = c(Cori = 8, WallingaTeunis = 3),
-  "infection_Excess Deaths" = c(Cori = 0, WallingaTeunis = -5),
+  "infection_Excess deaths" = c(Cori = 0, WallingaTeunis = -5),
   "Excess deaths" = c(Cori = 20, WallingaTeunis = 15))
 
 truncations <- list(
@@ -328,19 +328,16 @@ estimatesReRaw_calc <- doAllReEstimations(
     truncations = truncations,
     interval_ends = interval_ends)
 
-library("tidyverse")
+library(tidyverse)
 estimatesReRaw <- as_tibble(estimatesReRaw_calc) %>%
   mutate(
-    replicate = as_factor(replicate),
     data_type = factor(
       data_type,
       levels = c("infection_Confirmed cases", "infection_Hospitalized patients",
-        "infection_Deaths", "infection_Excess Deaths"),
-      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")),
-    country = as_factor(country),
-    region = as_factor(region))
+        "infection_Deaths", "infection_Excess deaths"),
+      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")))
 
-save(estimatesReRaw, file = pathToEstimatesReRawSave)
+save(estimatesReRaw, file = pathToEstimatesReRaw)
 
 #############################
 print(paste("done 3_doReEstimates.R:", Sys.time()))

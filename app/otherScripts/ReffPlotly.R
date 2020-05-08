@@ -1,13 +1,17 @@
+# TO-DO: deduplicate code & general clean up...
+
 toLowerFirst <- function(string) {
   str_replace(string, ".{1}", tolower(str_extract(string, ".{1}")))
 }
 
 rEffPlotly <- function(
-  cumulativePlotData,
-  rEffPlotWindowData,
+  caseData,
+  estimates,
   interventions,
   plotColoursNamed,
   lastDataDate,
+  startDate = min(caseData$date) - 1,
+  endDate = max(caseData$date),
   legendOrientation = "v", # "v" or "h"
   textElements,
   language,
@@ -84,24 +88,16 @@ rEffPlotly <- function(
   newLevels <- c("Confirmed cases",  "Hospitalized patients", "Deaths")
   names(newLevels) <- newLevelNames
 
-  caseData <- cumulativePlotData %>%
+  caseData <- caseData %>%
     filter(region == "Switzerland") %>%
     mutate(data_type = fct_recode(data_type, !!!newLevels))
 
-  startDate <- min(caseData$date) - 1
-  endDate <- max(caseData$date)
-  lastDate <- max(caseData$date)
-  minEstimateDate <- as.Date("2020-03-07")
-
-  rEffWindowData <- rEffPlotWindowData %>%
+  estimatesPlot <- estimates %>%
     filter(
-      region == "Switzerland",
-      date >= minEstimateDate,
-      replicate == 1) %>%
-    select(-replicate) %>%
+      region == "Switzerland") %>%
     mutate(data_type = fct_recode(data_type, !!!newLevels))
 
-  estimatesEndPoint <- rEffWindowData %>%
+  estimatesEndPoint <- estimatesPlot %>%
     group_by(data_type) %>%
     filter(date == max(date))
 
@@ -127,7 +123,7 @@ rEffPlotly <- function(
         title = list(text = textElements[[language]][["axisCases"]], font = list(size = axisTitleFontSize))),
       legend = list(title = list(text = "<b> Data Type </b>")))
 
-  pReSlidingWindow <- plot_ly(data = rEffWindowData) %>%
+  pEstimates <- plot_ly(data = estimatesPlot) %>%
     add_trace(
       x = ~date, y = ~median_R_mean, color = ~data_type, colors = plotColoursNamed,
       type = "scatter", mode = "lines",
@@ -223,7 +219,7 @@ rEffPlotly <- function(
         fixedrange = TRUE),
       yaxis = list(visible = FALSE, fixedrange = TRUE))
 
-  plotlist <- list(pCases, pReSlidingWindow, pIntervention)
+  plotlist <- list(pCases, pEstimates, pIntervention)
   plot <- subplot(plotlist, nrows = 3, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
     layout(
       margin = list(b = bottomMargin),
@@ -264,10 +260,13 @@ rEffPlotly <- function(
 }
 
 rEffPlotlyRegion <- function(
-  cumulativePlotData,
-  rEffPlotWindowData,
+  caseData,
+  estimates,
   interventions,
   lastDataDate,
+  startDate = min(caseData$date) - 1,
+  endDate = max(caseData$date),
+  minEstimateDate = as.Date("2020-03-07"),
   legendOrientation = "v", # "v" or "h"
   regionColors,
   textElements,
@@ -343,7 +342,7 @@ rEffPlotlyRegion <- function(
 
   names(regionColors) <- recode(names(regionColors), Switzerland = textElements[[language]][["totalCH"]])
 
-  caseData <- cumulativePlotData %>%
+  caseData <- caseData %>%
     mutate(
       data_type = fct_recode(data_type, !!!newLevels),
       region = recode(region, Switzerland = textElements[[language]][["totalCH"]])
@@ -352,25 +351,18 @@ rEffPlotlyRegion <- function(
 
   caseDataCH <- filter(caseData, region == textElements[[language]][["totalCH"]])
 
-  startDate <- min(caseData$date) - 1
-  endDate <- Sys.Date()
-  lastDate <- max(caseData$date)
-  minEstimateDate <- as.Date("2020-03-07")
-
-  rEffWindowData <- rEffPlotWindowData %>%
+  estimatesPlot <- estimates %>%
     filter(
-      date >= minEstimateDate,
-      replicate == 1) %>%
-    select(-replicate) %>%
+      date >= minEstimateDate) %>%
     mutate(
       data_type = fct_recode(data_type, !!!newLevels),
       region = recode(region, Switzerland = textElements[[language]][["totalCH"]])
       ) %>%
     filter(data_type == textElements[[language]][["confirmedCases"]])
 
-  rEffWindowDataCH <- filter(rEffWindowData, region == textElements[[language]][["totalCH"]])
+  estimatesPlotCH <- filter(estimatesPlot, region == textElements[[language]][["totalCH"]])
 
-  estimatesEndPoint <- rEffWindowData %>%
+  estimatesEndPoint <- estimatesPlot %>%
     group_by(data_type) %>%
     filter(date == max(date))
 
@@ -401,7 +393,7 @@ rEffPlotlyRegion <- function(
         title = list(text = textElements[[language]][["axisCases"]], font = list(size = axisTitleFontSize))),
       legend = list(title = list(text = "<b> Data Type </b>")))
 
-  pReSlidingWindow <- plot_ly(data = rEffWindowData) %>%
+  pEstimates <- plot_ly(data = estimatesPlot) %>%
     filter(region != textElements[[language]][["totalCH"]]) %>%
     add_trace(
       x = ~date, y = ~median_R_mean, color = ~region, colors = regionColors,
@@ -432,7 +424,7 @@ rEffPlotlyRegion <- function(
       hoverinfo = "text",
       showlegend = FALSE) %>%
     add_trace(
-      data = rEffWindowDataCH,
+      data = estimatesPlotCH,
       x = ~date, y = ~median_R_mean, color = ~region, colors = regionColors,
       type = "scatter", mode = "lines", showlegend = FALSE,
       legendgroup = ~region,
@@ -442,7 +434,7 @@ rEffPlotlyRegion <- function(
       " <br>(", region, ")<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_ribbons(
-      data = rEffWindowDataCH,
+      data = estimatesPlotCH,
       x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
       color = ~region, legendgroup = ~region,
       line = list(color = "transparent"), opacity = 0.5, showlegend = FALSE,
@@ -527,7 +519,7 @@ rEffPlotlyRegion <- function(
         fixedrange = TRUE),
       yaxis = list(visible = FALSE, fixedrange = TRUE))
 
-  plotlist <- list(pCases, pReSlidingWindow, pIntervention)
+  plotlist <- list(pCases, pEstimates, pIntervention)
   plot <- subplot(plotlist, nrows = 3, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
     layout(
       margin = list(b = bottomMargin, r = rightMargin),
@@ -569,15 +561,16 @@ rEffPlotlyRegion <- function(
 
 rEffPlotlyCountry <- function(
   countrySelect,
-  cumulativePlotData,
-  rEffPlotWindowData,
+  caseData,
+  estimates,
   plotColoursNamed,
   lastDataDate,
+  startDate = min(caseData$date) - 1,
+  endDate = max(caseData$date),
   legendOrientation = "v", # "v" or "h"
   textElements,
   language,
-  widgetID = "rEffplotsCountry",
-  minEstimateDate = as.Date("2020-03-07")) {
+  widgetID = "rEffplotsCountry") {
 
   # plot parameter
   if (language %in% c("de-ch", "fr-ch")) {
@@ -644,21 +637,13 @@ rEffPlotlyCountry <- function(
     stop("legendOrientation must be either \"v\" or \"h\".")
   }
 
-  caseData <- cumulativePlotData %>%
+  caseDataPlot <- caseData %>%
     filter(country == countrySelect, region == countrySelect)
 
-  startDate <- min(caseData$date) - 1
-  endDate <- max(caseData$date)
-  lastDate <- max(caseData$date)
+  estimatesPlot <- estimates %>%
+    filter(country == countrySelect, region == countrySelect)
 
-  rEffWindowData <- rEffPlotWindowData %>%
-    filter(
-      country == countrySelect, region == countrySelect,
-      date >= minEstimateDate,
-      replicate == 1) %>%
-    select(-replicate)
-
-  estimatesEndPoint <- rEffWindowData %>%
+  estimatesEndPoint <- estimatesPlot %>%
     group_by(data_type) %>%
     filter(date == max(date))
 
@@ -684,7 +669,7 @@ rEffPlotlyCountry <- function(
         title = list(text = textElements[[language]][["axisCases"]], font = list(size = axisTitleFontSize))),
       legend = list(title = list(text = "<b> Data Type </b>")))
 
-  pReSlidingWindow <- plot_ly(data = rEffWindowData) %>%
+  pEstimates <- plot_ly(data = estimatesPlot) %>%
     add_trace(
       x = ~date, y = ~median_R_mean, color = ~data_type, colors = plotColoursNamed,
       type = "scatter", mode = "lines",
@@ -757,7 +742,7 @@ rEffPlotlyCountry <- function(
       )
     )
 
-  plotlist <- list(pCases, pReSlidingWindow)
+  plotlist <- list(pCases, pEstimates)
   plot <- subplot(plotlist, nrows = 2, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
     layout(
       margin = list(b = bottomMargin),

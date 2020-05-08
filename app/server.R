@@ -11,13 +11,8 @@ server <- function(input, output, session) {
   load(pathToRawData)
   load(pathToEstimatesRePlot)
   load(pathToCantonList)
+  load(pathToEstimateDates)
   lastCheck <- readLines(pathToLastCheck)
-
-  updateSelectInput(session, "canton", choices = cantonList, selected = cantonList)
-
-  observeEvent(input$selectAllCantons, {
-    updateSelectInput(session, "canton", selected = cantonList)
-  })
 
   # Render UI
   output$menu <- renderMenu({
@@ -86,20 +81,21 @@ server <- function(input, output, session) {
           )
         )
       )
-    )})
+    )
+  })
 
   output$aboutUI <- renderUI({
     includeMarkdown("md/about.md")
   })
 
+  # country UIs
   lapply(c("Comparison", countryList), function(i) {
     output[[str_c(i,"UI")]] <- renderUI({
       fluidRow(
         box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) in Europe - ",
           i))),
           width = 12,
-          p("Coming Soon")
-          #plotlyOutput("CHinteractivePlot", width = "100%", height = "700px")
+          plotlyOutput(str_c(i,"Plot"), width = "100%", height = "700px")
         ),
         fluidRow(
           column(width = 8,
@@ -135,7 +131,8 @@ server <- function(input, output, session) {
   latestDataInt <- reactive({
     load(pathTolatestData)
     latestData$source[latestData$source == "FOPH"] <- i18n()$t("FOPH")
-    return(latestData)
+    latestDataInt <- latestData
+    return(latestDataInt)
   })
 
   interventions <- reactive({
@@ -151,51 +148,80 @@ server <- function(input, output, session) {
     return(interventions)
   })
 
-  rawDataCHallCantons <- reactive({
-    rawDataCHallCantons <- rawData %>%
+  rawDataSwitzerlandFOPH <- reactive({
+    rawDataSwitzerlandFOPH <- rawData %>%
       filter(country == "Switzerland",
         source %in% c("openZH", "FOPH"),
         data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
       mutate(
-        region = fct_drop(region),
-        country = fct_drop(country),
         data_type = fct_drop(data_type)
       ) %>%
       pivot_wider(names_from = "variable", values_from = "value")
-    return(rawDataCHallCantons)
+    return(rawDataSwitzerlandFOPH)
   })
 
-  estimatesRePlotCH <- reactive({
-    estimatesRePlotCH <- estimatesRePlot %>%
+  estimatesSwitzerlandFOPH <- reactive({
+    estimatesSwitzerlandFOPH <- estimatesReSum %>%
       filter(country == "Switzerland",
         source %in% c("openZH", "FOPH"),
-        data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths"),
-        estimate_type == "Cori_slidingWindow") %>%
+        data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
       mutate(
-        region = fct_drop(region),
-        country = fct_drop(country),
         data_type = fct_drop(data_type)
       ) %>%
+      group_by(data_type) %>%
       filter(
-        # confirmed: delay 10 days
-        !(data_type == "Confirmed cases" & date > (latestData[latestData$source == "openZH", ]$date - 10)),
-        # hospitalized
-        !(data_type == "Hospitalized patients" & date > (latestData[latestData$source == "FOPH", ]$date - 10)),
-        # deaths: delay 16 days
-        !(data_type == "Deaths" & date > (latestData[latestData$source == "openZH", ]$date - 15))
-      )
-    return(estimatesRePlotCH)
+        estimate_type == "Cori_slidingWindow",
+        between(date,
+          left = estimatesDates[["Switzerland"]][["start"]][[as.character(data_type[1])]],
+          right = estimatesDates[["Switzerland"]][["end"]][[as.character(data_type[1])]]),
+      ) %>%
+      ungroup()
+    
+    return(estimatesSwitzerlandFOPH)
   })
+
+  # country raw data
+  countryRawData <- lapply(countryList, function(i) {
+    rawDataCountry <- rawData %>%
+      filter(country == i) %>%
+      pivot_wider(names_from = "variable", values_from = "value")
+    if (i == "Switzerland"){
+      rawDataCountry <- rawDataCountry %>%
+        filter(source != "ECDC")
+    }
+    return(rawDataCountry)
+  })
+  names(countryRawData) <- countryList
+
+  # country estimates
+  countryEstimates <- lapply(countryList, function(i) {
+    countryEstimates <- estimatesReSum %>%
+      filter(country == i) %>%
+      group_by(data_type) %>%
+      filter(
+        estimate_type == "Cori_slidingWindow",
+        between(date,
+          left = estimatesDates[[i]][["start"]][[as.character(data_type[1])]],
+          right = estimatesDates[[i]][["end"]][[as.character(data_type[1])]]),
+      ) %>%
+      ungroup()
+    if (i == "Switzerland"){
+      countryEstimates <- countryEstimates %>%
+        filter(source != "ECDC")
+    }
+    return(countryEstimates)
+  })
+  names(countryEstimates) <- countryList
 
   output$CHinteractivePlot <- renderPlotly({
 
-    rEffData <- estimatesRePlotCH()
+    rEffData <- estimatesSwitzerlandFOPH()
 
     latestDataCH <- filter(latestDataInt(), country == "Switzerland",
       source %in% unique(rEffData$source))
 
     plot <- rEffPlotly(
-      rawDataCHallCantons(),
+      rawDataSwitzerlandFOPH(),
       rEffData,
       interventions(),
       plotColoursNamed,
@@ -209,16 +235,16 @@ server <- function(input, output, session) {
 
   output$cantonInteractivePlot <- renderPlotly({
 
-    rEffData <- estimatesRePlotCH()
+    rEffData <- estimatesSwitzerlandFOPH()
 
-    cantonColors <- c(viridis(length(levels(rEffData$region)) - 1), "#666666")
-    names(cantonColors) <- levels(rEffData$region)
+    cantonColors <- c(viridis(length(unique(rEffData$region)) - 1), "#666666")
+    names(cantonColors) <- unique(rEffData$region)
 
     latestDataCH <- filter(latestDataInt(), country == "Switzerland",
       source %in% unique(rEffData$source))
 
     plot <- rEffPlotlyRegion(
-      rawDataCHallCantons(),
+      rawDataSwitzerlandFOPH(),
       rEffData,
       interventions(),
       latestDataCH,
@@ -229,4 +255,30 @@ server <- function(input, output, session) {
       widgetID = NULL)
     return(plot)
   })
+
+  # country plots
+  lapply(countryList, function(i) {
+    output[[str_c(i,"Plot")]] <- renderPlotly({
+      
+      latestDataInt <-  latestDataInt()
+      if (i == "Switzerland") {
+        latestDataInt <- latestDataInt %>%
+          filter(source != "ECDC")
+      }
+
+      plot <- rEffPlotlyCountry(
+        countrySelect = i,
+        caseData = countryRawData[[i]],
+        estimates = countryEstimates[[i]],
+        plotColoursNamed = plotColoursNamed,
+        lastDataDate = latestDataInt,
+        startDate = min(filter(countryRawData[[i]], cumul > 0)$date) - 1,
+        legendOrientation = "v", # "v" or "h"
+        textElements = textElements,
+        language = "en-gb",
+        widgetID = NULL)
+      return(plot)
+    })
+  })
+
 }

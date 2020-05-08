@@ -312,7 +312,7 @@ getExcessDeathNL <- function(startAt = as.Date("2020-02-20")) {
   return(longData)
 }
 
-##### UK Excess Deaths ####################################
+##### UK Excess deaths ####################################
 
 getRawExcessDeathUK <- function(startAt = as.Date("2020-02-20")) {
 
@@ -417,7 +417,7 @@ getLongECDCData <- function(countries = NULL) {
 
 dataCHHospitalPath <- here("../ch-hospital-data/data")
 
-outputDir <- here("app/data")
+dataDir <- here("app/data")
 
 ##### Pull data
 
@@ -432,7 +432,7 @@ CHrawData <- tibble::as_tibble(CHrawData) %>%
     region = recode(as.character(region), "CH" = "Switzerland"),
     country = recode(country, "CH" = "Switzerland"))
 # save data
-# pathToCHRawDataSave <- file.path(outputDir, "CH_Raw_data.Rdata")
+# pathToCHRawDataSave <- file.path(dataDir, "CH_Raw_data.Rdata")
 # save(CHrawData, file = pathToCHRawDataSave)
 
 ##### European data
@@ -458,34 +458,88 @@ EUrawData <- rbind(ECDCdata, swissExcessDeath, NLdata)
 # format data
 EUrawData <- tibble::as_tibble(EUrawData)
 # save data
-# pathToEURawDataSave <- file.path(outputDir, "EU_Raw_data.Rdata")
+# pathToEURawDataSave <- file.path(dataDir, "EU_Raw_data.Rdata")
 # save(EUrawData, file = pathToEURawDataSave)
 
 ##### Finished pulling data
 
-pathToRawDataSave <- file.path(outputDir, "Raw_data.Rdata")
+pathToRawDataSave <- file.path(dataDir, "Raw_data.Rdata")
 rawData <- bind_rows(CHrawData, EUrawData) %>%
   mutate(
     data_type = factor(
       data_type,
       levels = c("confirmed", "hospitalized", "deaths", "excess_deaths"),
-      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")),
-    country = as_factor(country),
-    region = as_factor(region))
+      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")))
 save(rawData, file = pathToRawDataSave)
 
-pathToCantonListSave <- file.path(outputDir, "cantonList.Rdata")
-save(cantonList, file = pathToCantonListSave)
+# figuring out when estimation can start (i.e. on the first day confirmed cases are > 100)
 
-pathToCountryListSave <- file.path(outputDir, "countryList.Rdata")
+estimateStartDates <- rawData %>%
+  filter(
+    data_type == "Confirmed cases",
+    !(country == "Switzerland" & region == "Switzerland" & source == "ECDC"),
+    country == region) %>%
+  group_by(country, source, data_type, variable) %>%
+  filter(
+    value > 100
+  ) %>%
+  top_n(n = -1, value) %>%
+  filter(variable == "cumul") %>%
+  ungroup() %>%
+  select(country, estimateStart = date)
+
+# figuring out when estimation ends i.e. applying the delays
+
+delays <- tibble(
+  data_type = factor(
+    c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"),
+    levels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")),
+  delay = c(10, 10, 15, 30)
+)
+
+estimateDatesDf <- rawData %>%
+  filter(
+    !(country == "Switzerland" & region == "Switzerland" & source == "ECDC"),
+    region == country
+  ) %>%
+  group_by(country, source, data_type) %>%
+  top_n(n = 1, date) %>%
+  filter(variable == "cumul") %>%
+  arrange(country) %>%
+  left_join(delays, by = "data_type") %>%
+  ungroup() %>%
+  transmute(
+    country = country, data_type = data_type, estimateEnd = date - delay) %>%
+  left_join(estimateStartDates, by = "country")
+
+estimatesDates <- list()
+
+for (i in unique(estimateDatesDf$country)) {
+  tmp <- filter(estimateDatesDf, country == i)
+  tmpListEnd <- tmp$estimateEnd
+  names(tmpListEnd) <- tmp$data_type
+  tmpListStart <- tmp$estimateStart
+  names(tmpListStart) <- tmp$data_type
+  estimatesDates[[i]] <- list(start = tmpListStart, end = tmpListEnd)
+}
+pathToEstimateDates <- file.path(dataDir, "estimate_dates.Rdata")
+save(estimatesDates, file = pathToEstimateDates)
+
+pathToEstimateStartDates <- file.path(dataDir, "estimate_start_dates.Rdata")
+save(estimateStartDates, file = pathToEstimateStartDates)
+
+pathToCantonList <- file.path(dataDir, "cantonList.Rdata")
+save(cantonList, file = pathToCantonList)
+
+pathToCountryListSave <- file.path(dataDir, "countryList.Rdata")
 save(countryList, file = pathToCountryListSave)
 
-pathToLatestData <- file.path(outputDir, "latestData.Rdata")
+pathToLatestData <- file.path(dataDir, "latestData.Rdata")
 latestData <- rawData %>%
   group_by(country, source) %>%
   summarize(date = max(date))
 save(latestData, file = pathToLatestData)
 
-writeLines(str_c("last check: ", Sys.time()), file.path(outputDir, "lastCheck.txt"))
+writeLines(str_c("last check: ", Sys.time()), file.path(dataDir, "lastCheck.txt"))
 
 print(paste("Done 1_getRawData.R:", Sys.time()))

@@ -92,7 +92,7 @@ makePanelEstimates <- function(castEstimates, estimateType, lastDayBAGData=Sys.D
   return(pRe)
 }
 
-makeWebsitePlot <- function(data, castEstimates, cantonList=c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "LU", "NE", "SG", "TI", "VD", "VS", "ZH", "CH"), lastDayBAGData=Sys.Date(), outputDir) {
+makeWebsitePlot <- function(data, castEstimates, cantonList=c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "LU", "NE", "SG", "TI", "VD", "VS", "ZH", "CH"), lastDayBAGData=Sys.Date(), dataDir) {
   
   pCases <- makePanelRawData(data, cantonList)
   pRe_window <- makePanelEstimates(castEstimates, "Cori_slidingWindow", lastDayBAGData=Sys.Date(),  startDate=as.Date("2020-03-07"), endDate=(Sys.Date() - 11)) 
@@ -105,9 +105,9 @@ makeWebsitePlot <- function(data, castEstimates, cantonList=c("AG", "BE", "BL", 
             common.legend = TRUE,
             legend = "bottom")
   
-  plotPath <- file.path(outputDir, paste0("Re_CH_", gsub("-","", Sys.Date()), ".png"))
+  plotPath <- file.path(dataDir, paste0("Re_CH_", gsub("-","", Sys.Date()), ".png"))
   ggsave(plotPath, width = 40, height = 60, units = "cm")
-  plotPathCommon <- plotPath <- file.path(outputDir, paste0("Re_CH.png"))
+  plotPathCommon <- plotPath <- file.path(dataDir, paste0("Re_CH.png"))
   ggsave(plotPathCommon, width = 40, height = 60, units = "cm")
 }
 
@@ -133,10 +133,10 @@ castEstimateData <- function(estimates, cantonList=c("AG", "BE", "BL", "BS", "FR
   return(castEstimates)
 }
 
-saveEstimatesAsCSV <- function(castEstimates, outputDir, startDate=as.Date("2020-03-07"), endDate=(Sys.Date() - 11)){
+saveEstimatesAsCSV <- function(castEstimates, dataDir, startDate=as.Date("2020-03-07"), endDate=(Sys.Date() - 11)){
   #### Save estimates in CSV files
-  dirPath_step <- file.path(outputDir, paste0(Sys.Date(), "_step"))
-  dirPath_window <- file.path(outputDir, paste0(Sys.Date(), "_slidingWindow"))
+  dirPath_step <- file.path(dataDir, paste0(Sys.Date(), "_step"))
+  dirPath_window <- file.path(dataDir, paste0(Sys.Date(), "_slidingWindow"))
   dir.create(dirPath_step, showWarnings = FALSE)
   dir.create(dirPath_window, showWarnings = FALSE)
   
@@ -161,16 +161,16 @@ saveEstimatesAsCSV <- function(castEstimates, outputDir, startDate=as.Date("2020
   
   ## Create zip archive from each estimate type (to be uploaded to webpage)
   csvFiles <- dir(dirPath_step, full.names = TRUE)
-  zipFile_step <- file.path(outputDir, "Re_CH_step.zip")
+  zipFile_step <- file.path(dataDir, "Re_CH_step.zip")
   zip(zipfile = zipFile_step, flags="-r9Xj", files = csvFiles) # flag "-j" added  to default flags to not save entire dir tree
   
   csvFiles <- dir(dirPath_window, full.names = TRUE)
-  zipFile_window <- file.path(outputDir, "Re_CH_slidingWindow.zip")
+  zipFile_window <- file.path(dataDir, "Re_CH_slidingWindow.zip")
   zip(zipfile = zipFile_window, flags="-r9Xj", files = csvFiles) # flag "-j" added to default flags to not save entire dir tree
 }
 
 ### Make plot and csv files for "https://bsse.ethz.ch/cevo/research/sars-cov-2/real-time-monitoring-in-switzerland.html"
-makeWebsitePlotAndFiles <- function(data, estimates, cantonList=c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "LU", "NE", "SG", "TI", "VD", "VS", "ZH", "CH"), lastDayBAGData,  startDateEstimates=as.Date("2020-03-07"), endDate=(Sys.Date() - 11), outputDir){
+makeWebsitePlotAndFiles <- function(data, estimates, cantonList=c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "LU", "NE", "SG", "TI", "VD", "VS", "ZH", "CH"), lastDayBAGData,  startDateEstimates=as.Date("2020-03-07"), endDate=(Sys.Date() - 11), dataDir){
   
 
   
@@ -214,17 +214,17 @@ makeWebsitePlotAndFiles <- function(data, estimates, cantonList=c("AG", "BE", "B
             common.legend = TRUE,
             legend = "bottom")
   
-  plotPath <- file.path(outputDir, paste0("Re_CH_", gsub("-","", Sys.Date()), ".png"))
+  plotPath <- file.path(dataDir, paste0("Re_CH_", gsub("-","", Sys.Date()), ".png"))
   ggsave(plotPath, width = 40, height = 60, units = "cm")
-  plotPathCommon <- plotPath <- file.path(outputDir, paste0("Re_CH.png"))
+  plotPathCommon <- plotPath <- file.path(dataDir, paste0("Re_CH.png"))
   ggsave(plotPathCommon, width = 40, height = 60, units = "cm")
   
   
   #### Save estimates in CSV files
   regionsToSave <- cantonList
   
-  dirPath_step <- file.path(outputDir, paste0(Sys.Date(), "_step"))
-  dirPath_window <- file.path(outputDir, paste0(Sys.Date(), "_slidingWindow"))
+  dirPath_step <- file.path(dataDir, paste0(Sys.Date(), "_step"))
+  dirPath_window <- file.path(dataDir, paste0(Sys.Date(), "_slidingWindow"))
   dir.create(dirPath_step, showWarnings = FALSE)
   dir.create(dirPath_window, showWarnings = FALSE)
   
@@ -253,11 +253,11 @@ makeWebsitePlotAndFiles <- function(data, estimates, cantonList=c("AG", "BE", "B
   
   ## Create zip archive from each estimate type (to be uploaded to webpage)
   csvFiles <- dir(dirPath_step, full.names = TRUE)
-  zipFile_step <- file.path(outputDir, "Re_CH_step.zip")
+  zipFile_step <- file.path(dataDir, "Re_CH_step.zip")
   zip(zipfile = zipFile_step, flags="-r9Xj", files = csvFiles) # flag "-j" added  to default flags to not save entire dir tree
   
   csvFiles <- dir(dirPath_window, full.names = TRUE)
-  zipFile_window <- file.path(outputDir, "Re_CH_slidingWindow.zip")
+  zipFile_window <- file.path(dataDir, "Re_CH_slidingWindow.zip")
   zip(zipfile = zipFile_window, flags="-r9Xj", files = csvFiles) # flag "-j" added to default flags to not save entire dir tree
   
 }
@@ -272,9 +272,9 @@ makeWebsitePlotAndFiles <- function(data, estimates, cantonList=c("AG", "BE", "B
 ###### Input #######
 ####################
 
-outputDir <- here("app/data")
-pathToEstimatesReSave <- file.path(outputDir, paste0("Estimates_Re_",Sys.Date(), ".Rdata"))
-pathToRawDataSave <- file.path(outputDir, paste0("Raw_data_",Sys.Date(), ".Rdata"))
+dataDir <- here("app/data")
+pathToEstimatesRe <- file.path(dataDir, paste0("Estimates_Re_",Sys.Date(), ".Rdata"))
+pathToRawDataSave <- file.path(dataDir, paste0("Raw_data_",Sys.Date(), ".Rdata"))
 
 lastDayBAGData <- as.Date("2020-04-28")
 orderedListOfRegions <- c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "LU", "NE", "SG", "TI", "VD", "VS", "ZH", "CH")
@@ -282,13 +282,13 @@ orderedListOfRegions <- c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "LU", "NE", 
 
 #### data
 load(file=pathToRawDataSave)
-load(file=pathToEstimatesReSave)
+load(file=pathToEstimatesRe)
 
 ## cast estimates from long format
 castEstimates <- castEstimateData(estimatesRe, orderedListOfRegions)
 
 ## make plot
-makeWebsitePlot(rawData, castEstimates, cantonList=orderedListOfRegions, lastDayBAGData = lastDayBAGData, outputDir=outputDir)
+makeWebsitePlot(rawData, castEstimates, cantonList=orderedListOfRegions, lastDayBAGData = lastDayBAGData, dataDir=dataDir)
 
 ## save in csv files
-saveEstimatesAsCSV(castEstimates, outputDir)
+saveEstimatesAsCSV(castEstimates, dataDir)

@@ -7,13 +7,15 @@ library(viridisLite)
 
 # load data
 dataDir <- here("app/data")
-pathToEstimatesRePlot <- file.path(dataDir, "Estimates_Re_plot.Rdata")
+pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.Rdata")
 pathToLatestData <- file.path(dataDir, "latestData.Rdata")
 pathToRawData <- file.path(dataDir, "Raw_data.Rdata")
+pathToEstimateDates <- file.path(dataDir, "estimate_dates.Rdata")
 
 load(pathToRawData)
-load(pathToEstimatesRePlot)
+load(pathToEstimatesReSum)
 load(pathToLatestData)
+load(pathToEstimateDates)
 
 # common functions
 dataUpdatesString <- function(latestData, name = "Data Source", dateFormat = "%Y-%m-%d") {
@@ -38,18 +40,16 @@ plotColoursNamed <-  c(
   "Deaths" = allCols[5])
 
 # prepare Data
-cumulativePlotData <- rawData %>%
+caseDataPlot <- rawData %>%
   filter(country == "Switzerland",
     source %in% c("openZH", "FOPH"),
     data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
   mutate(
-    region = fct_drop(region),
-    country = fct_drop(country),
     data_type = fct_drop(data_type)
   ) %>%
   pivot_wider(names_from = "variable", values_from = "value")
 
-estimatesRePlotFiltered <- estimatesRePlot %>%
+estimates <- estimatesReSum %>%
   filter(country == "Switzerland",
     source %in% c("openZH", "FOPH"),
     data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
@@ -58,21 +58,18 @@ estimatesRePlotFiltered <- estimatesRePlot %>%
     country = fct_drop(country),
     data_type = fct_drop(data_type)
   ) %>%
+  group_by(data_type) %>%
   filter(
-    # confirmed: delay 10 days
-    !(data_type == "Confirmed cases" & date > (latestData[latestData$source == "openZH", ]$date - 10)),
-    # hospitalized
-    !(data_type == "Hospitalized patients" & date > (latestData[latestData$source == "FOPH", ]$date - 10)),
-    # deaths: delay 16 days
-    !(data_type == "Deaths" & date > (latestData[latestData$source == "openZH", ]$date - 15))
-  )
-
-rEffPlotWindowData <- filter(estimatesRePlotFiltered,
-  estimate_type == "Cori_slidingWindow")
+    estimate_type == "Cori_slidingWindow",
+    between(date,
+      left = estimatesDates[["Switzerland"]][["start"]][[as.character(data_type[1])]],
+      right = estimatesDates[["Switzerland"]][["end"]][[as.character(data_type[1])]]),
+  ) %>%
+  ungroup()
 
 latestDataPlot <- latestData %>%
   filter(country == "Switzerland",
-    source %in% unique(rEffPlotWindowData$source))
+    source %in% unique(estimates$source))
 
 source(here("app", "otherScripts", "ReffPlotly.R"))
 
@@ -83,7 +80,7 @@ for (i in names(translations)[-1]) {
   names(textElements[[i]]) <- translations$element
 }
 
-outputDir <- here("app/www")
+dataDir <- here("app/www")
 
 for (i in names(textElements)) {
   pathToInterventionData <- here(str_c(
@@ -99,8 +96,8 @@ for (i in names(textElements)) {
       date = col_date(format = "")))
 
   plotlyPlotV <- rEffPlotly(
-    cumulativePlotData,
-    rEffPlotWindowData,
+    caseDataPlot,
+    estimates,
     interventions,
     plotColoursNamed,
     lastDataDate = latestDataPlot,
@@ -114,12 +111,12 @@ for (i in names(textElements)) {
   plotlyPlotV
 
   htmlwidgets::saveWidget(plotlyPlotV,
-    file.path(outputDir, str_c("rEffplotly_", i, ".html")), selfcontained = FALSE, libdir = "lib",
+    file.path(dataDir, str_c("rEffplotly_", i, ".html")), selfcontained = FALSE, libdir = "lib",
     title = "Effective reproductive number (Re) in Switzerland")
 
   # write_lines(
   #   htmlwidgetsExtended::exportWidgetJson(plotlyPlotV),
-  #   file.path(outputDir, str_c("rEffplotly_data_", i, ".json")))
+  #   file.path(dataDir, str_c("rEffplotly_data_", i, ".json")))
 }
 
 print(paste("Done makeReffPlotly.R:", Sys.time()))

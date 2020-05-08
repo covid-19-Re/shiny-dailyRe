@@ -176,9 +176,9 @@ drawAllInfectionDates <- function(
 ###### Input #######
 ####################
 
-outputDir <- here("app/data")
-pathToRawDataSave <- file.path(outputDir, "Raw_data.Rdata")
-pathToSampledInfectDataSave <- file.path(outputDir, "Sampled_infect_data.Rdata")
+dataDir <- here("app/data")
+pathToRawDataSave <- file.path(dataDir, "Raw_data.Rdata")
+pathToSampledInfectDataSave <- file.path(dataDir, "Sampled_infect_data.Rdata")
 
 ### Waiting time distributions ##
 ## hardcoded for now, but to be taken outside of script
