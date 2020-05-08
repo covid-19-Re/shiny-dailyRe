@@ -21,7 +21,7 @@ server <- function(input, output, session) {
       menuItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantonsPlot", icon = icon("chart-area")),
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")),
         lapply(c("Comparison", countryList), function(i) {
-          menuSubItem(i, tabName = str_c(i, "Plot"), icon = icon("chart-area"))
+          menuSubItem(i, tabName = str_c(str_remove(i, " "), "Plot"), icon = icon("chart-area"))
         })
       ),
       menuItem(i18n()$t("About"), tabName = "aboutPlot", icon = icon("question-circle")),
@@ -90,12 +90,12 @@ server <- function(input, output, session) {
 
   # country UIs
   lapply(c("Comparison", countryList), function(i) {
-    output[[str_c(i,"UI")]] <- renderUI({
+    output[[str_c(str_remove(i," "),"UI")]] <- renderUI({
       fluidRow(
         box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) in Europe - ",
           i))),
           width = 12,
-          plotlyOutput(str_c(i,"Plot"), width = "100%", height = "700px")
+          plotlyOutput(str_c(str_remove(i, " "), "Plot"), width = "100%", height = "700px")
         ),
         fluidRow(
           column(width = 8,
@@ -151,7 +151,7 @@ server <- function(input, output, session) {
     tabs <- lapply(
       tabList,
       function(i) {
-        tabItem(tabName = str_c(i, "Plot"), uiOutput(str_c(i,"UI")))
+        tabItem(tabName = str_c(str_remove(i, " "), "Plot"), uiOutput(str_c(str_remove(i, " " ),"UI")))
       })
     return(do.call(tabItems, tabs))
   })
@@ -251,7 +251,7 @@ server <- function(input, output, session) {
     }
     return(rawDataCountry)
   })
-  names(caseDataCountry) <- countryList
+  names(caseDataCountry) <- str_remove(countryList, " ")
 
   # country estimates
   estimatesCountry <- lapply(countryList, function(i) {
@@ -271,7 +271,7 @@ server <- function(input, output, session) {
     }
     return(estimatesCountry)
   })
-  names(estimatesCountry) <- countryList
+  names(estimatesCountry) <- str_remove(countryList, " ")
 
   output$CHinteractivePlot <- renderPlotly({
 
@@ -341,21 +341,22 @@ server <- function(input, output, session) {
 
   # country plots
   lapply(countryList, function(i) {
-    output[[str_c(i,"Plot")]] <- renderPlotly({
+    output[[str_c(str_remove(i," "),"Plot")]] <- renderPlotly({
       
       latestDataInt <-  latestDataInt()
       if (i == "Switzerland") {
         latestDataInt <- latestDataInt %>%
           filter(source != "ECDC")
       }
+      caseData <- caseDataCountry[[str_remove(i, " ")]]
 
       plot <- rEffPlotlyCountry(
         countrySelect = i,
-        caseData = caseDataCountry[[i]],
-        estimates = estimatesCountry[[i]],
+        caseData = caseData,
+        estimates = estimatesCountry[[str_remove(i, " ")]],
         plotColoursNamed = plotColoursNamed,
         lastDataDate = latestDataInt,
-        startDate = min(filter(caseDataCountry[[i]], cumul > 0)$date) - 1,
+        startDate = min(filter(caseData, cumul > 0)$date) - 1,
         legendOrientation = "v", # "v" or "h"
         textElements = textElements,
         language = "en-gb",
