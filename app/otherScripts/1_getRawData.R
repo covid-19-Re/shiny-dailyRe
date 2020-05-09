@@ -30,7 +30,7 @@ meltCumulativeData <- function(
   stoppingDate = (Sys.Date() - 1)) {
 
   cumulData <- rawData
-  cumulData$Date <- ymd(cumulData$Date)
+  cumulData$Date <- ymd(cumulData$Date, locale = "en_GB.UTF-8")
   cumulData <- cumulData[cumulData$Date <= stoppingDate, ]
   cumulData <- melt(cumulData, id.vars = nameDateCol)
   colnames(cumulData) <- c("date", "region", "value")
@@ -293,8 +293,7 @@ getRawExcessDeathNL <- function(startAt = as.Date("2020-02-20")) {
         parse_date_time(
           paste(year, week, "Mon", sep = "/"), "Y/W/a",
           locale = "en_GB.UTF-8"
-          )
-        )) %>%
+          ), locale = "en_GB.UTF-8")) %>%
     select(-year, -week)
   # this translation to a date associates the last day of the week
 
