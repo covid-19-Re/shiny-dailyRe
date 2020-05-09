@@ -318,16 +318,16 @@ getExcessDeathNL <- function(startAt = as.Date("2020-02-20")) {
 
 ##### UK Excess deaths ####################################
 
-getRawExcessDeathUK <- function(startAt = as.Date("2020-02-20")) {
+getRawExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = "../data/UK") {
 
   relevant_weeks <- seq(isoweek(startAt), isoweek(Sys.Date()) - 2)
-  last_week <- isoweek(Sys.Date()) - 2
+  #last_week <- isoweek(Sys.Date()) - 2
 
   #url = "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales"
 
   raw_data <- suppressWarnings(
     readxl::read_excel(
-      path = paste0("../data/UK/publishedweek", last_week, "2020.xlsx"),
+      path = file.path(path_to_data, "Excess_death_UK.xlsx"),
       sheet = "Weekly figures 2020", col_names = F))
 
   rowUK <- raw_data[c(5, 6, 9, 11, 19), ] %>%
@@ -351,14 +351,14 @@ getRawExcessDeathUK <- function(startAt = as.Date("2020-02-20")) {
   excess_deaths <- columnUK %>%
     select(-tmp) %>%
     filter(!is.na(deaths), week %in% relevant_weeks) %>%
-    mutate(date = as.Date(date, origin = "1899-12-30")) %>%
+    mutate(date = as.Date(date, origin = "1899-12-30", locale = "en_GB.UTF-8")) %>%
     mutate(excess_deaths = deaths - avg_deaths)
 
   return(excess_deaths)
 }
 
-getExcessDeathUK <- function(startAt = as.Date("2020-02-20")) {
-  excess_death <- getRawExcessDeathUK(startAt)
+getExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = "../data/UK") {
+  excess_death <- getRawExcessDeathUK(startAt, path_to_data)
 
   longData <- excess_death %>%
     select(date, deaths = covid_deaths, excess_deaths) %>%
@@ -441,19 +441,14 @@ CHrawData <- tibble::as_tibble(CHrawData) %>%
 
 ##### European data
 
-ECDCdata <- getLongECDCData(countryList)
-NLdata <- getDataNL(stopAfter = Sys.Date() - 1) %>%
-  filter(data_type %in% c("hospitalized", "excess_deaths"))
-#UKdata <- getExcessDeathUK() %>%
-#  filter(data_type %in% c("excess_deaths"))
-
-# "In England and Wales,
-# the Covid-19 deaths reflect the revised death
-# figures from the Office of National Statistics."
-
+ECDCdata <- getLongECDCData(setdiff(countryList, c('Switzerland', 'Netherlands')))
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
+NLdata <- getDataNL(stopAfter = Sys.Date() - 1)
+UKExcessDeath <- getExcessDeathUK(startAt = as.Date("2020-02-20"), 
+                           path_to_data = here("../ch-hospital-data/data/UK")) %>%
+  filter(data_type %in% c("excess_deaths"))
 
-EUrawData <- rbind(ECDCdata, swissExcessDeath, NLdata)
+EUrawData <- rbind(ECDCdata, swissExcessDeath, NLdata, UKExcessDeath)
 
 # format data
 EUrawData <- tibble::as_tibble(EUrawData)
