@@ -289,7 +289,12 @@ getRawExcessDeathNL <- function(startAt = as.Date("2020-02-20")) {
       sd_deaths = past_mean$sd_deaths,
       excess_deaths = ceiling(deaths - avg_deaths),
       perc_excess = 100 * (excess_deaths / avg_deaths),
-      date = ymd(parse_date_time(paste(year, week, "Mon", sep = "/"), "Y/W/a"))) %>%
+      date = ymd(
+        parse_date_time(
+          paste(year, week, "Mon", sep = "/"), "Y/W/a",
+          locale = "en_GB.UTF-8"
+          )
+        )) %>%
     select(-year, -week)
   # this translation to a date associates the last day of the week
 
@@ -446,10 +451,6 @@ NLdata <- getDataNL(stopAfter = Sys.Date() - 1) %>%
 # "In England and Wales,
 # the Covid-19 deaths reflect the revised death
 # figures from the Office of National Statistics."
-
-swissData <- getAllSwissData(pathToHospData = dataCHHospitalPath, regions = "CH") %>%
-  mutate(country = recode(country, "CH" = "Switzerland")) %>%
-  filter(data_type %in% c("hospitalized", "excess_deaths"))
 
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
 
