@@ -121,7 +121,7 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
   typeLabels <- list("cases", "fatalities")
   names(countTypes) <- typeLabels
   names(typeLabels) <- countTypes
-
+  # https://raw.githubusercontent.com/openZH/covid_19/master/COVID19_Fallzahlen_CH_total_v2.csv
   baseUrl <-  "https://raw.githubusercontent.com/daenuprobst/covid19-cases-switzerland/master/"
 
   data <- data.frame(

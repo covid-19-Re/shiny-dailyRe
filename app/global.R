@@ -15,7 +15,7 @@ names(languageSelect) <- c("EN", "IT", "FR", "DE")
 pathToRawData <- file.path(dataDir, "Raw_data.Rdata")
 pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.Rdata")
 pathToEstimatesRe <- file.path(dataDir, "Estimates_Re.Rdata")
-pathToEstimatesRePlot <- file.path(dataDir, "Estimates_Re_sum.Rdata")
+pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.Rdata")
 pathToCantonList <- file.path(dataDir, "cantonList.Rdata")
 pathTolatestData <- file.path(dataDir, "latestData.Rdata")
 pathToLastCheck <- file.path(dataDir, "lastCheck.txt")
@@ -36,13 +36,42 @@ for (i in names(translations)[-1]) {
 
 # helpers
 
-dataUpdatesTable <- function(latestData, lastCheck, dateFormat = "%Y-%m-%d") {
+dataUpdatesTable <- function(
+  latestData,
+  lastCheck,
+  dateFormat = "%Y-%m-%d",
+  showDataType = FALSE) {
+  
+  latestData <- latestData %>%
+    group_by(country, source) %>%
+    slice(1L)
+  showCountry <- length(unique(latestData$country)) > 1
+
   outList <- list("<table style=\"width:100%\">")
   for (i in 1:dim(latestData)[1]) {
+    if (i == 1) {
+      printCountry <- showCountry
+    } else {
+      printCountry <- (showCountry & latestData[i - 1, ]$country != latestData[i, ]$country)
+    }
+    
+    if (printCountry) {
+      countryString <- str_c("<tr><td colspan=\"3\">", latestData[i, ]$country, "</td></tr>")
+    } else {
+      countryString <- ""
+    }
+
+    sourceString <- str_c("<td style = \"font-weight: normal;\">", latestData[i, ]$source, "</td>")
+    if (showCountry) {
+      sourceString <- str_c("<td>&nbsp;&nbsp;</td>", sourceString)
+    }
+
     outList[[i + 1]] <- str_c(
-      "<tr><td>",
-      latestData[i, ]$source, "</td><td>", format(latestData[i, ]$date, dateFormat),
-      "</td></tr>")
+      countryString,
+      "<tr>",
+        sourceString,
+        "<td style = \"font-weight: normal;font-style: italic;\">", format(latestData[i, ]$date, dateFormat), "</td>",
+      "</tr>")
   }
   outList[[i + 2]] <- "</table>"
   out <- str_c(outList, collapse = "")

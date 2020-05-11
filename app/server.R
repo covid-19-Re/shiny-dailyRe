@@ -9,7 +9,7 @@ server <- function(input, output, session) {
   })
 
   load(pathToRawData)
-  load(pathToEstimatesRePlot)
+  load(pathToEstimatesReSum)
   load(pathToCantonList)
   load(pathToEstimateDates)
   lastCheck <- readLines(pathToLastCheck)
@@ -65,12 +65,12 @@ server <- function(input, output, session) {
           plotlyOutput("cantonInteractivePlot", width = "100%", height = "700px")
       ),
       fluidRow(
-        column(width = 8,
+        column(width = 7,
           box(width = 12,
             includeMarkdown(str_c("md/methodsCH_", input$lang, ".md"))
             )
         ),
-        column(width = 4,
+        column(width = 5,
           infoBox(width = 12,
             i18n()$t("Last Data Updates"),
             HTML(dataUpdatesTable(filter(latestDataInt(),
@@ -89,8 +89,8 @@ server <- function(input, output, session) {
   })
 
   # country UIs
-  lapply(c("Comparison", countryList), function(i) {
-    output[[str_c(str_remove(i," "),"UI")]] <- renderUI({
+  lapply(countryList, function(i) {
+    output[[str_c(str_remove(i, " "), "UI")]] <- renderUI({
       fluidRow(
         box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) in Europe - ",
           i))),
@@ -134,15 +134,21 @@ server <- function(input, output, session) {
               )
           ),
           column(width = 4,
-            infoBox(width = 12,
-              i18n()$t("Last Data Updates"),
-              HTML(
-                dataUpdatesTable(latestDataInt(), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
-              icon = icon("exclamation-circle"),
-              color = "purple"
-            )
+            uiOutput("ComparisonDataSourceUI")
           )
         )
+      )
+  })
+
+  output$ComparisonDataSourceUI <- renderUI({
+    infoBox(width = 12,
+        i18n()$t("Last Data Updates"),
+        HTML(
+          dataUpdatesTable(
+            latestDataIntComp(),
+            lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+        icon = icon("exclamation-circle"),
+        color = "purple"
       )
   })
 
@@ -162,6 +168,16 @@ server <- function(input, output, session) {
     latestData$source[latestData$source == "FOPH"] <- i18n()$t("FOPH")
     latestDataInt <- latestData
     return(latestDataInt)
+  })
+
+  latestDataIntComp <- reactive({
+    if(is.null(input$data_type_select)) {
+      selectedDataType <- "Confirmed cases"
+    } else {
+      selectedDataType <- input$data_type_select
+    }
+    latestDataIntComp <- filter(latestDataInt(), data_type == selectedDataType)
+    return(latestDataIntComp)
   })
 
   interventions <- reactive({
