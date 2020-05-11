@@ -284,9 +284,8 @@ getRawExcessDeathNL <- function(startAt = as.Date("2020-02-20")) {
   excess_death <- data %>%
     filter(year == 2020) %>%
     select(year, week, deaths) %>%
+    left_join(past_mean, by = "week") %>%
     mutate(
-      avg_deaths = past_mean$avg_deaths,
-      sd_deaths = past_mean$sd_deaths,
       excess_deaths = ceiling(deaths - avg_deaths),
       perc_excess = 100 * (excess_deaths / avg_deaths),
       date = ymd(
@@ -441,11 +440,12 @@ CHrawData <- tibble::as_tibble(CHrawData) %>%
 
 ##### European data
 
-ECDCdata <- getLongECDCData(setdiff(countryList, c('Switzerland', 'Netherlands')))
+ECDCdata <- getLongECDCData(setdiff(countryList, c("Switzerland", "Netherlands")))
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
 NLdata <- getDataNL(stopAfter = Sys.Date() - 1)
-UKExcessDeath <- getExcessDeathUK(startAt = as.Date("2020-02-20"), 
-                           path_to_data = here("../ch-hospital-data/data/UK")) %>%
+UKExcessDeath <- getExcessDeathUK(
+    startAt = as.Date("2020-02-20"),
+    path_to_data = here("../ch-hospital-data/data/UK")) %>%
   filter(data_type %in% c("excess_deaths"))
 
 EUrawData <- rbind(ECDCdata, swissExcessDeath, NLdata, UKExcessDeath)
@@ -528,7 +528,7 @@ save(countryList, file = pathToCountryListSave)
 
 pathToLatestData <- file.path(dataDir, "latestData.Rdata")
 latestData <- rawData %>%
-  group_by(country, source) %>%
+  group_by(country, source, data_type) %>%
   summarize(date = max(date))
 save(latestData, file = pathToLatestData)
 
