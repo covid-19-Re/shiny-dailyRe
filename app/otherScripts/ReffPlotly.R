@@ -601,6 +601,13 @@ rEffPlotlyCountry <- function(
 
   lastDataDate <- filter(lastDataDate, country == countrySelect)
 
+  lastDataDate <- lastDataDate %>%
+    ungroup() %>%
+    select(source, date) %>%
+    group_by(source) %>%
+    distinct() %>%
+    filter(date == max(date))
+
   axisTitleFontSize <- 14
   if (legendOrientation == "v") {
     xrNote <- 1
