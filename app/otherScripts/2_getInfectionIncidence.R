@@ -1,4 +1,4 @@
-print(paste("starting 2_getInfectionIncidence.R:", Sys.time()))
+cat(paste("###", Sys.time(), "- starting 2_getInfectionIncidence.R", "\n"))
 
 library("lubridate")
 library("readr")
@@ -238,4 +238,4 @@ save(sampledInfectData, file = pathToSampledInfectDataSave)
 
 ###############
 
-print(paste("Done 2_getInfectionIncidence.R: ", Sys.time()))
+cat(paste("###", Sys.time(), "- done 2_getInfectionIncidence.R", "\n"))

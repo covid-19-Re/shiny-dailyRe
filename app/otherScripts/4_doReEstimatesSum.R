@@ -1,5 +1,5 @@
 # format estimate data in seperate process to avoid c stack limit
-print(paste("starting 4_doReEstimatesSum.R: ", Sys.time()))
+cat(paste("###", Sys.time(), "- starting 4_doReEstimatesSum.R", "\n"))
 library(tidyverse)
 library(here)
 
@@ -49,4 +49,4 @@ estimatesReSum <- estimatesRe %>%
 save(estimatesReSum, file = pathToEstimatesReSum)
 
 #############################
-print(paste("Done 4_doReEstimatesSum.R: ", Sys.time()))
+cat(paste("###", Sys.time(), "- done 4_doReEstimatesSum.R", "\n"))

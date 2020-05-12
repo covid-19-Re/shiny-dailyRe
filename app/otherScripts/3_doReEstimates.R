@@ -1,4 +1,4 @@
-print(paste("starting 3_doReEstimates.R: ", Sys.time()))
+cat(paste("###", Sys.time(), "- starting 3_doReEstimates.R", "\n"))
 
 library("lubridate")
 library("readr")
@@ -337,4 +337,4 @@ estimatesReRaw <- as_tibble(estimatesReRaw_calc) %>%
 save(estimatesReRaw, file = pathToEstimatesReRaw)
 
 #############################
-print(paste("done 3_doReEstimates.R:", Sys.time()))
+cat(paste("###", Sys.time(), "- done 3_doReEstimates.R", "\n"))

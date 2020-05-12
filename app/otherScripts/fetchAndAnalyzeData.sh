@@ -7,12 +7,14 @@ cd "../../../ch-hospital-data"
 git pull
 
 cd "$parent_path"
-Rscript --vanilla --verbose 1_getRawData.R > 1_getRawData.Rout 2>&1
-Rscript --vanilla --verbose 2_getInfectionIncidence.R > 2_getInfectionIncidence.Rout 2>&1
-Rscript --vanilla --verbose 3_doReEstimates.R > 3_doReEstimates.Rout 2>&1
+rm *.Rout
+rm -f ../data/temp/*
+Rscript --vanilla --verbose 1_getRawData.R >> messages.Rout 2>> errors.Rout
+Rscript --vanilla --verbose 2_getInfectionIncidence.R >> messages.Rout 2>> errors.Rout
+Rscript --vanilla --verbose 3_doReEstimates.R >> messages.Rout 2>> errors.Rout
 # summarize data in seperate process to avoid C stack limit
-Rscript --vanilla --verbose 4_doReEstimatesSum.R > 4_doReEstimatesSum.Rout 2>&1
-Rscript --vanilla --verbose 5_makeReffPlotly.R > 5_makeReffPlotly.Rout 2>&1
+Rscript --vanilla --verbose 4_doReEstimatesSum.R >> messages.Rout 2>> errors.Rout
+Rscript --vanilla --verbose 5_makeReffPlotly.R >> messages.Rout 2>> errors.Rout
 # copy data
 cp -f ../data/temp/* ../data/
 # make app restart on next connection

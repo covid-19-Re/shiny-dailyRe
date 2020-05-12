@@ -1,4 +1,6 @@
-print(paste("starting 1_getRawData.R:", Sys.time()))
+startTime <- Sys.time()
+save(startTime, file = "ScriptStartTime.Rdata")
+cat(paste("###", startTime, "- starting 1_getRawData.R", "\n"))
 
 library("lubridate")
 library("readr")
@@ -271,7 +273,8 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
 
 ##### Dutch Data ##########################################
 getDataNL <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
-  baseurl <- "https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/rivm_NL_covid19_national_by_date/rivm_NL_covid19_national_by_date_"
+  baseurl <- str_c("https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/",
+    "rivm_NL_covid19_national_by_date/rivm_NL_covid19_national_by_date_")
   urlfile <- paste0(baseurl, stopAfter, ".csv")
 
   raw_data <- read_csv(urlfile)
@@ -388,7 +391,8 @@ getRawExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = 
   relevant_weeks <- seq(isoweek(startAt), isoweek(Sys.Date()) - 2)
   #last_week <- isoweek(Sys.Date()) - 2
 
-  #url = "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales"
+  # url <- str_c("https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/",
+  #   "deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales")
 
   raw_data <- suppressWarnings(
     readxl::read_excel(
@@ -491,8 +495,6 @@ dataDir <- here("app/data/temp")
 ##### Pull data
 
 ##### Swiss data
-### just an example here with keeping all the data from different sources/countries in one dataframe and saving into one file
-# rawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath), getLongECDCData())
 CHrawData <- getAllSwissData(pathToHospData = dataCHHospitalPath) %>%
   mutate(
     region = recode(region, "CH" = "Switzerland", "FL" = "Liechtenstein"),
@@ -605,4 +607,4 @@ latestData <- rawData %>%
   summarize(date = max(date))
 save(latestData, file = pathToLatestData)
 
-print(paste("Done 1_getRawData.R:", Sys.time()))
+cat(paste("###", Sys.time(), "- done 1_getRawData.R", "\n"))

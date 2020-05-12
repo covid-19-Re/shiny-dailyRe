@@ -1,4 +1,5 @@
-print(paste("starting makeReffPlotly.R:", Sys.time()))
+cat(paste("###", Sys.time(), "- starting makeReffPlotly.R", "\n"))
+
 library(tidyverse)
 library(plotly)
 library(htmlwidgets)
@@ -127,4 +128,8 @@ for (i in names(textElements)) {
 
 writeLines(str_c("last check: ", Sys.time()), file.path(dataDir, "lastCheck.txt"))
 
-print(paste("Done makeReffPlotly.R:", Sys.time()))
+cat(paste("###", Sys.time(), "- done makeReffPlotly.R", "\n"))
+
+load(file = "ScriptStartTime.Rdata")
+
+cat(paste("###", "total script duration:", signif(difftime(Sys.time(), startTime, units = "mins")), "min"))
