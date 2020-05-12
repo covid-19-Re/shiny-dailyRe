@@ -18,10 +18,13 @@ server <- function(input, output, session) {
   output$menu <- renderMenu({
     sidebarMenu(id = "tabs",
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Switzerland")), startExpanded = TRUE,
-        menuSubItem(HTML(i18n()$t("Switzerland")),tabName = "chPlot", icon = icon("chart-area")),
-        menuItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantonsPlot", icon = icon("chart-area")),
-        menuItem(HTML(i18n()$t("R<sub>e</sub> for greater Regions")), tabName = "greaterRegionsPlot", icon = icon("chart-area"))
-      ),      
+        menuSubItem(HTML(i18n()$t("Switzerland")), tabName = "chPlot", icon = icon("chart-area")),
+        menuSubItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantonsPlot", icon = icon("chart-area")),
+        menuSubItem(HTML(i18n()$t("R<sub>e</sub> for greater Regions")),
+          tabName = "greaterRegionsPlot", icon = icon("chart-area")),
+        menuSubItem(HTML(i18n()$t("CH estimates download")),
+          tabName = "downloadPlot", icon = icon("download"))
+      ),
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")),
         lapply(c("Comparison", countryList), function(i) {
           menuSubItem(i, tabName = str_c(str_remove(i, " "), "Plot"), icon = icon("chart-area"))
@@ -181,12 +184,21 @@ server <- function(input, output, session) {
       )
   })
 
+  output$downloadUI <- renderUI({
+    fluidRow(
+      box(title = HTML(i18n()$t("Download estimates for Switzerland")), width = 12,
+        downloadLink("downloadCHestimates", "Download estimats (.csv)")
+      )
+    )
+  })
+
+
   output$dashboardBodyUI <- renderUI({
-    tabList <- c("ch", "cantons", "greaterRegions", "Comparison", countryList, "about")
+    tabList <- c("ch", "cantons", "greaterRegions", "download", "Comparison", countryList, "about")
     tabs <- lapply(
       tabList,
       function(i) {
-        tabItem(tabName = str_c(str_remove(i, " "), "Plot"), uiOutput(str_c(str_remove(i, " " ),"UI")))
+        tabItem(tabName = str_c(str_remove(i, " "), "Plot"), uiOutput(str_c(str_remove(i, " "),"UI")))
       })
     return(do.call(tabItems, tabs))
   })
@@ -449,5 +461,15 @@ server <- function(input, output, session) {
       return(plot)
     })
   })
+
+  # download
+  output$downloadCHestimates <- downloadHandler(
+    filename = function() {
+      str_c(format(Sys.Date(), "%Y%m%d"), "-ReEstimatesCH.csv")
+    },
+    content = function(file) {
+      write_csv(estimatesSwitzerlandFOPH(), file)
+    }
+  )
 
 }
