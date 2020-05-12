@@ -16,15 +16,14 @@ pathToRawData <- file.path(dataDir, "Raw_data.Rdata")
 pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.Rdata")
 pathToEstimatesRe <- file.path(dataDir, "Estimates_Re.Rdata")
 pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.Rdata")
-pathToCantonList <- file.path(dataDir, "cantonList.Rdata")
 pathTolatestData <- file.path(dataDir, "latestData.Rdata")
 pathToLastCheck <- file.path(dataDir, "lastCheck.txt")
 pathToInterventionData <- file.path("../../ch-hospital-data/data/interventions")
 pathToTranslations <- file.path(dataDir, "translations.csv")
 pathToCountryList <- file.path(dataDir, "countryList.Rdata")
 pathToEstimateDates <- file.path(dataDir, "estimate_dates.Rdata")
+pathToValidEstimates <- file.path(dataDir, "valid_estimates.Rdata")
 
-load(pathToCantonList)
 load(pathToCountryList)
 
 translations <- read_csv(here("app", "data", "translations.csv"), col_types = "ccccc")
@@ -41,7 +40,7 @@ dataUpdatesTable <- function(
   lastCheck,
   dateFormat = "%Y-%m-%d",
   showDataType = FALSE) {
-  
+
   latestData <- latestData %>%
     group_by(country, source) %>%
     slice(1L)

@@ -10,15 +10,18 @@ server <- function(input, output, session) {
 
   load(pathToRawData)
   load(pathToEstimatesReSum)
-  load(pathToCantonList)
   load(pathToEstimateDates)
+  load(pathToValidEstimates)
   lastCheck <- readLines(pathToLastCheck)
 
   # Render UI
   output$menu <- renderMenu({
     sidebarMenu(id = "tabs",
-      menuItem(HTML(i18n()$t("R<sub>e</sub> in Switzerland")), tabName = "chPlot", icon = icon("chart-area")),
-      menuItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantonsPlot", icon = icon("chart-area")),
+      menuItem(HTML(i18n()$t("R<sub>e</sub> in Switzerland")), startExpanded = TRUE,
+        menuSubItem(HTML(i18n()$t("Switzerland")),tabName = "chPlot", icon = icon("chart-area")),
+        menuItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantonsPlot", icon = icon("chart-area")),
+        menuItem(HTML(i18n()$t("R<sub>e</sub> for greater Regions")), tabName = "greaterRegionsPlot", icon = icon("chart-area"))
+      ),      
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")),
         lapply(c("Comparison", countryList), function(i) {
           menuSubItem(i, tabName = str_c(str_remove(i, " "), "Plot"), icon = icon("chart-area"))
@@ -62,12 +65,38 @@ server <- function(input, output, session) {
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for cantons")),
       width = 12,
-          plotlyOutput("cantonInteractivePlot", width = "100%", height = "700px")
+          plotlyOutput("cantonInteractivePlot", width = "100%", height = "800px")
       ),
       fluidRow(
         column(width = 7,
           box(width = 12,
-            includeMarkdown(str_c("md/methodsCH_", input$lang, ".md"))
+            includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
+            )
+        ),
+        column(width = 5,
+          infoBox(width = 12,
+            i18n()$t("Last Data Updates"),
+            HTML(dataUpdatesTable(filter(latestDataInt(),
+              country == "Switzerland", source %in% c("openZH", "FOPH")),
+              lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+              icon = icon("exclamation-circle"),
+            color = "purple"
+          )
+        )
+      )
+    )
+  })
+
+  output$greaterRegionsUI <- renderUI({
+    fluidRow(
+      box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for greater regions of Switzerland")),
+      width = 12,
+          plotlyOutput("greaterRegionInteractivePlot", width = "100%", height = "800px")
+      ),
+      fluidRow(
+        column(width = 7,
+          box(width = 12,
+            includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
             )
         ),
         column(width = 5,
@@ -100,7 +129,7 @@ server <- function(input, output, session) {
         fluidRow(
           column(width = 8,
               box(width = 12,
-                includeMarkdown(str_c("md/methodsCountry_", input$lang, ".md"))
+                includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
               )
           ),
           column(width = 4,
@@ -130,7 +159,7 @@ server <- function(input, output, session) {
         fluidRow(
           column(width = 8,
               box(width = 12,
-                includeMarkdown(str_c("md/methodsCountry_", input$lang, ".md"))
+                includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
               )
           ),
           column(width = 4,
@@ -153,7 +182,7 @@ server <- function(input, output, session) {
   })
 
   output$dashboardBodyUI <- renderUI({
-    tabList <- c("ch", "cantons", "Comparison", countryList, "about")
+    tabList <- c("ch", "cantons", "greaterRegions", "Comparison", countryList, "about")
     tabs <- lapply(
       tabList,
       function(i) {
@@ -217,8 +246,8 @@ server <- function(input, output, session) {
       filter(
         estimate_type == "Cori_slidingWindow",
         between(date,
-          left = estimatesDates[["Switzerland"]][["start"]][[as.character(data_type[1])]],
-          right = estimatesDates[["Switzerland"]][["end"]][[as.character(data_type[1])]]),
+          left = estimatesDates[["Switzerland"]][["Switzerland"]][["start"]][[as.character(data_type[1])]],
+          right = estimatesDates[["Switzerland"]][["Switzerland"]][["end"]][[as.character(data_type[1])]]),
       ) %>%
       ungroup()
     
@@ -230,6 +259,7 @@ server <- function(input, output, session) {
       filter(data_type == input$data_type_select, region %in% countryList,
         !(country == "Switzerland" & source == "ECDC")
       ) %>%
+      filter(country %in% validEstimates$country, region %in% validEstimates$region) %>%
       mutate(
         data_type = fct_drop(data_type)
       ) %>%
@@ -241,6 +271,7 @@ server <- function(input, output, session) {
     estimatesOverview <- estimatesReSum %>%
       filter(data_type == input$data_type_select, region %in% countryList,
       !(country == "Switzerland" & source == "ECDC")) %>%
+      filter(country %in% validEstimates$country, region %in% validEstimates$region) %>%
       mutate(
         data_type = fct_drop(data_type)
       ) %>%
@@ -248,8 +279,8 @@ server <- function(input, output, session) {
       filter(
         estimate_type == "Cori_slidingWindow",
         between(date,
-          left = estimatesDates[["Switzerland"]][["start"]][[as.character(data_type[1])]],
-          right = estimatesDates[["Switzerland"]][["end"]][[as.character(data_type[1])]]),
+          left = estimatesDates[["Switzerland"]][["Switzerland"]][["start"]][[as.character(data_type[1])]],
+          right = estimatesDates[["Switzerland"]][["Switzerland"]][["end"]][[as.character(data_type[1])]]),
       ) %>%
       ungroup()
 
@@ -277,8 +308,8 @@ server <- function(input, output, session) {
       filter(
         estimate_type == "Cori_slidingWindow",
         between(date,
-          left = estimatesDates[[i]][["start"]][[as.character(data_type[1])]],
-          right = estimatesDates[[i]][["end"]][[as.character(data_type[1])]]),
+          left = estimatesDates[[i]][[i]][["start"]][[as.character(data_type[1])]],
+          right = estimatesDates[[i]][[i]][["end"]][[as.character(data_type[1])]]),
       ) %>%
       ungroup()
     if (i == "Switzerland") {
@@ -293,7 +324,7 @@ server <- function(input, output, session) {
 
     rEffData <- estimatesSwitzerlandFOPH()
 
-    latestDataCH <- filter(latestDataInt(), country == "Switzerland",
+    latestDataCH <- filter(latestDataInt(), country == "Switzerland", region == "Switzerland",
       source %in% unique(rEffData$source))
 
     plot <- rEffPlotly(
@@ -311,22 +342,60 @@ server <- function(input, output, session) {
 
   output$cantonInteractivePlot <- renderPlotly({
 
-    rEffData <- estimatesSwitzerlandFOPH()
+    rEffData <- estimatesSwitzerlandFOPH() %>%
+      filter(!str_detect(region, "grR"))
+    caseData <- caseDataSwitzerlandFOPH() %>%
+      filter(region %in% rEffData$region)
 
-    cantonColors <- viridis(length(unique(rEffData$region)))
-    names(cantonColors) <- unique(rEffData$region)
+    cantonColors <- viridis(length(unique(caseData$region)))
+    names(cantonColors) <- unique(caseData$region)
     cantonColors["Switzerland"] <- "#666666"
 
-    latestDataCH <- filter(latestDataInt(), country == "Switzerland",
-      source %in% unique(rEffData$source))
+    latestDataCH <- latestDataInt() %>%
+      filter(
+        country == "Switzerland",
+        region %in% unique(caseData$region),
+        source %in% unique(caseData$source))
 
     plot <- rEffPlotlyRegion(
-      caseDataSwitzerlandFOPH(),
+      caseData,
       rEffData,
       interventions(),
       latestDataCH,
-      legendOrientation = "v",
+      legendOrientation = "h",
       regionColors = cantonColors,
+      language = input$lang,
+      textElements = textElements,
+      widgetID = NULL)
+    return(plot)
+  })
+
+  output$greaterRegionInteractivePlot <- renderPlotly({
+
+    rEffData <- estimatesSwitzerlandFOPH() %>%
+      filter(str_detect(region, "grR") | region == "Switzerland") %>%
+      mutate(region = str_remove(region, "grR "))
+    caseData <- caseDataSwitzerlandFOPH() %>%
+      mutate(region = str_remove(region, "grR ")) %>%
+      filter(region %in% rEffData$region)
+
+    greaterRegionColors <- viridis(length(unique(caseData$region)))
+    names(greaterRegionColors) <- unique(caseData$region)
+    greaterRegionColors["Switzerland"] <- "#666666"
+
+    latestDataCH <- latestDataInt() %>%
+      filter(
+        country == "Switzerland",
+        region %in% unique(caseData$region),
+        source %in% unique(caseData$source))
+
+    plot <- rEffPlotlyRegion(
+      caseData,
+      rEffData,
+      interventions(),
+      latestDataCH,
+      legendOrientation = "h",
+      regionColors = greaterRegionColors,
       language = input$lang,
       textElements = textElements,
       widgetID = NULL)
