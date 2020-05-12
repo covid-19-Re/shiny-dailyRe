@@ -53,7 +53,7 @@ dataUpdatesTable <- function(
     } else {
       printCountry <- (showCountry & latestData[i - 1, ]$country != latestData[i, ]$country)
     }
-    
+
     if (printCountry) {
       countryString <- str_c("<tr><td colspan=\"3\">", latestData[i, ]$country, "</td></tr>")
     } else {
