@@ -43,7 +43,8 @@ estimatesReSum <- estimatesRe %>%
     median_R_lowHPD = median(R_lowHPD)
   ) %>%
   select(country, region, source, data_type, estimate_type, date, median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
-  arrange(country, region, source, data_type, estimate_type, date)
+  arrange(country, region, source, data_type, estimate_type, date) %>%
+  ungroup()
 
 save(estimatesReSum, file = pathToEstimatesReSum)
 
