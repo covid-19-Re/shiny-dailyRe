@@ -35,28 +35,15 @@ estimatesReSum <- estimatesRe %>%
     !(country == "Switzerland" & region != "Switzerland" & data_type == "Deaths"),
     # exclude infection hospitalized data not provided by FOPH
     !(country == "Switzerland" & data_type == "Hospitalized patients" &
-      date > filter(latestData, source == "FOPH")$date))
-
-estimatesReSum$median_R_mean <- with(estimatesReSum,
-  ave(R_mean, date, country, region, data_type, source, estimate_type, FUN = median))
-estimatesReSum$median_R_highHPD <- with(estimatesReSum,
-  ave(R_highHPD, date, country, region, data_type, source, estimate_type, FUN = median))
-estimatesReSum$median_R_lowHPD <- with(estimatesReSum,
-  ave(R_lowHPD, date, country, region, data_type, source, estimate_type, FUN = median))
-
-# lets save processing as long as we don't use it
-#
-# estimatesReSum$highQuantile_R_highHPD <- with(estimatesReSum,
-#   ave(R_highHPD, date, country, region, data_type, source, estimate_type,
-#     FUN = function(x) quantile(x, probs = 0.975, na.rm = TRUE)))
-# estimatesReSum$lowQuantile_R_lowHPD <- with(estimatesReSum,
-#   ave(R_lowHPD, date, country, region, data_type, source, estimate_type,
-#     FUN = function(x) quantile(x, probs = 0.025, na.rm = TRUE)))
-
-# remove replicates and individual estimates
-estimatesReSum <- estimatesReSum %>%
-  filter(replicate == 1) %>%
-  select(-replicate, -R_mean, -R_highHPD, -R_lowHPD) 
+      date > filter(latestData, source == "FOPH")$date)) %>%
+  group_by(date, country, region, data_type, source, estimate_type) %>%
+  summarize(
+    median_R_mean = median(R_mean),
+    median_R_highHPD = median(R_highHPD),
+    median_R_lowHPD = median(R_lowHPD)
+  ) %>%
+  select(country, region, source, data_type, estimate_type, date, median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
+  arrange(country, region, source, data_type, estimate_type, date)
 
 save(estimatesReSum, file = pathToEstimatesReSum)
 

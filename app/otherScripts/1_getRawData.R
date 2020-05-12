@@ -529,7 +529,8 @@ rawData <- bind_rows(CHrawData, EUrawData) %>%
       data_type,
       levels = c("confirmed", "hospitalized", "deaths", "excess_deaths"),
       labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"))) %>%
-  select(country, region, source, data_type, variable, date, value)
+  select(country, region, source, data_type, variable, date, value) %>%
+  arrange(country, region, source, data_type, variable, date)
 save(rawData, file = pathToRawDataSave)
 
 # figuring out when estimation can start (i.e. on the first day confirmed cases are > 100)
