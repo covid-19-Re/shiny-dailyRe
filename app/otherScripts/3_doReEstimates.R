@@ -10,8 +10,6 @@ library("utils")
 library("EpiEstim")
 library("here")
 
-
-
 ### Apply EpiEstim R estimation method to 'incidenceData' timeseries with 'dates' the dates associated
 ##
 ## 'estimateOffsetting' is the number of days the estimates are to be shifted towards the past
@@ -294,7 +292,6 @@ doAllReEstimations <- function(
 dataDir <- here("app/data/temp")
 pathToSampledInfectDataSave <- file.path(dataDir, paste0("Sampled_infect_data.Rdata"))
 pathToEstimatesReRaw <- file.path(dataDir, paste0("Estimates_Re_raw.Rdata"))
-pathToCantonList <- file.path(dataDir, paste0("cantonList.Rdata"))
 
 ### Date input
 interval_ends <- c("2020-03-13", "2020-03-16", "2020-03-20")

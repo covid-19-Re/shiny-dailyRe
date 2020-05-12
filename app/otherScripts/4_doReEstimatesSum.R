@@ -9,16 +9,21 @@ dataDir <- here("app/data/temp")
 pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.Rdata")
 pathToEstimatesRe <- file.path(dataDir, "Estimates_Re.Rdata")
 pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.Rdata")
-pathToCantonList <- file.path(dataDir, "cantonList.Rdata")
 pathToLatestData <- file.path(dataDir, "latestData.Rdata")
+pathToValidEstimates <- file.path(dataDir, "valid_estimates.Rdata")
 
 
 load(file = pathToEstimatesReRaw)
 load(file = pathToLatestData)
+load(file = pathToValidEstimates)
 
 #############################
 estimatesRe <- as_tibble(estimatesReRaw) %>%
-  pivot_wider(names_from = "variable", values_from = "value")
+  pivot_wider(names_from = "variable", values_from = "value") %>%
+  filter(
+    country %in% validEstimates$country,
+    region %in% validEstimates$region,
+  )
 
 save(estimatesRe, file = pathToEstimatesRe)
 

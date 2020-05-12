@@ -270,7 +270,9 @@ rEffPlotlyRegion <- function(
   regionColors,
   textElements,
   language,
-  widgetID = "rEffplotsRegions") {
+  widgetID = "rEffplotsRegions",
+  visibilityNonFocus = "legendonly"
+  ) {
 
   # plot parameter
   if (language %in% c("de-ch", "fr-ch")) {
@@ -288,6 +290,12 @@ rEffPlotlyRegion <- function(
   }
 
   lastDataDate$source[1] <- textElements[[language]][["FOPH"]]
+  lastDataDate <- lastDataDate %>%
+    ungroup() %>%
+    select(source, date) %>%
+    group_by(source) %>%
+    distinct() %>%
+    filter(date == max(date))
 
   axisTitleFontSize <- 14
   if (legendOrientation == "v") {
@@ -318,16 +326,17 @@ rEffPlotlyRegion <- function(
     rNote <- textElements[[language]][["rEexplanation"]]
     rNoteAnchors <- c("right", "top")
     xHelpBox <- 0
-    yHelpBox <- -0.2
+    yHelpBox <- -0.1
     helpBoxAnchors <- c("left", "top")
-    wHelpBox <- 400
+    wHelpBox <- 500
     hHelpBox <- 50
     helpBoxText <- textElements[[language]][["helpBoxH"]]
     helpBoxShift <- c(0, 0)
-    xDataSource <- 0
-    yDataSource <- -0.21
-    dataSourceAnchors <- c("left", "top")
-    bottomMargin <- 200
+    xDataSource <- 1
+    yDataSource <- -0.1
+    dataSourceAnchors <- c("right", "top")
+    bottomMargin <- 125
+    rightMargin <- 200
   } else {
     stop("legendOrientation must be either \"v\" or \"h\".")
   }
@@ -366,7 +375,7 @@ rEffPlotlyRegion <- function(
   pCases <- plot_ly(data = caseData) %>%
     filter(region != textElements[[language]][["totalCH"]]) %>%
     add_bars(x = ~date, y = ~incidence, color = ~region, colors = regionColors,
-      legendgroup = ~region, visible = "legendonly",
+      legendgroup = ~region, visible = visibilityNonFocus,
       text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>",
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
@@ -395,7 +404,7 @@ rEffPlotlyRegion <- function(
     add_trace(
       x = ~date, y = ~median_R_mean, color = ~region, colors = regionColors,
       type = "scatter", mode = "lines", showlegend = FALSE,
-      legendgroup = ~region, visible = "legendonly",
+      legendgroup = ~region, visible = visibilityNonFocus,
       text = ~str_c("<i>", format(date, "%d.%m.%y"),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
       " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
@@ -403,14 +412,14 @@ rEffPlotlyRegion <- function(
       hovertemplate = "%{text}") %>%
     add_ribbons(
       x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
-      color = ~region, legendgroup = ~region, visible = "legendonly",
+      color = ~region, legendgroup = ~region, visible = visibilityNonFocus,
       line = list(color = "transparent"), opacity = 0.5, showlegend = FALSE,
       hoverinfo = "none") %>%
     group_by(region) %>%
     filter(date == max(date)) %>%
     add_trace(
       x = ~as.POSIXct(date) + 10 * 60 * 60, y = ~median_R_mean,
-      type = "scatter", mode = "markers", visible = "legendonly",
+      type = "scatter", mode = "markers", visible = visibilityNonFocus,
       color = ~region, colors = regionColors,
       legendgroup = ~region,
       marker = list(symbol = "asterisk-open"),
@@ -520,7 +529,7 @@ rEffPlotlyRegion <- function(
   plot <- subplot(plotlist, nrows = 3, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
     layout(
       margin = list(b = bottomMargin, r = rightMargin),
-      legend = list(orientation = legendOrientation),
+      legend = list(orientation = "v"),
       annotations = list(
         list(
           x = xDataSource, y = yDataSource, xref = "paper", yref = "paper",
@@ -851,6 +860,13 @@ rEffPlotlyComparison <- function(
   }
 
   # prepare Data
+  lastDataDate <- lastDataDate %>%
+    ungroup() %>%
+    select(source, date) %>%
+    group_by(source) %>%
+    distinct() %>%
+    filter(date == max(date))
+
   caseDataFocus <- filter(caseData, country == focusCountry)
 
   estimatesPlot <- estimates

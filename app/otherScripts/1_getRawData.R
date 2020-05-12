@@ -11,10 +11,6 @@ library("cbsodataR")
 library("tidyverse")
 library("here")
 
-cantonList <- c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "LU", "NE", "SG", "TI", "VD", "VS", "ZH", "CH")
-countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
-  "Netherlands", "Spain", "Switzerland", "Sweden", "United Kingdom")
-
 ###############################################
 ################ Utilities ####################
 ###############################################
@@ -25,8 +21,8 @@ meltCumulativeData <- function(
   rawData,
   dataType,
   dataSource,
-  country="CH",
-  nameDateCol="Date",
+  country = "CH",
+  nameDateCol = "Date",
   stoppingDate = (Sys.Date() - 1)) {
 
   cumulData <- rawData
@@ -84,7 +80,7 @@ curateLongTimeSeries <- function(data, isIncidenceData = TRUE) {
     ## Replace missing data in rest of series by zeroes (required for using EpiEstim)
     data[is.na(data$value), "value"] <- 0
   } else { # cumulative counts time series
-    ## Replace missing values by the previous day"s value
+    ## Replace missing values by the previous days value
     for (i in 2:nrow(data)) {
       if (is.na(data[i, "value"])) {
         data[i, "value"] <- data[i - 1, "value"]
@@ -109,43 +105,112 @@ getCumulData <- function(data) {
   return(cumulData)
 }
 
+calcIncidenceData <- function(data) {
+  incidence <- diff(data$value)
+  data <- data[-1, ]
+  data$value <- incidence
+  data$variable <- "incidence"
+  return(data)
+}
+
 ########################################
 ############ Data fetching #############
 ########################################
 
 ##### Swiss Data #######
-## Fetch data from openZH via Daniel Probst"s repo
+## Fetch data from openZH via Daniel Probsts repo
 getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
+  openZHurl <- "https://raw.githubusercontent.com/openZH/covid_19/master/COVID19_Fallzahlen_CH_total_v2.csv"
 
-  countTypes <- list("confirmed", "deaths")
-  typeLabels <- list("cases", "fatalities")
-  names(countTypes) <- typeLabels
-  names(typeLabels) <- countTypes
-  # https://raw.githubusercontent.com/openZH/covid_19/master/COVID19_Fallzahlen_CH_total_v2.csv
-  baseUrl <-  "https://raw.githubusercontent.com/daenuprobst/covid19-cases-switzerland/master/"
+  openZHraw <- read_csv(
+    file = openZHurl,
+    col_types = cols_only(
+      date = col_date(format = ""),
+      abbreviation_canton_and_fl = col_character(),
+      ncumul_conf = col_double(),
+      ncumul_deceased = col_double())
+  ) %>%
+  rename(
+    region = "abbreviation_canton_and_fl",
+    confirmed = "ncumul_conf",
+    deaths = "ncumul_deceased") %>%
+  pivot_longer(cols = confirmed:deaths, names_to = "data_type", values_to = "value") %>%
+  mutate(variable = "cumul", source = "openZH") %>%
+  select(date, region, source, data_type, value, variable) %>%
+  complete(date, region, source, data_type, variable) %>%
+  mutate(country = if_else(region != "FL", "CH", "FL")) %>%
+  filter(date <= stopAfter)
 
-  data <- data.frame(
-    date = c(),
-    region = c(),
-    country = c(),
-    value = c(),
-    data_type = c(),
-    variable = c(),
-    estimate_type = c())
+  greaterRegions <- tribble(
+    ~greaterRegion,             ~region,
+    "Lake Geneva Region",       c("VD", "VS", "GE"),
+    "Espace Mittelland",        c("BE", "FR", "SO", "NE", "JU"),
+    "Northwestern Switzerland", c("BS", "BL", "AG"),
+    "Zurich",                   c("ZH"),
+    "Eastern Switzerland",      c("GL", "SH", "AR", "AI", "SG", "GR", "TG"),
+    "Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
+    "Ticino",                   c("TI")
+  ) %>% unnest(cols = c(region))
 
-  for (typeLabel in typeLabels) {
-    cumulFileUrl <- paste0(baseUrl, "covid19_", typeLabel, "_switzerland_openzh.csv")
-    # cumulFileUrl <- "/Users/scirej/Documents/nCov19/Incidence_analysis/data/openZH_daenuprobst/covid19_cases_switzerland_openzh.csv" # Fix while raw.github is down
-    cumulData <- read.csv(cumulFileUrl)
-    data <- rbind(
-      data,
-      meltCumulativeData(cumulData,
-        dataType = countTypes[[typeLabel]],
-        dataSource = "openZH",
-        country = "CH",
-        stoppingDate = stopAfter))
-  }
-  return(data)
+  openZHcantons <- openZHraw  %>%
+    group_by(data_type, region) %>%
+    nest() %>%
+    mutate(
+      dataCurated = map(data, curateLongTimeSeries, isIncidenceData = FALSE),
+    ) %>%
+    select(-data) %>%
+    unnest(cols = "dataCurated")
+
+  openZHsum <- openZHraw %>%
+    arrange(region, data_type, variable, date) %>%
+    group_by(region, data_type) %>%
+    fill(value, .direction = "down") %>%
+    filter(!is.na(value))
+
+  openZHswitzerland <- openZHsum %>%
+    filter(country == "CH") %>%
+    group_by(date, country, source, data_type, variable) %>%
+    summarize(
+      value = sum(value),
+      region = "CH")
+
+  greaterRegions <- tribble(
+    ~greaterRegion,             ~region,
+    "grR Lake Geneva Region",       c("VD", "VS", "GE"),
+    "grR Espace Mittelland",        c("BE", "FR", "SO", "NE", "JU"),
+    "grR Northwestern Switzerland", c("BS", "BL", "AG"),
+    "grR Zurich",                   c("ZH"),
+    "grR Eastern Switzerland",      c("GL", "SH", "AR", "AI", "SG", "GR", "TG"),
+    "grR Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
+    "grR Ticino",                   c("TI")
+  ) %>% unnest(cols = c(region))
+
+  openZHgreaterRegions <- openZHsum %>%
+    filter(country == "CH") %>%
+    left_join(greaterRegions, by = "region") %>%
+    ungroup() %>%
+    mutate(region = greaterRegion) %>%
+    select(-greaterRegion) %>%
+    group_by(date, region, source, data_type, variable) %>%
+    summarize(
+      value = sum(value),
+      country = "CH")
+
+  openZHincidence <- bind_rows(openZHcantons, openZHswitzerland, openZHgreaterRegions) %>%
+    group_by(data_type, region) %>%
+    nest() %>%
+    mutate(
+      dataIncidence = map(data, calcIncidenceData),
+    )
+
+  openZHdata <- bind_rows(
+    openZHincidence %>% select(-dataIncidence) %>% unnest(cols = data),
+    openZHincidence %>% select(-data) %>% unnest(cols = dataIncidence)
+  ) %>%
+  select(date, region, country, source, data_type, value, variable) %>%
+  arrange(country, region, data_type, variable, date)
+
+  return(openZHdata)
 }
 
 ## Include hospitalization counts from local csv files
@@ -157,18 +222,19 @@ getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases_") 
       Incidence = col_double(),
       CH = col_double()))
   cumData <- cumData[, c(1, 3)]
-  out <- meltCumulativeData(cumData,
+  out <- as_tibble(meltCumulativeData(cumData,
     dataType = "hospitalized",
     country = "CH",
-    dataSource = "FOPH")
+    dataSource = "FOPH")) %>%
+    mutate(region = as.character(region))
   return(out)
 }
 
 ## Combine openZH data with hospitalization data
-getAllSwissData <- function(stoppingAfter = (Sys.Date() - 1), pathToHospData, regions = cantonList) {
+getAllSwissData <- function(stoppingAfter = (Sys.Date() - 1), pathToHospData) {
   openZHData <- getSwissDataFromOpenZH(stopAfter = stoppingAfter)
-  hospitalData <- rbind(getHospitalData(path = pathToHospData, region = "CH"))
-  swissData <- subset(rbind(openZHData, hospitalData), region %in% regions)
+  hospitalData <- getHospitalData(path = pathToHospData, region = "CH")
+  swissData <- bind_rows(openZHData, hospitalData) %>% ungroup()
   return(swissData)
 }
 
@@ -427,18 +493,17 @@ dataDir <- here("app/data/temp")
 ##### Swiss data
 ### just an example here with keeping all the data from different sources/countries in one dataframe and saving into one file
 # rawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath), getLongECDCData())
-CHrawData <- rbind(getAllSwissData(pathToHospData = dataCHHospitalPath, regions = cantonList))
-
-# format data
-CHrawData <- tibble::as_tibble(CHrawData) %>%
+CHrawData <- getAllSwissData(pathToHospData = dataCHHospitalPath) %>%
   mutate(
-    region = recode(as.character(region), "CH" = "Switzerland"),
-    country = recode(country, "CH" = "Switzerland"))
+    region = recode(region, "CH" = "Switzerland", "FL" = "Liechtenstein"),
+    country = recode(country, "CH" = "Switzerland", "FL" = "Liechtenstein"))
 # save data
 # pathToCHRawDataSave <- file.path(dataDir, "CH_Raw_data.Rdata")
 # save(CHrawData, file = pathToCHRawDataSave)
 
 ##### European data
+countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
+  "Netherlands", "Spain", "Switzerland", "Sweden", "United Kingdom")
 
 ECDCdata <- getLongECDCData(setdiff(countryList, c("Switzerland", "Netherlands")))
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
@@ -448,10 +513,9 @@ UKExcessDeath <- getExcessDeathUK(
     path_to_data = here("../ch-hospital-data/data/UK")) %>%
   filter(data_type %in% c("excess_deaths"))
 
-EUrawData <- rbind(ECDCdata, swissExcessDeath, NLdata, UKExcessDeath)
+EUrawData <- bind_rows(ECDCdata, swissExcessDeath, NLdata, UKExcessDeath) %>%
+  as_tibble()
 
-# format data
-EUrawData <- tibble::as_tibble(EUrawData)
 # save data
 # pathToEURawDataSave <- file.path(dataDir, "EU_Raw_data.Rdata")
 # save(EUrawData, file = pathToEURawDataSave)
@@ -464,7 +528,8 @@ rawData <- bind_rows(CHrawData, EUrawData) %>%
     data_type = factor(
       data_type,
       levels = c("confirmed", "hospitalized", "deaths", "excess_deaths"),
-      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")))
+      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"))) %>%
+  select(country, region, source, data_type, variable, date, value)
 save(rawData, file = pathToRawDataSave)
 
 # figuring out when estimation can start (i.e. on the first day confirmed cases are > 100)
@@ -473,15 +538,13 @@ estimateStartDates <- rawData %>%
   filter(
     data_type == "Confirmed cases",
     !(country == "Switzerland" & region == "Switzerland" & source == "ECDC"),
-    country == region) %>%
-  group_by(country, source, data_type, variable) %>%
-  filter(
-    value > 100
-  ) %>%
+    variable == "cumul",
+    value > 100) %>%
+  group_by(region, country, source, data_type, variable) %>%
   top_n(n = -1, value) %>%
-  filter(variable == "cumul") %>%
+  filter(date == max(date)) %>%
   ungroup() %>%
-  select(country, estimateStart = date)
+  select(country, region, estimateStart = date)
 
 # figuring out when estimation ends i.e. applying the delays
 
@@ -495,43 +558,50 @@ delays <- tibble(
 estimateDatesDf <- rawData %>%
   filter(
     !(country == "Switzerland" & region == "Switzerland" & source == "ECDC"),
-    region == country
+    variable == "cumul"
   ) %>%
-  group_by(country, source, data_type) %>%
+  group_by(region, country, source, data_type) %>%
   top_n(n = 1, date) %>%
-  filter(variable == "cumul") %>%
-  arrange(country) %>%
+  arrange(country, region) %>%
   left_join(delays, by = "data_type") %>%
   ungroup() %>%
   transmute(
-    country = country, data_type = data_type, estimateEnd = date - delay) %>%
-  left_join(estimateStartDates, by = "country")
+    country = country, region = region, data_type = data_type, estimateEnd = date - delay) %>%
+  left_join(estimateStartDates, by = c("country", "region"))
 
 estimatesDates <- list()
 
-for (i in unique(estimateDatesDf$country)) {
-  tmp <- filter(estimateDatesDf, country == i)
-  tmpListEnd <- tmp$estimateEnd
-  names(tmpListEnd) <- tmp$data_type
-  tmpListStart <- tmp$estimateStart
-  names(tmpListStart) <- tmp$data_type
-  estimatesDates[[i]] <- list(start = tmpListStart, end = tmpListEnd)
+for (iCountry in unique(estimateDatesDf$country)) {
+  tmpCountry <- filter(estimateDatesDf, country == iCountry)
+  for (iRegion in unique(tmpCountry$region)) {
+    tmpRegion <- filter(tmpCountry, region == iRegion)
+    tmpListEnd <- tmpRegion$estimateEnd
+    names(tmpListEnd) <- tmpRegion$data_type
+    tmpListStart <- tmpRegion$estimateStart
+    names(tmpListStart) <- tmpRegion$data_type
+    estimatesDates[[iCountry]][[iRegion]] <- list(start = tmpListStart, end = tmpListEnd)
+  }
 }
+
 pathToEstimateDates <- file.path(dataDir, "estimate_dates.Rdata")
 save(estimatesDates, file = pathToEstimateDates)
 
-pathToCantonList <- file.path(dataDir, "cantonList.Rdata")
-save(cantonList, file = pathToCantonList)
+validEstimates <- estimateDatesDf %>%
+  filter(!is.na(estimateStart)) %>%
+  select(country, region) %>%
+  distinct()
+
+pathToValidEstimates <- file.path(dataDir, "valid_estimates.Rdata")
+save(validEstimates, file = pathToValidEstimates)
 
 pathToCountryListSave <- file.path(dataDir, "countryList.Rdata")
+countryList <- unique(validEstimates$country)
 save(countryList, file = pathToCountryListSave)
 
 pathToLatestData <- file.path(dataDir, "latestData.Rdata")
 latestData <- rawData %>%
-  group_by(country, source, data_type) %>%
+  group_by(country, region, source, data_type) %>%
   summarize(date = max(date))
 save(latestData, file = pathToLatestData)
-
-writeLines(str_c("last check: ", Sys.time()), file.path(dataDir, "lastCheck.txt"))
 
 print(paste("Done 1_getRawData.R:", Sys.time()))

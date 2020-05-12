@@ -41,7 +41,9 @@ plotColoursNamed <-  c(
 
 # prepare Data
 caseDataPlot <- rawData %>%
-  filter(country == "Switzerland",
+  filter(
+    country == "Switzerland",
+    region == "Switzerland",
     source %in% c("openZH", "FOPH"),
     data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
   mutate(
@@ -50,7 +52,9 @@ caseDataPlot <- rawData %>%
   pivot_wider(names_from = "variable", values_from = "value")
 
 estimates <- estimatesReSum %>%
-  filter(country == "Switzerland",
+  filter(
+    country == "Switzerland",
+    region == "Switzerland",
     source %in% c("openZH", "FOPH"),
     data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
   mutate(
@@ -62,13 +66,15 @@ estimates <- estimatesReSum %>%
   filter(
     estimate_type == "Cori_slidingWindow",
     between(date,
-      left = estimatesDates[["Switzerland"]][["start"]][[as.character(data_type[1])]],
-      right = estimatesDates[["Switzerland"]][["end"]][[as.character(data_type[1])]]),
+      left = estimatesDates[["Switzerland"]][["Switzerland"]][["start"]][[as.character(data_type[1])]],
+      right = estimatesDates[["Switzerland"]][["Switzerland"]][["end"]][[as.character(data_type[1])]]),
   ) %>%
   ungroup()
 
 latestDataPlot <- latestData %>%
-  filter(country == "Switzerland",
+  filter(
+    country == "Switzerland",
+    region == "Switzerland",
     source %in% unique(estimates$source))
 
 source(here("app", "otherScripts", "ReffPlotly.R"))
@@ -118,5 +124,7 @@ for (i in names(textElements)) {
   #   htmlwidgetsExtended::exportWidgetJson(plotlyPlotV),
   #   file.path(plotOutDir, str_c("rEffplotly_data_", i, ".json")))
 }
+
+writeLines(str_c("last check: ", Sys.time()), file.path(dataDir, "lastCheck.txt"))
 
 print(paste("Done makeReffPlotly.R:", Sys.time()))
