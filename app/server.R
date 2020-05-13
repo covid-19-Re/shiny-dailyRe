@@ -499,12 +499,15 @@ server <- function(input, output, session) {
 
   # source table
   output$sourcesTable <- renderDataTable({
-    tableData <- latestDataInt() %>%
+    tableData <- latestData %>%
       ungroup() %>%
-      mutate(url = str_c("<a href=", url, ">link</a>")) %>%
-      arrange(data_type, source) %>%
-      select("Data type" = data_type, "Source" = source, "Description" = sourceLong, "URL" = url) %>%
-      distinct()
+      select(source, sourceLong, data_type, url) %>%
+      distinct() %>%
+      group_by(source, sourceLong, url) %>%
+      summarize(data_type = str_c(data_type, collapse = ", ")) %>%
+      mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
+      select("Source" = source, "Description" = sourceLong, "Data types" = data_type, "URL" = url) %>%
+      arrange(Source)
 
     return(tableData)
   }, escape = FALSE, options = list(paging = FALSE, searching = FALSE))
