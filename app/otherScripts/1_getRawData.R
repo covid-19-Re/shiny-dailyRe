@@ -604,7 +604,18 @@ save(countryList, file = pathToCountryListSave)
 pathToLatestData <- file.path(dataDir, "latestData.Rdata")
 latestData <- rawData %>%
   group_by(country, region, source, data_type) %>%
-  summarize(date = max(date))
+  summarize(date = max(date)) %>%
+  left_join(tribble(
+      ~source, ~sourceLong, ~url,
+      "openZH", "Data for Cantons and the Principality of Liechtenstein, aggregated by the statistical office of the canton Zürich", "https://github.com/openZH/covid_19/",
+      "FOPH",   "Data from the Swiss Federal Office of Public Health", "",
+      "BFS",    "Data from the Swiss Federal Office of Statistics", "https://www.bfs.admin.ch/bfsstatic/dam/assets/12727505/master",
+      "RIVM",   "Data from the Dutch National Institute for Public Health and the Environment", "https://github.com/J535D165/CoronaWatchNL",
+      "CBS",    "Data from the Dutch Central Office for Statistics", "https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70895ned/table?fromstatweb",
+      "ONS",    "Data from the UK Office of National Statistics", "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales",
+      "ECDC",   "Data from the European Center for Disease Preventen and Control", "https://opendata.ecdc.europa.eu/covid19/casedistribution/",
+    ), by = "source")
+
 save(latestData, file = pathToLatestData)
 
 cat(paste("###", Sys.time(), "- done 1_getRawData.R", "\n"))
