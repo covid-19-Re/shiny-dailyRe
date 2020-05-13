@@ -18,12 +18,12 @@ server <- function(input, output, session) {
   output$menu <- renderMenu({
     sidebarMenu(id = "tabs",
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Switzerland")), startExpanded = TRUE,
-        menuSubItem(HTML(i18n()$t("Switzerland")), tabName = "chPlot", icon = icon("chart-area")),
-        menuSubItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantonsPlot", icon = icon("chart-area")),
+        menuSubItem(HTML(i18n()$t("Switzerland")), tabName = "ch", icon = icon("chart-area")),
+        menuSubItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantons", icon = icon("chart-area")),
         menuSubItem(HTML(i18n()$t("R<sub>e</sub> for greater Regions")),
-          tabName = "greaterRegionsPlot", icon = icon("chart-area")),
+          tabName = "greaterRegions", icon = icon("chart-area")),
         menuSubItem(HTML(i18n()$t("CH estimates download")),
-          tabName = "downloadPlot", icon = icon("download")),
+          tabName = "download", icon = icon("download")),
         radioButtons("estimation_type_select", "Select estimation type to show",
           choices = c("sliding window" = "Cori_slidingWindow", "step-wise constant" = "Cori_step"),
           selected = "Cori_slidingWindow", inline = FALSE),
@@ -31,10 +31,10 @@ server <- function(input, output, session) {
       ),
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")),
         lapply(c("Comparison", countryList), function(i) {
-          menuSubItem(i, tabName = str_c(str_remove(i, " "), "Plot"), icon = icon("chart-area"))
+          menuSubItem(i, tabName = str_remove(i, " "), icon = icon("chart-area"))
         })
       ),
-      menuItem(i18n()$t("About"), tabName = "aboutPlot", icon = icon("question-circle")),
+      menuItem(i18n()$t("About"), tabName = "about", icon = icon("question-circle")),
       selectInput("lang", i18n()$t("Language"),
         languageSelect, selected = input$lang, multiple = FALSE,
         selectize = TRUE, width = NULL, size = NULL)
@@ -97,14 +97,14 @@ server <- function(input, output, session) {
   output$greaterRegionsUI <- renderUI({
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for greater regions of Switzerland")),
-      width = 12,
-          plotlyOutput("greaterRegionInteractivePlot", width = "100%", height = "800px")
+        width = 12,
+        plotlyOutput("greaterRegionInteractivePlot", width = "100%", height = "800px")
       ),
       fluidRow(
         column(width = 7,
           box(width = 12,
             includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
-            )
+          )
         ),
         column(width = 5,
           infoBox(width = 12,
@@ -121,7 +121,14 @@ server <- function(input, output, session) {
   })
 
   output$aboutUI <- renderUI({
-    includeMarkdown("md/about.md")
+    fluidRow(
+      box(title = i18n()$t("About"), width = 12,
+        includeMarkdown("md/about.md")
+      ),
+      box(title = i18n()$t("Data Sources"), width = 12,
+        dataTableOutput("sourcesTable")
+      )
+    )
   })
 
   # country UIs
@@ -131,7 +138,7 @@ server <- function(input, output, session) {
         box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) in Europe - ",
           i))),
           width = 12,
-          plotlyOutput(str_c(str_remove(i, " "), "Plot"), width = "100%", height = "700px")
+          plotlyOutput(str_c(str_remove(i, " "),"Plot"), width = "100%", height = "700px")
         ),
         fluidRow(
           column(width = 8,
@@ -202,7 +209,7 @@ server <- function(input, output, session) {
     tabs <- lapply(
       tabList,
       function(i) {
-        tabItem(tabName = str_c(str_remove(i, " "), "Plot"), uiOutput(str_c(str_remove(i, " "), "UI")))
+        tabItem(tabName = str_c(str_remove(i, " ")), uiOutput(str_c(str_remove(i, " "), "UI")))
       })
     return(do.call(tabItems, tabs))
   })
@@ -489,5 +496,17 @@ server <- function(input, output, session) {
       write_csv(estimatesSwitzerland(), file)
     }
   )
+
+  # source table
+  output$sourcesTable <- renderDataTable({
+    tableData <- latestData %>%
+      ungroup() %>%
+      mutate(url = str_c("<a href=",url,">link</a>")) %>%
+      arrange(data_type, source) %>%
+      select("Data type" = data_type, "Source" = source, "Description" = sourceLong, "URL" = url) %>%
+      distinct()
+
+    return(tableData)
+  }, escape = FALSE, options = list(paging = FALSE, searching = FALSE))
 
 }

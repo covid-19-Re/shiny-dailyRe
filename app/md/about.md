@@ -1,4 +1,3 @@
-# About
 Analysis: 
   - Jérémie Scire, ETH Zürich, D-BSSE
   - Jana S. Huisman, ETH Zürich, D-BSSE & D-USYS
