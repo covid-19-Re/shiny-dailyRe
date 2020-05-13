@@ -499,9 +499,9 @@ server <- function(input, output, session) {
 
   # source table
   output$sourcesTable <- renderDataTable({
-    tableData <- latestData %>%
+    tableData <- latestDataInt() %>%
       ungroup() %>%
-      mutate(url = str_c("<a href=",url,">link</a>")) %>%
+      mutate(url = str_c("<a href=", url, ">link</a>")) %>%
       arrange(data_type, source) %>%
       select("Data type" = data_type, "Source" = source, "Description" = sourceLong, "URL" = url) %>%
       distinct()
