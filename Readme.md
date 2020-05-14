@@ -7,5 +7,5 @@ The R<sub>e</sub> for a particular day is the average R<sub>e</sub> over the thr
   - Jana S. Huisman, ETH Zürich, D-BSSE & D-USYS
   - Tanja Stadler, ETH Zürich, D-BSSE
 
-**Code**:
+**Visualization code**:
   - Daniel Angst, ETH Zürich, D-USYS
