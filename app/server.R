@@ -203,7 +203,6 @@ server <- function(input, output, session) {
     )
   })
 
-
   output$dashboardBodyUI <- renderUI({
     tabList <- c("ch", "cantons", "greaterRegions", "download", "Comparison", countryList, "about")
     tabs <- lapply(
@@ -341,6 +340,18 @@ server <- function(input, output, session) {
 
       return(estimatesOverview)
   })
+
+  interventionsEU <- read_csv(
+    str_c(pathToInterventionData, "EU/interventions_", "en-gb", ".csv"),
+    col_types = cols(
+      name = col_character(),
+      y = col_double(),
+      text = col_character(),
+      tooltip = col_character(),
+      type = col_character(),
+      date = col_date(format = ""),
+      plotTextPosition = col_character())) %>%
+    split(f = .$country)
 
   # country raw data
   caseDataCountry <- lapply(countryList, function(i) {
@@ -495,9 +506,10 @@ server <- function(input, output, session) {
         countrySelect = i,
         caseData = caseData,
         estimates = estimatesCountry,
+        interventions = interventionsEU[[i]],
         plotColoursNamed = plotColoursNamed,
         lastDataDate = latestDataInt,
-        startDate = min(filter(caseData, cumul > 0)$date) - 1,
+        startDate = min(estimatesCountry$date) - 14,
         legendOrientation = "v", # "v" or "h"
         textElements = textElements,
         language = "en-gb",

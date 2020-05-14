@@ -581,6 +581,7 @@ rEffPlotlyCountry <- function(
   countrySelect,
   caseData,
   estimates,
+  interventions = NULL,
   plotColoursNamed,
   lastDataDate,
   startDate = min(caseData$date) - 1,
@@ -766,9 +767,38 @@ rEffPlotlyCountry <- function(
         )
       )
     )
+  if (!is.null(interventions)) {
+    pIntervention <- plot_ly(data = interventions) %>%
+      add_trace(
+        x = ~date, y = ~y, color = ~name,
+        type = "scatter", mode = "markers+lines",
+        colors = rep("#505050", length(interventions$date)),
+        showlegend = FALSE,
+        text = ~str_c("<i>", date, "</i><br>", tooltip),
+        hoveron = "points",
+        hoverinfo = "text") %>%
+      add_text(x = ~date, y = ~y, color = ~name, text = ~text,
+        textposition = ~plotTextPosition, showlegend = FALSE, textfont = list(size = 10)) %>%
+      layout(
+        xaxis = list(title = "",
+          type = "date",
+          range = c(startDate, endDate),
+          tick0 = startDate,
+          dtick = 3 * 86400000,
+          tickformat = dateFormat,
+          tickangle = 45,
+          showgrid = TRUE,
+          fixedrange = TRUE),
+        yaxis = list(visible = FALSE, fixedrange = TRUE))
+    plotlist <- list(pCases, pEstimates, pIntervention)
+    nPlots <- 3
+  } else {
+    plotlist <- list(pCases, pEstimates)
+    nPlots <- 2
+    yrNote <- 0.40
+  }
 
-  plotlist <- list(pCases, pEstimates)
-  plot <- subplot(plotlist, nrows = 2, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
+  plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
     layout(
       margin = list(b = bottomMargin),
       legend = list(orientation = legendOrientation),
