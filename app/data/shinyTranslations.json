@@ -65,6 +65,192 @@
       "it-ch": "Stima del numero di riproduzione effettivo (R <sub> e </sub>) per i cantoni",
       "fr-ch": "Estimation du nombre de reproduction effectif (R<sub>e</sub>) pour les cantons",
       "de-ch": "Schätzung der effektiven Reproduktionszahl (R<sub>e</sub>) für Kantone"
+    },
+    {
+      "en-gb": "End of closure of all stores and markets",
+      "it-ch": "Termine della chiusura di tutti i negozi e mercati",
+      "fr-ch": "Réouverture de tous les magasins et marchés",
+      "de-ch": "Ende der Schliessung aller Läden und Märkten"
+    },
+    {
+      "en-gb": "Closure of all stores and markets",
+      "it-ch": "Chiusura di tutti i negozi e mercati",
+      "fr-ch": "Fermeture des magasins et des marchés",
+      "de-ch": "Schliessung aller Läden und Märkte"
+    },
+    {
+      "en-gb": "Closure of all stores and markets <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 17.03.2020",
+      "it-ch": "Chiusura di tutti i negozi e mercati <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 17.03.2020",
+      "fr-ch": "Fermeture des magasins et des marchés <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 17.03.2020",
+      "de-ch": "Schliessung aller Läden und Märkte <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 17.03.2020"
+    },
+    {
+      "en-gb": "End of closure of restaurants and bars <br>",
+      "it-ch": "Termine della chiusura ristoranti e bar",
+      "fr-ch": "Réouverture des restaurants et bars <br>",
+      "de-ch": "Ende der Schliessung von Restaurationsbetrieben <br>"
+    },
+    {
+      "en-gb": "Closure of restaurants and bars",
+      "it-ch": "Chiusura ristoranti e bar",
+      "fr-ch": "Fermeture des restaurants et des bars",
+      "de-ch": "Schliessung von Restaurationsbetrieben"
+    },
+    {
+      "en-gb": "Closure of restaurants and bars <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 17.3.2020",
+      "it-ch": "Chiusura ristoranti e bar <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 17.3.2020",
+      "fr-ch": "Fermeture des restaurants et bars <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 17.3.2020",
+      "de-ch": "Schliessung von Restaurationsbetrieben <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 17.3.2020"
+    },
+    {
+      "en-gb": "End of closure of hairdresser, hardware stores & garden centers <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 16.4.2020",
+      "it-ch": "Termine della chiusura parrucchieri, esercizi commerciali del fai da te ed esercizi commerciali florovivaistici <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 16.4.2020",
+      "fr-ch": "Réouverture des coiffeurs, des jardineries et des magasins de bricolage <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 16.4.2020",
+      "de-ch": "Ende der Schliessung von Coiffeuren sowie Bau- und Gartenfachmärkte <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 16.4.2020"
+    },
+    {
+      "en-gb": "Closure of hairdresser, hardware stores & garden centers",
+      "it-ch": "Chiusura parrucchieri, esercizi commerciali del fai da te ed esercizi commerciali florovivaistici",
+      "fr-ch": "Fermeture des coiffeurs, des jardineries et des magasins de bricolage",
+      "de-ch": "Schliessung von Coiffeuren sowie Bau- und Gartenfachmärkten"
+    },
+    {
+      "en-gb": "Closure of hairdresser, hardware stores & garden centers <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 17.03.2020",
+      "it-ch": "Chiusura parrucchieri, esercizi commerciali del fai da te ed esercizi commerciali florovivaistici <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 17.03.2020",
+      "fr-ch": "Fermeture des coiffeurs, des jardineries et des magasins de bricolage <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 17.03.2020",
+      "de-ch": "Schliessung von Coiffeuren sowie Bau- und Gartenfachmärkte <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 17.03.2020"
+    },
+    {
+      "en-gb": "End of closure of museums, zoos, etc.",
+      "it-ch": "Termine della chiusura musei, zoo, etc",
+      "fr-ch": "Réouverture des musées, des zoos…",
+      "de-ch": "Ende der Schliessung von Museen, Zoos, etc.."
+    },
+    {
+      "en-gb": "Closure of museums, zoos, etc.",
+      "it-ch": "Chiusura musei, zoo, etc.",
+      "fr-ch": "Fermeture des musées, des zoos…",
+      "de-ch": "Schliessung von Museen, Zoos, etc."
+    },
+    {
+      "en-gb": "Closure of museums, zoos, etc <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 17.03.2020",
+      "it-ch": "Chiusura musei, zoo, etc <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 17.03.2020",
+      "fr-ch": "Fermeture des musées, des zoos… <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 17.03.2020",
+      "de-ch": "Schliessung von Museen, Zoos, etc. <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 17.03.2020"
+    },
+    {
+      "en-gb": "End of ban of events > 1000 people",
+      "it-ch": "Termine del divieto di eventi> 1000 persone",
+      "fr-ch": "Fin de l’interdiction des évènements de plus de 1000 personnes",
+      "de-ch": "Ende des Verbots von Veranstaltungen mit > 1000 Personen"
+    },
+    {
+      "en-gb": "Ban of events > 1000 people",
+      "it-ch": "Divieto di eventi > 1000 persone",
+      "fr-ch": "Interdiction des évènements de plus de 1000 personnes",
+      "de-ch": "Verbot von Veranstaltungen mit > 1000 Personen"
+    },
+    {
+      "en-gb": "Ban of events > 1000 people <br> SR 818.101.24 COVID-19 Ordinance 1, 28.2.2020",
+      "it-ch": "Divieto di eventi > 1000 persone <br> SR 818.101.24 Ordinanza 2 COVID-19 1, 28.2.2020",
+      "fr-ch": "Interdiction des évènements de plus de 1000 personnes <br> SR 818.101.24 Ordonnance 1 COVID-19, 28.2.2020",
+      "de-ch": "Verbot von Veranstaltungen mit > 1000 Personen <br> SR 818.101.24 COVID-19 Verordnung 1, 28.2.2020"
+    },
+    {
+      "en-gb": "End of ban of events > 100 people",
+      "it-ch": "Termine del divieto di eventi > 100 persone",
+      "fr-ch": "Fin de l’interdiction des évènements de plus de 100 personnes",
+      "de-ch": "Ende des Verbots von Veranstaltungen mit > 100 Personen"
+    },
+    {
+      "en-gb": "Ban of events > 100 people",
+      "it-ch": "Divieto di eventi > 100 persone",
+      "fr-ch": "Interdiction des évènements de plus de 100 personnes",
+      "de-ch": "Verbot von Veranstaltungen mit > 100 Personen"
+    },
+    {
+      "en-gb": "Ban of events > 100 people <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020",
+      "it-ch": "Divieto di eventi > 100 persone <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020",
+      "fr-ch": "Interdiction des évènements de plus de 100 personnes <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020",
+      "de-ch": "Verbot von Veranstaltungen mit > 100 Personen <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020"
+    },
+    {
+      "en-gb": "End of ban of gatherings > 5 people <br>",
+      "it-ch": "Termine del divieto di assembramenti > 5 persone",
+      "fr-ch": "Fin de l’interdiction des groupes de plus de 5 personnes <br>",
+      "de-ch": "Ende des Verbots von Menschenansammlungen > 5 Personen <br>"
+    },
+    {
+      "en-gb": "Ban of gatherings > 5 people",
+      "it-ch": "divieto di assembramenti > 5 persone",
+      "fr-ch": "Interdiction des regroupements de plus de 5 personnes",
+      "de-ch": "Verbot von Menschenansammlungen > 5 Personen"
+    },
+    {
+      "en-gb": "Ban of gatherings > 5 people <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 20.3.2020",
+      "it-ch": "divieto di assembramenti > 5 persone <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 20.3.2020",
+      "fr-ch": "Interdiction des groupes de plus de 5 personnes <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 20.3.2020",
+      "de-ch": "Verbot von Menschenansammlungen > 5 Personen <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 20.3.2020"
+    },
+    {
+      "en-gb": "Additional hygiene rules",
+      "it-ch": "Norme igieniche supplementari",
+      "fr-ch": "Nouvelles règles d’hygiènes.",
+      "de-ch": "Zusätzliche Hygieneregeln"
+    },
+    {
+      "en-gb": "FOPH communicates additional hygiene rules",
+      "it-ch": "UFSP ha comunicato le norme igieniche supplementari",
+      "fr-ch": "Communication de nouvelles règles d’hygiène par l’OFSP",
+      "de-ch": "BAG kommuniziert zusätzliche Hygieneregeln"
+    },
+    {
+      "en-gb": "End of partial border closure",
+      "it-ch": "Termine della parziale chiusura delle frontiere",
+      "fr-ch": "Réouverture des frontières",
+      "de-ch": "end of Teilweise Schliessung der Grenzen"
+    },
+    {
+      "en-gb": "Partial border closure",
+      "it-ch": "Parziale chiusura delle frontiere",
+      "fr-ch": "Fermeture partielle des frontières",
+      "de-ch": "Teilweise Schliessung der Grenzen"
+    },
+    {
+      "en-gb": "partial border closure <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020",
+      "it-ch": "Parziale chiusura delle frontiere <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020",
+      "fr-ch": "Fermeture partielle des frontières <br> SR 818.101.24 Ordonance 2 COVID-19, 13.3.2020",
+      "de-ch": "Teilweise Schliessung der Grenzen <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020"
+    },
+    {
+      "en-gb": "End of school closure <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020",
+      "it-ch": "Termine della chiusura scuole<br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020",
+      "fr-ch": "Réouverture des écoles <br> SR 818.101.24 COVID-19-Verordnung 3, 13.3.2020",
+      "de-ch": "ende der Schulschliessung <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020"
+    },
+    {
+      "en-gb": "School closure",
+      "it-ch": "Chiusura scuole",
+      "fr-ch": "Fermeture des écoles",
+      "de-ch": "Schulschliessung"
+    },
+    {
+      "en-gb": "School closure <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020",
+      "it-ch": "Chiusura scuole<br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020",
+      "fr-ch": "Fermeture des écoles <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020",
+      "de-ch": "Schulschliessung <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020"
+    },
+    {
+      "en-gb": "Testing of all symptomatic patients",
+      "it-ch": "Test su tutti I pazienti sintomatici",
+      "fr-ch": "Test de tous les patients symptomatiques",
+      "de-ch": "Testen von allen symptomatischen Patienten"
+    },
+    {
+      "en-gb": "stop testing of all symptomatic patients",
+      "it-ch": "Fine test su tutti I pazienti sintomatici",
+      "fr-ch": "Arrêt du test de tous les patients symptomatiques",
+      "de-ch": "kein Testen von allen symptomatischen Patienten"
     }
   ]
 }

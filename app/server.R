@@ -230,36 +230,24 @@ server <- function(input, output, session) {
     return(latestDataIntComp)
   })
 
-  interventionsCH <- reactive({
-    filePath <- str_c(pathToInterventionData, "CH/interventions_", input$lang, ".csv")
-    filePathEN <- str_c(pathToInterventionData, "CH/interventions_", "en-gb", ".csv")
+  interventions <- read_csv(
+    str_c(pathToInterventionData, "interventions.csv"),
+    col_types = cols(
+      name = col_character(),
+      y = col_double(),
+      text = col_character(),
+      tooltip = col_character(),
+      type = col_character(),
+      date = col_date(format = ""),
+      plotTextPosition = col_character())) %>%
+    split(f = .$country)
 
-    if (file.exists(filePath)) {
-      interventionsCH <- read_csv(filePath,
-        col_types = cols(
-          name = col_character(),
-          y = col_double(),
-          text = col_character(),
-          tooltip = col_character(),
-          type = col_character(),
-          date = col_date(format = ""),
-          plotTextPosition = col_character()))
-      return(interventionsCH)
-    } else if (file.exists(filePathEN)) {
-      interventionsCH <- read_csv(filePathEN,
-        col_types = cols(
-          name = col_character(),
-          y = col_double(),
-          text = col_character(),
-          tooltip = col_character(),
-          type = col_character(),
-          date = col_date(format = ""),
-          plotTextPosition = col_character()))
-      return(interventionsCH)
-    } else {
-      cat("can't find interventions data...\n")
-      return(NULL)
-    }
+  interventionsCH <- reactive({
+    interventionsCH <- interventions[["Switzerland"]] %>%
+      mutate(
+        text = i18n()$t(text),
+        tooltip =  i18n()$t(tooltip))
+    return(interventionsCH)
   })
 
   caseDataSwitzerlandPlot <- reactive({
@@ -339,18 +327,6 @@ server <- function(input, output, session) {
 
       return(estimatesOverview)
   })
-
-  interventionsEU <- read_csv(
-    str_c(pathToInterventionData, "EU/interventions_", "en-gb", ".csv"),
-    col_types = cols(
-      name = col_character(),
-      y = col_double(),
-      text = col_character(),
-      tooltip = col_character(),
-      type = col_character(),
-      date = col_date(format = ""),
-      plotTextPosition = col_character())) %>%
-    split(f = .$country)
 
   # country raw data
   caseDataCountry <- lapply(countryList, function(i) {
@@ -505,7 +481,7 @@ server <- function(input, output, session) {
         countrySelect = i,
         caseData = caseData,
         estimates = estimatesCountry,
-        interventions = interventionsEU[[i]],
+        interventions = interventions[[i]],
         plotColoursNamed = plotColoursNamed,
         lastDataDate = latestDataInt,
         startDate = min(estimatesCountry$date) - 14,
