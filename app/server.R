@@ -23,11 +23,7 @@ server <- function(input, output, session) {
         menuSubItem(HTML(i18n()$t("R<sub>e</sub> for greater Regions")),
           tabName = "greaterRegions", icon = icon("chart-area")),
         menuSubItem(HTML(i18n()$t("CH estimates download")),
-          tabName = "download", icon = icon("download")),
-        radioButtons("estimation_type_select", "Select estimation type to show",
-          choices = c("sliding window" = "Cori_slidingWindow", "step-wise constant" = "Cori_step"),
-          selected = "Cori_slidingWindow", inline = FALSE),
-        HTML("<li><small style=\"padding-left: 15px\">", "(for swiss estimates only)", "</small></li>")
+          tabName = "download", icon = icon("download"))
       ),
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")),
         lapply(c("Comparison", countryList), function(i) {
@@ -35,6 +31,9 @@ server <- function(input, output, session) {
         })
       ),
       menuItem(i18n()$t("About"), tabName = "about", icon = icon("question-circle")),
+      radioButtons("estimation_type_select", "Select estimation type to show",
+          choices = c("sliding window" = "Cori_slidingWindow", "step-wise constant" = "Cori_step"),
+          selected = "Cori_slidingWindow", inline = FALSE),
       selectInput("lang", i18n()$t("Language"),
         languageSelect, selected = input$lang, multiple = FALSE,
         selectize = TRUE, width = NULL, size = NULL)
@@ -331,7 +330,7 @@ server <- function(input, output, session) {
       ) %>%
       group_by(country, data_type) %>%
       filter(
-        estimate_type == "Cori_slidingWindow", #input$estimation_type_select,
+        estimate_type == input$estimation_type_select,
         between(date,
           left = estimatesDates[["Switzerland"]][["Switzerland"]][["start"]][[as.character(data_type[1])]],
           right = estimatesDates[["Switzerland"]][["Switzerland"]][["end"]][[as.character(data_type[1])]]),
@@ -500,7 +499,7 @@ server <- function(input, output, session) {
       }
       caseData <- caseDataCountry[[str_remove(i, " ")]]
       estimatesCountry <- estimatesCountry[[str_remove(i, " ")]] %>%
-        filter(estimate_type == "Cori_slidingWindow")#input$estimation_type_select)
+        filter(estimate_type == input$estimation_type_select)
 
       plot <- rEffPlotlyCountry(
         countrySelect = i,
