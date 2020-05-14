@@ -196,7 +196,7 @@ rEffPlotly <- function(
       )
     )
 
-  if (!is.null(interventions)){
+  if (!is.null(interventions)) {
     pIntervention <- plot_ly(data = interventions) %>%
       add_trace(
         x = ~date, y = ~y, color = ~name,
@@ -507,7 +507,7 @@ rEffPlotlyRegion <- function(
         )
       )
     )
-  if (!is.null(interventions)){
+  if (!is.null(interventions)) {
     pIntervention <- plot_ly(data = interventions) %>%
       add_trace(
         x = ~date, y = ~y, color = ~name,

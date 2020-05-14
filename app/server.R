@@ -138,7 +138,7 @@ server <- function(input, output, session) {
         box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) in Europe - ",
           i))),
           width = 12,
-          plotlyOutput(str_c(str_remove(i, " "),"Plot"), width = "100%", height = "700px")
+          plotlyOutput(str_c(str_remove(i, " "), "Plot"), width = "100%", height = "700px")
         ),
         fluidRow(
           column(width = 8,
@@ -247,7 +247,7 @@ server <- function(input, output, session) {
           date = col_date(format = ""),
           plotTextPosition = col_character()))
       return(interventionsCH)
-    } else if (file.exists(filePathEN)){
+    } else if (file.exists(filePathEN)) {
       interventionsCH <- read_csv(filePathEN,
         col_types = cols(
           name = col_character(),
@@ -260,7 +260,7 @@ server <- function(input, output, session) {
       return(interventionsCH)
     } else {
       return(NULL)
-    }    
+    }
   })
 
   caseDataSwitzerlandPlot <- reactive({
