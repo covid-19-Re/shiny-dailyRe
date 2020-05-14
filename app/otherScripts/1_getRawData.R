@@ -220,17 +220,17 @@ getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases_") 
   filePath <- file.path(path, str_c(csvBaseName, region, ".csv"))
 
   if (file.exists(filePath)) {
-  cumData <- read_csv(filePath,
+    cumData <- read_csv(filePath,
     col_types = cols(
       Date = col_date(format = ""),
       Incidence = col_double(),
       CH = col_double()))
-  cumData <- cumData[, c(1, 3)]
-  out <- as_tibble(meltCumulativeData(cumData,
-    dataType = "hospitalized",
-    country = "CH",
-    dataSource = "FOPH")) %>%
-    mutate(region = as.character(region))
+    cumData <- cumData[, c(1, 3)]
+    out <- as_tibble(meltCumulativeData(cumData,
+      dataType = "hospitalized",
+      country = "CH",
+      dataSource = "FOPH")) %>%
+      mutate(region = as.character(region))
   } else {
     cat("Swiss Hospital Data file not found. Ignoring... \n")
     out <- NULL
@@ -518,10 +518,10 @@ swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
 NLdata <- getDataNL(stopAfter = Sys.Date() - 1)
 pathToExcessDeathUK <- here("../covid19-additionalData/excessDeath/Excess_death_UK.xlsx")
 if (file.exists(pathToExcessDeathUK)) {
-UKExcessDeath <- getExcessDeathUK(
-    startAt = as.Date("2020-02-20"),
+  UKExcessDeath <- getExcessDeathUK(
+      startAt = as.Date("2020-02-20"),
       path_to_data = pathToExcessDeathUK) %>%
-  filter(data_type %in% c("excess_deaths"))
+    filter(data_type %in% c("excess_deaths"))
 } else {
   UKExcessDeath <- NULL
   cat("UK Excess Death Data file not found. Ignoring... \n")
@@ -537,7 +537,22 @@ EUrawData <- bind_rows(ECDCdata, swissExcessDeath, NLdata, UKExcessDeath) %>%
 ##### Finished pulling data
 
 pathToRawDataSave <- file.path(dataDir, "Raw_data.Rdata")
-rawData <- bind_rows(CHrawData, EUrawData) %>%
+
+rawDataAll <- bind_rows(CHrawData, EUrawData)
+
+# Filter out all regions that do not reach X cumul cases
+thresholdCumulCases <- 500
+
+regionsIncluded <- rawDataAll %>%
+  filter(variable == "cumul", data_type == "confirmed") %>%
+  group_by(region) %>%
+  filter(max(value) >= thresholdCumulCases) %>%
+  select(region, country) %>%
+  distinct()
+excludedRegions <- setdiff(unique(rawDataAll$region), regionsIncluded$region)
+
+rawData <- rawDataAll %>%
+  filter(region %in% regionsIncluded$region) %>%
   mutate(
     data_type = factor(
       data_type,
@@ -545,6 +560,12 @@ rawData <- bind_rows(CHrawData, EUrawData) %>%
       labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"))) %>%
   select(country, region, source, data_type, variable, date, value) %>%
   arrange(country, region, source, data_type, variable, date)
+
+cat(str_c(
+  "Discarded ", length(excludedRegions), " regions because threshold of ",
+  thresholdCumulCases, " confirmed cases wasn't reached.\n",
+  "Discarded regions: ", str_c(excludedRegions, collapse = ", "), "\n"))
+
 save(rawData, file = pathToRawDataSave)
 
 # figuring out when estimation can start (i.e. on the first day confirmed cases are > 100)
@@ -562,7 +583,6 @@ estimateStartDates <- rawData %>%
   select(country, region, estimateStart = date)
 
 # figuring out when estimation ends i.e. applying the delays
-
 delays <- tibble(
   data_type = factor(
     c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"),
