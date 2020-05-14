@@ -138,7 +138,7 @@ server <- function(input, output, session) {
         box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) in Europe - ",
           i))),
           width = 12,
-          plotlyOutput(str_c(str_remove(i, " "),"Plot"), width = "100%", height = "700px")
+          plotlyOutput(str_c(str_remove(i, " "), "Plot"), width = "100%", height = "700px")
         ),
         fluidRow(
           column(width = 8,
@@ -232,17 +232,36 @@ server <- function(input, output, session) {
     return(latestDataIntComp)
   })
 
-  interventions <- reactive({
-    interventions <- read_csv(str_c(pathToInterventionData, "_", input$lang, ".csv"),
-    col_types = cols(
-      name = col_character(),
-      y = col_double(),
-      text = col_character(),
-      tooltip = col_character(),
-      type = col_character(),
-      date = col_date(format = ""),
-      plotTextPosition = col_character()))
-    return(interventions)
+  interventionsCH <- reactive({
+    filePath <- str_c(pathToInterventionData, "CH/interventions_", input$lang, ".csv")
+    filePathEN <- str_c(pathToInterventionData, "CH/interventions_", "en-gb", ".csv")
+
+    if (file.exists(filePath)) {
+      interventionsCH <- read_csv(filePath,
+        col_types = cols(
+          name = col_character(),
+          y = col_double(),
+          text = col_character(),
+          tooltip = col_character(),
+          type = col_character(),
+          date = col_date(format = ""),
+          plotTextPosition = col_character()))
+      return(interventionsCH)
+    } else if (file.exists(filePathEN)) {
+      interventionsCH <- read_csv(filePathEN,
+        col_types = cols(
+          name = col_character(),
+          y = col_double(),
+          text = col_character(),
+          tooltip = col_character(),
+          type = col_character(),
+          date = col_date(format = ""),
+          plotTextPosition = col_character()))
+      return(interventionsCH)
+    } else {
+      cat("can't find interventions data...\n")
+      return(NULL)
+    }
   })
 
   caseDataSwitzerlandPlot <- reactive({
@@ -365,7 +384,7 @@ server <- function(input, output, session) {
     plot <- rEffPlotly(
       caseDataSwitzerlandPlot(),
       rEffData,
-      interventions(),
+      interventionsCH(),
       plotColoursNamed,
       latestDataCH,
       legendOrientation = "v",
@@ -395,7 +414,7 @@ server <- function(input, output, session) {
     plot <- rEffPlotlyRegion(
       caseData,
       rEffData,
-      interventions(),
+      interventionsCH(),
       latestDataCH,
       legendOrientation = "h",
       regionColors = cantonColors,
@@ -427,7 +446,7 @@ server <- function(input, output, session) {
     plot <- rEffPlotlyRegion(
       caseData,
       rEffData,
-      interventions(),
+      interventionsCH(),
       latestDataCH,
       legendOrientation = "h",
       regionColors = greaterRegionColors,

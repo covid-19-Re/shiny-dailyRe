@@ -3,12 +3,19 @@ parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
 cd "$parent_path"
 
+echo "updating ch-hospital-data ..."
 cd "../../../ch-hospital-data"
+git pull
+echo "updating covid19-interventions ..."
+cd "../covid19-additionalData"
 git pull
 
 cd "$parent_path"
 rm *.Rout
+# make temp data directory and clean last temp files
+mkdir ../data/temp
 rm -f ../data/temp/*
+echo "running R scripts ..."
 Rscript --vanilla --verbose 1_getRawData.R >> messages.Rout 2>> errors.Rout
 Rscript --vanilla --verbose 2_getInfectionIncidence.R >> messages.Rout 2>> errors.Rout
 Rscript --vanilla --verbose 3_doReEstimates.R >> messages.Rout 2>> errors.Rout

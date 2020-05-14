@@ -91,7 +91,7 @@ plotOutDir <- here("app/www")
 
 for (i in names(textElements)) {
   pathToInterventionData <- here(str_c(
-    "../ch-hospital-data/data/interventions_", i, ".csv"))
+    "../covid19-additionalData/interventions/CH/interventions_", i, ".csv"))
 
   interventions <- read_csv(pathToInterventionData,
     col_types = cols(
