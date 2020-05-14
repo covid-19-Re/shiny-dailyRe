@@ -259,6 +259,7 @@ server <- function(input, output, session) {
           plotTextPosition = col_character()))
       return(interventionsCH)
     } else {
+      cat("can't find interventions data...\n")
       return(NULL)
     }
   })
