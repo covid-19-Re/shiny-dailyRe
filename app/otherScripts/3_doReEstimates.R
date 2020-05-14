@@ -1,5 +1,6 @@
 cat(paste("###", Sys.time(), "- starting 3_doReEstimates.R", "\n"))
 
+library("tidyverse")
 library("lubridate")
 library("readr")
 library("gridExtra")
@@ -236,28 +237,30 @@ doReEstimation <- function(
 }
 
 ## Intervention Dates for the European countries
-getIntervalEnds <- function(interval_ends, region_i, 
-                            swissRegions = c("Liechtenstein","AG","AI","AR","BE","BL","BS","FR","GE","GL",
-                                             "GR","grR Central Switzerland", "grR Eastern Switzerland", 
-                                             "grR Espace Mittelland","grR Lake Geneva Region","grR Northwestern Switzerland",
-                                             "grR Ticino", "grR Zurich","JU","LU","NE", "NW","OW","SG",                        
-                                             "SH", "SO","SZ","TG","TI", "UR","VD","VS","ZG", "ZH")){
-  if ("data.frame" %in% class(interval_ends)){
-    if (region_i %in% swissRegions){
-      region_i = 'Switzerland'
+getIntervalEnds <- function(
+  interval_ends,
+  region_i,
+  swissRegions = c("Liechtenstein", "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL",
+    "GR", "grR Central Switzerland", "grR Eastern Switzerland",
+    "grR Espace Mittelland", "grR Lake Geneva Region", "grR Northwestern Switzerland",
+    "grR Ticino", "grR Zurich", "JU", "LU", "NE", "NW", "OW", "SG",
+    "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH")) {
+
+  if ("data.frame" %in% class(interval_ends)) {
+    if (region_i %in% swissRegions) {
+      region_i <- "Switzerland"
     }
-    
     interventionDataSubset <- interval_ends %>%
       filter(region == region_i,
-             type == 'start',
-             measure != 'testing')
-    
-    region_interval_ends <- sort(unique(pull(interventionDataSubset, 'date')))
+             type == "start",
+             measure != "testing")
+
+    region_interval_ends <- sort(unique(pull(interventionDataSubset, "date")))
   } else {
     region_interval_ends <- interval_ends
   }
-  if (length(region_interval_ends)<1){
-    region_interval_ends = c(Sys.Date())
+  if (length(region_interval_ends) < 1) {
+    region_interval_ends <- c(Sys.Date())
   }
   return(region_interval_ends)
 }
@@ -283,10 +286,10 @@ doAllReEstimations <- function(
     cat("estimating Re for data source: ", source_i, "...\n")
     for (region_i in unique(data$region)) {
       cat("  Region: ", region_i, "\n")
-      
+
       ## take region specific interval_ends
       region_interval_ends <- getIntervalEnds(interval_ends, region_i, ...)
-      
+
       ## Run EpiEstim
       for (data_type_i in unique(data$data_type)) {
         subset_data <- subset(data, region == region_i & source == source_i & data_type == data_type_i)
@@ -334,21 +337,31 @@ dataDir <- here("app/data/temp")
 pathToSampledInfectDataSave <- file.path(dataDir, paste0("Sampled_infect_data.Rdata"))
 pathToEstimatesReRaw <- file.path(dataDir, paste0("Estimates_Re_raw.Rdata"))
 
+load(file = pathToSampledInfectDataSave)
 ### Date input
-interval_ends <- c("2020-03-13", "2020-03-16", "2020-03-20")
 
-# pathToInterventionDates <- file.path(dataDir, paste0("interventions_en-gb.csv"))
-# interventionData <- read_csv(pathToInterventionDates) %>%
-#   mutate(date = recode(date,
-#                        '01.01.99' = '01.01.2099'),
-#          date = dmy(date))
-# interval_ends <- interventionData
-# 
-# swissRegions <- c("Liechtenstein","AG","AI","AR","BE","BL","BS","FR","GE","GL",
-#                   "GR","grR Central Switzerland", "grR Eastern Switzerland", 
-#                   "grR Espace Mittelland","grR Lake Geneva Region","grR Northwestern Switzerland",
-#                   "grR Ticino", "grR Zurich","JU","LU","NE", "NW","OW","SG",                        
-#                   "SH", "SO","SZ","TG","TI", "UR","VD","VS","ZG", "ZH")
+pathToInterventionDates <- here("../covid19-additionalData/interventions/EU", "interventions_en-gb.csv")
+interventionData <- read_csv(pathToInterventionDates,
+  col_types = cols(
+    date = col_date(format = ""),
+    country = col_character(),
+    measure = col_character(),
+    source = col_character(),
+    name = col_character(),
+    y = col_double(),
+    text = col_character(),
+    tooltip = col_character(),
+    type = col_character(),
+    plotTextPosition = col_character(),
+    region = col_character()))
+
+interval_ends <- interventionData
+
+swissRegions <- sampledInfectData %>%
+  filter(country %in% c("Switzerland", "Liechtenstein")) %>%
+  select(region) %>%
+  distinct() %>%
+  .$region
 
 ### Window
 window <- 3
@@ -367,10 +380,6 @@ all_delays <- list(
 truncations <- list(
   left = c(Cori = 5, WallingaTeunis = 0),
   right = c(Cori = 0, WallingaTeunis = 8))
-
-
-#############################
-load(file = pathToSampledInfectDataSave)
 
 ### Run EpiEstim
 estimatesReRaw_calc <- doAllReEstimations(
