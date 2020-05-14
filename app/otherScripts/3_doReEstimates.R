@@ -56,26 +56,31 @@ estimateRe <- function(
   ## generate start and end bounds for Re estimates
   if (variationType == "step") {
 
+    # index in incidenceData that corresponds to the interval_end date
     interval_end_indices <- sapply(
       interval_ends,
       function(x) {
         which(dates == as.Date(x))[1]
       }
     )
-
+    
+    #starts and end indices of the intervals (numeric vector)
     t_start <- c(offset, na.omit(interval_end_indices) + 1)
     t_end <- c(na.omit(interval_end_indices), length(incidenceData))
 
     if (offset >= length(incidenceData)) {
       return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
     }
-
+    
+    # remove intervals if the offset is greater than the
+    # end of the interval
     while (offset > t_end[1]) {
       t_start <- t_start[-1]
       t_start[1] <- offset
       t_end <- t_end[-1]
     }
 
+    # make sure there are no intervals beyond the length of the data
     while (t_start[length(t_start)] >= length(incidenceData)) {
       t_end <- t_end[-length(t_end)]
       t_start <- t_start[-length(t_start)]
@@ -84,6 +89,8 @@ estimateRe <- function(
     outputDates <- dates[t_start[1]:t_end[length(t_end)]]
 
   } else if (variationType == "slidingWindow") {
+    # computation intervals corresponding to every position of the
+    # sliding window
     t_start <- seq(offset, rightBound)
     t_end <- t_start + windowLength - 1
     outputDates <- dates[t_end]
