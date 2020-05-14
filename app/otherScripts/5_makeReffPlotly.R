@@ -5,6 +5,7 @@ library(plotly)
 library(htmlwidgets)
 library(here)
 library(viridisLite)
+library(shiny.i18n)
 
 # load data
 dataDir <- here("app/data/temp")
@@ -12,6 +13,7 @@ pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.Rdata")
 pathToLatestData <- file.path(dataDir, "latestData.Rdata")
 pathToRawData <- file.path(dataDir, "Raw_data.Rdata")
 pathToEstimateDates <- file.path(dataDir, "estimate_dates.Rdata")
+pathToInterventionData <- here("../covid19-additionalData/interventions/interventions.csv")
 
 load(pathToRawData)
 load(pathToEstimatesReSum)
@@ -73,44 +75,55 @@ estimates <- estimatesReSum %>%
   ungroup()
 
 latestDataPlot <- latestData %>%
+  ungroup() %>%
   filter(
     country == "Switzerland",
     region == "Switzerland",
-    source %in% unique(estimates$source))
+    source %in% unique(estimates$source)) %>%
+  select(-data_type) %>%
+  distinct()
 
 source(here("app", "otherScripts", "ReffPlotly.R"))
 
-translations <- read_csv(here("app", "data", "translations.csv"), col_types = "ccccc")
-textElements <- list()
-for (i in names(translations)[-1]) {
-  textElements[[i]] <- translations[[i]]
-  names(textElements[[i]]) <- translations$element
-}
+translator <- Translator$new(translation_json_path = here("app","data", "shinyTranslations.json"))
 
 plotOutDir <- here("app/www")
 
-for (i in names(textElements)) {
-  pathToInterventionData <- here(str_c(
-    "../covid19-additionalData/interventions/CH/interventions_", i, ".csv"))
+interventions <- read_csv(file = pathToInterventionData,
+  col_types = cols(
+    name = col_character(),
+    y = col_double(),
+    text = col_character(),
+    tooltip = col_character(),
+    type = col_character(),
+    date = col_date(format = ""),
+    plotTextPosition = col_character())) %>%
+  filter(country == "Switzerland")
 
-  interventions <- read_csv(pathToInterventionData,
-    col_types = cols(
-      name = col_character(),
-      y = col_double(),
-      text = col_character(),
-      tooltip = col_character(),
-      type = col_character(),
-      date = col_date(format = "")))
+
+for (i in translator$languages) {
+
+  translator$set_translation_language(i)
+
+  interventionsLocalized <- interventions %>%
+      mutate(
+        text = sapply(text, translator$t,  USE.NAMES = FALSE),
+        tooltip =  sapply(tooltip, translator$t,  USE.NAMES = FALSE))
+
+  latestDataPlotLocalized <- latestDataPlot %>%
+    mutate(
+      source = sapply(source, translator$t,  USE.NAMES = FALSE)
+    )
 
   plotlyPlotV <- rEffPlotly(
     caseDataPlot,
     estimates,
-    interventions,
+    interventionsLocalized,
     plotColoursNamed,
-    lastDataDate = latestDataPlot,
+    lastDataDate = latestDataPlotLocalized,
     legendOrientation = "v",
-    textElements = textElements,
     language = i,
+    translator = translator,
     widgetID = "rEffplots")
 
   plotlyPlotV$sizingPolicy$browser$padding <- 0

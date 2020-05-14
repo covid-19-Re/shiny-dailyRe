@@ -12,6 +12,7 @@ server <- function(input, output, session) {
   load(pathToEstimatesReSum)
   load(pathToEstimateDates)
   load(pathToValidEstimates)
+  load(pathTolatestData)
   lastCheck <- readLines(pathToLastCheck)
 
   # Render UI
@@ -56,7 +57,7 @@ server <- function(input, output, session) {
           infoBox(width = 12,
             i18n()$t("Last Data Updates"),
             HTML(
-              dataUpdatesTable(filter(latestDataInt(),
+              dataUpdatesTable(filter(latestData,
                 country == "Switzerland", source %in% c("openZH", "FOPH")),
                 lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
               icon = icon("exclamation-circle"),
@@ -82,7 +83,7 @@ server <- function(input, output, session) {
         column(width = 5,
           infoBox(width = 12,
             i18n()$t("Last Data Updates"),
-            HTML(dataUpdatesTable(filter(latestDataInt(),
+            HTML(dataUpdatesTable(filter(latestData,
               country == "Switzerland", source %in% c("openZH", "FOPH")),
               lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
               icon = icon("exclamation-circle"),
@@ -108,7 +109,7 @@ server <- function(input, output, session) {
         column(width = 5,
           infoBox(width = 12,
             i18n()$t("Last Data Updates"),
-            HTML(dataUpdatesTable(filter(latestDataInt(),
+            HTML(dataUpdatesTable(filter(latestData,
               country == "Switzerland", source %in% c("openZH", "FOPH")),
               lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
               icon = icon("exclamation-circle"),
@@ -149,7 +150,7 @@ server <- function(input, output, session) {
             infoBox(width = 12,
               i18n()$t("Last Data Updates"),
               HTML(
-                dataUpdatesTable(filter(latestDataInt(), country == i), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+                dataUpdatesTable(filter(latestData, country == i), lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
               icon = icon("exclamation-circle"),
               color = "purple"
             )
@@ -187,7 +188,7 @@ server <- function(input, output, session) {
         i18n()$t("Last Data Updates"),
         HTML(
           dataUpdatesTable(
-            latestDataIntComp(),
+            latestDataComp(),
             lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
         icon = icon("exclamation-circle"),
         color = "purple"
@@ -212,22 +213,14 @@ server <- function(input, output, session) {
     return(do.call(tabItems, tabs))
   })
 
-  load(pathTolatestData)
-  latestDataInt <- reactive({
-    load(pathTolatestData)
-    latestData$source[latestData$source == "FOPH"] <- i18n()$t("FOPH")
-    latestDataInt <- latestData
-    return(latestDataInt)
-  })
-
-  latestDataIntComp <- reactive({
+  latestDataComp <- reactive({
     if (is.null(input$data_type_select)) {
       selectedDataType <- "Confirmed cases"
     } else {
       selectedDataType <- input$data_type_select
     }
-    latestDataIntComp <- filter(latestDataInt(), data_type == selectedDataType)
-    return(latestDataIntComp)
+    latestDataComp <- filter(latestData, data_type == selectedDataType)
+    return(latestDataComp)
   })
 
   interventions <- read_csv(
@@ -245,8 +238,8 @@ server <- function(input, output, session) {
   interventionsCH <- reactive({
     interventionsCH <- interventions[["Switzerland"]] %>%
       mutate(
-        text = i18n()$t(text),
-        tooltip =  i18n()$t(tooltip))
+        text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
+        tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
     return(interventionsCH)
   })
 
@@ -364,8 +357,10 @@ server <- function(input, output, session) {
 
     rEffData <- estimatesSwitzerlandPlot()
 
-    latestDataCH <- filter(latestDataInt(), country == "Switzerland", region == "Switzerland",
+    latestDataCH <- filter(latestData, country == "Switzerland", region == "Switzerland",
       source %in% unique(rEffData$source))
+
+    latestDataCH$source <- sapply(latestDataCH$source, i18n()$t,  USE.NAMES = FALSE)
 
     plot <- rEffPlotly(
       caseDataSwitzerlandPlot(),
@@ -375,7 +370,7 @@ server <- function(input, output, session) {
       latestDataCH,
       legendOrientation = "v",
       language = input$lang,
-      textElements = textElements,
+      translator = i18n(),
       widgetID = NULL)
     return(plot)
   })
@@ -391,7 +386,7 @@ server <- function(input, output, session) {
     names(cantonColors) <- unique(caseData$region)
     cantonColors["Switzerland"] <- "#666666"
 
-    latestDataCH <- latestDataInt() %>%
+    latestDataCH <- latestData %>%
       filter(
         country == "Switzerland",
         region %in% unique(caseData$region),
@@ -423,7 +418,7 @@ server <- function(input, output, session) {
     names(greaterRegionColors) <- unique(caseData$region)
     greaterRegionColors["Switzerland"] <- "#666666"
 
-    latestDataCH <- latestDataInt() %>%
+    latestDataCH <- latestData %>%
       filter(
         country == "Switzerland",
         region %in% unique(caseData$region),
@@ -453,7 +448,7 @@ server <- function(input, output, session) {
     rEffPlotlyComparison(
       caseData = caseData,
       estimates = estimatesOverview(),
-      lastDataDate = latestDataInt(),
+      lastDataDate = latestData,
       startDate = min(filter(caseData, cumul > 0)$date) - 1,
       focusCountry = focusCountry,
       legendOrientation = "v", # "v" or "h"
@@ -468,9 +463,8 @@ server <- function(input, output, session) {
   lapply(countryList, function(i) {
     output[[str_c(str_remove(i, " "), "Plot")]] <- renderPlotly({
 
-      latestDataInt <-  latestDataInt()
       if (i == "Switzerland") {
-        latestDataInt <- latestDataInt %>%
+        latestData <- latestData %>%
           filter(source != "ECDC")
       }
       caseData <- caseDataCountry[[str_remove(i, " ")]]
@@ -483,7 +477,7 @@ server <- function(input, output, session) {
         estimates = estimatesCountry,
         interventions = interventions[[i]],
         plotColoursNamed = plotColoursNamed,
-        lastDataDate = latestDataInt,
+        lastDataDate = latestData,
         startDate = min(estimatesCountry$date) - 14,
         legendOrientation = "v", # "v" or "h"
         textElements = textElements,
