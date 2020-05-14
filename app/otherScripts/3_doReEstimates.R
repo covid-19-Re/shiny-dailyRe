@@ -340,7 +340,7 @@ pathToEstimatesReRaw <- file.path(dataDir, paste0("Estimates_Re_raw.Rdata"))
 load(file = pathToSampledInfectDataSave)
 ### Date input
 
-pathToInterventionDates <- here("../covid19-additionalData/interventions/EU", "interventions_en-gb.csv")
+pathToInterventionDates <- here("../covid19-additionalData/interventions/", "interventions.csv")
 interventionData <- read_csv(pathToInterventionDates,
   col_types = cols(
     date = col_date(format = ""),
