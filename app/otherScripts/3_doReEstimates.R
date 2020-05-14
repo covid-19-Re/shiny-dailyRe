@@ -228,6 +228,35 @@ doReEstimation <- function(
   return(end_result)
 }
 
+## Intervention Dates for the European countries
+getIntervalEnds <- function(interval_ends, region_i, 
+                            swissRegions = c("Liechtenstein","AG","AI","AR","BE","BL","BS","FR","GE","GL",
+                                             "GR","grR Central Switzerland", "grR Eastern Switzerland", 
+                                             "grR Espace Mittelland","grR Lake Geneva Region","grR Northwestern Switzerland",
+                                             "grR Ticino", "grR Zurich","JU","LU","NE", "NW","OW","SG",                        
+                                             "SH", "SO","SZ","TG","TI", "UR","VD","VS","ZG", "ZH")){
+  if ("data.frame" %in% class(interval_ends)){
+    if (region_i %in% swissRegions){
+      region_i = 'Switzerland'
+    }
+    
+    interventionDataSubset <- interval_ends %>%
+      filter(region == region_i,
+             type == 'start',
+             measure != 'testing')
+    
+    region_interval_ends <- sort(unique(pull(interventionDataSubset, 'date')))
+  } else {
+    region_interval_ends <- interval_ends
+  }
+  if (length(region_interval_ends)<1){
+    region_interval_ends = c(Sys.Date())
+  }
+  return(region_interval_ends)
+}
+
+
+
 ## Perform R(t) estimations with EpiEstim on each 'region' of the data, with each 'method' and on each 'data_type'
 ## 'region' is the geographical region
 ## 'data_type' can be 'confirmed' for confirmed cases, 'deaths' for fatalities,
@@ -239,7 +268,7 @@ doAllReEstimations <- function(
   variationTypes = c("step", "slidingWindow"),
   all_delays,
   truncations,
-  interval_ends = c("2020-04-01")) {
+  interval_ends = c("2020-04-01"), ...) {
 
   results_list <- list()
 
@@ -247,6 +276,11 @@ doAllReEstimations <- function(
     cat("estimating Re for data source: ", source_i, "...\n")
     for (region_i in unique(data$region)) {
       cat("  Region: ", region_i, "\n")
+      
+      ## take region specific interval_ends
+      region_interval_ends <- getIntervalEnds(interval_ends, region_i, ...)
+      
+      ## Run EpiEstim
       for (data_type_i in unique(data$data_type)) {
         subset_data <- subset(data, region == region_i & source == source_i & data_type == data_type_i)
         if (nrow(subset_data) == 0) {
@@ -265,7 +299,7 @@ doAllReEstimations <- function(
                 slidingWindow = slidingWindow,
                 methods = methods,
                 variationTypes = variationTypes,
-                interval_ends = interval_ends,
+                interval_ends = region_interval_ends,
                 delays = delay_i,
                 truncations = truncations
               )
@@ -295,6 +329,21 @@ pathToEstimatesReRaw <- file.path(dataDir, paste0("Estimates_Re_raw.Rdata"))
 
 ### Date input
 interval_ends <- c("2020-03-13", "2020-03-16", "2020-03-20")
+
+# pathToInterventionDates <- file.path(dataDir, paste0("interventions_en-gb.csv"))
+# interventionData <- read_csv(pathToInterventionDates) %>%
+#   mutate(date = recode(date,
+#                        '01.01.99' = '01.01.2099'),
+#          date = dmy(date))
+# interval_ends <- interventionData
+# 
+# swissRegions <- c("Liechtenstein","AG","AI","AR","BE","BL","BS","FR","GE","GL",
+#                   "GR","grR Central Switzerland", "grR Eastern Switzerland", 
+#                   "grR Espace Mittelland","grR Lake Geneva Region","grR Northwestern Switzerland",
+#                   "grR Ticino", "grR Zurich","JU","LU","NE", "NW","OW","SG",                        
+#                   "SH", "SO","SZ","TG","TI", "UR","VD","VS","ZG", "ZH")
+
+### Window
 window <- 3
 
 ### Delays applied
@@ -323,7 +372,8 @@ estimatesReRaw_calc <- doAllReEstimations(
     methods = "Cori",
     all_delays = all_delays,
     truncations = truncations,
-    interval_ends = interval_ends)
+    interval_ends = interval_ends,
+    swissRegions = swissRegions)
 
 library(tidyverse)
 estimatesReRaw <- as_tibble(estimatesReRaw_calc) %>%
