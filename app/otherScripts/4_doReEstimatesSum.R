@@ -31,11 +31,8 @@ save(estimatesRe, file = pathToEstimatesRe)
 
 estimatesReSum <- estimatesRe %>%
   filter(
-    # exclude infection_deaths in CH
-    !(country == "Switzerland" & region != "Switzerland" & data_type == "Deaths"),
-    # exclude infection hospitalized data not provided by FOPH
-    !(country == "Switzerland" & data_type == "Hospitalized patients" &
-      date > filter(latestData, source == "FOPH")$date)) %>%
+    # exclude infection_deaths in Cantons
+    !(country == "Switzerland" & region != "Switzerland" & data_type == "Deaths")) %>%
   group_by(date, country, region, data_type, source, estimate_type) %>%
   summarize(
     median_R_mean = median(R_mean),

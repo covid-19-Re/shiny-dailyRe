@@ -218,6 +218,8 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
 ## Include hospitalization counts from local csv files
 getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases_") {
   filePath <- file.path(path, str_c(csvBaseName, region, ".csv"))
+
+  if (file.exists(filePath)) {
   cumData <- read_csv(filePath,
     col_types = cols(
       Date = col_date(format = ""),
@@ -229,6 +231,10 @@ getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases_") 
     country = "CH",
     dataSource = "FOPH")) %>%
     mutate(region = as.character(region))
+  } else {
+    cat("Swiss Hospital Data file not found. Ignoring... \n")
+    out <- NULL
+  }
   return(out)
 }
 
@@ -396,7 +402,7 @@ getRawExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = 
 
   raw_data <- suppressWarnings(
     readxl::read_excel(
-      path = file.path(path_to_data, "Excess_death_UK.xlsx"),
+      path = path_to_data,
       sheet = "Weekly figures 2020", col_names = F))
 
   rowUK <- raw_data[c(5, 6, 9, 11, 19), ] %>%
@@ -510,10 +516,16 @@ countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
 ECDCdata <- getLongECDCData(setdiff(countryList, c("Switzerland", "Netherlands")))
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
 NLdata <- getDataNL(stopAfter = Sys.Date() - 1)
+pathToExcessDeathUK <- here("../covid19-additionalData/excessDeath/Excess_death_UK.xlsx")
+if (file.exists(pathToExcessDeathUK)) {
 UKExcessDeath <- getExcessDeathUK(
     startAt = as.Date("2020-02-20"),
-    path_to_data = here("../ch-hospital-data/data/UK")) %>%
+      path_to_data = pathToExcessDeathUK) %>%
   filter(data_type %in% c("excess_deaths"))
+} else {
+  UKExcessDeath <- NULL
+  cat("UK Excess Death Data file not found. Ignoring... \n")
+}
 
 EUrawData <- bind_rows(ECDCdata, swissExcessDeath, NLdata, UKExcessDeath) %>%
   as_tibble()
