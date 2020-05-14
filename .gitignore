@@ -10,3 +10,4 @@ app/restart.txt
 !app/www/info.md
 .vscode
 .Rproj.user
+*.Rdata

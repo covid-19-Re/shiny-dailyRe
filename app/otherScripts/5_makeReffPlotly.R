@@ -8,12 +8,12 @@ library(viridisLite)
 library(shiny.i18n)
 
 # load data
-dataDir <- here("app/data/temp")
+dataDir <- here::here("app/data/temp")
 pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.Rdata")
 pathToLatestData <- file.path(dataDir, "latestData.Rdata")
 pathToRawData <- file.path(dataDir, "Raw_data.Rdata")
 pathToEstimateDates <- file.path(dataDir, "estimate_dates.Rdata")
-pathToInterventionData <- here("../covid19-additionalData/interventions/interventions.csv")
+pathToInterventionData <- here::here("../covid19-additionalData/interventions/interventions.csv")
 
 load(pathToRawData)
 load(pathToEstimatesReSum)
@@ -80,14 +80,14 @@ latestDataPlot <- latestData %>%
     country == "Switzerland",
     region == "Switzerland",
     source %in% unique(estimates$source)) %>%
-  select(-data_type) %>%
+  dplyr::select(-data_type) %>%
   distinct()
 
-source(here("app", "otherScripts", "ReffPlotly.R"))
+source(here::here("app", "otherScripts", "ReffPlotly.R"))
 
-translator <- Translator$new(translation_json_path = here("app","data", "shinyTranslations.json"))
+translator <- Translator$new(translation_json_path = here::here("app","data", "shinyTranslations.json"))
 
-plotOutDir <- here("app/www")
+plotOutDir <- here::here("app/www")
 
 interventions <- read_csv(file = pathToInterventionData,
   col_types = cols(

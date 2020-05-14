@@ -198,7 +198,7 @@ server <- function(input, output, session) {
   output$downloadUI <- renderUI({
     fluidRow(
       box(title = HTML(i18n()$t("Download estimates for Switzerland")), width = 12,
-        downloadLink("downloadCHestimates", "Download estimats (.csv)")
+        downloadLink("downloadCHestimates", "Download estimates (.csv)")
       )
     )
   })
@@ -501,12 +501,12 @@ server <- function(input, output, session) {
   output$sourcesTable <- renderDataTable({
     tableData <- latestData %>%
       ungroup() %>%
-      select(source, sourceLong, data_type, url) %>%
+      dplyr::select(source, sourceLong, data_type, url) %>%
       distinct() %>%
       group_by(source, sourceLong, url) %>%
-      summarize(data_type = str_c(data_type, collapse = ", ")) %>%
+      dplyr:summarize(data_type = str_c(data_type, collapse = ", ")) %>%
       mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
-      select("Source" = source, "Description" = sourceLong, "Data types" = data_type, "URL" = url) %>%
+      dplyr::select("Source" = source, "Description" = sourceLong, "Data types" = data_type, "URL" = url) %>%
       arrange(Source)
 
     return(tableData)

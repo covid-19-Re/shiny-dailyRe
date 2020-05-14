@@ -26,7 +26,7 @@ pathToValidEstimates <- file.path(dataDir, "valid_estimates.Rdata")
 
 load(pathToCountryList)
 
-translations <- read_csv(here("app", "data", "translations.csv"), col_types = "ccccc")
+translations <- read_csv(here::here("app", "data", "translations.csv"), col_types = "ccccc")
 textElements <- list()
 for (i in names(translations)[-1]) {
   textElements[[i]] <- translations[[i]]

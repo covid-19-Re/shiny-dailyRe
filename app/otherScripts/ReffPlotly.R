@@ -309,7 +309,7 @@ rEffPlotlyRegion <- function(
   lastDataDate$source[1] <- textElements[[language]][["FOPH"]]
   lastDataDate <- lastDataDate %>%
     ungroup() %>%
-    select(source, date) %>%
+    dplyr::select(source, date) %>%
     group_by(source) %>%
     distinct() %>%
     filter(date == max(date))
@@ -627,7 +627,7 @@ rEffPlotlyCountry <- function(
 
   lastDataDate <- lastDataDate %>%
     ungroup() %>%
-    select(source, date) %>%
+    dplyr::select(source, date) %>%
     group_by(source) %>%
     distinct() %>%
     filter(date == max(date))
@@ -922,7 +922,7 @@ rEffPlotlyComparison <- function(
   # prepare Data
   lastDataDate <- lastDataDate %>%
     ungroup() %>%
-    select(source, date) %>%
+    dplyr::select(source, date) %>%
     group_by(source) %>%
     distinct() %>%
     filter(date == max(date))

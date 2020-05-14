@@ -333,14 +333,15 @@ doAllReEstimations <- function(
 ###### Input #######
 ####################
 
-dataDir <- here("app/data/temp")
+dataDir <- here::here("app/data/temp")
 pathToSampledInfectDataSave <- file.path(dataDir, paste0("Sampled_infect_data.Rdata"))
 pathToEstimatesReRaw <- file.path(dataDir, paste0("Estimates_Re_raw.Rdata"))
 
 load(file = pathToSampledInfectDataSave)
 ### Date input
 
-pathToInterventionDates <- here("../covid19-additionalData/interventions/", "interventions.csv")
+pathToInterventionDates <- here::here("../covid19-additionalData/interventions/", "interventions.csv")
+
 interventionData <- read_csv(pathToInterventionDates,
   col_types = cols(
     date = col_date(format = ""),
@@ -359,7 +360,7 @@ interval_ends <- interventionData
 
 swissRegions <- sampledInfectData %>%
   filter(country %in% c("Switzerland", "Liechtenstein")) %>%
-  select(region) %>%
+  dplyr::select(region) %>%
   distinct() %>%
   .$region
 

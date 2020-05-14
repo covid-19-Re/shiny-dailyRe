@@ -13,7 +13,7 @@ git pull
 cd "$parent_path"
 rm *.Rout
 # make temp data directory and clean last temp files
-mkdir ../data/temp
+mkdir --parents ../data/temp
 rm -f ../data/temp/*
 echo "running R scripts ..."
 Rscript --vanilla --verbose 1_getRawData.R >> messages.Rout 2>> errors.Rout

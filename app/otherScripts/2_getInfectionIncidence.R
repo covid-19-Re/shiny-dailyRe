@@ -106,7 +106,12 @@ drawInfectionDates <- function(
     country <- rep(unique(data_subset$country)[1], length(infectionDates))
     source <- rep(unique(data_subset$source)[1], length(infectionDates))
 
-    data_type_name <- rep(paste0("infection_", unique(data_subset$data_type)[1]), length(infectionDates))
+    data_type_subset <- unique(data_subset$data_type)[1]
+    if(data_type_subset %in% c("Hospitalized patients - onset", "Hospitalized patients - admission")) {
+      data_type_subset <- "Hospitalized patients"
+    }
+    
+    data_type_name <- rep(paste0("infection_", data_type_subset), length(infectionDates))
     variable <- rep("incidence", length(infectionDates))
     replicate <- rep(replicateNum, length(infectionDates))
 
@@ -152,6 +157,13 @@ drawAllInfectionDates <- function(
           if (nrow(subset_data) == 0) {
             return(data.frame())
           }
+          
+          if(count_type_i == "Hospitalized patients") {
+            data_types_included <- unique(subset(data, region == x & source == source_i & variable == "incidence")$data_type)
+            if("Hospitalized patients - onset" %in% data_types_included) {
+              return(data.frame())
+            }
+          }
 
           drawInfectionDates(
             subset_data,
@@ -176,7 +188,7 @@ drawAllInfectionDates <- function(
 ###### Input #######
 ####################
 
-dataDir <- here("app/data/temp")
+dataDir <- here::here("app/data/temp")
 pathToRawDataSave <- file.path(dataDir, "Raw_data.Rdata")
 pathToSampledInfectDataSave <- file.path(dataDir, "Sampled_infect_data.Rdata")
 
@@ -186,13 +198,13 @@ pathToSampledInfectDataSave <- file.path(dataDir, "Sampled_infect_data.Rdata")
 meanIncubation <- 5.3
 sdIncubation <- 3.2
 
-# onset to test: pooled CH data from BAG (01/05/20 update)
+# onset to test: pooled CH data from BAG (12/05/20 update)
 meanOnsetToTest <- 4.5
-sdOnsetToTest <- 4.8
+sdOnsetToTest <- 4.9
 
-# onset to hospitalization report: pooled CH data from BAG (01/05/20 update)
-meanOnsetToHosp <- 6.3
-sdOnsetToHosp <- 5.4
+# onset to hospitalization report: pooled CH data from BAG (12/05/20 update)
+meanOnsetToHosp <- 6.1
+sdOnsetToHosp <- 4.7
 
 # onset to death: mean =15.0 sd=6.9 (Linton et al. best gamma distr fit)
 meanOnsetToDeath <- 15.0
@@ -205,17 +217,19 @@ scaleIncubation <- (sdIncubation^2) / meanIncubation
 meanOnsetToCount <- c(
   "Confirmed cases" = meanOnsetToTest,
   "Deaths" = meanOnsetToDeath,
+  "Hospitalized patients - admission" = meanOnsetToHosp,
   "Hospitalized patients" = meanOnsetToHosp,
   "Excess deaths" = meanOnsetToDeath)
 sdOnsetToCount <- c(
   "Confirmed cases" = sdOnsetToTest,
   "Deaths" = sdOnsetToDeath,
+  "Hospitalized patients - admission" = sdOnsetToHosp,
   "Hospitalized patients" = sdOnsetToHosp,
   "Excess deaths" = sdOnsetToDeath)
 
 ### parameters for gamma distribution between symptom onset and report
-shapeOnsetToCount <- meanOnsetToCount^2 / (sdOnsetToCount^2)
-scaleOnsetToCount <- (sdOnsetToCount^2) / meanOnsetToCount
+shapeOnsetToCount <- c(meanOnsetToCount^2 / (sdOnsetToCount^2), "Hospitalized patients - onset" = 0)
+scaleOnsetToCount <- c((sdOnsetToCount^2) / meanOnsetToCount, "Hospitalized patients - onset" = 0)
 
 #####
 replicates <- 100
@@ -227,12 +241,34 @@ load(file = pathToRawDataSave)
 ### Sample infection dates
 sampledInfectData <- drawAllInfectionDates(
   rawData,
-  data_type = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"),
+  data_type = c("Confirmed cases",
+                "Hospitalized patients",
+                "Deaths",
+                "Excess deaths"),
   numberOfReplicates = replicates,
   shapeIncubation = shapeIncubation,
   scaleIncubation = scaleIncubation,
   shapeOnsetToCount = shapeOnsetToCount,
   scaleOnsetToCount = scaleOnsetToCount)
+
+sampledInfectHospData <- drawAllInfectionDates(
+  rawData,
+  data_type = c("Hospitalized patients - admission", 
+                "Hospitalized patients - onset"),
+  numberOfReplicates = replicates,
+  shapeIncubation = shapeIncubation,
+  scaleIncubation = scaleIncubation,
+  shapeOnsetToCount = shapeOnsetToCount,
+  scaleOnsetToCount = scaleOnsetToCount)
+
+## sum infections from Hospitalized patients - admission and Hospitalized patients - onset
+sampledInfectSumHospData <- sampledInfectHospData %>%
+  group_by(date, country, region, data_type, source, replicate, variable) %>%
+  dplyr::summarise(value=sum(value)) %>%
+  arrange(country, region, source, data_type, variable, replicate, date) %>%
+  ungroup()
+
+sampledInfectData <- bind_rows(sampledInfectData, sampledInfectSumHospData) %>% ungroup()
 
 save(sampledInfectData, file = pathToSampledInfectDataSave)
 

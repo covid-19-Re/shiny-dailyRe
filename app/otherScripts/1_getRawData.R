@@ -120,7 +120,6 @@ calcIncidenceData <- function(data) {
 ########################################
 
 ##### Swiss Data #######
-## Fetch data from openZH via Daniel Probsts repo
 getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
   openZHurl <- "https://raw.githubusercontent.com/openZH/covid_19/master/COVID19_Fallzahlen_CH_total_v2.csv"
 
@@ -132,13 +131,13 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
       ncumul_conf = col_double(),
       ncumul_deceased = col_double())
   ) %>%
-  rename(
+  dplyr::rename(
     region = "abbreviation_canton_and_fl",
     confirmed = "ncumul_conf",
     deaths = "ncumul_deceased") %>%
   pivot_longer(cols = confirmed:deaths, names_to = "data_type", values_to = "value") %>%
   mutate(variable = "cumul", source = "openZH") %>%
-  select(date, region, source, data_type, value, variable) %>%
+  dplyr::select(date, region, source, data_type, value, variable) %>%
   complete(date, region, source, data_type, variable) %>%
   mutate(country = if_else(region != "FL", "CH", "FL")) %>%
   filter(date <= stopAfter)
@@ -160,7 +159,7 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
     mutate(
       dataCurated = map(data, curateLongTimeSeries, isIncidenceData = FALSE),
     ) %>%
-    select(-data) %>%
+    dplyr::select(-data) %>%
     unnest(cols = "dataCurated")
 
   openZHsum <- openZHraw %>%
@@ -172,7 +171,7 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
   openZHswitzerland <- openZHsum %>%
     filter(country == "CH") %>%
     group_by(date, country, source, data_type, variable) %>%
-    summarize(
+    dplyr::summarize(
       value = sum(value),
       region = "CH")
 
@@ -192,9 +191,9 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
     left_join(greaterRegions, by = "region") %>%
     ungroup() %>%
     mutate(region = greaterRegion) %>%
-    select(-greaterRegion) %>%
+    dplyr::select(-greaterRegion) %>%
     group_by(date, region, source, data_type, variable) %>%
-    summarize(
+    dplyr::summarize(
       value = sum(value),
       country = "CH")
 
@@ -206,18 +205,18 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
     )
 
   openZHdata <- bind_rows(
-    openZHincidence %>% select(-dataIncidence) %>% unnest(cols = data),
-    openZHincidence %>% select(-data) %>% unnest(cols = dataIncidence)
+    openZHincidence %>% dplyr::select(-dataIncidence) %>% unnest(cols = data),
+    openZHincidence %>% dplyr::select(-data) %>% unnest(cols = dataIncidence)
   ) %>%
-  select(date, region, country, source, data_type, value, variable) %>%
+  dplyr::select(date, region, country, source, data_type, value, variable) %>%
   arrange(country, region, data_type, variable, date)
 
   return(openZHdata)
 }
 
 ## Include hospitalization counts from local csv files
-getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases_") {
-  filePath <- file.path(path, str_c(csvBaseName, region, ".csv"))
+getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases", dataTypeSuffix="") {
+  filePath <- file.path(path, str_c(csvBaseName,dataTypeSuffix, "_", region, ".csv"))
 
   if (file.exists(filePath)) {
     cumData <- read_csv(filePath,
@@ -227,7 +226,7 @@ getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases_") 
       CH = col_double()))
     cumData <- cumData[, c(1, 3)]
     out <- as_tibble(meltCumulativeData(cumData,
-      dataType = "hospitalized",
+      dataType = str_c("hospitalized", dataTypeSuffix),
       country = "CH",
       dataSource = "FOPH")) %>%
       mutate(region = as.character(region))
@@ -241,8 +240,10 @@ getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases_") 
 ## Combine openZH data with hospitalization data
 getAllSwissData <- function(stoppingAfter = (Sys.Date() - 1), pathToHospData) {
   openZHData <- getSwissDataFromOpenZH(stopAfter = stoppingAfter)
-  hospitalData <- getHospitalData(path = pathToHospData, region = "CH")
-  swissData <- bind_rows(openZHData, hospitalData) %>% ungroup()
+  hospitalData <- getHospitalData(path = pathToHospData, region = "CH", dataTypeSuffix = "")
+  hospitalData_onsets <- getHospitalData(path = pathToHospData, region = "CH", dataTypeSuffix = "_onsets")
+  hospitalData_admissions <- getHospitalData(path = pathToHospData, region = "CH", dataTypeSuffix = "_admissions")
+  swissData <- bind_rows(openZHData, hospitalData, hospitalData_onsets, hospitalData_admissions) %>% ungroup()
   return(swissData)
 }
 
@@ -256,7 +257,7 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
   relevant_weeks <- seq(isoweek(startAt), isoweek(Sys.Date()) - 2)
 
   tidy_data <- data2020 %>%
-    select(date = Ending, week = Week, age = Age,
+    dplyr::select(date = Ending, week = Week, age = Age,
            avg_deaths = Expected, deaths = extrapol) %>%
     filter(week %in% relevant_weeks) %>%
     mutate(date = dmy(date))
@@ -265,7 +266,7 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
     group_by(date) %>%
     summarise_at(vars(deaths, avg_deaths), list(total = sum)) %>%
     mutate(excess_deaths = deaths_total - avg_deaths_total) %>%
-    select(date, excess_deaths) %>%
+    dplyr::select(date, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
     mutate(country = "Switzerland", variable = "incidence",
            region = country, source = "BFS") %>%
@@ -289,7 +290,7 @@ getDataNL <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
   # https://github.com/J535D165/CoronaWatchNL/blob/master/data/nice_ic_by_day.csv
 
   longData <- raw_data %>%
-    select(date = Datum, data_type = Type, value = Aantal) %>%
+    dplyr::select(date = Datum, data_type = Type, value = Aantal) %>%
     mutate(
       data_type = recode(data_type,
         "Totaal" = "confirmed",
@@ -325,7 +326,7 @@ getDeathNL <- function() {
 
   raw_data <- cbs_get_data("70895NED")
   data <- raw_data %>%
-    select(sex = "Geslacht", age = "LeeftijdOp31December",
+    dplyr::select(sex = "Geslacht", age = "LeeftijdOp31December",
       period = "Perioden", deaths = "Overledenen_1") %>%
     separate(period, c("year", "unit", "week"), sep = c(4, 6)) %>%
     mutate(sex = recode(sex,
@@ -358,7 +359,7 @@ getRawExcessDeathNL <- function(startAt = as.Date("2020-02-20")) {
 
   excess_death <- data %>%
     filter(year == 2020) %>%
-    select(year, week, deaths) %>%
+    dplyr::select(year, week, deaths) %>%
     left_join(past_mean, by = "week") %>%
     mutate(
       excess_deaths = ceiling(deaths - avg_deaths),
@@ -368,7 +369,7 @@ getRawExcessDeathNL <- function(startAt = as.Date("2020-02-20")) {
           paste(year, week, "Mon", sep = "/"), "Y/W/a",
           locale = "en_GB.UTF-8"
           ), locale = "en_GB.UTF-8")) %>%
-    select(-year, -week)
+    dplyr::select(-year, -week)
   # this translation to a date associates the last day of the week
 
   return(excess_death)
@@ -378,7 +379,7 @@ getExcessDeathNL <- function(startAt = as.Date("2020-02-20")) {
   excess_death <- suppressWarnings(getRawExcessDeathNL(startAt))
 
   longData <- excess_death %>%
-    select(date, excess_deaths) %>%
+    dplyr::select(date, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
     mutate(
       country = "Netherlands",
@@ -407,12 +408,12 @@ getRawExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = 
 
   rowUK <- raw_data[c(5, 6, 9, 11, 19), ] %>%
     mutate(...1 = coalesce(...1, ...2)) %>%
-    select(-...2)
+   dplyr::select(-...2)
 
   columnUK <- data.frame(tmp = 2:dim(rowUK)[2])
   for (row in 1:dim(rowUK)[1]) {
     rowdata <- rowUK %>%
-      select(-...1) %>%
+      dplyr::select(-...1) %>%
       slice(row) %>%
       unlist(., use.names = FALSE)
 
@@ -424,7 +425,7 @@ getRawExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = 
   colnames(columnUK) <- c("tmp", "week", "date", "deaths", "avg_deaths", "covid_deaths")
 
   excess_deaths <- columnUK %>%
-    select(-tmp) %>%
+    dplyr::select(-tmp) %>%
     filter(!is.na(deaths), week %in% relevant_weeks) %>%
     mutate(date = as.Date(date, origin = "1899-12-30", locale = "en_GB.UTF-8")) %>%
     mutate(excess_deaths = deaths - avg_deaths)
@@ -436,7 +437,7 @@ getExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = "..
   excess_death <- getRawExcessDeathUK(startAt, path_to_data)
 
   longData <- excess_death %>%
-    select(date, deaths = covid_deaths, excess_deaths) %>%
+    dplyr::select(date, deaths = covid_deaths, excess_deaths) %>%
     pivot_longer(cols = c(deaths, excess_deaths), names_to = "data_type") %>%
     mutate(
       country = "United Kingdom", variable = "incidence",
@@ -457,7 +458,7 @@ getLongECDCData <- function(countries = NULL) {
   urlfile <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
   world_data <- read_csv(urlfile)
   longData <- world_data %>%
-    select(
+    dplyr::select(
       c(date = "dateRep", country = "countriesAndTerritories",
         confirmed = "cases", deaths = "deaths")) %>%
     mutate(date = dmy(date)) %>%
@@ -494,9 +495,9 @@ getLongECDCData <- function(countries = NULL) {
 ###### Input #######
 ####################
 
-dataCHHospitalPath <- here("../ch-hospital-data/data")
+dataCHHospitalPath <- here::here("../ch-hospital-data/data")
 
-dataDir <- here("app/data/temp")
+dataDir <- here::here("app/data/temp")
 
 ##### Pull data
 
@@ -516,7 +517,7 @@ countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
 ECDCdata <- getLongECDCData(setdiff(countryList, c("Switzerland", "Netherlands")))
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
 NLdata <- getDataNL(stopAfter = Sys.Date() - 1)
-pathToExcessDeathUK <- here("../covid19-additionalData/excessDeath/Excess_death_UK.xlsx")
+pathToExcessDeathUK <- here::here("../covid19-additionalData/excessDeath/Excess_death_UK.xlsx")
 if (file.exists(pathToExcessDeathUK)) {
   UKExcessDeath <- getExcessDeathUK(
       startAt = as.Date("2020-02-20"),
@@ -547,7 +548,7 @@ regionsIncluded <- rawDataAll %>%
   filter(variable == "cumul", data_type == "confirmed") %>%
   group_by(region) %>%
   filter(max(value) >= thresholdCumulCases) %>%
-  select(region, country) %>%
+  dplyr::select(region, country) %>%
   distinct()
 excludedRegions <- setdiff(unique(rawDataAll$region), regionsIncluded$region)
 
@@ -556,9 +557,19 @@ rawData <- rawDataAll %>%
   mutate(
     data_type = factor(
       data_type,
-      levels = c("confirmed", "hospitalized", "deaths", "excess_deaths"),
-      labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"))) %>%
-  select(country, region, source, data_type, variable, date, value) %>%
+      levels = c("confirmed", 
+                 "hospitalized",
+                 "hospitalized_onsets",
+                 "hospitalized_admissions", 
+                 "deaths", 
+                 "excess_deaths"),
+      labels = c("Confirmed cases", 
+                 "Hospitalized patients", 
+                 "Hospitalized patients - onset", 
+                 "Hospitalized patients - admission", 
+                 "Deaths",
+                 "Excess deaths"))) %>%
+  dplyr::select(country, region, source, data_type, variable, date, value) %>%
   arrange(country, region, source, data_type, variable, date)
 
 cat(str_c(
@@ -580,7 +591,7 @@ estimateStartDates <- rawData %>%
   top_n(n = -1, value) %>%
   filter(date == max(date)) %>%
   ungroup() %>%
-  select(country, region, estimateStart = date)
+  dplyr::select(country, region, estimateStart = date)
 
 # figuring out when estimation ends i.e. applying the delays
 delays <- tibble(
@@ -623,7 +634,7 @@ save(estimatesDates, file = pathToEstimateDates)
 
 validEstimates <- estimateDatesDf %>%
   filter(!is.na(estimateStart)) %>%
-  select(country, region) %>%
+  dplyr::select(country, region) %>%
   distinct()
 
 pathToValidEstimates <- file.path(dataDir, "valid_estimates.Rdata")
@@ -634,9 +645,11 @@ countryList <- unique(validEstimates$country)
 save(countryList, file = pathToCountryListSave)
 
 pathToLatestData <- file.path(dataDir, "latestData.Rdata")
+  
 latestData <- rawData %>%
+  mutate(data_type=replace(data_type, data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"), "Hospitalized patients")) %>%
   group_by(country, region, source, data_type) %>%
-  summarize(date = max(date)) %>%
+  dplyr::summarize(date = max(date)) %>%
   left_join(tribble(
       ~source, ~sourceLong, ~url,
       "openZH", "Data for Cantons and the Principality of Liechtenstein, aggregated by the statistical office of the canton Zürich", "https://github.com/openZH/covid_19/",

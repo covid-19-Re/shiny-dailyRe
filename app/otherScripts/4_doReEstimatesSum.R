@@ -4,7 +4,7 @@ library(tidyverse)
 library(here)
 
 #############################
-dataDir <- here("app/data/temp")
+dataDir <- here::here("app/data/temp")
 
 pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.Rdata")
 pathToEstimatesRe <- file.path(dataDir, "Estimates_Re.Rdata")
@@ -34,14 +34,16 @@ estimatesReSum <- estimatesRe %>%
     # exclude infection_deaths in Cantons
     !(country == "Switzerland" & region != "Switzerland" & data_type == "Deaths")) %>%
   group_by(date, country, region, data_type, source, estimate_type) %>%
-  summarize(
+  dplyr::summarize(
     median_R_mean = median(R_mean),
     median_R_highHPD = median(R_highHPD),
     median_R_lowHPD = median(R_lowHPD)
   ) %>%
-  select(country, region, source, data_type, estimate_type, date, median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
+  dplyr::select(country, region, source, data_type, estimate_type, date, median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
   arrange(country, region, source, data_type, estimate_type, date) %>%
   ungroup()
+
+  # dplyr::select(country, region, source, data_type, estimate_type, date, median_R_mean, median_R_highHPD, median_R_lowHPD)
 
 save(estimatesReSum, file = pathToEstimatesReSum)
 
