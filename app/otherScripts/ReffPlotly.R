@@ -8,7 +8,7 @@ rEffPlotly <- function(
   caseData,
   estimates,
   interventions,
-  plotColoursNamed,
+  plotColors,
   lastDataDate,
   startDate = min(caseData$date) - 1,
   endDate = max(caseData$date),
@@ -29,7 +29,7 @@ rEffPlotly <- function(
     locale <- "it"
   }
 
-  names(plotColoursNamed) <- sapply(names(plotColoursNamed), translator$t,  USE.NAMES = FALSE)
+  names(plotColors) <- sapply(names(plotColors), translator$t,  USE.NAMES = FALSE)
   
   axisTitleFontSize <- 14
   if (legendOrientation == "v") {
@@ -112,7 +112,7 @@ rEffPlotly <- function(
 
   pCases <- plot_ly(data = caseData) %>%
     add_bars(x = ~date, y = ~incidence, color = ~data_type,
-      colors = plotColoursNamed,
+      colors = plotColors,
       text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>",
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}",
@@ -134,7 +134,7 @@ rEffPlotly <- function(
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
     add_trace(
-      x = ~date, y = ~median_R_mean, color = ~data_type, colors = plotColoursNamed,
+      x = ~date, y = ~median_R_mean, color = ~data_type, colors = plotColors,
       type = "scatter", mode = "lines",
       legendgroup = ~data_type, showlegend = FALSE,
       text = ~str_c("<i>", format(date, "%d.%m.%y"),
@@ -144,7 +144,7 @@ rEffPlotly <- function(
       hovertemplate = "%{text}") %>%
     add_ribbons(
       x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
-      color = ~data_type, colors = plotColoursNamed,
+      color = ~data_type, colors = plotColors,
       line = list(color = "transparent"), opacity = 0.5,
       legendgroup = ~data_type, showlegend = FALSE,
       hoverinfo = "none") %>%
@@ -153,7 +153,7 @@ rEffPlotly <- function(
     add_trace(
       x = ~as.POSIXct(date) + 10 * 60 * 60, y = ~median_R_mean,
       type = "scatter", mode = "markers",
-      color = ~data_type, colors = plotColoursNamed,
+      color = ~data_type, colors = plotColors,
       legendgroup = ~data_type,
       marker = list(symbol = "asterisk-open"),
       text = ~str_c("<i>", format(date, "%d.%m.%y"),
@@ -593,7 +593,7 @@ rEffPlotlyCountry <- function(
   caseData,
   estimates,
   interventions = NULL,
-  plotColoursNamed,
+  plotColors,
   lastDataDate,
   startDate = min(caseData$date) - 1,
   endDate = max(caseData$date),
@@ -617,7 +617,7 @@ rEffPlotlyCountry <- function(
     dateFormatLong <- "%d.%m.%Y"
   }
 
-  names(plotColoursNamed) <- c(
+  names(plotColors) <- c(
     textElements[[language]][["confirmedCases"]],
     textElements[[language]][["hospPatients"]],
     textElements[[language]][["deaths"]],
@@ -686,7 +686,7 @@ rEffPlotlyCountry <- function(
 
   pCases <- plot_ly(data = caseData) %>%
     add_bars(x = ~date, y = ~incidence, color = ~data_type,
-      colors = plotColoursNamed,
+      colors = plotColors,
       text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>",
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}",
@@ -708,7 +708,7 @@ rEffPlotlyCountry <- function(
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
     add_trace(
-      x = ~date, y = ~median_R_mean, color = ~data_type, colors = plotColoursNamed,
+      x = ~date, y = ~median_R_mean, color = ~data_type, colors = plotColors,
       type = "scatter", mode = "lines",
       legendgroup = ~data_type, showlegend = FALSE,
       text = ~str_c("<i>", format(date, "%d.%m.%y"),
@@ -718,7 +718,7 @@ rEffPlotlyCountry <- function(
       hovertemplate = "%{text}") %>%
     add_ribbons(
       x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
-      color = ~data_type, colors = plotColoursNamed,
+      color = ~data_type, colors = plotColors,
       line = list(color = "transparent"), opacity = 0.5,
       legendgroup = ~data_type, showlegend = FALSE,
       hoverinfo = "none") %>%
@@ -727,7 +727,7 @@ rEffPlotlyCountry <- function(
     add_trace(
       x = ~as.POSIXct(date) + 10 * 60 * 60, y = ~median_R_mean,
       type = "scatter", mode = "markers",
-      color = ~data_type, colors = plotColoursNamed,
+      color = ~data_type, colors = plotColors,
       legendgroup = ~data_type,
       marker = list(symbol = "asterisk-open"),
       text = ~str_c("<i>", format(date, "%d.%m.%y"),

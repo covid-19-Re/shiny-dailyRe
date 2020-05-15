@@ -91,30 +91,10 @@ dataUpdatesString <- function(latestData, name = "Data Source", dateFormat = "%Y
 toLowerFirst <- function(string) {
   str_replace(string, ".{1}", tolower(str_extract(string, ".{1}")))
 }
-
-plotTheme <- theme_bw() +
-  theme(
-    strip.background = element_blank(),
-    strip.text = element_text(size = 14),
-    axis.text.y = element_text(size = 12),
-    axis.text.x = element_text(size = 12, angle = 30, hjust = 1),
-    axis.title.y =  element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 12),
-    legend.position = "bottom"
-  )
-
 allCols <- viridis(6)
-allColsTransparent <- viridis(6, 0.5)
 
-plotColoursNamed <-  c(
+plotColors <-  c(
   "Confirmed cases" = allCols[1],
   "Hospitalized patients" = allCols[3],
   "Deaths" = allCols[5],
   "Excess deaths" = allCols[6])
-
-
-colorScale <- scale_colour_manual(
-        values = plotColoursNamed,
-        name  = "",
-        aesthetics = c("colour", "fill"))

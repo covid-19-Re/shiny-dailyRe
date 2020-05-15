@@ -37,7 +37,7 @@ toLowerFirst <- function(string) {
 
 # colours
 allCols <- viridis(6)
-plotColoursNamed <-  c(
+plotColors <-  c(
   "Confirmed cases" = allCols[1],
   "Hospitalized patients" = allCols[3],
   "Deaths" = allCols[5])
@@ -119,7 +119,7 @@ for (i in translator$languages) {
     caseDataPlot,
     estimates,
     interventionsLocalized,
-    plotColoursNamed,
+    plotColors,
     lastDataDate = latestDataPlotLocalized,
     legendOrientation = "v",
     language = i,

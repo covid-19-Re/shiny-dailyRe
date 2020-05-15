@@ -366,7 +366,7 @@ server <- function(input, output, session) {
       caseDataSwitzerlandPlot(),
       rEffData,
       interventionsCH(),
-      plotColoursNamed,
+      plotColors,
       latestDataCH,
       legendOrientation = "v",
       language = input$lang,
@@ -476,7 +476,7 @@ server <- function(input, output, session) {
         caseData = caseData,
         estimates = estimatesCountry,
         interventions = interventions[[i]],
-        plotColoursNamed = plotColoursNamed,
+        plotColors = plotColors,
         lastDataDate = latestData,
         startDate = min(estimatesCountry$date) - 14,
         legendOrientation = "v", # "v" or "h"
