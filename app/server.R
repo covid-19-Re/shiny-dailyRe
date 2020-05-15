@@ -461,6 +461,7 @@ server <- function(input, output, session) {
       language = input$lang,
       widgetID = NULL,
       visibilityNonFocus = "legendonly")
+
     return(plot)
   })
 
@@ -513,9 +514,19 @@ server <- function(input, output, session) {
         select(source, date) %>%
         distinct()
 
-      caseData <- caseDataCountry[[str_remove(i, " ")]]
+      caseData <- caseDataCountry[[str_remove(i, " ")]] %>%
+        filter(
+          data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
+        mutate(
+          data_type = fct_drop(data_type)
+        )
       estimatesCountry <- estimatesCountry[[str_remove(i, " ")]] %>%
-        filter(estimate_type == input$estimation_type_select)
+        filter(
+          estimate_type == input$estimation_type_select,
+          data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
+        mutate(
+          data_type = fct_drop(data_type)
+        )
 
       plot <- rEffPlotly(
         caseData = caseData,

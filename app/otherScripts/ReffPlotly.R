@@ -41,7 +41,7 @@ rEffPlotly <- function(
       "the last data observation."))
     rNoteAnchors <- c("left", "bottom")
     xHelpBox <- 1
-    yHelpBox <- 0.8
+    yHelpBox <- 0.72
     helpBoxAnchors <- c("left", "top")
     wHelpBox <- 174
     hHelpBox <- 90
