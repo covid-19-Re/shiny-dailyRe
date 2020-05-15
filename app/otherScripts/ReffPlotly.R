@@ -30,7 +30,7 @@ rEffPlotly <- function(
   }
 
   names(plotColors) <- sapply(names(plotColors), translator$t,  USE.NAMES = FALSE)
-  
+
   axisTitleFontSize <- 14
   if (legendOrientation == "v") {
     xrNote <- 1
@@ -98,17 +98,10 @@ rEffPlotly <- function(
   names(newLevels) <- sapply(newLevels, translator$t,  USE.NAMES = FALSE)
 
   caseData <- caseData %>%
-    filter(region == "Switzerland") %>%
     mutate(data_type = fct_recode(data_type, !!!newLevels))
 
   estimatesPlot <- estimates %>%
-    filter(
-      region == "Switzerland") %>%
     mutate(data_type = fct_recode(data_type, !!!newLevels))
-
-  estimatesEndPoint <- estimatesPlot %>%
-    group_by(data_type) %>%
-    filter(date == max(date))
 
   pCases <- plot_ly(data = caseData) %>%
     add_bars(x = ~date, y = ~incidence, color = ~data_type,
@@ -122,7 +115,6 @@ rEffPlotly <- function(
         type = "date",
         range = c(startDate, endDate),
         tickvals = seq(startDate, endDate, length.out = 18),
-        dtick = 3 * 86400000,
         tickformat = dateFormat,
         tickangle = 45,
         showgrid = TRUE,
@@ -130,7 +122,8 @@ rEffPlotly <- function(
       yaxis = list(
         fixedrange = TRUE,
         title = list(text = translator$t("New observations"), font = list(size = axisTitleFontSize))),
-      legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>"))))
+      legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>")))
+      )
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
     add_trace(
@@ -179,9 +172,7 @@ rEffPlotly <- function(
       xaxis = list(title = "",
         type = "date",
         range = c(startDate, endDate),
-        #tick0 = startDate,
         tickvals = seq(startDate, endDate, length.out = 18),
-        #dtick = 3 * 86400000,
         tickformat = dateFormat,
         tickangle = 45,
         showgrid = TRUE,
@@ -285,40 +276,32 @@ rEffPlotlyRegion <- function(
   endDate = max(caseData$date),
   legendOrientation = "v", # "v" or "h"
   regionColors,
-  textElements,
+  translator,
   language,
   widgetID = "rEffplotsRegions",
   visibilityNonFocus = "legendonly"
   ) {
 
   # plot parameter
+  dateFormat <- translator$t("%b-%d")
+  dateFormatLong <- translator$t("%Y-%m-%d")
+
   if (language %in% c("de-ch", "fr-ch")) {
     locale <- language
-    dateFormat <- "%d. %b"
-    dateFormatLong <- "%d.%m.%Y"
   } else if (language == "en-gb") {
     locale <- NULL
-    dateFormat <- "%b-%d"
-    dateFormatLong <- "%Y-%m-%d"
   } else if (language == "it-ch") {
     locale <- "it"
-    dateFormat <- "%d. %b"
-    dateFormatLong <- "%d.%m.%Y"
   }
-
-  lastDataDate$source[1] <- textElements[[language]][["FOPH"]]
-  lastDataDate <- lastDataDate %>%
-    ungroup() %>%
-    dplyr::select(source, date) %>%
-    group_by(source) %>%
-    distinct() %>%
-    filter(date == max(date))
 
   axisTitleFontSize <- 14
   if (legendOrientation == "v") {
     xrNote <- 0.99
     yrNote <- 0.60
-    rNote <- textElements[[language]][["rEexplanation"]]
+    rNote <- translator$t(str_c(
+      "<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>",
+      "delays between infection and<br>",
+      "the last data observation."))
     rNoteAnchors <- c("right", "top")
     xHelpBox <- 1
     yHelpBox <- 0
@@ -330,7 +313,14 @@ rEffPlotlyRegion <- function(
     } else if (language == "de-ch") {
       hHelpBox <- 130
     }
-    helpBoxText <- textElements[[language]][["helpBox"]]
+    helpBoxText <- translator$t(str_c(
+      "&nbsp;<b>Interactive plot</b><br>",
+      "&nbsp;&nbsp;• Click on legend toggles<br>",
+      "&nbsp;&nbsp;&nbsp;&nbsp;datatypes; doubleclick<br>",
+      "&nbsp;&nbsp;&nbsp;&nbsp;isolates datatypes.<br>",
+      "&nbsp;&nbsp;• Hovering the mouse over<br>",
+      "&nbsp;&nbsp;&nbsp;&nbsp;data points shows details."
+    ))
     helpBoxShift <- c(10, 0)
     xDataSource <- 1
     yDataSource <- -0.1
@@ -340,14 +330,24 @@ rEffPlotlyRegion <- function(
   } else if (legendOrientation == "h") {
     xrNote <- 0.99
     yrNote <- 0.60
-    rNote <- textElements[[language]][["rEexplanation"]]
+    rNote <- translator$t(str_c(
+      "<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>",
+      "delays between infection and <br>",
+      "the last data observation."))
     rNoteAnchors <- c("right", "top")
     xHelpBox <- 0
     yHelpBox <- -0.1
     helpBoxAnchors <- c("left", "top")
     wHelpBox <- 500
     hHelpBox <- 50
-    helpBoxText <- textElements[[language]][["helpBoxH"]]
+    helpBoxText <- translator$t(str_c(
+      "&nbsp;<b>Interactive plot</b><br>",
+      "&nbsp;&nbsp;• Click on legend toggles<br>",
+      "&nbsp;&nbsp;&nbsp;&nbsp;datatypes; doubleclick<br>",
+      "&nbsp;&nbsp;&nbsp;&nbsp;isolates datatypes.<br>",
+      "&nbsp;&nbsp;• Hovering the mouse over<br>",
+      "&nbsp;&nbsp;&nbsp;&nbsp;data points shows details."
+    ))
     helpBoxShift <- c(0, 0)
     xDataSource <- 1
     yDataSource <- -0.1
@@ -359,38 +359,31 @@ rEffPlotlyRegion <- function(
   }
 
   # prepare Data
-  newLevelNames <- c(textElements[[language]][["confirmedCases"]],
-    textElements[[language]][["hospPatients"]],
-    textElements[[language]][["deaths"]])
   newLevels <- c("Confirmed cases",  "Hospitalized patients", "Deaths")
-  names(newLevels) <- newLevelNames
+  names(newLevels) <- sapply(newLevels, translator$t,  USE.NAMES = FALSE)
 
-  names(regionColors) <- recode(names(regionColors), Switzerland = textElements[[language]][["totalCH"]])
+  names(regionColors) <- recode(
+    names(regionColors),
+    Switzerland = translator$t("Switzerland (Total)"))
 
   caseData <- caseData %>%
+    filter(data_type == "Confirmed cases") %>%
     mutate(
       data_type = fct_recode(data_type, !!!newLevels),
-      region = recode(region, Switzerland = textElements[[language]][["totalCH"]])
-      ) %>%
-    filter(data_type == textElements[[language]][["confirmedCases"]])
+      region = recode(region, Switzerland = translator$t("Switzerland (Total)")))
 
-  caseDataCH <- filter(caseData, region == textElements[[language]][["totalCH"]])
+  caseDataCH <- filter(caseData, region == translator$t("Switzerland (Total)"))
 
   estimatesPlot <- estimates %>%
+    filter(data_type == "Confirmed cases") %>%
     mutate(
       data_type = fct_recode(data_type, !!!newLevels),
-      region = recode(region, Switzerland = textElements[[language]][["totalCH"]])
-      ) %>%
-    filter(data_type == textElements[[language]][["confirmedCases"]])
+      region = recode(region, Switzerland = translator$t("Switzerland (Total)")))
 
-  estimatesPlotCH <- filter(estimatesPlot, region == textElements[[language]][["totalCH"]])
-
-  estimatesEndPoint <- estimatesPlot %>%
-    group_by(data_type) %>%
-    filter(date == max(date))
+  estimatesPlotCH <- filter(estimatesPlot, region == translator$t("Switzerland (Total)"))
 
   pCases <- plot_ly(data = caseData) %>%
-    filter(region != textElements[[language]][["totalCH"]]) %>%
+    filter(region != translator$t("Switzerland (Total)")) %>%
     add_bars(x = ~date, y = ~incidence, color = ~region, colors = regionColors,
       legendgroup = ~region, visible = visibilityNonFocus,
       text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>",
@@ -413,11 +406,12 @@ rEffPlotlyRegion <- function(
         fixedrange = TRUE),
       yaxis = list(
         fixedrange = TRUE,
-        title = list(text = textElements[[language]][["axisCases"]], font = list(size = axisTitleFontSize))),
-      legend = list(title = list(text = "<b> Data Type </b>")))
+        title = list(text = translator$t("New observations"), font = list(size = axisTitleFontSize))),
+      legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>")))
+    )
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
-    filter(region != textElements[[language]][["totalCH"]]) %>%
+    filter(region != translator$t("Switzerland (Total)")) %>%
     add_trace(
       x = ~date, y = ~median_R_mean, color = ~region, colors = regionColors,
       type = "scatter", mode = "lines", showlegend = FALSE,
@@ -477,7 +471,9 @@ rEffPlotlyRegion <- function(
       hoverinfo = "text",
       showlegend = FALSE) %>%
     add_annotations(
-      text = c(textElements[[language]][["rLarger1"]], textElements[[language]][["rLower1"]]),
+      text = c(
+        translator$t("Exponential increase<br>in number of new cases"),
+        translator$t("Decrease in number of new cases")),
       font = list(color = "red"),
       x = startDate,
       y = c(1.30, 0.85),
@@ -502,12 +498,12 @@ rEffPlotlyRegion <- function(
         range = c(0, 3),
         fixedrange = TRUE,
         title = list(
-          text = textElements[[language]][["axisRe"]],
+          text = translator$t("Reproductive number R<sub>e</sub>"),
           font = list(size = axisTitleFontSize)),
         zeroline = TRUE),
       legend = list(
         title = list(
-          text = str_c("<b>", textElements[[language]][["canton"]], "</b>"))
+          text = str_c("<b>", translator$t("Canton"), "</b>"))
       ),
       shapes = list(
         list(
@@ -556,267 +552,7 @@ rEffPlotlyRegion <- function(
       annotations = list(
         list(
           x = xDataSource, y = yDataSource, xref = "paper", yref = "paper",
-          text = dataUpdatesString(lastDataDate, name = textElements[[language]][["dataSource"]], dateFormatLong),
-          showarrow = FALSE,
-          xanchor = dataSourceAnchors[1], yanchor = dataSourceAnchors[2], xshift = 0, yshift = 0,
-          font = list(size = 10, color = "black")),
-        list(
-          x = xrNote, y = yrNote, xref = "paper", yref = "paper",
-          text = rNote,
-          showarrow = FALSE,
-          xanchor = rNoteAnchors[1], yanchor = rNoteAnchors[2], align = "left",
-          xshift = 10, yshift = 0,
-          font = list(size = 11, color = "black")),
-        list(
-          x = xHelpBox, y = yHelpBox, xref = "paper", yref = "paper",
-          width = wHelpBox,
-          height = hHelpBox,
-          bgcolor = "#eeeeee",
-          text = helpBoxText,
-          valign = "top",
-          showarrow = FALSE,
-          xanchor = helpBoxAnchors[1], yanchor = helpBoxAnchors[2], align = "left",
-          xshift = helpBoxShift[1], yshift = helpBoxShift[2],
-          font = list(size = 11, color = "black")
-        )
-    )) %>%
-    config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
-      locale = locale)
-
-  plot$elementId <- widgetID
-
-  return(plot)
-}
-
-rEffPlotlyCountry <- function(
-  countrySelect,
-  caseData,
-  estimates,
-  interventions = NULL,
-  plotColors,
-  lastDataDate,
-  startDate = min(caseData$date) - 1,
-  endDate = max(caseData$date),
-  legendOrientation = "v", # "v" or "h"
-  textElements,
-  language,
-  widgetID = "rEffplotsCountry") {
-
-  # plot parameter
-  if (language %in% c("de-ch", "fr-ch")) {
-    locale <- language
-    dateFormat <- "%d. %b"
-    dateFormatLong <- "%d.%m.%Y"
-  } else if (language == "en-gb") {
-    locale <- NULL
-    dateFormat <- "%b-%d"
-    dateFormatLong <- "%Y-%m-%d"
-  } else if (language == "it-ch") {
-    locale <- "it"
-    dateFormat <- "%d. %b"
-    dateFormatLong <- "%d.%m.%Y"
-  }
-
-  names(plotColors) <- c(
-    textElements[[language]][["confirmedCases"]],
-    textElements[[language]][["hospPatients"]],
-    textElements[[language]][["deaths"]],
-    textElements[[language]][["excessDeaths"]])
-
-  lastDataDate <- filter(lastDataDate, country == countrySelect)
-
-  lastDataDate <- lastDataDate %>%
-    ungroup() %>%
-    dplyr::select(source, date) %>%
-    group_by(source) %>%
-    distinct() %>%
-    filter(date == max(date))
-
-  axisTitleFontSize <- 14
-  if (legendOrientation == "v") {
-    xrNote <- 1
-    yrNote <- 0.35
-    rNote <- textElements[[language]][["rEexplanation"]]
-    rNoteAnchors <- c("left", "bottom")
-    xHelpBox <- 1
-    yHelpBox <- 0.75
-    helpBoxAnchors <- c("left", "top")
-    wHelpBox <- 174
-    hHelpBox <- 90
-    if (language %in% c("fr-ch", "it-ch")) {
-      hHelpBox <- 120
-    } else if (language == "de-ch") {
-      hHelpBox <- 130
-    }
-    helpBoxText <- textElements[[language]][["helpBox"]]
-    helpBoxShift <- c(10, 0)
-    xDataSource <- 1
-    yDataSource <- -0.1
-    dataSourceAnchors <- c("right", "auto")
-    bottomMargin <- 80
-  } else if (legendOrientation == "h") {
-    xrNote <- 0.99
-    yrNote <- 0.34
-    rNote <- textElements[[language]][["rEexplanation"]]
-    rNoteAnchors <- c("right", "bottom")
-    xHelpBox <- 0
-    yHelpBox <- -0.15
-    helpBoxAnchors <- c("left", "top")
-    wHelpBox <- 550
-    hHelpBox <- 30
-    helpBoxText <- textElements[[language]][["helpBox"]]
-    helpBoxShift <- c(0, 0)
-    xDataSource <- 0
-    yDataSource <- -0.21
-    dataSourceAnchors <- c("left", "top")
-    bottomMargin <- 140
-  } else {
-    stop("legendOrientation must be either \"v\" or \"h\".")
-  }
-
-  caseDataPlot <- caseData %>%
-    filter(country == countrySelect, region == countrySelect)
-
-  estimatesPlot <- estimates %>%
-    filter(country == countrySelect, region == countrySelect)
-
-  estimatesEndPoint <- estimatesPlot %>%
-    group_by(data_type) %>%
-    filter(date == max(date))
-
-  pCases <- plot_ly(data = caseData) %>%
-    add_bars(x = ~date, y = ~incidence, color = ~data_type,
-      colors = plotColors,
-      text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>",
-        incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
-      hovertemplate = "%{text}",
-      legendgroup = ~data_type) %>%
-    layout(
-      xaxis = list(title = "",
-        type = "date",
-        range = c(startDate, endDate),
-        tickvals = seq(startDate, endDate, length.out = 18),
-        dtick = 3 * 86400000,
-        tickformat = dateFormat,
-        tickangle = 45,
-        showgrid = TRUE,
-        fixedrange = TRUE),
-      yaxis = list(
-        fixedrange = TRUE,
-        title = list(text = textElements[[language]][["axisCases"]], font = list(size = axisTitleFontSize))),
-      legend = list(title = list(text = "<b> Data Type </b>")))
-
-  pEstimates <- plot_ly(data = estimatesPlot) %>%
-    add_trace(
-      x = ~date, y = ~median_R_mean, color = ~data_type, colors = plotColors,
-      type = "scatter", mode = "lines",
-      legendgroup = ~data_type, showlegend = FALSE,
-      text = ~str_c("<i>", format(date, "%d.%m.%y"),
-      "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
-      " <br>(", data_type, ")<extra></extra>"),
-      hovertemplate = "%{text}") %>%
-    add_ribbons(
-      x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
-      color = ~data_type, colors = plotColors,
-      line = list(color = "transparent"), opacity = 0.5,
-      legendgroup = ~data_type, showlegend = FALSE,
-      hoverinfo = "none") %>%
-    group_by(data_type) %>%
-    filter(date == max(date)) %>%
-    add_trace(
-      x = ~as.POSIXct(date) + 10 * 60 * 60, y = ~median_R_mean,
-      type = "scatter", mode = "markers",
-      color = ~data_type, colors = plotColors,
-      legendgroup = ~data_type,
-      marker = list(symbol = "asterisk-open"),
-      text = ~str_c("<i>", format(date, "%d.%m.%y"),
-      "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
-      " <br>(", data_type, ")"),
-      hoverinfo = "text",
-      showlegend = FALSE) %>%
-    add_annotations(
-      text = c(textElements[[language]][["rLarger1"]], textElements[[language]][["rLower1"]]),
-      font = list(color = "red"),
-      x = startDate,
-      y = c(1.2, 0.9),
-      textangle = 0,
-      align = "left",
-      xanchor = "left",
-      yanchor = "middle",
-      showarrow = FALSE,
-      inherit = FALSE) %>%
-    layout(
-      xaxis = list(title = "",
-        type = "date",
-        range = c(startDate, endDate),
-        #tick0 = startDate,
-        tickvals = seq(startDate, endDate, length.out = 18),
-        #dtick = 3 * 86400000,
-        tickformat = dateFormat,
-        tickangle = 45,
-        showgrid = TRUE,
-        fixedrange = TRUE),
-      yaxis = list(
-        range = c(0, 2),
-        fixedrange = TRUE,
-        title = list(
-          text = textElements[[language]][["axisRe"]],
-          font = list(size = axisTitleFontSize)),
-        zeroline = TRUE),
-      legend = list(
-        title = list(
-          text = str_c("<b>", textElements[[language]][["dataType"]], "</b>"))
-      ),
-      shapes = list(
-        list(
-          type = "line",
-          x0 = startDate, x1 = endDate,
-          y0 = 1, y1 = 1,
-          line = list(color = "red", width = 0.5)
-        )
-      )
-    )
-  if (!is.null(interventions)) {
-    pIntervention <- plot_ly(data = interventions) %>%
-      add_trace(
-        x = ~date, y = ~y, color = ~name,
-        type = "scatter", mode = "markers+lines",
-        colors = rep("#505050", length(interventions$date)),
-        showlegend = FALSE,
-        text = ~str_c("<i>", date, "</i><br>", tooltip),
-        hoveron = "points",
-        hoverinfo = "text") %>%
-      add_text(x = ~date, y = ~y, color = ~name, text = ~text,
-        textposition = ~plotTextPosition, showlegend = FALSE, textfont = list(size = 10)) %>%
-      layout(
-        xaxis = list(title = "",
-          type = "date",
-          range = c(startDate, endDate),
-          tick0 = startDate,
-          dtick = 3 * 86400000,
-          tickformat = dateFormat,
-          tickangle = 45,
-          showgrid = TRUE,
-          fixedrange = TRUE),
-        yaxis = list(visible = FALSE, fixedrange = TRUE))
-    plotlist <- list(pCases, pEstimates, pIntervention)
-    nPlots <- 3
-  } else {
-    plotlist <- list(pCases, pEstimates)
-    nPlots <- 2
-    yrNote <- 0.40
-  }
-
-  plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
-    layout(
-      margin = list(b = bottomMargin),
-      legend = list(orientation = legendOrientation),
-      annotations = list(
-        list(
-          x = xDataSource, y = yDataSource, xref = "paper", yref = "paper",
-          text = dataUpdatesString(lastDataDate, name = textElements[[language]][["dataSource"]], dateFormatLong),
+          text = dataUpdatesString(lastDataDate, name = translator$t("Data Source"), dateFormatLong),
           showarrow = FALSE,
           xanchor = dataSourceAnchors[1], yanchor = dataSourceAnchors[2], xshift = 0, yshift = 0,
           font = list(size = 10, color = "black")),
@@ -857,30 +593,29 @@ rEffPlotlyComparison <- function(
   focusCountry = "Switzerland",
   legendOrientation = "v", # "v" or "h"
   countryColors,
-  textElements,
+  translator,
   language,
-  widgetID = "rEffplotsRegions") {
+  widgetID = "rEffplotsComparison") {
 
   # plot parameter
+  dateFormat <- translator$t("%b-%d")
+  dateFormatLong <- translator$t("%Y-%m-%d")
   if (language %in% c("de-ch", "fr-ch")) {
     locale <- language
-    dateFormat <- "%d. %b"
-    dateFormatLong <- "%d.%m.%Y"
   } else if (language == "en-gb") {
     locale <- NULL
-    dateFormat <- "%b-%d"
-    dateFormatLong <- "%Y-%m-%d"
   } else if (language == "it-ch") {
     locale <- "it"
-    dateFormat <- "%d. %b"
-    dateFormatLong <- "%d.%m.%Y"
   }
 
   axisTitleFontSize <- 14
   if (legendOrientation == "v") {
     xrNote <- 1
     yrNote <- 0.05
-    rNote <- textElements[[language]][["rEexplanation"]]
+    rNote <- translator$t(str_c(
+      "<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>",
+      "delays between infection and<br>",
+      "the last data observation."))
     rNoteAnchors <- c("left", "bottom")
     xHelpBox <- 1
     yHelpBox <- 0.2
@@ -892,7 +627,14 @@ rEffPlotlyComparison <- function(
     } else if (language == "de-ch") {
       hHelpBox <- 130
     }
-    helpBoxText <- textElements[[language]][["helpBox"]]
+    helpBoxText <- translator$t(str_c(
+      "&nbsp;<b>Interactive plot</b><br>",
+      "&nbsp;&nbsp;• Click on legend toggles<br>",
+      "&nbsp;&nbsp;&nbsp;&nbsp;datatypes; doubleclick<br>",
+      "&nbsp;&nbsp;&nbsp;&nbsp;isolates datatypes.<br>",
+      "&nbsp;&nbsp;• Hovering the mouse over<br>",
+      "&nbsp;&nbsp;&nbsp;&nbsp;data points shows details."
+    ))
     helpBoxShift <- c(10, 0)
     xDataSource <- 1
     yDataSource <- -0.1
@@ -902,14 +644,24 @@ rEffPlotlyComparison <- function(
   } else if (legendOrientation == "h") {
     xrNote <- 0.99
     yrNote <- 0.60
-    rNote <- textElements[[language]][["rEexplanation"]]
+    rNote <- translator$t(str_c(
+      "<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>",
+      "delays between infection and <br>",
+      "the last data observation."))
     rNoteAnchors <- c("right", "top")
     xHelpBox <- 0
     yHelpBox <- -0.2
     helpBoxAnchors <- c("left", "top")
     wHelpBox <- 400
     hHelpBox <- 50
-    helpBoxText <- textElements[[language]][["helpBoxH"]]
+    helpBoxText <- translator$t(str_c(
+      "&nbsp;<b>Interactive plot</b><br>",
+      "&nbsp;&nbsp;• Click on legend toggles<br>",
+      "&nbsp;&nbsp;&nbsp;&nbsp;datatypes; doubleclick<br>",
+      "&nbsp;&nbsp;&nbsp;&nbsp;isolates datatypes.<br>",
+      "&nbsp;&nbsp;• Hovering the mouse over<br>",
+      "&nbsp;&nbsp;&nbsp;&nbsp;data points shows details."
+    ))
     helpBoxShift <- c(0, 0)
     xDataSource <- 0
     yDataSource <- -0.21
@@ -920,21 +672,11 @@ rEffPlotlyComparison <- function(
   }
 
   # prepare Data
-  lastDataDate <- lastDataDate %>%
-    ungroup() %>%
-    dplyr::select(source, date) %>%
-    group_by(source) %>%
-    distinct() %>%
-    filter(date == max(date))
 
   caseDataFocus <- filter(caseData, country == focusCountry)
 
   estimatesPlot <- estimates
   estimatesPlotFocus <- filter(estimatesPlot, country == focusCountry)
-
-  estimatesEndPoint <- estimatesPlot %>%
-    group_by(data_type) %>%
-    filter(date == max(date))
 
   pCases <- plot_ly(data = caseData) %>%
     filter(country != focusCountry) %>%
@@ -960,7 +702,7 @@ rEffPlotlyComparison <- function(
         fixedrange = TRUE),
       yaxis = list(
         fixedrange = TRUE,
-        title = list(text = textElements[[language]][["axisCases"]], font = list(size = axisTitleFontSize))),
+        title = list(text = translator$t("New observations"), font = list(size = axisTitleFontSize))),
       legend = list(title = list(text = "<b> Data Type </b>")))
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
@@ -1024,7 +766,9 @@ rEffPlotlyComparison <- function(
       hoverinfo = "text",
       showlegend = FALSE) %>%
     add_annotations(
-      text = c(textElements[[language]][["rLarger1"]], textElements[[language]][["rLower1"]]),
+      text = c(
+        translator$t("Exponential increase<br>in number of new cases"),
+        translator$t("Decrease in number of new cases")),
       font = list(color = "red"),
       x = startDate,
       y = c(1.30, 0.85),
@@ -1049,12 +793,12 @@ rEffPlotlyComparison <- function(
         range = c(0, 3),
         fixedrange = TRUE,
         title = list(
-          text = textElements[[language]][["axisRe"]],
+          text = translator$t("Reproductive number R<sub>e</sub>"),
           font = list(size = axisTitleFontSize)),
         zeroline = TRUE),
       legend = list(
         title = list(
-          text = str_c("<b>", textElements[[language]][["country"]], "</b>"))
+          text = str_c("<b>", translator$t("Country"), "</b>"))
       ),
       shapes = list(
         list(
@@ -1074,7 +818,7 @@ rEffPlotlyComparison <- function(
       annotations = list(
         list(
           x = xDataSource, y = yDataSource, xref = "paper", yref = "paper",
-          text = dataUpdatesString(lastDataDate, name = textElements[[language]][["dataSource"]], dateFormatLong),
+          text = dataUpdatesString(lastDataDate, name = translator$t("Data Source"), dateFormatLong),
           showarrow = FALSE,
           xanchor = dataSourceAnchors[1], yanchor = dataSourceAnchors[2], xshift = 0, yshift = 0,
           font = list(size = 10, color = "black")),

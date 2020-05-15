@@ -355,16 +355,24 @@ server <- function(input, output, session) {
 
   output$CHinteractivePlot <- renderPlotly({
 
-    rEffData <- estimatesSwitzerlandPlot()
+    caseDataCH <- caseDataSwitzerlandPlot() %>%
+      filter(country == "Switzerland", region == "Switzerland")
+
+    estimatesCH <- estimatesSwitzerlandPlot() %>%
+      filter(country == "Switzerland", region == "Switzerland")
 
     latestDataCH <- filter(latestData, country == "Switzerland", region == "Switzerland",
-      source %in% unique(rEffData$source))
-
-    latestDataCH$source <- sapply(latestDataCH$source, i18n()$t,  USE.NAMES = FALSE)
+      source %in% unique(estimatesCH$source)) %>%
+      group_by(source) %>%
+      filter(date == max(date)) %>%
+      ungroup() %>%
+      select(source, date) %>%
+      distinct() %>%
+      mutate(source = sapply(source, i18n()$t,  USE.NAMES = FALSE))
 
     plot <- rEffPlotly(
-      caseDataSwitzerlandPlot(),
-      rEffData,
+      caseDataCH,
+      estimatesCH,
       interventionsCH(),
       plotColors,
       latestDataCH,
@@ -377,10 +385,10 @@ server <- function(input, output, session) {
 
   output$cantonInteractivePlot <- renderPlotly({
 
-    rEffData <- estimatesSwitzerlandPlot() %>%
+    estimates <- estimatesSwitzerlandPlot() %>%
       filter(!str_detect(region, "grR"))
     caseData <- caseDataSwitzerlandPlot() %>%
-      filter(region %in% rEffData$region)
+      filter(region %in% estimates$region)
 
     cantonColors <- viridis(length(unique(caseData$region)))
     names(cantonColors) <- unique(caseData$region)
@@ -390,19 +398,29 @@ server <- function(input, output, session) {
       filter(
         country == "Switzerland",
         region %in% unique(caseData$region),
-        source %in% unique(caseData$source))
+        source %in% unique(caseData$source)) %>%
+      group_by(source) %>%
+      filter(date == max(date)) %>%
+      ungroup() %>%
+      select(source, date) %>%
+      distinct() %>%
+      mutate(source = sapply(source, i18n()$t,  USE.NAMES = FALSE))
 
     plot <- rEffPlotlyRegion(
-      caseData,
-      rEffData,
+      caseData = caseData,
+      estimates = estimates,
       interventionsCH(),
       latestDataCH,
-      legendOrientation = "h",
+      startDate = min(caseData$date) - 1,
+      endDate = max(caseData$date),
+      legendOrientation = "v", # "v" or "h"
       regionColors = cantonColors,
+      translator = i18n(),
       language = input$lang,
-      textElements = textElements,
-      widgetID = NULL)
-    return(plot)
+      widgetID = NULL,
+      visibilityNonFocus = "legendonly")
+
+      return(plot)
   })
 
   output$greaterRegionInteractivePlot <- renderPlotly({
@@ -422,38 +440,56 @@ server <- function(input, output, session) {
       filter(
         country == "Switzerland",
         region %in% unique(caseData$region),
-        source %in% unique(caseData$source))
+        source %in% unique(caseData$source)) %>%
+      group_by(source) %>%
+      filter(date == max(date)) %>%
+      ungroup() %>%
+      select(source, date) %>%
+      distinct() %>%
+      mutate(source = sapply(source, i18n()$t,  USE.NAMES = FALSE))
 
     plot <- rEffPlotlyRegion(
-      caseData,
-      rEffData,
+      caseData = caseData,
+      estimates = rEffData,
       interventionsCH(),
       latestDataCH,
-      legendOrientation = "h",
+      startDate = min(caseData$date) - 1,
+      endDate = max(caseData$date),
+      legendOrientation = "v", # "v" or "h"
       regionColors = greaterRegionColors,
+      translator = i18n(),
       language = input$lang,
-      textElements = textElements,
-      widgetID = NULL)
+      widgetID = NULL,
+      visibilityNonFocus = "legendonly")
     return(plot)
   })
 
   output$ComparisonPlot <- renderPlotly({
 
     caseData <- caseDataOverview()
+    estimates <- estimatesOverview()
+
     focusCountry <- "Switzerland"
     countryColors <- viridis(length(countryList))
     names(countryColors) <- countryList
     countryColors[focusCountry] <- "#666666"
 
+    latestDataComparison <- latestDataComp() %>%
+      ungroup() %>%
+      dplyr::select(source, date) %>%
+      group_by(source) %>%
+      filter(date == max(date)) %>%
+      distinct()
+
     rEffPlotlyComparison(
       caseData = caseData,
-      estimates = estimatesOverview(),
-      lastDataDate = latestData,
-      startDate = min(filter(caseData, cumul > 0)$date) - 1,
+      estimates = estimates,
+      lastDataDate = latestDataComparison,
+      startDate = min(estimates$date) - 14,
       focusCountry = focusCountry,
       legendOrientation = "v", # "v" or "h"
       countryColors = countryColors,
-      textElements = textElements,
+      translator = i18n(),
       language = "en-gb",
       widgetID = NULL)
 
@@ -464,23 +500,32 @@ server <- function(input, output, session) {
     output[[str_c(str_remove(i, " "), "Plot")]] <- renderPlotly({
 
       if (i == "Switzerland") {
-        latestData <- latestData %>%
-          filter(source != "ECDC")
+        latestDataCountry <- latestData %>%
+          filter(country == i, source != "ECDC")
+      } else {
+        latestDataCountry <- latestData %>%
+        filter(country == i)
       }
+      latestDataCountry <- latestDataCountry %>% 
+        group_by(source) %>%
+        filter(date == max(date)) %>%
+        ungroup() %>%
+        select(source, date) %>%
+        distinct()
+
       caseData <- caseDataCountry[[str_remove(i, " ")]]
       estimatesCountry <- estimatesCountry[[str_remove(i, " ")]] %>%
         filter(estimate_type == input$estimation_type_select)
 
-      plot <- rEffPlotlyCountry(
-        countrySelect = i,
+      plot <- rEffPlotly(
         caseData = caseData,
         estimates = estimatesCountry,
         interventions = interventions[[i]],
         plotColors = plotColors,
-        lastDataDate = latestData,
+        lastDataDate = latestDataCountry,
         startDate = min(estimatesCountry$date) - 14,
         legendOrientation = "v", # "v" or "h"
-        textElements = textElements,
+        translator = i18n(),
         language = "en-gb",
         widgetID = NULL)
       return(plot)

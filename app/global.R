@@ -19,19 +19,11 @@ pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.Rdata")
 pathTolatestData <- file.path(dataDir, "latestData.Rdata")
 pathToLastCheck <- file.path(dataDir, "lastCheck.txt")
 pathToInterventionData <- file.path("../../covid19-additionalData/interventions/")
-pathToTranslations <- file.path(dataDir, "translations.csv")
 pathToCountryList <- file.path(dataDir, "countryList.Rdata")
 pathToEstimateDates <- file.path(dataDir, "estimate_dates.Rdata")
 pathToValidEstimates <- file.path(dataDir, "valid_estimates.Rdata")
 
 load(pathToCountryList)
-
-translations <- read_csv(here::here("app", "data", "translations.csv"), col_types = "ccccc")
-textElements <- list()
-for (i in names(translations)[-1]) {
-  textElements[[i]] <- translations[[i]]
-  names(textElements[[i]]) <- translations$element
-}
 
 # helpers
 
