@@ -106,7 +106,7 @@ rEffPlotly <- function(
   pCases <- plot_ly(data = caseData) %>%
     add_bars(x = ~date, y = ~incidence, color = ~data_type,
       colors = plotColors,
-      text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>",
+      text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}",
       legendgroup = ~data_type) %>%
@@ -130,7 +130,7 @@ rEffPlotly <- function(
       x = ~date, y = ~median_R_mean, color = ~data_type, colors = plotColors,
       type = "scatter", mode = "lines",
       legendgroup = ~data_type, showlegend = FALSE,
-      text = ~str_c("<i>", format(date, "%d.%m.%y"),
+      text = ~str_c("<i>", format(date, dateFormatLong),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
       " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", data_type, ")<extra></extra>"),
@@ -149,7 +149,7 @@ rEffPlotly <- function(
       color = ~data_type, colors = plotColors,
       legendgroup = ~data_type,
       marker = list(symbol = "asterisk-open"),
-      text = ~str_c("<i>", format(date, "%d.%m.%y"),
+      text = ~str_c("<i>", format(date, dateFormatLong),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
       " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", data_type, ")"),
@@ -386,12 +386,12 @@ rEffPlotlyRegion <- function(
     filter(region != translator$t("Switzerland (Total)")) %>%
     add_bars(x = ~date, y = ~incidence, color = ~region, colors = regionColors,
       legendgroup = ~region, visible = visibilityNonFocus,
-      text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>",
+      text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_bars(data = caseDataCH, x = ~date, y = ~incidence, color = ~region, colors = regionColors,
       legendgroup = ~region,
-      text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>",
+      text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     layout(
@@ -416,7 +416,7 @@ rEffPlotlyRegion <- function(
       x = ~date, y = ~median_R_mean, color = ~region, colors = regionColors,
       type = "scatter", mode = "lines", showlegend = FALSE,
       legendgroup = ~region, visible = visibilityNonFocus,
-      text = ~str_c("<i>", format(date, "%d.%m.%y"),
+      text = ~str_c("<i>", format(date, dateFormatLong),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
       " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", region, ")<extra></extra>"),
@@ -434,7 +434,7 @@ rEffPlotlyRegion <- function(
       color = ~region, colors = regionColors,
       legendgroup = ~region,
       marker = list(symbol = "asterisk-open"),
-      text = ~str_c("<i>", format(date, "%d.%m.%y"),
+      text = ~str_c("<i>", format(date, dateFormatLong),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
       " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", region, ")"),
@@ -445,7 +445,7 @@ rEffPlotlyRegion <- function(
       x = ~date, y = ~median_R_mean, color = ~region, colors = regionColors,
       type = "scatter", mode = "lines", showlegend = FALSE,
       legendgroup = ~region,
-      text = ~str_c("<i>", format(date, "%d.%m.%y"),
+      text = ~str_c("<i>", format(date, dateFormatLong),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
       " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", region, ")<extra></extra>"),
@@ -464,7 +464,7 @@ rEffPlotlyRegion <- function(
       color = ~region, colors = regionColors,
       legendgroup = ~region,
       marker = list(symbol = "asterisk-open"),
-      text = ~str_c("<i>", format(date, "%d.%m.%y"),
+      text = ~str_c("<i>", format(date, dateFormatLong),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
       " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", region, ")"),
@@ -600,6 +600,7 @@ rEffPlotlyComparison <- function(
   # plot parameter
   dateFormat <- translator$t("%b-%d")
   dateFormatLong <- translator$t("%Y-%m-%d")
+  
   if (language %in% c("de-ch", "fr-ch")) {
     locale <- language
   } else if (language == "en-gb") {
@@ -682,12 +683,12 @@ rEffPlotlyComparison <- function(
     filter(country != focusCountry) %>%
     add_bars(x = ~date, y = ~incidence, color = ~country, colors = countryColors,
       legendgroup = ~country, visible = "legendonly",
-      text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>",
+      text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_bars(data = caseDataFocus, x = ~date, y = ~incidence, color = ~country, colors = countryColors,
       legendgroup = ~country,
-      text = ~str_c("<i>", format(date, "%d.%m.%y"), "</i> <br>",
+      text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     layout(
@@ -711,7 +712,7 @@ rEffPlotlyComparison <- function(
       x = ~date, y = ~median_R_mean, color = ~country, colors = countryColors,
       type = "scatter", mode = "lines", showlegend = FALSE,
       legendgroup = ~country, visible = "legendonly",
-      text = ~str_c("<i>", format(date, "%d.%m.%y"),
+      text = ~str_c("<i>", format(date, dateFormatLong),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
       " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", country, ")<extra></extra>"),
@@ -729,7 +730,7 @@ rEffPlotlyComparison <- function(
       color = ~country, colors = countryColors,
       legendgroup = ~country,
       marker = list(symbol = "asterisk-open"),
-      text = ~str_c("<i>", format(date, "%d.%m.%y"),
+      text = ~str_c("<i>", format(date, dateFormatLong),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
       " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", country, ")"),
@@ -740,7 +741,7 @@ rEffPlotlyComparison <- function(
       x = ~date, y = ~median_R_mean, color = ~country, colors = countryColors,
       type = "scatter", mode = "lines", showlegend = FALSE,
       legendgroup = ~country,
-      text = ~str_c("<i>", format(date, "%d.%m.%y"),
+      text = ~str_c("<i>", format(date, dateFormatLong),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
       " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", country, ")<extra></extra>"),
@@ -759,7 +760,7 @@ rEffPlotlyComparison <- function(
       color = ~country, colors = countryColors,
       legendgroup = ~country,
       marker = list(symbol = "asterisk-open"),
-      text = ~str_c("<i>", format(date, "%d.%m.%y"),
+      text = ~str_c("<i>", format(date, dateFormatLong),
       "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
       " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
       " <br>(", region, ")"),
