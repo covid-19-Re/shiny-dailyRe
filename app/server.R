@@ -560,7 +560,7 @@ server <- function(input, output, session) {
       dplyr::select(source, sourceLong, data_type, url) %>%
       distinct() %>%
       group_by(source, sourceLong, url) %>%
-      dplyr:summarize(data_type = str_c(data_type, collapse = ", ")) %>%
+      dplyr::summarize(data_type = str_c(data_type, collapse = ", ")) %>%
       mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
       dplyr::select("Source" = source, "Description" = sourceLong, "Data types" = data_type, "URL" = url) %>%
       arrange(Source)
