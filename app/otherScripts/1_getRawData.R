@@ -657,8 +657,8 @@ latestData <- rawData %>%
       "BFS",    "Data from the Swiss Federal Office of Statistics", "https://www.bfs.admin.ch/bfsstatic/dam/assets/12727505/master",
       "RIVM",   "Data from the Dutch National Institute for Public Health and the Environment", "https://github.com/J535D165/CoronaWatchNL",
       "CBS",    "Data from the Dutch Central Office for Statistics", "https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70895ned/table?fromstatweb",
-      "ONS",    "Data from the UK Office of National Statistics", "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales",
-      "ECDC",   "Data from the European Center for Disease Preventen and Control", "https://opendata.ecdc.europa.eu/covid19/casedistribution/",
+      "ONS",    "Data from the UK Office of National Statistics (England and Wales)", "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales",
+      "ECDC",   "Data from the European Center for Disease Prevention and Control", "https://opendata.ecdc.europa.eu/covid19/casedistribution/",
     ), by = "source")
 
 save(latestData, file = pathToLatestData)

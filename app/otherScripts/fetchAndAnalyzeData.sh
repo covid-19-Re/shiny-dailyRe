@@ -8,7 +8,7 @@ cd "../../../ch-hospital-data"
 git pull
 echo "updating covid19-interventions ..."
 cd "../covid19-additionalData"
-git pull
+git pull origin addEUinterventions
 
 cd "$parent_path"
 rm *.Rout
