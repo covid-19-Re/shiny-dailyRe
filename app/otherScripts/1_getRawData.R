@@ -252,7 +252,11 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
   # pastData <- read_delim(urlPastData, delim = ";", comment = "#")
 
   url2020 <- "https://www.bfs.admin.ch/bfsstatic/dam/assets/12727505/master"
-  data2020 <- read_delim(url2020, delim = ";")
+  data2020 <- try(read_delim(url2020, delim = ";"))
+  
+  if ("try-error" %in% class(data2020)){
+    return(NULL)
+  }
 
   relevant_weeks <- seq(isoweek(startAt), isoweek(Sys.Date()) - 2)
 
