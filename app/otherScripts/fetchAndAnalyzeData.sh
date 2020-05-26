@@ -6,7 +6,7 @@ cd "$parent_path"
 echo "updating ch-hospital-data ..."
 cd "../../../ch-hospital-data"
 git pull
-echo "updating covid19-interventions ..."
+echo "updating covid19-additionalData ..."
 cd "../covid19-additionalData"
 git pull
 
