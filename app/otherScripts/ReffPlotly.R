@@ -94,7 +94,7 @@ rEffPlotly <- function(
   }
 
   # prepare Data
-  newLevels <- c("Confirmed cases",  "Hospitalized patients", "Deaths")
+  newLevels <- levels(caseData$data_type)
   names(newLevels) <- sapply(newLevels, translator$t,  USE.NAMES = FALSE)
 
   caseData <- caseData %>%
@@ -359,7 +359,7 @@ rEffPlotlyRegion <- function(
   }
 
   # prepare Data
-  newLevels <- c("Confirmed cases",  "Hospitalized patients", "Deaths")
+  newLevels <- levels(caseData$data_type)
   names(newLevels) <- sapply(newLevels, translator$t,  USE.NAMES = FALSE)
 
   names(regionColors) <- recode(
