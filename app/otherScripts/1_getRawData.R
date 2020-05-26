@@ -286,9 +286,14 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
 getDataNL <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
   baseurl <- str_c("https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/",
     "rivm_NL_covid19_national_by_date/rivm_NL_covid19_national_by_date_")
-  urlfile <- paste0(baseurl, stopAfter, ".csv")
 
-  raw_data <- read_csv(urlfile)
+  urlfile <- paste0(baseurl, stopAfter, ".csv")
+  raw_data <- try(read_csv(urlfile))
+  
+  if ('try-error' %in% class(raw_data)){
+    urlfile <- paste0(baseurl, "latest.csv")
+    raw_data <- read_csv(urlfile)
+  }
 
   # Could also add data on ICU
   # https://github.com/J535D165/CoronaWatchNL/blob/master/data/nice_ic_by_day.csv
@@ -520,7 +525,13 @@ countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
 
 ECDCdata <- getLongECDCData(setdiff(countryList, c("Switzerland", "Netherlands")))
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
-NLdata <- getDataNL(stopAfter = Sys.Date() - 1)
+
+NLdata <- try(getDataNL(stopAfter = Sys.Date() - 1))
+if ('try-error' %in% class(NLdata)){
+  NLdata <- NULL
+}
+
+
 pathToExcessDeathUK <- here::here("../covid19-additionalData/excessDeath/Excess_death_UK.xlsx")
 if (file.exists(pathToExcessDeathUK)) {
   UKExcessDeath <- getExcessDeathUK(
