@@ -33,7 +33,7 @@ meltCumulativeData <- function(
   cumulData <- melt(cumulData, id.vars = nameDateCol)
   colnames(cumulData) <- c("date", "region", "value")
 
-  cumulData <- rbind.fill(lapply(
+  cumulData <- bind_rows(lapply(
     unique(cumulData$region),
     function(reg) {
       curateLongTimeSeries(subset(cumulData, region == reg), isIncidenceData = F)
@@ -46,7 +46,7 @@ meltCumulativeData <- function(
   cumulData$source <- dataSource
   cumulData <- cumulData[, c("date", "region", "country", "source", "data_type", "value", "variable")]
 
-  incidenceData <- rbind.fill(lapply(
+  incidenceData <- bind_rows(lapply(
     unique(cumulData$region), function(reg) {
       incidenceSeries <- subset(cumulData, region == reg);
       incidence <- diff(incidenceSeries$value);
@@ -57,7 +57,7 @@ meltCumulativeData <- function(
   ))
   incidenceData$variable <- rep("incidence", nrow(incidenceData))
 
-  return(rbind(cumulData, incidenceData))
+  return(bind_rows(cumulData, incidenceData))
 }
 
 ## Prepare time series to be compatible with EpiEstim
@@ -251,7 +251,7 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
   # urlPastData = "https://www.bfs.admin.ch/bfsstatic/dam/assets/12607335/master"
   # pastData <- read_delim(urlPastData, delim = ";", comment = "#")
 
-  url2020 <- "https://www.bfs.admin.ch/bfsstatic/dam/assets/12727505/master"
+  url2020 <- "https://www.bfs.admin.ch/bfsstatic/dam/assets/13047388/master"
   data2020 <- try(read_delim(url2020, delim = ";"))
   
   if ("try-error" %in% class(data2020)){
@@ -262,14 +262,14 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
 
   tidy_data <- data2020 %>%
     dplyr::select(date = Ending, week = Week, age = Age,
-           avg_deaths = Expected, deaths = extrapol) %>%
+           avg_deaths = Expected, deaths = NoDec_EP) %>%
     filter(week %in% relevant_weeks) %>%
     mutate(date = dmy(date))
 
   longData <- tidy_data %>%
     group_by(date) %>%
     summarise_at(vars(deaths, avg_deaths), list(total = sum)) %>%
-    mutate(excess_deaths = deaths_total - avg_deaths_total) %>%
+    mutate(excess_deaths = round(deaths_total - avg_deaths_total)) %>%
     dplyr::select(date, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
     mutate(country = "Switzerland", variable = "incidence",
@@ -277,7 +277,7 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
     mutate(value = ifelse(value < 0, 0, value))
 
   cumulData <- getCumulData(longData)
-  longData <- rbind.fill(longData, cumulData)
+  longData <- bind_rows(longData, cumulData)
 
   return(longData)
 }
@@ -312,11 +312,11 @@ getDataNL <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
 
   excessData <- try(getExcessDeathNL(startAt))
   if (!"try-error"  %in% class(excessData)) {
-    longData <- rbind.fill(longData, excessData)
+    longData <- bind_rows(longData, excessData)
   }
 
   cumulData <- getCumulData(longData)
-  longData <- rbind.fill(longData, cumulData)
+  longData <- bind_rows(longData, cumulData)
 
   return(longData)
 }
@@ -455,7 +455,7 @@ getExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = "..
       value = ifelse(value < 0, 0, value))
 
   cumulData <- getCumulData(longData)
-  longData <- rbind.fill(longData, cumulData)
+  longData <- bind_rows(longData, cumulData)
 
   return(longData)
 }
@@ -486,7 +486,7 @@ getLongECDCData <- function(countries = NULL) {
       variable = "cumul") %>%
     arrange(country)
 
-  longData <- rbind.fill(longData, cumulData)
+  longData <- bind_rows(longData, cumulData)
 
   if (!is.null(countries)) {
     longData <- getCountryData(countries, data = longData)

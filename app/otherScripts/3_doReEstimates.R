@@ -229,7 +229,7 @@ doReEstimation <- function(
         result <- result[, c(
           "date", "region", "country", "source", "data_type", "estimate_type",
           "replicate", "value", "variable")]
-        end_result <- rbind(end_result, result)
+        end_result <- bind_rows(end_result, result)
       }
     }
   }
@@ -322,7 +322,7 @@ doAllReEstimations <- function(
       
       ## Run EpiEstim
       for (data_type_i in unique(data$data_type)) {
-        subset_data <- subset(data, region == region_i & source == source_i & data_type == data_type_i)
+        subset_data <- data %>% filter(region == region_i & source == source_i & data_type == data_type_i)
         if (nrow(subset_data) == 0) {
           next
         }
@@ -354,7 +354,7 @@ doAllReEstimations <- function(
     }
   }
   
-  return(rbind.fill(results_list))
+  return(bind_rows(results_list))
 }
 
 
