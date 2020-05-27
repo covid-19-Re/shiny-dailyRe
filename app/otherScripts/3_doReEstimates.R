@@ -252,7 +252,7 @@ getIntervalEnds <- function(
     }
     interventionDataSubset <- interval_ends %>%
       filter(region == region_i,
-             type == "start",
+             type %in% c("start","end"),
              measure != "testing")
     
     region_interval_ends <- sort(unique(pull(interventionDataSubset, "date")))
