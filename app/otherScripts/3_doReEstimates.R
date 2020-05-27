@@ -258,6 +258,7 @@ getIntervalEnds <- function(
       select(date, type, region) %>%
       mutate(shift_date = as_date(ifelse(type == "end", date, date - 1))) %>%
       filter(region == region_i,
+             measure != "testing",
              shift_date != "9999-01-01")
 
     region_interval_ends <- sort(unique(pull(interventionDataSubset, "shift_date")))
