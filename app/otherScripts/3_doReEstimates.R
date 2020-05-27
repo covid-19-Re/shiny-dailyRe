@@ -229,7 +229,7 @@ doReEstimation <- function(
         result <- result[, c(
           "date", "region", "country", "source", "data_type", "estimate_type",
           "replicate", "value", "variable")]
-        end_result <- rbind(end_result, result)
+        end_result <- bind_rows(end_result, result)
       }
     }
   }
@@ -353,7 +353,7 @@ doAllReEstimations <- function(
     }
   }
   
-  return(rbind.fill(results_list))
+  return(bind_rows(results_list))
 }
 
 

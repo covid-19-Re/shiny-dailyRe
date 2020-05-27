@@ -129,7 +129,7 @@ drawInfectionDates <- function(
     results_list <- c(results_list, list(infectionsDF))
   }
 
-  return(rbind.fill(results_list))
+  return(bind_rows(results_list))
 }
 
 
@@ -176,7 +176,7 @@ drawAllInfectionDates <- function(
       results <- c(results, results_list)
     }
   }
-  return(rbind.fill(results))
+  return(bind_rows(results))
 }
 
 
