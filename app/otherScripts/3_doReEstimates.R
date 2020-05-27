@@ -321,7 +321,7 @@ doAllReEstimations <- function(
       
       ## Run EpiEstim
       for (data_type_i in unique(data$data_type)) {
-        subset_data <- subset(data, region == region_i & source == source_i & data_type == data_type_i)
+        subset_data <- data %>% filter(region == region_i & source == source_i & data_type == data_type_i)
         if (nrow(subset_data) == 0) {
           next
         }

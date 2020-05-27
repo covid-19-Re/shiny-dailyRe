@@ -77,6 +77,7 @@ drawInfectionDates <- function(
     allInfectionDates <- seq(min(infectionDates), max(infectionDates), by = "days")
 
     lastDayTesting <- max(data_subset$date)
+    # Time + memory consuming step
     infectionCount <- unname( table( c(infectionDates, allInfectionDates) )) -1
     trueInfectionCount <- c()
 
