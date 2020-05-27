@@ -66,6 +66,7 @@ estimateRe <- function(
     )
     
     #starts and end indices of the intervals (numeric vector)
+    # t_start = interval_end + 1
     t_start <- c(offset, na.omit(interval_end_indices) + 1)
     t_end <- c(na.omit(interval_end_indices), length(incidenceData))
     
@@ -250,12 +251,17 @@ getIntervalEnds <- function(
     if (region_i %in% swissRegions) {
       region_i <- "Switzerland"
     }
-    interventionDataSubset <- interval_ends %>%
-      filter(region == region_i,
-             type %in% c("start","end"),
-             measure != "testing")
     
-    region_interval_ends <- sort(unique(pull(interventionDataSubset, "date")))
+    # in Re estimation, the interval starts on interval_end + 1
+    # so the intervention start dates need to be shifted to -1
+    interventionDataSubset <- interval_ends %>%
+      select(date, type, region) %>%
+      mutate(shift_date = as_date(ifelse(type == "end", date, date - 1))) %>%
+      filter(region == region_i,
+             shift_date != "9999-01-01")
+
+    region_interval_ends <- sort(unique(pull(interventionDataSubset, "shift_date")))
+    
   } else {
     region_interval_ends <- interval_ends
   }
