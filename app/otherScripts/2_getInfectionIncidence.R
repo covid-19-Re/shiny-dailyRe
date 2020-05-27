@@ -43,7 +43,11 @@ drawInfectionDates <- function(
   partial_results <- list()
 
   for (replicateNum in 1:numberOfReplicates) {
-    infectionDates <- c()
+    
+    n_tot <- sum(floor(na.omit(data_subset$value)))
+    infectionDates <- vector(mode = 'numeric', length = n_tot)
+    count = 1
+    #infectionDates <- c()
     for (dateTest in data_subset$date) {
       ## for each date in the time series, if incidence on that day is > 0
       ## draw 'incidenceOnDay' delays between infection and count, with 'incidenceOnDay' the daily incidence
@@ -53,16 +57,19 @@ drawInfectionDates <- function(
           rgamma(incidenceOnDay, shape = shapeOnsetToCount, scale = scaleOnsetToCount) +
           rgamma(incidenceOnDay, shape = shapeIncubation, scale = scaleIncubation))
         drawnInfectionTimes <- dateTest - sampledInfectionToCountDelay
-        infectionDates <- c(infectionDates, drawnInfectionTimes)
+        
+        infectionDates[count:(count+incidenceOnDay-1)] <- drawnInfectionTimes
+        count <- count + floor(incidenceOnDay)
+        #infectionDates <- c(infectionDates, drawnInfectionTimes)
       }
     }
-
+    
     if (length(infectionDates) == 0) {
       return(data.frame())
     }
 
     infectionDates <- as_date(infectionDates)
-
+    
     ### keep track of the most recent date an infection has been sampled, across all replicates
     lastInfectionDate <- max(lastInfectionDate, max(infectionDates))
 
@@ -70,13 +77,14 @@ drawInfectionDates <- function(
     allInfectionDates <- seq(min(infectionDates), max(infectionDates), by = "days")
 
     lastDayTesting <- max(data_subset$date)
-    infectionCount <- c()
+    infectionCount <- unname( table( c(infectionDates, allInfectionDates) )) -1
     trueInfectionCount <- c()
 
     ### account for the yet-to-be-sampled infections happening on each day
     ### the closer to the present, the more likely it is that an infection has not been reported yet.
     for (i in seq_along(allInfectionDates)) {
-      infectionCount[i] <- sum(infectionDates == allInfectionDates[i])
+      #infectionCount[i] <- sum(infectionDates == allInfectionDates[i])
+      
       windowToReport <- as.numeric(lastDayTesting - allInfectionDates[i])
       ## Fhat(windowToReport) is the probability that an infection is sampled before 'windowToReport' days
       trueInfectionCount[i] <- round(infectionCount[i] * 1 / Fhat(windowToReport))
@@ -86,7 +94,6 @@ drawInfectionDates <- function(
 
     partial_results <- c(partial_results, list(results))
   }
-
   ## Now we need to extend the time series so that they all end on the same day.
   ## Thus we need to add trailing zeroes to the true infection counts that end earlier
   results_list <- list()
@@ -262,11 +269,13 @@ sampledInfectHospData <- drawAllInfectionDates(
   scaleOnsetToCount = scaleOnsetToCount)
 
 ## sum infections from Hospitalized patients - admission and Hospitalized patients - onset
-sampledInfectSumHospData <- sampledInfectHospData %>%
-  group_by(date, country, region, data_type, source, replicate, variable) %>%
-  dplyr::summarise(value=sum(value)) %>%
-  arrange(country, region, source, data_type, variable, replicate, date) %>%
-  ungroup()
+if(dim(sampledInfectHospData)[2]>0){
+  sampledInfectSumHospData <- sampledInfectHospData %>%
+    group_by(date, country, region, data_type, source, replicate, variable) %>%
+    dplyr::summarise(value=sum(value)) %>%
+    arrange(country, region, source, data_type, variable, replicate, date) %>%
+    ungroup()
+}
 
 sampledInfectData <- bind_rows(sampledInfectData, sampledInfectSumHospData) %>% ungroup()
 

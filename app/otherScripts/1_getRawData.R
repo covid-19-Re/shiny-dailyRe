@@ -251,7 +251,7 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
   # urlPastData = "https://www.bfs.admin.ch/bfsstatic/dam/assets/12607335/master"
   # pastData <- read_delim(urlPastData, delim = ";", comment = "#")
 
-  url2020 <- "https://www.bfs.admin.ch/bfsstatic/dam/assets/12727505/master"
+  url2020 <- "https://www.bfs.admin.ch/bfsstatic/dam/assets/13047388/master"
   data2020 <- try(read_delim(url2020, delim = ";"))
   
   if ("try-error" %in% class(data2020)){
@@ -262,14 +262,14 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
 
   tidy_data <- data2020 %>%
     dplyr::select(date = Ending, week = Week, age = Age,
-           avg_deaths = Expected, deaths = extrapol) %>%
+           avg_deaths = Expected, deaths = NoDec_EP) %>%
     filter(week %in% relevant_weeks) %>%
     mutate(date = dmy(date))
 
   longData <- tidy_data %>%
     group_by(date) %>%
     summarise_at(vars(deaths, avg_deaths), list(total = sum)) %>%
-    mutate(excess_deaths = deaths_total - avg_deaths_total) %>%
+    mutate(excess_deaths = round(deaths_total - avg_deaths_total)) %>%
     dplyr::select(date, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
     mutate(country = "Switzerland", variable = "incidence",
