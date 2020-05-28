@@ -22,15 +22,15 @@ server <- function(input, output, session) {
         menuSubItem(HTML(i18n()$t("Switzerland")), tabName = "ch", icon = icon("chart-area")),
         menuSubItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantons", icon = icon("chart-area")),
         menuSubItem(HTML(i18n()$t("R<sub>e</sub> for greater Regions")),
-          tabName = "greaterRegions", icon = icon("chart-area")),
-        menuSubItem(HTML(i18n()$t("CH estimates download")),
-          tabName = "download", icon = icon("download"))
+          tabName = "greaterRegions", icon = icon("chart-area"))
       ),
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")),
         lapply(c("Comparison", countryList), function(i) {
           menuSubItem(i, tabName = str_remove(i, " "), icon = icon("chart-area"))
         })
       ),
+      menuItem(HTML(i18n()$t("Download Re estimates")),
+                  tabName = "download", icon = icon("download")),
       menuItem(i18n()$t("About"), tabName = "about", icon = icon("question-circle")),
       radioButtons("estimation_type_select", "Select estimation type to show",
           choices = c("sliding window" = "Cori_slidingWindow", "step-wise constant" = "Cori_step"),
@@ -196,9 +196,16 @@ server <- function(input, output, session) {
   })
 
   output$downloadUI <- renderUI({
-    fluidRow(
-      box(title = HTML(i18n()$t("Download estimates for Switzerland")), width = 12,
-        downloadLink("downloadCHestimates", "Download estimates (.csv)")
+    fluidPage(
+      fluidRow(
+        box(title = HTML(i18n()$t("Download estimates for Switzerland")), width = 12,
+          downloadLink("downloadCHestimates", "Download estimates (.csv)")
+        )
+      ),
+      fluidRow(
+        box(title = HTML(i18n()$t("Download estimates for Europe")), width = 12,
+            downloadLink("downloadEUestimates", "Download estimates (.csv)")
+        )
       )
     )
   })
@@ -353,6 +360,12 @@ server <- function(input, output, session) {
   })
   names(estimatesCountry) <- str_remove(countryList, " ")
 
+  estimatesEU <- reactive({
+    estimatesEU <- bind_rows(estimatesCountry)
+    return(estimatesEU)
+  })
+  
+  
   output$CHinteractivePlot <- renderPlotly({
 
     caseDataCH <- caseDataSwitzerlandPlot() %>%
@@ -552,6 +565,16 @@ server <- function(input, output, session) {
       write_csv(estimatesSwitzerland(), file)
     }
   )
+  
+  output$downloadEUestimates <- downloadHandler(
+    filename = function() {
+      str_c(format(Sys.Date(), "%Y%m%d"), "-ReEstimatesEU.csv")
+    },
+    content = function(file) {
+      write_csv(estimatesEU(), file)
+    }
+  )
+  
 
   # source table
   output$sourcesTable <- renderDataTable({
