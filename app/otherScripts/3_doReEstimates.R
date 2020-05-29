@@ -255,7 +255,6 @@ getIntervalEnds <- function(
     # in Re estimation, the interval starts on interval_end + 1
     # so the intervention start dates need to be shifted to -1
     interventionDataSubset <- interval_ends %>%
-      select(date, type, region) %>%
       mutate(shift_date = as_date(ifelse(type == "end", date, date - 1))) %>%
       filter(region == region_i,
              measure != "testing",
