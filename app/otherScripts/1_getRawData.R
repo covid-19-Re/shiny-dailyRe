@@ -339,6 +339,97 @@ getExcessDeathHMD <- function(startAt = as.Date("2020-02-20")) {
   return(longData)
 }
 
+getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/excessDeath/Excess_death_IT.csv"), 
+                             startAt = as.Date("2020-02-20")) {
+  #https://www.istat.it/it/archivio/240401 
+  if (file.exists(filePath)) {
+    rawData <- read_csv(filePath,
+                        col_types = cols(
+                          REG = col_double(),
+                          PROV = col_double(),
+                          NOME_REGIONE = col_character(),
+                          NOME_PROVINCIA = col_character(),
+                          NOME_COMUNE = col_character(),
+                          COD_PROVCOM = col_character(),
+                          TIPO_COMUNE = col_double(),
+                          CL_ETA = col_double(),
+                          GE = col_character(),
+                          M_15 = col_double(),
+                          F_15 = col_double(),
+                          T_15 = col_double(),
+                          M_16 = col_double(),
+                          F_16 = col_double(),
+                          T_16 = col_double(),
+                          M_17 = col_double(),
+                          F_17 = col_double(),
+                          T_17 = col_double(),
+                          M_18 = col_double(),
+                          F_18 = col_double(),
+                          T_18 = col_double(),
+                          M_19 = col_double(),
+                          F_19 = col_double(),
+                          T_19 = col_double(),
+                          M_20 = col_character(),
+                          F_20 = col_character(),
+                          T_20 = col_character()
+                        ))
+  } else {
+    return(NULL)
+  }
+
+  tidy_data <- rawData %>%
+    dplyr::select(commune_code = COD_PROVCOM, date = GE,
+                  paste0("T_", seq(15, 20))) %>%
+    mutate(T_20 = parse_double(T_20, na = "n.d.")) %>%
+    pivot_longer(cols = paste0("T_", seq(15, 20)), names_to = 'year', values_to = 'deaths') %>%
+    mutate(year = gsub('T_','20', year),
+           day = date,
+           date = paste0(year, date)) %>%
+    filter(day != "0229") %>%
+    mutate(date = parse_date(date, format = "%Y%m%d"),
+           commune_day = paste0(commune_code, "_", day))
+  # we exclude the day 02-29 because it does not exist in all years
+  
+  # in 2020 for some communes data is missing on some days
+  # we exclude it, so we don't compare to a wrong total
+  na_commune_days <- tidy_data %>%
+    filter(year == "2020",
+           is.na(deaths)) %>%
+    pull(unique(commune_day))
+  
+  past_data <- tidy_data %>%
+    filter(!(commune_day %in% na_commune_days),
+      year %in% seq(2015, 2019)) %>%
+    group_by(date, year, day) %>%
+    summarise_at(vars(deaths), sum, na.rm = TRUE) %>%
+    group_by(day) %>%
+    summarise_at(vars(deaths), list(avg_deaths = mean))
+  
+  excess_death <- tidy_data %>%
+    group_by(date, year, day) %>%
+    summarise_at(vars(deaths), sum, na.rm = TRUE) %>%
+    filter(year == "2020",
+           day > "0220") %>%
+    left_join(past_data, by = c("day")) %>%
+    mutate(excess_deaths = ceiling(deaths - avg_deaths)) %>%
+    dplyr::select(-day) %>% 
+    ungroup()
+  
+  longData <- excess_death %>%
+    dplyr::select(date, excess_deaths) %>%
+    pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
+    mutate(variable = "incidence", country = "Italy",
+           region = country, source = "Istat") %>%
+    mutate(value = ifelse(value < 0, 0, value)) %>%
+    filter(!is.na(value))
+  
+  cumulData <- getCumulData(longData)
+  longData <- bind_rows(longData, cumulData)
+  
+  return(longData)
+}
+
+
 ##### Dutch Data ##########################################
 getDataNL <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
   baseurl <- str_c("https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/",
@@ -575,6 +666,7 @@ CHrawData <- getAllSwissData(pathToHospData = dataCHHospitalPath) %>%
 # save data
 # pathToCHRawDataSave <- file.path(dataDir, "CH_Raw_data.Rdata")
 # save(CHrawData, file = pathToCHRawDataSave)
+cat(paste("CH"))
 
 ##### European data
 countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
@@ -582,14 +674,23 @@ countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
 
 ECDCdata <- getLongECDCData(setdiff(countryList, c("Switzerland", "Netherlands")))
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
+cat(paste("Swiss Excess"))
 
 NLdata <- try(getDataNL(stopAfter = Sys.Date() - 1))
 if ('try-error' %in% class(NLdata)){
   NLdata <- NULL
 }
+cat(paste("NL"))
 
 ExcessDeathData <- getExcessDeathHMD() %>%
   filter(country %in% countryList)
+cat(paste("HMD"))
+
+pathToExcessDeathIT <- here::here("../covid19-additionalData/excessDeath/Excess_death_IT.csv")
+ITExcessDeath <- getExcessDeathIT(filePath = pathToExcessDeathIT, 
+                 startAt = as.Date("2020-02-20"))
+cat(paste("IT"))
+
 # pathToExcessDeathUK <- here::here("../covid19-additionalData/excessDeath/Excess_death_UK.xlsx")
 # if (file.exists(pathToExcessDeathUK)) {
 #   UKExcessDeath <- getExcessDeathUK(
@@ -601,9 +702,10 @@ ExcessDeathData <- getExcessDeathHMD() %>%
 #   cat("UK Excess Death Data file not found. Ignoring... \n")
 # }
 
-EUrawData <- bind_rows(ECDCdata, swissExcessDeath, NLdata, ExcessDeathData) %>%
+EUrawData <- bind_rows(ECDCdata, swissExcessDeath, NLdata, ExcessDeathData,
+                       ITExcessDeath) %>%
   as_tibble()
-
+print("Bound")
 # save data
 # pathToEURawDataSave <- file.path(dataDir, "EU_Raw_data.Rdata")
 # save(EUrawData, file = pathToEURawDataSave)
@@ -732,7 +834,8 @@ latestData <- rawData %>%
       "CBS",    "Data from the Dutch Central Office for Statistics", "https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70895ned/table?fromstatweb",
       "ONS",    "Data from the UK Office of National Statistics (England and Wales)", "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales",
       "ECDC",   "Data from the European Center for Disease Prevention and Control", "https://opendata.ecdc.europa.eu/covid19/casedistribution/",
-      "HMD",    "Data from the Human Mortality Database - Short-term Mortality Fluctuations Data Series", "https://www.mortality.org/"
+      "HMD",    "Data from the Human Mortality Database - Short-term Mortality Fluctuations Data Series", "https://www.mortality.org/",
+      "Istat",  "Data from the Italian National Institute of Statistics", "https://www.istat.it/it/archivio/240401"
     ), by = "source")
 
 save(latestData, file = pathToLatestData)
