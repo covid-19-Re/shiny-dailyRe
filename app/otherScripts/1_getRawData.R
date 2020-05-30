@@ -429,6 +429,80 @@ getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/ex
   return(longData)
 }
 
+##### French Data ##########################################
+
+getDataFR <- function(){
+  # nouveaux file contains the incidence
+  url = "https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c"
+  rawData = try(read_delim(url, delim = ";",
+                       col_types = cols(
+                         dep = col_character(),
+                         jour = col_date(format = ""),
+                         incid_hosp = col_double(),
+                         incid_rea = col_double(),
+                         incid_dc = col_double(),
+                         incid_rad = col_double()
+                       )))
+  if('try-error' %in% class(rawData)){
+    return(NULL)
+  }
+
+  longData <- rawData %>%
+    select(date = jour,
+           region = dep,
+           value = incid_hosp) %>%
+    mutate(data_type = 'hospitalized',
+           country = "France",
+           variable = "incidence",
+           region = country,
+           source = "SpF-DMI")
+  
+  cumulData <- getCumulData(longData)
+  longData <- bind_rows(longData, cumulData)
+
+  return(longData)
+}
+
+getExcessDeathFR <- function(startAt = as.Date("2020-02-20")){
+  url <- "https://raw.githubusercontent.com/TheEconomist/covid-19-excess-deaths-tracker/master/output-data/excess-deaths/france_excess_deaths.csv"
+  rawData = try(read_csv(url,
+                         col_types = cols(
+                           country = col_character(),
+                           region = col_character(),
+                           region_code = col_double(),
+                           start_date = col_date(format = ""),
+                           end_date = col_date(format = ""),
+                           year = col_double(),
+                           week = col_double(),
+                           population = col_double(),
+                           total_deaths = col_double(),
+                           covid_deaths = col_double(),
+                           expected_deaths = col_double(),
+                           excess_deaths = col_double(),
+                           non_covid_deaths = col_double()
+                         )))
+  
+  if('try-error' %in% class(rawData)){
+    return(NULL)
+  }
+  
+  longData <- rawData %>%
+    group_by(country, end_date, week) %>%
+    summarise_at(vars(total_deaths, excess_deaths), list(sum)) %>%
+    dplyr::select(country, date = end_date, excess_deaths) %>%
+    pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
+    mutate(variable = "incidence",
+           region = country,
+          source = "Economist") %>%
+    mutate(value = ifelse(value < 0, 0, value)) %>%
+    filter(date > startAt)
+  
+  cumulData <- getCumulData(longData)
+  longData <- bind_rows(longData, cumulData)
+  
+  return(longData)
+}
+
 
 ##### Dutch Data ##########################################
 getDataNL <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
@@ -691,6 +765,9 @@ ITExcessDeath <- getExcessDeathIT(filePath = pathToExcessDeathIT,
                  startAt = as.Date("2020-02-20"))
 cat(paste("IT"))
 
+hospitalDataFR <- getDataFR()
+ExcessDeathFR <- getExcessDeathFR()
+
 # pathToExcessDeathUK <- here::here("../covid19-additionalData/excessDeath/Excess_death_UK.xlsx")
 # if (file.exists(pathToExcessDeathUK)) {
 #   UKExcessDeath <- getExcessDeathUK(
@@ -703,7 +780,7 @@ cat(paste("IT"))
 # }
 
 EUrawData <- bind_rows(ECDCdata, swissExcessDeath, NLdata, ExcessDeathData,
-                       ITExcessDeath) %>%
+                       ITExcessDeath, hospitalDataFR, ExcessDeathFR) %>%
   as_tibble()
 print("Bound")
 # save data
@@ -835,7 +912,8 @@ latestData <- rawData %>%
       "ONS",    "Data from the UK Office of National Statistics (England and Wales)", "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales",
       "ECDC",   "Data from the European Center for Disease Prevention and Control", "https://opendata.ecdc.europa.eu/covid19/casedistribution/",
       "HMD",    "Data from the Human Mortality Database - Short-term Mortality Fluctuations Data Series", "https://www.mortality.org/",
-      "Istat",  "Data from the Italian National Institute of Statistics", "https://www.istat.it/it/archivio/240401"
+      "Istat",  "Data from the Italian National Institute of Statistics", "https://www.istat.it/it/archivio/240401",
+      "SpF-DMI","Data from the French National Public Health Agency", "https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/"
     ), by = "source")
 
 save(latestData, file = pathToLatestData)
