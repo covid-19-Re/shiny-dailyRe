@@ -282,6 +282,63 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
   return(longData)
 }
 
+##### Excess Death HMD ##########################################
+
+getExcessDeathHMD <- function(startAt = as.Date("2020-02-20")) {
+  # Human mortality database
+  
+  url <- "https://www.mortality.org/Public/STMF/Outputs/stmf.csv"
+  rawData <- try(read_csv(url, comment = "#"))
+
+  if ("try-error" %in% class(rawData)){
+    return(NULL)
+  }
+  
+  tidy_data <- rawData %>%
+    dplyr::select(country = CountryCode, year = Year,
+           week = Week, sex = Sex, deaths = DTotal) %>%
+    filter(sex == 'b') %>%
+    mutate(country = recode(country, 
+                AUT="Austria", BEL="Belgium",
+                BGR="Bulgaria", CZE="Czech Republic", 
+                DEUTNP="Germany", DNK="Denmark", ESP="Spain",     
+                FIN="Finland", GBRTENW="United Kingdom", ISL="Island",
+                NLD="Netherlands", NOR="Norway", PRT="Portugal", SWE="Sweden",
+                USA="USA"))
+  
+  past_data <- tidy_data %>%
+    filter(year %in% seq(2015, 2019)) %>%
+    group_by(country, week) %>%
+    summarise_at(vars(deaths), list(avg_deaths = mean))
+
+  excess_death <- tidy_data %>%
+    filter(year == 2020,
+           week > isoweek(startAt)) %>%
+    dplyr::select(country, year, week, deaths) %>%
+    left_join(past_data, by = c("country", "week")) %>%
+    mutate(
+      excess_deaths = ceiling(deaths - avg_deaths),
+      date = ymd(
+        parse_date_time(
+          paste(year, week, "Mon", sep = "/"), "Y/W/a",
+          locale = "en_GB.UTF-8"
+        ), locale = "en_GB.UTF-8")) %>%
+    dplyr::select(-year, -week)
+
+  
+  longData <- excess_death %>%
+    dplyr::select(date, country, excess_deaths) %>%
+    pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
+    mutate(variable = "incidence",
+           region = country, source = "HMD") %>%
+    mutate(value = ifelse(value < 0, 0, value))
+  
+  cumulData <- getCumulData(longData)
+  longData <- bind_rows(longData, cumulData)
+  
+  return(longData)
+}
+
 ##### Dutch Data ##########################################
 getDataNL <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
   baseurl <- str_c("https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/",
@@ -310,10 +367,10 @@ getDataNL <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
       region = country,
       source = "RIVM")
 
-  excessData <- try(getExcessDeathNL(startAt))
-  if (!"try-error"  %in% class(excessData)) {
-    longData <- bind_rows(longData, excessData)
-  }
+  # excessData <- try(getExcessDeathNL(startAt))
+  # if (!"try-error"  %in% class(excessData)) {
+  #   longData <- bind_rows(longData, excessData)
+  # }
 
   cumulData <- getCumulData(longData)
   longData <- bind_rows(longData, cumulData)
@@ -531,19 +588,20 @@ if ('try-error' %in% class(NLdata)){
   NLdata <- NULL
 }
 
+ExcessDeathData <- getExcessDeathHMD() %>%
+  filter(country %in% countryList)
+# pathToExcessDeathUK <- here::here("../covid19-additionalData/excessDeath/Excess_death_UK.xlsx")
+# if (file.exists(pathToExcessDeathUK)) {
+#   UKExcessDeath <- getExcessDeathUK(
+#       startAt = as.Date("2020-02-20"),
+#       path_to_data = pathToExcessDeathUK) %>%
+#     filter(data_type %in% c("excess_deaths"))
+# } else {
+#   UKExcessDeath <- NULL
+#   cat("UK Excess Death Data file not found. Ignoring... \n")
+# }
 
-pathToExcessDeathUK <- here::here("../covid19-additionalData/excessDeath/Excess_death_UK.xlsx")
-if (file.exists(pathToExcessDeathUK)) {
-  UKExcessDeath <- getExcessDeathUK(
-      startAt = as.Date("2020-02-20"),
-      path_to_data = pathToExcessDeathUK) %>%
-    filter(data_type %in% c("excess_deaths"))
-} else {
-  UKExcessDeath <- NULL
-  cat("UK Excess Death Data file not found. Ignoring... \n")
-}
-
-EUrawData <- bind_rows(ECDCdata, swissExcessDeath, NLdata, UKExcessDeath) %>%
+EUrawData <- bind_rows(ECDCdata, swissExcessDeath, NLdata, ExcessDeathData) %>%
   as_tibble()
 
 # save data
@@ -674,6 +732,7 @@ latestData <- rawData %>%
       "CBS",    "Data from the Dutch Central Office for Statistics", "https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70895ned/table?fromstatweb",
       "ONS",    "Data from the UK Office of National Statistics (England and Wales)", "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales",
       "ECDC",   "Data from the European Center for Disease Prevention and Control", "https://opendata.ecdc.europa.eu/covid19/casedistribution/",
+      "HMD",    "Data from the Human Mortality Database - Short-term Mortality Fluctuations Data Series", "https://www.mortality.org/"
     ), by = "source")
 
 save(latestData, file = pathToLatestData)
