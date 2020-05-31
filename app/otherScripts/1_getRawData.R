@@ -431,7 +431,7 @@ getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/ex
 
 ##### French Data ##########################################
 
-getDataFR <- function(){
+getHospitalDataFR <- function(){
   # nouveaux file contains the incidence
   url = "https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c"
   rawData = try(read_delim(url, delim = ";",
@@ -500,6 +500,46 @@ getExcessDeathFR <- function(startAt = as.Date("2020-02-20")){
           source = "Economist") %>%
     mutate(value = ifelse(value < 0, 0, value)) %>%
     filter(date > startAt)
+  
+  cumulData <- getCumulData(longData)
+  longData <- bind_rows(longData, cumulData)
+  
+  return(longData)
+}
+
+##### Belgian Data ##########################################
+
+getHospitalDataBE <- function(){
+  url = "https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv"
+  rawData = try(read_csv(url,
+                           col_types = cols(
+                             DATE = col_date(format = ""),
+                             PROVINCE = col_character(),
+                             REGION = col_character(),
+                             NR_REPORTING = col_double(),
+                             TOTAL_IN = col_double(),
+                             TOTAL_IN_ICU = col_double(),
+                             TOTAL_IN_RESP = col_double(),
+                             TOTAL_IN_ECMO = col_double(),
+                             NEW_IN = col_double(),
+                             NEW_OUT = col_double()
+                           ) ))
+  if('try-error' %in% class(rawData)){
+    return(NULL)
+  }
+  
+  longData <- rawData %>%
+    select(date = DATE,
+           value = NEW_IN) %>%
+    group_by(date) %>%
+    summarise_at(vars(value), list(value = sum) ) %>%
+    ungroup() %>%
+    arrange(date) %>%
+    mutate(data_type = 'hospitalized',
+           country = "Belgium",
+           variable = "incidence",
+           region = country,
+           source = "Sciensano")
   
   cumulData <- getCumulData(longData)
   longData <- bind_rows(longData, cumulData)
@@ -769,8 +809,10 @@ ITExcessDeath <- getExcessDeathIT(filePath = pathToExcessDeathIT,
                  startAt = as.Date("2020-02-20"))
 cat(paste("IT"))
 
-hospitalDataFR <- getDataFR()
+hospitalDataFR <- getHospitalDataFR()
 ExcessDeathFR <- getExcessDeathFR()
+
+hospitalDataBE <- getHospitalDataBE()
 
 # pathToExcessDeathUK <- here::here("../covid19-additionalData/excessDeath/Excess_death_UK.xlsx")
 # if (file.exists(pathToExcessDeathUK)) {
@@ -784,7 +826,8 @@ ExcessDeathFR <- getExcessDeathFR()
 # }
 
 EUrawData <- bind_rows(ECDCdata, swissExcessDeath, NLdata, ExcessDeathData,
-                       ITExcessDeath, hospitalDataFR, ExcessDeathFR) %>%
+                       ITExcessDeath, hospitalDataFR, ExcessDeathFR,
+                       hospitalDataBE) %>%
   as_tibble()
 print("Bound")
 # save data
@@ -918,7 +961,8 @@ latestData <- rawData %>%
       "HMD",    "Data from the Human Mortality Database - Short-term Mortality Fluctuations Data Series", "https://www.mortality.org/",
       "Istat",  "Data from the Italian National Institute of Statistics", "https://www.istat.it/it/archivio/240401",
       "SpF-DMI","Data from the French National Public Health Agency", "https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/",
-      "Economist","Data from the Economist Excess Death Tracker", "https://github.com/TheEconomist/covid-19-excess-deaths-tracker"
+      "Economist","Data from the Economist Excess Death Tracker", "https://github.com/TheEconomist/covid-19-excess-deaths-tracker",
+      "Sciensano","Data from the Belgian Institute for Health", "https://epistat.wiv-isp.be/covid/"
     ), by = "source")
 
 save(latestData, file = pathToLatestData)
