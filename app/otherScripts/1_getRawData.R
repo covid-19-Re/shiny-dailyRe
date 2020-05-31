@@ -450,7 +450,11 @@ getDataFR <- function(){
   longData <- rawData %>%
     select(date = jour,
            region = dep,
-           value = incid_hosp) %>%
+           incid_hosp) %>%
+    group_by(date) %>%
+    summarise_at(vars(incid_hosp), list(value = sum) ) %>%
+    ungroup() %>%
+    arrange(date) %>%
     mutate(data_type = 'hospitalized',
            country = "France",
            variable = "incidence",
@@ -913,7 +917,8 @@ latestData <- rawData %>%
       "ECDC",   "Data from the European Center for Disease Prevention and Control", "https://opendata.ecdc.europa.eu/covid19/casedistribution/",
       "HMD",    "Data from the Human Mortality Database - Short-term Mortality Fluctuations Data Series", "https://www.mortality.org/",
       "Istat",  "Data from the Italian National Institute of Statistics", "https://www.istat.it/it/archivio/240401",
-      "SpF-DMI","Data from the French National Public Health Agency", "https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/"
+      "SpF-DMI","Data from the French National Public Health Agency", "https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/",
+      "Economist","Data from the Economist Excess Death Tracker", "https://github.com/TheEconomist/covid-19-excess-deaths-tracker"
     ), by = "source")
 
 save(latestData, file = pathToLatestData)
