@@ -1,10 +1,11 @@
-Analysis: 
+
+Contributors:
+
   - Jérémie Scire, ETH Zürich, D-BSSE
   - Jana S. Huisman, ETH Zürich, D-BSSE & D-USYS
-  - Tanja Stadler, ETH Zürich, D-BSSE
-
-Visualization:
   - Daniel Angst, ETH Zürich, D-USYS
+  - Sebastian Bonhoeffer, ETH Zürich, D-USYS
+  - Tanja Stadler, ETH Zürich, D-BSSE
 
 Source Code available at https://github.com/covid-19-Re
 
