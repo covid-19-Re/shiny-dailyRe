@@ -600,7 +600,7 @@ rEffPlotlyComparison <- function(
   # plot parameter
   dateFormat <- translator$t("%b-%d")
   dateFormatLong <- translator$t("%Y-%m-%d")
-  
+
   if (language %in% c("de-ch", "fr-ch")) {
     locale <- language
   } else if (language == "en-gb") {
@@ -611,13 +611,13 @@ rEffPlotlyComparison <- function(
 
   axisTitleFontSize <- 14
   if (legendOrientation == "v") {
-    xrNote <- 1
-    yrNote <- 0.05
+    xrNote <- 0.99
+    yrNote <- 0.35
     rNote <- translator$t(str_c(
       "<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>",
       "delays between infection and<br>",
       "the last data observation."))
-    rNoteAnchors <- c("left", "bottom")
+    rNoteAnchors <- c("right", "top")
     xHelpBox <- 1
     yHelpBox <- 0.2
     helpBoxAnchors <- c("left", "bottom")

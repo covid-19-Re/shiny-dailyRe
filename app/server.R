@@ -320,8 +320,8 @@ server <- function(input, output, session) {
       filter(
         estimate_type == input$estimation_type_select,
         between(date,
-          left = estimatesDates[["Switzerland"]][["Switzerland"]][["start"]][[as.character(data_type[1])]],
-          right = estimatesDates[["Switzerland"]][["Switzerland"]][["end"]][[as.character(data_type[1])]]),
+          left = estimatesDates[[country[1]]][[country[1]]][["start"]][[as.character(data_type[1])]],
+          right = estimatesDates[[country[1]]][[country[1]]][["end"]][[as.character(data_type[1])]]),
       ) %>%
       ungroup()
 
@@ -364,8 +364,7 @@ server <- function(input, output, session) {
     estimatesEU <- bind_rows(estimatesCountry)
     return(estimatesEU)
   })
-  
-  
+
   output$CHinteractivePlot <- renderPlotly({
 
     caseDataCH <- caseDataSwitzerlandPlot() %>%
@@ -504,7 +503,7 @@ server <- function(input, output, session) {
       legendOrientation = "v", # "v" or "h"
       countryColors = countryColors,
       translator = i18n(),
-      language = "en-gb",
+      language = input$lang,
       widgetID = NULL)
 
   })
@@ -520,7 +519,7 @@ server <- function(input, output, session) {
         latestDataCountry <- latestData %>%
         filter(country == i)
       }
-      latestDataCountry <- latestDataCountry %>% 
+      latestDataCountry <- latestDataCountry %>%
         group_by(source) %>%
         filter(date == max(date)) %>%
         ungroup() %>%
@@ -550,7 +549,7 @@ server <- function(input, output, session) {
         startDate = min(estimatesCountry$date) - 14,
         legendOrientation = "v", # "v" or "h"
         translator = i18n(),
-        language = "en-gb",
+        language = input$lang,
         widgetID = NULL)
       return(plot)
     })
@@ -565,7 +564,7 @@ server <- function(input, output, session) {
       write_csv(estimatesSwitzerland(), file)
     }
   )
-  
+
   output$downloadEUestimates <- downloadHandler(
     filename = function() {
       str_c(format(Sys.Date(), "%Y%m%d"), "-ReEstimatesEU.csv")
@@ -574,7 +573,7 @@ server <- function(input, output, session) {
       write_csv(estimatesEU(), file)
     }
   )
-  
+
 
   # source table
   output$sourcesTable <- renderDataTable({
