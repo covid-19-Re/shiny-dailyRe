@@ -320,8 +320,8 @@ server <- function(input, output, session) {
       filter(
         estimate_type == input$estimation_type_select,
         between(date,
-          left = estimatesDates[["Switzerland"]][["Switzerland"]][["start"]][[as.character(data_type[1])]],
-          right = estimatesDates[["Switzerland"]][["Switzerland"]][["end"]][[as.character(data_type[1])]]),
+          left = estimatesDates[[country[1]]][[country[1]]][["start"]][[as.character(data_type[1])]],
+          right = estimatesDates[[country[1]]][[country[1]]][["end"]][[as.character(data_type[1])]]),
       ) %>%
       ungroup()
 
