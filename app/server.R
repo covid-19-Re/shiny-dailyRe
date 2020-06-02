@@ -1,12 +1,11 @@
 server <- function(input, output, session) {
 
-  stateVals <- reactiveValues(lang = "en-gb", tabs = "ch")
+  stateVals <- reactiveValues(lang = "en-gb", tabs = "ch", sidebarExpanded = "chMenu")
 
   observeEvent(input$lang, {
       stateVals$lang <- input$lang
       stateVals$tabs <- input$tabs
-      print(stateVals$lang)
-      print(stateVals$tabs)
+      stateVals$sidebarExpanded <- input$sidebarItemExpanded
   })
 
   # load data
@@ -29,13 +28,15 @@ server <- function(input, output, session) {
   # Render UI
   output$menu <- renderMenu({
     sidebarMenu(id = "tabs",
-      menuItem(HTML(i18n()$t("R<sub>e</sub> in Switzerland")), startExpanded = TRUE,
+      menuItem(HTML(i18n()$t("R<sub>e</sub> in Switzerland")),
+        expandedName = "chMenu", startExpanded = stateVals$sidebarExpanded == "chMenu",
         menuSubItem(HTML(i18n()$t("Switzerland")), tabName = "ch", icon = icon("chart-area")),
         menuSubItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantons", icon = icon("chart-area")),
         menuSubItem(HTML(i18n()$t("R<sub>e</sub> for greater Regions")),
           tabName = "greaterRegions", icon = icon("chart-area"))
       ),
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")),
+        expandedName = "euMenu", startExpanded = stateVals$sidebarExpanded == "euMenu",
         lapply(c("Comparison", countryList), function(i) {
           menuSubItem(i, tabName = str_remove(i, " "), icon = icon("chart-area"))
         })
