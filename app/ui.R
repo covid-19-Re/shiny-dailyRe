@@ -8,9 +8,7 @@ dashboardPage(title = "COVID-19 Re",
     sidebarMenuOutput("menu")
   ),
   dashboardBody(
-      # tabItem(tabName = "chPlot", uiOutput("chPlotUI")),
-      # tabItem(tabName = "cantonsPlot", uiOutput("cantonsPlotUI")),
       uiOutput("dashboardBodyUI")
-      # tabItem(tabName = "about", uiOutput("aboutUI"))
   )
 )
+

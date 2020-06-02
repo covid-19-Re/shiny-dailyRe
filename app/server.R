@@ -1,11 +1,22 @@
 server <- function(input, output, session) {
+
+  stateVals <- reactiveValues(lang = "en-gb", tabs = "ch")
+
+  observeEvent(input$lang, {
+      stateVals$lang <- input$lang
+      stateVals$tabs <- input$tabs
+      print(stateVals$lang)
+      print(stateVals$tabs)
+  })
+
   # load data
   i18n <- reactive({
     selected <- input$lang
     if (length(selected) > 0 && selected %in% translator$languages) {
       translator$set_translation_language(selected)
     }
-    translator
+    updateTabItems(session, "tabs", selected = stateVals$tabs)
+    return(translator)
   })
 
   load(pathToRawData)
@@ -519,6 +530,7 @@ server <- function(input, output, session) {
         latestDataCountry <- latestData %>%
         filter(country == i)
       }
+      
       latestDataCountry <- latestDataCountry %>%
         group_by(source) %>%
         filter(date == max(date)) %>%
@@ -532,6 +544,7 @@ server <- function(input, output, session) {
         mutate(
           data_type = fct_drop(data_type)
         )
+      
       estimatesCountry <- estimatesCountry[[str_remove(i, " ")]] %>%
         filter(
           estimate_type == input$estimation_type_select,
@@ -540,10 +553,15 @@ server <- function(input, output, session) {
           data_type = fct_drop(data_type)
         )
 
+      interventionsCountry <- interventions[[i]] %>%
+        mutate(
+          text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
+          tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
+
       plot <- rEffPlotly(
         caseData = caseData,
         estimates = estimatesCountry,
-        interventions = interventions[[i]],
+        interventions = interventionsCountry,
         plotColors = plotColors,
         lastDataDate = latestDataCountry,
         startDate = min(estimatesCountry$date) - 14,
@@ -573,7 +591,6 @@ server <- function(input, output, session) {
       write_csv(estimatesEU(), file)
     }
   )
-
 
   # source table
   output$sourcesTable <- renderDataTable({
