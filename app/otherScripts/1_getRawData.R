@@ -142,17 +142,6 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
   mutate(country = if_else(region != "FL", "CH", "FL")) %>%
   filter(date <= stopAfter)
 
-  greaterRegions <- tribble(
-    ~greaterRegion,             ~region,
-    "Lake Geneva Region",       c("VD", "VS", "GE"),
-    "Espace Mittelland",        c("BE", "FR", "SO", "NE", "JU"),
-    "Northwestern Switzerland", c("BS", "BL", "AG"),
-    "Zurich",                   c("ZH"),
-    "Eastern Switzerland",      c("GL", "SH", "AR", "AI", "SG", "GR", "TG"),
-    "Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
-    "Ticino",                   c("TI")
-  ) %>% unnest(cols = c(region))
-
   openZHcantons <- openZHraw  %>%
     group_by(data_type, region) %>%
     nest() %>%
