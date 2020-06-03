@@ -12,6 +12,8 @@ rEffPlotly <- function(
   lastDataDate,
   startDate = min(caseData$date) - 1,
   endDate = max(caseData$date),
+  fixedRangeX = c(TRUE, TRUE, TRUE),
+  fixedRangeY = c(TRUE, TRUE, TRUE),
   legendOrientation = "v", # "v" or "h"
   language,
   translator,
@@ -118,9 +120,9 @@ rEffPlotly <- function(
         tickformat = dateFormat,
         tickangle = 45,
         showgrid = TRUE,
-        fixedrange = TRUE),
+        fixedrange = fixedRangeX[1]),
       yaxis = list(
-        fixedrange = TRUE,
+        fixedrange = fixedRangeY[1],
         title = list(text = translator$t("New observations"), font = list(size = axisTitleFontSize))),
       legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>")))
       )
@@ -176,10 +178,10 @@ rEffPlotly <- function(
         tickformat = dateFormat,
         tickangle = 45,
         showgrid = TRUE,
-        fixedrange = TRUE),
+        fixedrange = fixedRangeX[2]),
       yaxis = list(
         range = c(0, 2),
-        fixedrange = TRUE,
+        fixedrange = fixedRangeY[2],
         title = list(
           text = translator$t("Reproductive number R<sub>e</sub>"),
           font = list(size = axisTitleFontSize)),
@@ -219,8 +221,8 @@ rEffPlotly <- function(
           tickformat = dateFormat,
           tickangle = 45,
           showgrid = TRUE,
-          fixedrange = TRUE),
-        yaxis = list(visible = FALSE, fixedrange = TRUE))
+          fixedrange = fixedRangeX[3]),
+        yaxis = list(visible = FALSE, fixedrange = fixedRangeY[3]))
     plotlist <- list(pCases, pEstimates, pIntervention)
     nPlots <- 3
   } else {
@@ -275,6 +277,8 @@ rEffPlotlyRegion <- function(
   startDate = min(caseData$date) - 1,
   endDate = max(caseData$date),
   legendOrientation = "v", # "v" or "h"
+  fixedRangeX = c(TRUE, TRUE, TRUE),
+  fixedRangeY = c(TRUE, TRUE, TRUE),
   regionColors,
   translator,
   language,
@@ -403,9 +407,9 @@ rEffPlotlyRegion <- function(
         tickformat = dateFormat,
         tickangle = 45,
         showgrid = TRUE,
-        fixedrange = TRUE),
+        fixedrange = fixedRangeX[1]),
       yaxis = list(
-        fixedrange = TRUE,
+        fixedrange = fixedRangeY[1],
         title = list(text = translator$t("New observations"), font = list(size = axisTitleFontSize))),
       legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>")))
     )
@@ -493,10 +497,10 @@ rEffPlotlyRegion <- function(
         tickformat = dateFormat,
         tickangle = 45,
         showgrid = TRUE,
-        fixedrange = TRUE),
+        fixedrange = fixedRangeX[2]),
       yaxis = list(
         range = c(0, 3),
-        fixedrange = TRUE,
+        fixedrange = fixedRangeY[2],
         title = list(
           text = translator$t("Reproductive number R<sub>e</sub>"),
           font = list(size = axisTitleFontSize)),
@@ -535,8 +539,8 @@ rEffPlotlyRegion <- function(
           tickformat = dateFormat,
           tickangle = 45,
           showgrid = TRUE,
-          fixedrange = TRUE),
-        yaxis = list(visible = FALSE, fixedrange = TRUE))
+          fixedrange = fixedRangeX[3]),
+        yaxis = list(visible = FALSE, fixedrange = fixedRangeY[3]))
     plotlist <- list(pCases, pEstimates, pIntervention)
     nPlots <- 3
   } else {
@@ -592,6 +596,8 @@ rEffPlotlyComparison <- function(
   endDate = max(caseData$date),
   focusCountry = "Switzerland",
   legendOrientation = "v", # "v" or "h"
+  fixedRangeX = c(TRUE, TRUE, TRUE),
+  fixedRangeY = c(TRUE, TRUE, TRUE),
   countryColors,
   translator,
   language,
@@ -700,9 +706,9 @@ rEffPlotlyComparison <- function(
         tickformat = dateFormat,
         tickangle = 45,
         showgrid = TRUE,
-        fixedrange = TRUE),
+        fixedrange = fixedRangeX[1]),
       yaxis = list(
-        fixedrange = TRUE,
+        fixedrange = fixedRangeY[1],
         title = list(text = translator$t("New observations"), font = list(size = axisTitleFontSize))),
       legend = list(title = list(text = "<b> Data Type </b>")))
 
@@ -789,10 +795,10 @@ rEffPlotlyComparison <- function(
         tickformat = dateFormat,
         tickangle = 45,
         showgrid = TRUE,
-        fixedrange = TRUE),
+        fixedrange = fixedRangeX[2]),
       yaxis = list(
         range = c(0, 3),
-        fixedrange = TRUE,
+        fixedrange = fixedRangeY[2],
         title = list(
           text = translator$t("Reproductive number R<sub>e</sub>"),
           font = list(size = axisTitleFontSize)),

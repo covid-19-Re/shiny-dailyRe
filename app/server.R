@@ -403,6 +403,8 @@ server <- function(input, output, session) {
       plotColors,
       latestDataCH,
       legendOrientation = "v",
+      fixedRangeX = fixedRangeX,
+      fixedRangeY = fixedRangeY,
       language = input$lang,
       translator = i18n(),
       widgetID = NULL)
@@ -440,6 +442,8 @@ server <- function(input, output, session) {
       startDate = min(caseData$date) - 1,
       endDate = max(caseData$date),
       legendOrientation = "v", # "v" or "h"
+      fixedRangeX = fixedRangeX,
+      fixedRangeY = fixedRangeY,
       regionColors = cantonColors,
       translator = i18n(),
       language = input$lang,
@@ -482,6 +486,8 @@ server <- function(input, output, session) {
       startDate = min(caseData$date) - 1,
       endDate = max(caseData$date),
       legendOrientation = "v", # "v" or "h"
+      fixedRangeX = fixedRangeX,
+      fixedRangeY = fixedRangeY,
       regionColors = greaterRegionColors,
       translator = i18n(),
       language = input$lang,
@@ -515,6 +521,8 @@ server <- function(input, output, session) {
       startDate = min(estimates$date) - 14,
       focusCountry = focusCountry,
       legendOrientation = "v", # "v" or "h"
+      fixedRangeX = fixedRangeX,
+      fixedRangeY = fixedRangeY,
       countryColors = countryColors,
       translator = i18n(),
       language = input$lang,
@@ -569,6 +577,8 @@ server <- function(input, output, session) {
         lastDataDate = latestDataCountry,
         startDate = min(estimatesCountry$date) - 14,
         legendOrientation = "v", # "v" or "h"
+        fixedRangeX = fixedRangeX,
+        fixedRangeY = fixedRangeY,
         translator = i18n(),
         language = input$lang,
         widgetID = NULL)

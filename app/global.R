@@ -90,3 +90,6 @@ plotColors <-  c(
   "Hospitalized patients" = allCols[3],
   "Deaths" = allCols[5],
   "Excess deaths" = allCols[6])
+
+fixedRangeX <- c(TRUE, TRUE, TRUE)
+fixedRangeY <- c(TRUE, TRUE, TRUE)

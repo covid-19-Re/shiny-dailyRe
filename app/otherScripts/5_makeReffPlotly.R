@@ -122,6 +122,8 @@ for (i in translator$languages) {
     plotColors,
     lastDataDate = latestDataPlotLocalized,
     legendOrientation = "v",
+    fixedRangeX = c(TRUE, TRUE, TRUE),
+    fixedRangeY = c(TRUE, TRUE, TRUE),
     language = i,
     translator = translator,
     widgetID = "rEffplots")
