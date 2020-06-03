@@ -11,4 +11,3 @@ dashboardPage(title = "COVID-19 Re",
       uiOutput("dashboardBodyUI")
   )
 )
-
