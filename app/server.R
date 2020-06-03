@@ -2,6 +2,7 @@ server <- function(input, output, session) {
 
   stateVals <- reactiveValues(lang = "en-gb", tabs = "ch", sidebarExpanded = "chMenu")
 
+  # record state on language change
   observeEvent(input$lang, {
       stateVals$lang <- input$lang
       stateVals$tabs <- input$tabs
@@ -14,6 +15,7 @@ server <- function(input, output, session) {
     if (length(selected) > 0 && selected %in% translator$languages) {
       translator$set_translation_language(selected)
     }
+    # restore selected tabs
     updateTabItems(session, "tabs", selected = stateVals$tabs)
     return(translator)
   })
@@ -531,7 +533,7 @@ server <- function(input, output, session) {
         latestDataCountry <- latestData %>%
         filter(country == i)
       }
-      
+
       latestDataCountry <- latestDataCountry %>%
         group_by(source) %>%
         filter(date == max(date)) %>%
@@ -545,7 +547,7 @@ server <- function(input, output, session) {
         mutate(
           data_type = fct_drop(data_type)
         )
-      
+
       estimatesCountry <- estimatesCountry[[str_remove(i, " ")]] %>%
         filter(
           estimate_type == input$estimation_type_select,
