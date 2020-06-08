@@ -771,7 +771,7 @@ plotlyYaxis <- function(
 }
 
 makeZoomRange <- function(maxZoom, stepSize = 10, extra = 5) {
-  zoomLevels <- seq(0, maxZoom + extra * stepSize, by = stepSize)[-1]
+  zoomLevels <- rev(seq(0, maxZoom + extra * stepSize, by = stepSize)[-1])
   zoomRange <- list()
   for (i in seq_along(zoomLevels)) {
     zoomRange[[i]] <- list(
@@ -784,7 +784,7 @@ makeZoomRange <- function(maxZoom, stepSize = 10, extra = 5) {
 
 makeSlider <- function(zoomRange, x = 0.01, y = 1, anchor = c("top", "left")) {
   slider <- list(
-    active = length(zoomRange) - 1,
+    active = 0,
     currentvalue = list(prefix = "<b>Zoom</b>"),
     pad = list(t = 0, l = 0, r = 0, b = 0),
     steps = zoomRange,
