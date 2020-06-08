@@ -114,7 +114,7 @@ rEffPlotly <- function(
       hovertemplate = "%{text}",
       legendgroup = ~data_type) %>%
     layout(
-      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1]),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = TRUE),
       yaxis = plotlyYaxis(
         title = translator$t("New observations"),
         fixedRange = fixedRangeY[1]),
@@ -381,7 +381,7 @@ rEffPlotlyRegion <- function(
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     layout(
-      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1]),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = TRUE),
       yaxis = plotlyYaxis(
         title = translator$t("New observations"),
         fixedRange = fixedRangeY[1]),
@@ -658,7 +658,7 @@ rEffPlotlyComparison <- function(
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     layout(
-      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1]),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = TRUE),
       yaxis = plotlyYaxis(
         title = translator$t("New observations"),
         fixedRange = fixedRangeY[1]),
@@ -818,7 +818,8 @@ plotlyXaxis <- function(startDate, endDate, dateFormat, fixedRange, rSlider = FA
         type = "date",
         range = c(startDate, endDate),
         thickness = 0.05,
-        yaxis = list(range = c(-2, -1)))
+        yaxis2 = list(range = c(-2, -1)),
+        yaxis3 = list(range = c(-2, -1)))
     }
     return(out)
 }
