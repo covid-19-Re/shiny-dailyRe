@@ -91,5 +91,5 @@ plotColors <-  c(
   "Deaths" = allCols[5],
   "Excess deaths" = allCols[6])
 
-fixedRangeX <- c(TRUE, TRUE, TRUE)
+fixedRangeX <- c(FALSE, FALSE, FALSE)
 fixedRangeY <- c(TRUE, TRUE, TRUE)

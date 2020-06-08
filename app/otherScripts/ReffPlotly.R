@@ -802,17 +802,24 @@ rEffPlotlyComparison <- function(
   return(plot)
 }
 
-plotlyXaxis <- function(startDate, endDate, dateFormat, fixedRange){
+plotlyXaxis <- function(startDate, endDate, dateFormat, fixedRange, rSlider = FALSE) {
     out <- list(
-        title = "",
+      title = "",
+      type = "date",
+      range = c(startDate, endDate),
+      tickvals = seq(startDate, endDate, length.out = 18),
+      tickformat = dateFormat,
+      tickangle = 45,
+      showgrid = TRUE,
+      fixedrange = fixedRange
+    )
+    if (rSlider) {
+      out$rangeslider <- list(
         type = "date",
         range = c(startDate, endDate),
-        tickvals = seq(startDate, endDate, length.out = 18),
-        tickformat = dateFormat,
-        tickangle = 45,
-        showgrid = TRUE,
-        fixedrange = fixedRange,
-        rangemode = "tozero")
+        thickness = 0.05,
+        yaxis = list(range = c(-2, -1)))
+    }
     return(out)
 }
 
