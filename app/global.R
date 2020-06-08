@@ -93,35 +93,3 @@ plotColors <-  c(
 
 fixedRangeX <- c(TRUE, TRUE, TRUE)
 fixedRangeY <- c(TRUE, TRUE, TRUE)
-
-plotlyXaxis <- function(startDate, endDate, dateFormat, fixedRange){
-    out <- list(
-        title = "",
-        type = "date",
-        range = c(startDate, endDate),
-        tickvals = seq(startDate, endDate, length.out = 18),
-        tickformat = dateFormat,
-        tickangle = 45,
-        showgrid = TRUE,
-        fixedrange = fixedRange,
-        rangemode = "tozero")
-    return(out)
-}
-
-plotlyYaxis <- function(
-    title = "",
-    range = NULL, fixedRange = TRUE,
-    zeroline = TRUE,
-    visible = TRUE,
-    axisTitleFontSize = 14) {
-  out <- list(
-    visible = visible,
-    range = range,
-    fixedrange = fixedRange,
-    rangemode = "tozero",
-    zeroline = zeroline,
-    title = list(
-      text = title,
-      font = list(size = axisTitleFontSize)))
-  return(out)
-}
