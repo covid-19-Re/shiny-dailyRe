@@ -85,7 +85,7 @@ latestDataPlot <- latestData %>%
 
 source(here::here("app", "otherScripts", "ReffPlotly.R"))
 
-translator <- Translator$new(translation_json_path = here::here("app","data", "shinyTranslations.json"))
+translator <- Translator$new(translation_json_path = here::here("app", "data", "shinyTranslations.json"))
 
 plotOutDir <- here::here("app/www")
 
