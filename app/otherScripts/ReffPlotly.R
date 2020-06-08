@@ -104,6 +104,8 @@ rEffPlotly <- function(
   estimatesPlot <- estimates %>%
     mutate(data_type = fct_recode(data_type, !!!newLevels))
 
+  zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
+
   pCases <- plot_ly(data = caseData) %>%
     add_bars(x = ~date, y = ~incidence, color = ~data_type,
       colors = plotColors,
@@ -116,8 +118,11 @@ rEffPlotly <- function(
       yaxis = plotlyYaxis(
         title = translator$t("New observations"),
         fixedRange = fixedRangeY[1]),
-      legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>")))
+      legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>"))),
+      sliders = list(
+        makeSlider(zoomRange)
       )
+    )
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
     add_trace(
@@ -166,7 +171,7 @@ rEffPlotly <- function(
       xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[2]),
       yaxis = plotlyYaxis(
         title = translator$t("Reproductive number R<sub>e</sub>"),
-        range = c(0, 2),
+        range = c(0, 3),
         fixedRange = fixedRangeY[2],
         zeroline = TRUE),
       legend = list(
@@ -237,7 +242,7 @@ rEffPlotly <- function(
         )
     )) %>%
     config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
-      locale = locale, scrollZoom = TRUE)
+      locale = locale, scrollZoom = FALSE)
 
   plot$elementId <- widgetID
 
@@ -360,7 +365,9 @@ rEffPlotlyRegion <- function(
       region = recode(region, Switzerland = translator$t("Switzerland (Total)")))
 
   estimatesPlotCH <- filter(estimatesPlot, region == translator$t("Switzerland (Total)"))
-  
+
+  zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
+
   pCases <- plot_ly(data = caseData) %>%
     filter(region != translator$t("Switzerland (Total)")) %>%
     add_bars(x = ~date, y = ~incidence, color = ~region, colors = regionColors,
@@ -378,7 +385,10 @@ rEffPlotlyRegion <- function(
       yaxis = plotlyYaxis(
         title = translator$t("New observations"),
         fixedRange = fixedRangeY[1]),
-      legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>")))
+      legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>"))),
+      sliders = list(
+        makeSlider(zoomRange)
+      )
     )
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
@@ -458,7 +468,7 @@ rEffPlotlyRegion <- function(
       xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[2]),
       yaxis = plotlyYaxis(
         title = translator$t("Reproductive number R<sub>e</sub>"),
-        range = c(0, 2),
+        range = c(0, 3),
         fixedRange = fixedRangeY[2],
         zeroline = TRUE),
       legend = list(
@@ -529,7 +539,7 @@ rEffPlotlyRegion <- function(
         )
     )) %>%
     config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
-      locale = locale, scrollZoom = TRUE)
+      locale = locale, scrollZoom = FALSE)
 
   plot$elementId <- widgetID
 
@@ -633,6 +643,8 @@ rEffPlotlyComparison <- function(
   estimatesPlot <- estimates
   estimatesPlotFocus <- filter(estimatesPlot, country == focusCountry)
 
+  zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
+
   pCases <- plot_ly(data = caseData) %>%
     filter(country != focusCountry) %>%
     add_bars(x = ~date, y = ~incidence, color = ~country, colors = countryColors,
@@ -650,7 +662,11 @@ rEffPlotlyComparison <- function(
       yaxis = plotlyYaxis(
         title = translator$t("New observations"),
         fixedRange = fixedRangeY[1]),
-      legend = list(title = list(text = "<b> Data Type </b>")))
+      legend = list(title = list(text = "<b> Data Type </b>")),
+      sliders = list(
+        makeSlider(zoomRange)
+      )
+    )
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
     filter(country != focusCountry) %>%
@@ -729,7 +745,7 @@ rEffPlotlyComparison <- function(
       xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[2]),
       yaxis = plotlyYaxis(
         title = translator$t("Reproductive number R<sub>e</sub>"),
-        range = c(0, 2),
+        range = c(0, 3),
         fixedRange = fixedRangeY[2],
         zeroline = TRUE),
       legend = list(
@@ -779,9 +795,68 @@ rEffPlotlyComparison <- function(
         )
     )) %>%
     config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
-      locale = locale, scrollZoom = TRUE)
+      locale = locale, scrollZoom = FALSE)
 
   plot$elementId <- widgetID
 
   return(plot)
+}
+
+plotlyXaxis <- function(startDate, endDate, dateFormat, fixedRange){
+    out <- list(
+        title = "",
+        type = "date",
+        range = c(startDate, endDate),
+        tickvals = seq(startDate, endDate, length.out = 18),
+        tickformat = dateFormat,
+        tickangle = 45,
+        showgrid = TRUE,
+        fixedrange = fixedRange,
+        rangemode = "tozero")
+    return(out)
+}
+
+plotlyYaxis <- function(
+    title = "",
+    range = NULL, fixedRange = TRUE,
+    zeroline = TRUE,
+    visible = TRUE,
+    axisTitleFontSize = 14) {
+  out <- list(
+    visible = visible,
+    range = range,
+    fixedrange = fixedRange,
+    zeroline = zeroline,
+    title = list(
+      text = title,
+      font = list(size = axisTitleFontSize)))
+  return(out)
+}
+
+makeZoomRange <- function(maxZoom, stepSize = 10, extra = 5) {
+  zoomLevels <- seq(0, maxZoom + extra * stepSize, by = stepSize)[-1]
+  zoomRange <- list()
+  for (i in seq_along(zoomLevels)) {
+    zoomRange[[i]] <- list(
+      method = "relayout",
+      args = list(list(yaxis.range = c(0, zoomLevels[i]))),
+      label = "")
+  }
+  return(zoomRange)
+}
+
+makeSlider <- function(zoomRange, x = 0.01, y = 1, anchor = c("top", "left")) {
+  slider <- list(
+    active = length(zoomRange) - 1,
+    currentvalue = list(prefix = "<b>Zoom</b>"),
+    pad = list(t = 0, l = 0, r = 0, b = 0),
+    steps = zoomRange,
+    len = 0.20,
+    x = x,
+    xanchor = anchor[1],
+    y = y,
+    yanchor = anchor[2],
+    ticklen = 0, minorticklen = 0
+  )
+  return(slider)
 }
