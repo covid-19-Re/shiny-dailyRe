@@ -121,7 +121,6 @@ for (i in translator$languages) {
     interventionsLocalized,
     plotColors,
     lastDataDate = latestDataPlotLocalized,
-    legendOrientation = "v",
     fixedRangeX = c(TRUE, TRUE, TRUE),
     fixedRangeY = c(TRUE, TRUE, TRUE),
     language = i,

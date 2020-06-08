@@ -14,7 +14,6 @@ rEffPlotly <- function(
   endDate = max(caseData$date),
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
-  legendOrientation = "v", # "v" or "h"
   language,
   translator,
   widgetID = "rEffplots") {
@@ -33,7 +32,7 @@ rEffPlotly <- function(
 
   names(plotColors) <- sapply(names(plotColors), translator$t,  USE.NAMES = FALSE)
 
-  if (legendOrientation == "v") {
+  # layout pars
     xrNote <- 1
     yrNote <- 0.35
     rNote <- translator$t(str_c(
@@ -61,38 +60,9 @@ rEffPlotly <- function(
     ))
     helpBoxShift <- c(10, 0)
     xDataSource <- 1
-    yDataSource <- -0.1
+    yDataSource <- -0.2
     dataSourceAnchors <- c("right", "auto")
-    bottomMargin <- 80
-  } else if (legendOrientation == "h") {
-    xrNote <- 0.99
-    yrNote <- 0.34
-    rNote <- translator$t(str_c(
-      "<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>",
-      "delays between infection and <br>",
-      "the last data observation."))
-    rNoteAnchors <- c("right", "bottom")
-    xHelpBox <- 0
-    yHelpBox <- -0.15
-    helpBoxAnchors <- c("left", "top")
-    wHelpBox <- 550
-    hHelpBox <- 30
-    helpBoxText <- translator$t(str_c(
-      "&nbsp;<b>Interactive plot</b><br>",
-      "&nbsp;&nbsp;• Click on legend toggles<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;datatypes; doubleclick<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;isolates datatypes.<br>",
-      "&nbsp;&nbsp;• Hovering the mouse over<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;data points shows details."
-    ))
-    helpBoxShift <- c(0, 0)
-    xDataSource <- 0
-    yDataSource <- -0.21
-    dataSourceAnchors <- c("left", "top")
-    bottomMargin <- 140
-  } else {
-    stop("legendOrientation must be either \"v\" or \"h\".")
-  }
+    bottomMargin <- 0
 
   # prepare Data
   newLevels <- levels(caseData$data_type)
@@ -114,7 +84,7 @@ rEffPlotly <- function(
       hovertemplate = "%{text}",
       legendgroup = ~data_type) %>%
     layout(
-      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = TRUE),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = TRUE, rSelector = TRUE),
       yaxis = plotlyYaxis(
         title = translator$t("New observations"),
         fixedRange = fixedRangeY[1]),
@@ -160,7 +130,7 @@ rEffPlotly <- function(
         translator$t("Decrease in number of new cases")),
       font = list(color = "red"),
       x = startDate,
-      y = c(1.2, 0.9),
+      y = c(1.30, 0.85),
       textangle = 0,
       align = "left",
       xanchor = "left",
@@ -213,7 +183,6 @@ rEffPlotly <- function(
   plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
     layout(
       margin = list(b = bottomMargin),
-      legend = list(orientation = legendOrientation),
       annotations = list(
         list(
           x = xDataSource, y = yDataSource, xref = "paper", yref = "paper",
@@ -256,7 +225,6 @@ rEffPlotlyRegion <- function(
   lastDataDate,
   startDate = min(caseData$date) - 1,
   endDate = max(caseData$date),
-  legendOrientation = "v", # "v" or "h"
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
   regionColors,
@@ -278,8 +246,7 @@ rEffPlotlyRegion <- function(
     locale <- "it"
   }
 
-  axisTitleFontSize <- 14
-  if (legendOrientation == "v") {
+  # layout pars
     xrNote <- 0.99
     yrNote <- 0.60
     rNote <- translator$t(str_c(
@@ -307,40 +274,10 @@ rEffPlotlyRegion <- function(
     ))
     helpBoxShift <- c(10, 0)
     xDataSource <- 1
-    yDataSource <- -0.1
+    yDataSource <- -0.2
     dataSourceAnchors <- c("right", "auto")
-    bottomMargin <- 80
+    bottomMargin <- 0
     rightMargin <- 200
-  } else if (legendOrientation == "h") {
-    xrNote <- 0.99
-    yrNote <- 0.60
-    rNote <- translator$t(str_c(
-      "<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>",
-      "delays between infection and <br>",
-      "the last data observation."))
-    rNoteAnchors <- c("right", "top")
-    xHelpBox <- 0
-    yHelpBox <- -0.1
-    helpBoxAnchors <- c("left", "top")
-    wHelpBox <- 500
-    hHelpBox <- 50
-    helpBoxText <- translator$t(str_c(
-      "&nbsp;<b>Interactive plot</b><br>",
-      "&nbsp;&nbsp;• Click on legend toggles<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;datatypes; doubleclick<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;isolates datatypes.<br>",
-      "&nbsp;&nbsp;• Hovering the mouse over<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;data points shows details."
-    ))
-    helpBoxShift <- c(0, 0)
-    xDataSource <- 1
-    yDataSource <- -0.1
-    dataSourceAnchors <- c("right", "top")
-    bottomMargin <- 125
-    rightMargin <- 200
-  } else {
-    stop("legendOrientation must be either \"v\" or \"h\".")
-  }
 
   # prepare Data
   newLevels <- levels(caseData$data_type)
@@ -381,7 +318,7 @@ rEffPlotlyRegion <- function(
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     layout(
-      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = TRUE),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = TRUE, rSelector = TRUE),
       yaxis = plotlyYaxis(
         title = translator$t("New observations"),
         fixedRange = fixedRangeY[1]),
@@ -553,7 +490,6 @@ rEffPlotlyComparison <- function(
   startDate = min(caseData$date) - 1,
   endDate = max(caseData$date),
   focusCountry = "Switzerland",
-  legendOrientation = "v", # "v" or "h"
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
   countryColors,
@@ -573,8 +509,7 @@ rEffPlotlyComparison <- function(
     locale <- "it"
   }
 
-  axisTitleFontSize <- 14
-  if (legendOrientation == "v") {
+  # layout pars
     xrNote <- 0.99
     yrNote <- 0.35
     rNote <- translator$t(str_c(
@@ -602,39 +537,10 @@ rEffPlotlyComparison <- function(
     ))
     helpBoxShift <- c(10, 0)
     xDataSource <- 1
-    yDataSource <- -0.1
-    dataSourceAnchors <- c("right", "auto")
-    bottomMargin <- 80
+    yDataSource <- -0.18
+    dataSourceAnchors <- c("right", "top")
+    bottomMargin <- 0
     rightMargin <- 200
-  } else if (legendOrientation == "h") {
-    xrNote <- 0.99
-    yrNote <- 0.60
-    rNote <- translator$t(str_c(
-      "<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>",
-      "delays between infection and <br>",
-      "the last data observation."))
-    rNoteAnchors <- c("right", "top")
-    xHelpBox <- 0
-    yHelpBox <- -0.2
-    helpBoxAnchors <- c("left", "top")
-    wHelpBox <- 400
-    hHelpBox <- 50
-    helpBoxText <- translator$t(str_c(
-      "&nbsp;<b>Interactive plot</b><br>",
-      "&nbsp;&nbsp;• Click on legend toggles<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;datatypes; doubleclick<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;isolates datatypes.<br>",
-      "&nbsp;&nbsp;• Hovering the mouse over<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;data points shows details."
-    ))
-    helpBoxShift <- c(0, 0)
-    xDataSource <- 0
-    yDataSource <- -0.21
-    dataSourceAnchors <- c("left", "top")
-    bottomMargin <- 200
-  } else {
-    stop("legendOrientation must be either \"v\" or \"h\".")
-  }
 
   # prepare Data
 
@@ -658,7 +564,7 @@ rEffPlotlyComparison <- function(
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     layout(
-      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = TRUE),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = TRUE,  rSelector = TRUE),
       yaxis = plotlyYaxis(
         title = translator$t("New observations"),
         fixedRange = fixedRangeY[1]),
@@ -766,7 +672,6 @@ rEffPlotlyComparison <- function(
   plot <- subplot(plotlist, nrows = 2, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
     layout(
       margin = list(b = bottomMargin, r = rightMargin),
-      legend = list(orientation = legendOrientation),
       annotations = list(
         list(
           x = xDataSource, y = yDataSource, xref = "paper", yref = "paper",
@@ -802,12 +707,12 @@ rEffPlotlyComparison <- function(
   return(plot)
 }
 
-plotlyXaxis <- function(startDate, endDate, dateFormat, fixedRange, rSlider = FALSE) {
+plotlyXaxis <- function(startDate, endDate, dateFormat, fixedRange, rSlider = FALSE, rSelector = FALSE) {
     out <- list(
       title = "",
       type = "date",
       range = c(startDate, endDate),
-      tickvals = seq(startDate, endDate, length.out = 18),
+      #tickvals = seq(startDate, endDate, length.out = 18),
       tickformat = dateFormat,
       tickangle = 45,
       showgrid = TRUE,
@@ -820,6 +725,30 @@ plotlyXaxis <- function(startDate, endDate, dateFormat, fixedRange, rSlider = FA
         thickness = 0.05,
         yaxis2 = list(range = c(-2, -1)),
         yaxis3 = list(range = c(-2, -1)))
+    }
+    if (rSelector) {
+      out$rangeselector <- list(
+        buttons = list(
+          list(
+            count = 1,
+            label = "1 mo",
+            step = "month",
+            stepmode = "backwards"),
+          list(
+            count = 2,
+            label = "2 mo",
+            step = "month",
+            stepmode = "backwards"),
+          list(
+            count = 3,
+            label = "3 mo",
+            step = "month",
+            stepmode = "backwards"),
+          list(
+            count = as.integer(difftime(endDate, startDate)),
+            step = "day",
+            label = "all",
+            stepmode = "backwards")))
     }
     return(out)
 }
