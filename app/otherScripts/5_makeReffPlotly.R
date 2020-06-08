@@ -1,4 +1,4 @@
-cat(paste("###", Sys.time(), "- starting makeReffPlotly.R", "\n"))
+cat(paste("###", Sys.time(), "- starting 5_makeReffPlotly.R", "\n"))
 
 library(tidyverse)
 library(plotly)
@@ -143,7 +143,7 @@ for (i in translator$languages) {
 
 writeLines(str_c("last check: ", Sys.time()), file.path(dataDir, "lastCheck.txt"))
 
-cat(paste("###", Sys.time(), "- done makeReffPlotly.R", "\n"))
+cat(paste("###", Sys.time(), "- done 5_makeReffPlotly.R", "\n"))
 
 load(file = "ScriptStartTime.Rdata")
 
