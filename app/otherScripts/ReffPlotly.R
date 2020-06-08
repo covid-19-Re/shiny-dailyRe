@@ -33,7 +33,6 @@ rEffPlotly <- function(
 
   names(plotColors) <- sapply(names(plotColors), translator$t,  USE.NAMES = FALSE)
 
-  axisTitleFontSize <- 14
   if (legendOrientation == "v") {
     xrNote <- 1
     yrNote <- 0.35
@@ -113,17 +112,10 @@ rEffPlotly <- function(
       hovertemplate = "%{text}",
       legendgroup = ~data_type) %>%
     layout(
-      xaxis = list(title = "",
-        type = "date",
-        range = c(startDate, endDate),
-        tickvals = seq(startDate, endDate, length.out = 18),
-        tickformat = dateFormat,
-        tickangle = 45,
-        showgrid = TRUE,
-        fixedrange = fixedRangeX[1]),
-      yaxis = list(
-        fixedrange = fixedRangeY[1],
-        title = list(text = translator$t("New observations"), font = list(size = axisTitleFontSize))),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1]),
+      yaxis = plotlyYaxis(
+        title = translator$t("New observations"),
+        fixedRange = fixedRangeY[1]),
       legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>")))
       )
 
@@ -171,20 +163,11 @@ rEffPlotly <- function(
       showarrow = FALSE,
       inherit = FALSE) %>%
     layout(
-      xaxis = list(title = "",
-        type = "date",
-        range = c(startDate, endDate),
-        tickvals = seq(startDate, endDate, length.out = 18),
-        tickformat = dateFormat,
-        tickangle = 45,
-        showgrid = TRUE,
-        fixedrange = fixedRangeX[2]),
-      yaxis = list(
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[2]),
+      yaxis = plotlyYaxis(
+        title = translator$t("Reproductive number R<sub>e</sub>"),
         range = c(0, 2),
-        fixedrange = fixedRangeY[2],
-        title = list(
-          text = translator$t("Reproductive number R<sub>e</sub>"),
-          font = list(size = axisTitleFontSize)),
+        fixedRange = fixedRangeY[2],
         zeroline = TRUE),
       legend = list(
         title = list(
@@ -213,16 +196,8 @@ rEffPlotly <- function(
       add_text(x = ~date, y = ~y, color = ~name, text = ~text,
         textposition = ~plotTextPosition, showlegend = FALSE, textfont = list(size = 10)) %>%
       layout(
-        xaxis = list(title = "",
-          type = "date",
-          range = c(startDate, endDate),
-          tick0 = startDate,
-          dtick = 3 * 86400000,
-          tickformat = dateFormat,
-          tickangle = 45,
-          showgrid = TRUE,
-          fixedrange = fixedRangeX[3]),
-        yaxis = list(visible = FALSE, fixedrange = fixedRangeY[3]))
+        xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[3]),
+        yaxis = plotlyYaxis(visible = FALSE, fixedRange = fixedRangeY[3]))
     plotlist <- list(pCases, pEstimates, pIntervention)
     nPlots <- 3
   } else {
@@ -262,7 +237,7 @@ rEffPlotly <- function(
         )
     )) %>%
     config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
-      locale = locale)
+      locale = locale, scrollZoom = TRUE)
 
   plot$elementId <- widgetID
 
@@ -385,7 +360,7 @@ rEffPlotlyRegion <- function(
       region = recode(region, Switzerland = translator$t("Switzerland (Total)")))
 
   estimatesPlotCH <- filter(estimatesPlot, region == translator$t("Switzerland (Total)"))
-
+  
   pCases <- plot_ly(data = caseData) %>%
     filter(region != translator$t("Switzerland (Total)")) %>%
     add_bars(x = ~date, y = ~incidence, color = ~region, colors = regionColors,
@@ -399,18 +374,10 @@ rEffPlotlyRegion <- function(
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     layout(
-      xaxis = list(title = "",
-        type = "date",
-        range = c(startDate, endDate),
-        tick0 = startDate,
-        dtick = 3 * 86400000,
-        tickformat = dateFormat,
-        tickangle = 45,
-        showgrid = TRUE,
-        fixedrange = fixedRangeX[1]),
-      yaxis = list(
-        fixedrange = fixedRangeY[1],
-        title = list(text = translator$t("New observations"), font = list(size = axisTitleFontSize))),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1]),
+      yaxis = plotlyYaxis(
+        title = translator$t("New observations"),
+        fixedRange = fixedRangeY[1]),
       legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>")))
     )
 
@@ -488,22 +455,11 @@ rEffPlotlyRegion <- function(
       showarrow = FALSE,
       inherit = FALSE) %>%
     layout(
-      xaxis = list(title = "",
-        type = "date",
-        range = c(startDate, endDate),
-        #tick0 = startDate,
-        tickvals = seq(startDate, endDate, length.out = 18),
-        #dtick = 3 * 86400000,
-        tickformat = dateFormat,
-        tickangle = 45,
-        showgrid = TRUE,
-        fixedrange = fixedRangeX[2]),
-      yaxis = list(
-        range = c(0, 3),
-        fixedrange = fixedRangeY[2],
-        title = list(
-          text = translator$t("Reproductive number R<sub>e</sub>"),
-          font = list(size = axisTitleFontSize)),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[2]),
+      yaxis = plotlyYaxis(
+        title = translator$t("Reproductive number R<sub>e</sub>"),
+        range = c(0, 2),
+        fixedRange = fixedRangeY[2],
         zeroline = TRUE),
       legend = list(
         title = list(
@@ -531,16 +487,8 @@ rEffPlotlyRegion <- function(
       add_text(x = ~date, y = ~y, color = ~name, text = ~text,
         textposition = ~plotTextPosition, showlegend = FALSE, textfont = list(size = 10)) %>%
       layout(
-        xaxis = list(title = "",
-          type = "date",
-          range = c(startDate, endDate),
-          tick0 = startDate,
-          dtick = 3 * 86400000,
-          tickformat = dateFormat,
-          tickangle = 45,
-          showgrid = TRUE,
-          fixedrange = fixedRangeX[3]),
-        yaxis = list(visible = FALSE, fixedrange = fixedRangeY[3]))
+        xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[3]),
+        yaxis = plotlyYaxis(visible = FALSE, fixedRange = fixedRangeY[3]))
     plotlist <- list(pCases, pEstimates, pIntervention)
     nPlots <- 3
   } else {
@@ -581,7 +529,7 @@ rEffPlotlyRegion <- function(
         )
     )) %>%
     config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
-      locale = locale)
+      locale = locale, scrollZoom = TRUE)
 
   plot$elementId <- widgetID
 
@@ -698,18 +646,10 @@ rEffPlotlyComparison <- function(
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     layout(
-      xaxis = list(title = "",
-        type = "date",
-        range = c(startDate, endDate),
-        tick0 = startDate,
-        dtick = 3 * 86400000,
-        tickformat = dateFormat,
-        tickangle = 45,
-        showgrid = TRUE,
-        fixedrange = fixedRangeX[1]),
-      yaxis = list(
-        fixedrange = fixedRangeY[1],
-        title = list(text = translator$t("New observations"), font = list(size = axisTitleFontSize))),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1]),
+      yaxis = plotlyYaxis(
+        title = translator$t("New observations"),
+        fixedRange = fixedRangeY[1]),
       legend = list(title = list(text = "<b> Data Type </b>")))
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
@@ -786,22 +726,11 @@ rEffPlotlyComparison <- function(
       showarrow = FALSE,
       inherit = FALSE) %>%
     layout(
-      xaxis = list(title = "",
-        type = "date",
-        range = c(startDate, endDate),
-        #tick0 = startDate,
-        tickvals = seq(startDate, endDate, length.out = 18),
-        #dtick = 3 * 86400000,
-        tickformat = dateFormat,
-        tickangle = 45,
-        showgrid = TRUE,
-        fixedrange = fixedRangeX[2]),
-      yaxis = list(
-        range = c(0, 3),
-        fixedrange = fixedRangeY[2],
-        title = list(
-          text = translator$t("Reproductive number R<sub>e</sub>"),
-          font = list(size = axisTitleFontSize)),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[2]),
+      yaxis = plotlyYaxis(
+        title = translator$t("Reproductive number R<sub>e</sub>"),
+        range = c(0, 2),
+        fixedRange = fixedRangeY[2],
         zeroline = TRUE),
       legend = list(
         title = list(
@@ -850,7 +779,7 @@ rEffPlotlyComparison <- function(
         )
     )) %>%
     config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
-      locale = locale)
+      locale = locale, scrollZoom = TRUE)
 
   plot$elementId <- widgetID
 
