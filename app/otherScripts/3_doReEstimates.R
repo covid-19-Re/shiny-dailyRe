@@ -367,10 +367,10 @@ doAllReEstimations <- function(
 ####################
 
 dataDir <- here::here("app/data/temp")
-pathToSampledInfectDataSave <- file.path(dataDir, paste0("Sampled_infect_data.Rdata"))
-pathToEstimatesReRaw <- file.path(dataDir, paste0("Estimates_Re_raw.Rdata"))
+infection_data_file_path <- file.path(dataDir,  "Deconvolved_infect_data.rds")
+pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.Rdata")
 
-load(file = pathToSampledInfectDataSave)
+infect_data <- readRDS(file = infection_data_file_path)
 ### Date input
 
 pathToInterventionDates <- here::here("../covid19-additionalData/interventions/", "interventions.csv")
@@ -399,7 +399,7 @@ additionalIntervalEnds <-  read_csv(pathToAdditionalIntervalEndDates,
 
 interval_ends <- interventionData
 
-swissRegions <- sampledInfectData %>%
+swissRegions <- infect_data %>%
   filter(country %in% c("Switzerland", "Liechtenstein")) %>%
   dplyr::select(region) %>%
   distinct() %>%
@@ -425,7 +425,7 @@ truncations <- list(
 
 ### Run EpiEstim
 estimatesReRaw_calc <- doAllReEstimations(
-  subset(sampledInfectData, variable == "incidence"),
+  subset(infect_data, variable == "incidence"),
   slidingWindow = window,
   methods = "Cori",
   all_delays = all_delays,
