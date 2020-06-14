@@ -276,6 +276,19 @@ get_all_infection_incidence <- function(  data,
             return(tibble())
           }
           
+          if(count_type_i == "Hospitalized patients") {
+            data_types_included <- data %>%
+              filter(region == x,
+                     source == source_i,
+                     variable == "incidence") %>%
+              distinct(data_type) %>% 
+              pull()
+            
+            if("Hospitalized patients - onset" %in% data_types_included) {
+              return(tibble())
+            }
+          }
+          
           get_infection_incidence_by_deconvolution(   subset_data,
                                                       shapeIncubation,
                                                       scaleIncubation,
@@ -369,8 +382,14 @@ load(file = raw_data_path)
 ### Sample infection dates
 
 ##TESTING
-swissData <- rawData %>% 
-  filter( region == "Switzerland" )
+# swissData <- rawData %>% 
+#   filter( region == "Switzerland" )
+# 
+# data_types_included <- rawData %>%
+#   filter(region == "France",
+#          source == "ECDC",
+#          variable == "incidence") %>%
+#   distinct(data_type) %>% pull()
 
 # type <- "Confirmed cases"
 # austriaData  <-  rawData %>% 
@@ -427,8 +446,10 @@ swissData <- rawData %>%
 deconvolved_main_data <- get_all_infection_incidence(
   rawData,
   data_type = c("Confirmed cases",
+                "Hospitalized patients",
                 "Deaths"),
   #   data_type = c("Confirmed cases",
+  #                 "Hospitalized patients",
   #                 "Deaths",
   #                 "Excess deaths"),
   shapeIncubation = shapeIncubation,
