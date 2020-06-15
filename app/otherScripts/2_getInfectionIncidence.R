@@ -21,7 +21,9 @@ getLOESSCases <- function(dates, count_data, span=0.25){
   c_data.lo <- loess(value ~ date_num, data = c_data, span = span)
   smoothed <- predict(c_data.lo)
   smoothed[smoothed < 0] = 0
-  return(smoothed[(n_pad+1):length(smoothed)])
+  raw_smoothed_counts <- smoothed[(n_pad+1):length(smoothed)]
+  normalized_smoothed_counts <- raw_smoothed_counts * sum(count_data, na.rm = T)/sum(raw_smoothed_counts, na.rm = T)
+  return(normalized_smoothed_counts)
 }
 
 
@@ -473,7 +475,6 @@ maximum_iterations = 30
 # austria_deaths <- rawData %>%
 #   filter( region == "Austria", source == "HMD", data_type == "Excess deaths" )
 
-## TODO fix bug in smoothing with Excess deaths
 deconvolved_main_data <- get_all_infection_incidence(
   rawData,
   data_type = c("Confirmed cases",
@@ -484,7 +485,7 @@ deconvolved_main_data <- get_all_infection_incidence(
   scaleIncubation = scaleIncubation,
   shapeOnsetToCount = shapeOnsetToCount,
   scaleOnsetToCount = scaleOnsetToCount,
-  verbose = T)
+  verbose = F)
 
 deconvolved_FOPH_hosp_data <- get_all_infection_incidence(
   rawData,
