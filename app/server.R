@@ -392,7 +392,7 @@ server <- function(input, output, session) {
       group_by(source) %>%
       filter(date == max(date)) %>%
       ungroup() %>%
-      select(source, date) %>%
+      dplyr::select(source, date) %>%
       distinct() %>%
       mutate(source = sapply(source, i18n()$t,  USE.NAMES = FALSE))
 
@@ -429,7 +429,7 @@ server <- function(input, output, session) {
       group_by(source) %>%
       filter(date == max(date)) %>%
       ungroup() %>%
-      select(source, date) %>%
+      dplyr::select(source, date) %>%
       distinct() %>%
       mutate(source = sapply(source, i18n()$t,  USE.NAMES = FALSE))
 
@@ -472,7 +472,7 @@ server <- function(input, output, session) {
       group_by(source) %>%
       filter(date == max(date)) %>%
       ungroup() %>%
-      select(source, date) %>%
+      dplyr::select(source, date) %>%
       distinct() %>%
       mutate(source = sapply(source, i18n()$t,  USE.NAMES = FALSE))
 
@@ -542,7 +542,7 @@ server <- function(input, output, session) {
         group_by(source) %>%
         filter(date == max(date)) %>%
         ungroup() %>%
-        select(source, date) %>%
+        dplyr::select(source, date) %>%
         distinct()
 
       caseData <- caseDataCountry[[str_remove(i, " ")]] %>%

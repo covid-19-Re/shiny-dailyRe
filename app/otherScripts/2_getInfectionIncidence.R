@@ -170,12 +170,21 @@ get_infection_incidence_by_deconvolution <- function(   data_subset,
                                                         min_chi_squared = 0.5,
                                                         maximum_iterations = 30,
                                                         verbose = F,
-                                                        absolute_max_reporting_delay = 50) {
+                                                        absolute_max_reporting_delay = 50,
+                                                        smooth_incidence = T) {
   
+  length_initial_time_series <- data_subset %>% 
+    dplyr::select(date) %>%
+    complete( date = seq.Date( min(date),
+                               max(date), 
+                               by = "days" )) %>%
+    pull() %>%
+    length()
+
   
   discretized_distr <- discretize_waiting_time_distr(shape = c(shapeIncubation, shapeOnsetToCount),
                                                      scale = c(scaleIncubation, scaleOnsetToCount),
-                                                     length_out = nrow(data_subset) + absolute_max_reporting_delay)
+                                                     length_out = length_initial_time_series + absolute_max_reporting_delay)
   
   ## TODO this is temporary
   first_guess_delay <- which.max(discretized_distr)[1] - 1
@@ -187,14 +196,23 @@ get_infection_incidence_by_deconvolution <- function(   data_subset,
   minimal_date <- min(data_subset$date) - first_guess_delay
   maximal_date <- max(data_subset$date)
   
-  smoothed_incidence_data <- data_subset %>%
-    mutate( value = getLOESSCases( dates = date,
-                                   count_data = value )) %>%
-    complete( date = seq.Date( minimal_date,
-                               maximal_date, 
-                               by = "days" )) %>%
-    mutate( value = if_else(is.na(value), 0, value )) %>%
-    mutate( variable = "smoothed")
+  if(smooth_incidence == T) {
+    smoothed_incidence_data <- data_subset %>%
+      mutate( value = getLOESSCases( dates = date,
+                                     count_data = value )) %>%
+      complete( date = seq.Date( minimal_date,
+                                 maximal_date, 
+                                 by = "days" )) %>%
+      mutate( value = if_else(is.na(value), 0, value ))
+  } else {
+    smoothed_incidence_data <- data_subset  %>%
+      complete( date = seq.Date( minimal_date,
+                                 maximal_date, 
+                                 by = "days" )) %>%
+      mutate( value = if_else(is.na(value), 0, value ))
+  }
+  
+  
   
   
   first_guess <- smoothed_incidence_data %>% 
@@ -258,6 +276,8 @@ get_all_infection_incidence <- function(  data,
     
     cat("Deconvolve infections for data type:", count_type_i, "\n")
     
+    smooth <- (count_type_i != "Excess deaths")
+    
     for (source_i in unique(data$source)) {
       
       cat("   Data source:", source_i, "\n")
@@ -296,7 +316,8 @@ get_all_infection_incidence <- function(  data,
                                                       scaleOnsetToCount[[count_type_i]],
                                                       min_chi_squared,
                                                       maximum_iterations,
-                                                      verbose )
+                                                      verbose,
+                                                      smooth_incidence = smooth)
           
         })
       
@@ -375,9 +396,8 @@ load(file = raw_data_path)
 # 
 # ## start of what will be a function
 # 
-# min_chi_squared = 0.5
-# maximum_iterations = 30
-# initial_guess_delay <- 7
+min_chi_squared = 0.5
+maximum_iterations = 30
 
 ### Sample infection dates
 
@@ -391,17 +411,17 @@ load(file = raw_data_path)
 #          variable == "incidence") %>%
 #   distinct(data_type) %>% pull()
 
-# type <- "Confirmed cases"
-# austriaData  <-  rawData %>% 
+# type <- "Excess deaths"
+# data_subset  <-  rawData %>%
 #   filter( region == "Austria", data_type == type, variable == "incidence" )
 # 
 # 
-# discretized_distr <- discretize_waiting_time_distr(shape = c(shapeIncubation, shapeOnsetToCount[[type]]),
+# discretized_distr_2 <- discretize_waiting_time_distr(shape = c(shapeIncubation, shapeOnsetToCount[[type]]),
 #                                                    scale = c(scaleIncubation, scaleOnsetToCount[[type]]))
 # 
 # ## TODO this is temporary
 # first_guess_delay <- which.max(discretized_distr)[1] - 1
-# 
+# verbose <- T
 # if( verbose ) {
 #   cat("\tDelay on first guess: ", first_guess_delay, "\n")
 # }
@@ -409,31 +429,39 @@ load(file = raw_data_path)
 # minimal_date <- min(data_subset$date) - first_guess_delay
 # maximal_date <- max(data_subset$date)
 # 
-# smoothed_incidence_data <- data_subset %>%
-#   mutate( value = getLOESSCases( dates = date,
-#                                  count_data = value )) %>%
+# # smoothed_incidence_data <- data_subset %>%
+# #   mutate( value = getLOESSCases( dates = date,
+# #                                  count_data = value )) %>%
+# #   complete( date = seq.Date( minimal_date,
+# #                              maximal_date,
+# #                              by = "days" )) %>%
+# #   mutate( value = if_else(is.na(value), 0, value )) %>%
+# #   mutate( variable = "smoothed")
+# 
+# incidence_data <- data_subset %>%
 #   complete( date = seq.Date( minimal_date,
-#                              maximal_date, 
+#                              maximal_date,
 #                              by = "days" )) %>%
 #   mutate( value = if_else(is.na(value), 0, value )) %>%
 #   mutate( variable = "smoothed")
 # 
 # 
-# first_guess <- smoothed_incidence_data %>% 
-#   mutate(date = date - first_guess_delay) %>% 
+# first_guess_2 <- incidence_data %>%
+#   mutate(date = date - first_guess_delay) %>%
 #   complete( date = seq.Date( minimal_date, maximal_date, by = "days" )) %>%
 #   filter( date >=  minimal_date) %>%
 #   mutate( value = if_else(is.na(value), 0, value ))
 # 
+# # chi <- get_chi_squared(first_guess$value, incidence_data$value, discretized_distr, max_delay = 6)
 # chi <- get_chi_squared(first_guess$value, smoothed_incidence_data$value, discretized_distr, max_delay = 6)
-# 
-# final_estimate <- iterate_RL( first_guess$value, 
-#                               smoothed_incidence_data$value, 
-#                               discretized_distr = discretized_distr, 
-#                               threshold_chi_squared = min_chi_squared, 
-#                               max_iterations = maximum_iterations, 
+
+# final_estimate <- iterate_RL( first_guess$value,
+#                               incidence_data$value,
+#                               discretized_distr = discretized_distr,
+#                               threshold_chi_squared = min_chi_squared,
+#                               max_iterations = maximum_iterations,
 #                               max_delay = first_guess_delay,
-#                               verbose = verbose )
+#                               verbose = T )
 # 
 # ## right-truncate trailing zeroes induced by initial shift by 'first_guess_delay'
 # deconvolved_dates <- first_guess %>%
@@ -441,22 +469,22 @@ load(file = raw_data_path)
 #   .$date
 # deconvolved_infections <- final_estimate[ 1 : ( length(final_estimate) - first_guess_delay )]
 
-  
+
+# austria_deaths <- rawData %>%
+#   filter( region == "Austria", source == "HMD", data_type == "Excess deaths" )
+
 ## TODO fix bug in smoothing with Excess deaths
 deconvolved_main_data <- get_all_infection_incidence(
   rawData,
   data_type = c("Confirmed cases",
                 "Hospitalized patients",
-                "Deaths"),
-  #   data_type = c("Confirmed cases",
-  #                 "Hospitalized patients",
-  #                 "Deaths",
-  #                 "Excess deaths"),
+                "Deaths",
+                "Excess deaths"),
   shapeIncubation = shapeIncubation,
   scaleIncubation = scaleIncubation,
   shapeOnsetToCount = shapeOnsetToCount,
   scaleOnsetToCount = scaleOnsetToCount,
-  verbose = F)
+  verbose = T)
 
 deconvolved_FOPH_hosp_data <- get_all_infection_incidence(
   rawData,

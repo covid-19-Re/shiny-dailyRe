@@ -1,12 +1,12 @@
 cat(paste("###", Sys.time(), "- starting 3_doReEstimates.R", "\n"))
 
+library("plyr")
 library("tidyverse")
 library("lubridate")
 library("readr")
 library("gridExtra")
 library("reshape2")
 library("reshape")
-library("plyr")
 library("utils")
 library("EpiEstim")
 library("here")
