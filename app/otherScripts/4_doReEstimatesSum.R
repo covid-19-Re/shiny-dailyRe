@@ -6,16 +6,16 @@ library(here)
 #############################
 dataDir <- here::here("app/data/temp")
 
-pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.Rdata")
-pathToEstimatesRe <- file.path(dataDir, "Estimates_Re.Rdata")
-pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.Rdata")
-pathToLatestData <- file.path(dataDir, "latestData.Rdata")
-pathToValidEstimates <- file.path(dataDir, "valid_estimates.Rdata")
+pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.rds")
+pathToEstimatesRe <- file.path(dataDir, "Estimates_Re.rds")
+pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.rds")
+# pathToLatestData <- file.path(dataDir, "latestData.rds") #TODO remove
+pathToValidEstimates <- file.path(dataDir, "valid_estimates.rds")
 
 
-load(file = pathToEstimatesReRaw)
-load(file = pathToLatestData)
-load(file = pathToValidEstimates)
+estimatesReRaw <- readRDS(file = pathToEstimatesReRaw)
+# readRDS(file = pathToLatestData)
+validEstimates <- readRDS(file = pathToValidEstimates)
 
 #############################
 estimatesRe <- as_tibble(estimatesReRaw) %>%
@@ -25,7 +25,7 @@ estimatesRe <- as_tibble(estimatesReRaw) %>%
     region %in% validEstimates$region,
   )
 
-save(estimatesRe, file = pathToEstimatesRe)
+saveRDS(estimatesRe, file = pathToEstimatesRe)
 
 #############################
 
@@ -45,7 +45,7 @@ estimatesReSum <- estimatesRe %>%
 
   # dplyr::select(country, region, source, data_type, estimate_type, date, median_R_mean, median_R_highHPD, median_R_lowHPD)
 
-save(estimatesReSum, file = pathToEstimatesReSum)
+saveRDS(estimatesReSum, file = pathToEstimatesReSum)
 
 #############################
 cat(paste("###", Sys.time(), "- done 4_doReEstimatesSum.R", "\n"))

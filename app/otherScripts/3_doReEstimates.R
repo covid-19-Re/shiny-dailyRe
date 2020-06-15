@@ -368,7 +368,7 @@ doAllReEstimations <- function(
 
 dataDir <- here::here("app/data/temp")
 infection_data_file_path <- file.path(dataDir,  "Deconvolved_infect_data.rds")
-pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.Rdata")
+pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.rds")
 
 infect_data <- readRDS(file = infection_data_file_path)
 ### Date input
@@ -443,7 +443,7 @@ estimatesReRaw <- as_tibble(estimatesReRaw_calc) %>%
                  "infection_Deaths", "infection_Excess deaths"),
       labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")))
 
-save(estimatesReRaw, file = pathToEstimatesReRaw)
+saveRDS(estimatesReRaw, file = pathToEstimatesReRaw)
 
 #############################
 cat(paste("###", Sys.time(), "- done 3_doReEstimates.R", "\n"))

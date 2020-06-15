@@ -12,18 +12,18 @@ translator <- Translator$new(translation_json_path = file.path(dataDir, "shinyTr
 languageSelect <- translator$languages
 names(languageSelect) <- c("EN", "IT", "FR", "DE")
 
-pathToRawData <- file.path(dataDir, "Raw_data.Rdata")
-pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.Rdata")
-pathToEstimatesRe <- file.path(dataDir, "Estimates_Re.Rdata")
-pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.Rdata")
-pathTolatestData <- file.path(dataDir, "latestData.Rdata")
+pathToRawData <- file.path(dataDir, "Raw_data.rds")
+pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.rds")
+pathToEstimatesRe <- file.path(dataDir, "Estimates_Re.rds")
+pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.rds")
+pathTolatestData <- file.path(dataDir, "latestData.rds")
 pathToLastCheck <- file.path(dataDir, "lastCheck.txt")
 pathToInterventionData <- file.path("../../covid19-additionalData/interventions/")
-pathToCountryList <- file.path(dataDir, "countryList.Rdata")
-pathToEstimateDates <- file.path(dataDir, "estimate_dates.Rdata")
-pathToValidEstimates <- file.path(dataDir, "valid_estimates.Rdata")
+pathToCountryList <- file.path(dataDir, "countryList.rds")
+pathToEstimatesDates <- file.path(dataDir, "estimate_dates.rds")
+pathToValidEstimates <- file.path(dataDir, "valid_estimates.rds")
 
-load(pathToCountryList)
+readRDS(pathToCountryList)
 
 # helpers
 

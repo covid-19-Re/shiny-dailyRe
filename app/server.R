@@ -20,11 +20,11 @@ server <- function(input, output, session) {
     return(translator)
   })
 
-  load(pathToRawData)
-  load(pathToEstimatesReSum)
-  load(pathToEstimateDates)
-  load(pathToValidEstimates)
-  load(pathTolatestData)
+  rawData <- readRDS(pathToRawData)
+  estimatesReSum <- readRDS(pathToEstimatesReSum)
+  estimatesDates <- readRDS(pathToEstimatesDates)
+  validEstimates <- readRDS(pathToValidEstimates)
+  latestData <- readRDS(pathTolatestData)
   lastCheck <- readLines(pathToLastCheck)
 
   # Render UI

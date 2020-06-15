@@ -1,5 +1,5 @@
 startTime <- Sys.time()
-save(startTime, file = "ScriptStartTime.Rdata")
+saveRDS(startTime, file = "ScriptStartTime.rds")
 cat(paste("###", startTime, "- starting 1_getRawData.R", "\n"))
 
 library("lubridate")
@@ -437,7 +437,7 @@ getHospitalDataFR <- function(){
   }
 
   longData <- rawData %>%
-    select(date = jour,
+    dplyr::select(date = jour,
            region = dep,
            incid_hosp) %>%
     group_by(date) %>%
@@ -518,7 +518,7 @@ getHospitalDataBE <- function(){
   }
   
   longData <- rawData %>%
-    select(date = DATE,
+    dplyr::select(date = DATE,
            value = NEW_IN) %>%
     group_by(date) %>%
     summarise_at(vars(value), list(value = sum) ) %>%
@@ -771,8 +771,8 @@ CHrawData <- getAllSwissData(pathToHospData = dataCHHospitalPath) %>%
     region = recode(region, "CH" = "Switzerland", "FL" = "Liechtenstein"),
     country = recode(country, "CH" = "Switzerland", "FL" = "Liechtenstein"))
 # save data
-# pathToCHRawDataSave <- file.path(dataDir, "CH_Raw_data.Rdata")
-# save(CHrawData, file = pathToCHRawDataSave)
+# pathToCHRawDataSave <- file.path(dataDir, "CH_Raw_data.rds")
+# saveRDS(CHrawData, file = pathToCHRawDataSave)
 cat(paste("CH"))
 
 ##### European data
@@ -820,12 +820,12 @@ EUrawData <- bind_rows(ECDCdata, swissExcessDeath, NLdata, ExcessDeathData,
   as_tibble()
 print("Bound")
 # save data
-# pathToEURawDataSave <- file.path(dataDir, "EU_Raw_data.Rdata")
-# save(EUrawData, file = pathToEURawDataSave)
+# pathToEURawDataSave <- file.path(dataDir, "EU_Raw_data.rds")
+# saveRDS(EUrawData, file = pathToEURawDataSave)
 
 ##### Finished pulling data
 
-pathToRawDataSave <- file.path(dataDir, "Raw_data.Rdata")
+pathToRawDataSave <- file.path(dataDir, "Raw_data.rds")
 
 rawDataAll <- bind_rows(CHrawData, EUrawData)
 
@@ -865,7 +865,7 @@ cat(str_c(
   thresholdCumulCases, " confirmed cases wasn't reached.\n",
   "Discarded regions: ", str_c(excludedRegions, collapse = ", "), "\n"))
 
-save(rawData, file = pathToRawDataSave)
+saveRDS(rawData, file = pathToRawDataSave)
 
 # figuring out when estimation can start (i.e. on the first day confirmed cases are > 100)
 
@@ -917,22 +917,22 @@ for (iCountry in unique(estimateDatesDf$country)) {
   }
 }
 
-pathToEstimateDates <- file.path(dataDir, "estimate_dates.Rdata")
-save(estimatesDates, file = pathToEstimateDates)
+pathToEstimateDates <- file.path(dataDir, "estimate_dates.rds")
+saveRDS(estimatesDates, file = pathToEstimateDates)
 
 validEstimates <- estimateDatesDf %>%
   filter(!is.na(estimateStart)) %>%
   dplyr::select(country, region) %>%
   distinct()
 
-pathToValidEstimates <- file.path(dataDir, "valid_estimates.Rdata")
-save(validEstimates, file = pathToValidEstimates)
+pathToValidEstimates <- file.path(dataDir, "valid_estimates.rds")
+saveRDS(validEstimates, file = pathToValidEstimates)
 
-pathToCountryListSave <- file.path(dataDir, "countryList.Rdata")
+pathToCountryListSave <- file.path(dataDir, "countryList.rds")
 countryList <- unique(validEstimates$country)
-save(countryList, file = pathToCountryListSave)
+saveRDS(countryList, file = pathToCountryListSave)
 
-pathToLatestData <- file.path(dataDir, "latestData.Rdata")
+pathToLatestData <- file.path(dataDir, "latestData.rds")
   
 latestData <- rawData %>%
   mutate(data_type=replace(data_type, data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"), "Hospitalized patients")) %>%
@@ -954,6 +954,6 @@ latestData <- rawData %>%
       "Sciensano","Data from the Belgian Institute for Health", "https://epistat.wiv-isp.be/covid/"
     ), by = "source")
 
-save(latestData, file = pathToLatestData)
+saveRDS(latestData, file = pathToLatestData)
 
 cat(paste("###", Sys.time(), "- done 1_getRawData.R", "\n"))

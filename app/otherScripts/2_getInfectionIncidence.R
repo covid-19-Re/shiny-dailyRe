@@ -339,7 +339,7 @@ get_all_infection_incidence <- function(  data,
 ####################
 
 data_dir <- here::here("app/data/temp")
-raw_data_path <- file.path(data_dir, "Raw_data.Rdata")
+raw_data_path <- file.path(data_dir, "Raw_data.rds")
 infect_data_path <- file.path(data_dir, "Deconvolved_infect_data.rds")
 
 ##TODO update
@@ -387,9 +387,9 @@ scaleOnsetToCount <- c((sdOnsetToCount^2) / meanOnsetToCount, "Hospitalized pati
 
 ###############
 
-load(file = raw_data_path)
+raw_data <- readRDS(file = raw_data_path)
 # 
-# incidence_data <- rawData %>% 
+# incidence_data <- raw_data %>% 
 #   filter( region == "Switzerland",
 #           data_type == type,
 #           variable == "incidence") %>%
@@ -404,17 +404,17 @@ maximum_iterations = 30
 ### Sample infection dates
 
 ##TESTING
-# swissData <- rawData %>% 
+# swissData <- raw_data %>% 
 #   filter( region == "Switzerland" )
 # 
-# data_types_included <- rawData %>%
+# data_types_included <- raw_data %>%
 #   filter(region == "France",
 #          source == "ECDC",
 #          variable == "incidence") %>%
 #   distinct(data_type) %>% pull()
 
 # type <- "Excess deaths"
-# data_subset  <-  rawData %>%
+# data_subset  <-  raw_data %>%
 #   filter( region == "Austria", data_type == type, variable == "incidence" )
 # 
 # 
@@ -472,11 +472,11 @@ maximum_iterations = 30
 # deconvolved_infections <- final_estimate[ 1 : ( length(final_estimate) - first_guess_delay )]
 
 
-# austria_deaths <- rawData %>%
+# austria_deaths <- raw_data %>%
 #   filter( region == "Austria", source == "HMD", data_type == "Excess deaths" )
 
 deconvolved_main_data <- get_all_infection_incidence(
-  rawData,
+  raw_data,
   data_type = c("Confirmed cases",
                 "Hospitalized patients",
                 "Deaths",
@@ -488,7 +488,7 @@ deconvolved_main_data <- get_all_infection_incidence(
   verbose = F)
 
 deconvolved_FOPH_hosp_data <- get_all_infection_incidence(
-  rawData,
+  raw_data,
   data_type = c("Hospitalized patients - admission", 
                 "Hospitalized patients - onset"),
   shapeIncubation = shapeIncubation,

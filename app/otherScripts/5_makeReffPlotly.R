@@ -9,16 +9,16 @@ library(shiny.i18n)
 
 # load data
 dataDir <- here::here("app/data/temp")
-pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.Rdata")
-pathToLatestData <- file.path(dataDir, "latestData.Rdata")
-pathToRawData <- file.path(dataDir, "Raw_data.Rdata")
-pathToEstimateDates <- file.path(dataDir, "estimate_dates.Rdata")
+pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.rds")
+pathToLatestData <- file.path(dataDir, "latestData.rds")
+pathToRawData <- file.path(dataDir, "Raw_data.rds")
+pathToEstimateDates <- file.path(dataDir, "estimate_dates.rds")
 pathToInterventionData <- here::here("../covid19-additionalData/interventions/interventions.csv")
 
-load(pathToRawData)
-load(pathToEstimatesReSum)
-load(pathToLatestData)
-load(pathToEstimateDates)
+rawData <- readRDS(pathToRawData)
+estimatesReSum <- readRDS(pathToEstimatesReSum)
+latestData <- readRDS(pathToLatestData)
+estimatesDates <- readRDS(pathToEstimateDates)
 
 # common functions
 dataUpdatesString <- function(latestData, name = "Data Source", dateFormat = "%Y-%m-%d") {
@@ -144,6 +144,6 @@ writeLines(str_c("last check: ", Sys.time()), file.path(dataDir, "lastCheck.txt"
 
 cat(paste("###", Sys.time(), "- done 5_makeReffPlotly.R", "\n"))
 
-load(file = "ScriptStartTime.Rdata")
+startTime <- readRDS(file = "ScriptStartTime.rds")
 
 cat(paste("###", "total script duration:", signif(difftime(Sys.time(), startTime, units = "mins")), "min"))
