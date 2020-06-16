@@ -47,7 +47,7 @@ caseDataPlot <- rawData %>%
   filter(
     country == "Switzerland",
     region == "Switzerland",
-    source %in% c("openZH", "FOPH"),
+    source %in% c("FOPH"),
     data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
   mutate(
     data_type = fct_drop(data_type)
@@ -58,7 +58,7 @@ estimates <- estimatesReSum %>%
   filter(
     country == "Switzerland",
     region == "Switzerland",
-    source %in% c("openZH", "FOPH"),
+    source %in% c("FOPH"),
     data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
   mutate(
     region = fct_drop(region),
