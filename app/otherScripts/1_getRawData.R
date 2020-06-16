@@ -918,7 +918,8 @@ delays <- tibble(
 estimateDatesDf <- rawData %>%
   filter(
     !(country == "Switzerland" & region == "Switzerland" & source == "ECDC"),
-    variable == "cumul"
+    variable == "cumul",
+    !(is.na(value))
   ) %>%
   group_by(region, country, source, data_type) %>%
   top_n(n = 1, date) %>%
