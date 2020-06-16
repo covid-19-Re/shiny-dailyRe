@@ -5,7 +5,10 @@ cd "$parent_path"
 
 echo "updating ch-hospital-data ..."
 cd "../../../ch-hospital-data"
+git reset --hard HEAD
 git pull
+echo "running R script to extract BAG data ..."
+Rscript --vanilla --verbose scripts/format_BAG_data.R >> messages.Rout 2>> errors.Rout
 echo "updating covid19-additionalData ..."
 cd "../covid19-additionalData"
 git pull
