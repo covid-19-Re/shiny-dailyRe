@@ -746,7 +746,20 @@ getExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = "..
 
 getLongECDCData <- function(countries = NULL) {
   urlfile <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
-  world_data <- read_csv(urlfile)
+  world_data <- read_csv(urlfile,
+    col_types = cols(
+      dateRep = col_character(),
+      day = col_double(),
+      month = col_double(),
+      year = col_double(),
+      cases = col_double(),
+      deaths = col_double(),
+      countriesAndTerritories = col_character(),
+      geoId = col_character(),
+      countryterritoryCode = col_character(),
+      popData2019 = col_double(),
+      continentExp = col_character()
+    ))
   longData <- world_data %>%
     dplyr::select(
       c(date = "dateRep", country = "countriesAndTerritories",
@@ -757,7 +770,8 @@ getLongECDCData <- function(countries = NULL) {
       variable = "incidence",
       country = gsub("_", " ", country),
       region = country,
-      source = "ECDC")
+      source = "ECDC") %>%
+    filter(!is.na(value))
 
   cumulData <- longData %>%
     group_by(country, data_type) %>%
