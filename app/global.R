@@ -23,7 +23,7 @@ pathToCountryList <- file.path(dataDir, "countryList.rds")
 pathToEstimatesDates <- file.path(dataDir, "estimate_dates.rds")
 pathToValidEstimates <- file.path(dataDir, "valid_estimates.rds")
 
-readRDS(pathToCountryList)
+countryList <- readRDS(pathToCountryList)
 
 # helpers
 
