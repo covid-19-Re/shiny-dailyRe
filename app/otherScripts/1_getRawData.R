@@ -820,6 +820,7 @@ countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
   "Netherlands", "Spain", "Switzerland", "Sweden", "United Kingdom")
 
 ECDCdata <- getLongECDCData(setdiff(countryList, c("Switzerland", "Netherlands")))
+
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
 cat(paste("Swiss Excess"))
 

@@ -220,7 +220,7 @@ get_infection_incidence_by_deconvolution <- function(   data_subset,
                                                         absolute_max_reporting_delay = 100,
                                                         smooth_incidence = T,
                                                         empirical_delays  = tibble(),
-                                                        numCasesWindow = 100,
+                                                        numCasesWindow = 250,
                                                         verbose = F ) {
   
   length_initial_time_series <- data_subset %>% 

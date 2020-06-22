@@ -406,7 +406,7 @@ swissRegions <- infect_data %>%
   .$region
 
 ### Window
-window <- 3
+window <- 1
 
 ### Delays applied
 all_delays <- list(
