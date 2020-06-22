@@ -72,7 +72,7 @@ server <- function(input, output, session) {
             i18n()$t("Last Data Updates"),
             HTML(
               dataUpdatesTable(filter(latestData,
-                country == "Switzerland", source %in% c("openZH", "FOPH")),
+                country == "Switzerland", source %in% c("FOPH")),
                 lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
               icon = icon("exclamation-circle"),
             color = "purple"
@@ -98,7 +98,7 @@ server <- function(input, output, session) {
           infoBox(width = 12,
             i18n()$t("Last Data Updates"),
             HTML(dataUpdatesTable(filter(latestData,
-              country == "Switzerland", source %in% c("openZH", "FOPH")),
+              country == "Switzerland", source %in% c("FOPH")),
               lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
               icon = icon("exclamation-circle"),
             color = "purple"
@@ -124,7 +124,7 @@ server <- function(input, output, session) {
           infoBox(width = 12,
             i18n()$t("Last Data Updates"),
             HTML(dataUpdatesTable(filter(latestData,
-              country == "Switzerland", source %in% c("openZH", "FOPH")),
+              country == "Switzerland", source %in% c("FOPH")),
               lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
               icon = icon("exclamation-circle"),
             color = "purple"
@@ -267,7 +267,7 @@ server <- function(input, output, session) {
   caseDataSwitzerlandPlot <- reactive({
     caseDataSwitzerlandPlot <- rawData %>%
       filter(country == "Switzerland",
-        source %in% c("openZH", "FOPH"),
+        source %in% c("FOPH"),
         data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
       mutate(
         data_type = fct_drop(data_type)
@@ -296,7 +296,7 @@ server <- function(input, output, session) {
   estimatesSwitzerlandPlot <- reactive({
     estimatesSwitzerlandPlot <- estimatesSwitzerland() %>%
       filter(
-        source %in% c("openZH", "FOPH"),
+        source %in% c("FOPH"),
         data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
       mutate(
         data_type = fct_drop(data_type)

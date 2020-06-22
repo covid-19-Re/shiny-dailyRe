@@ -120,6 +120,31 @@ calcIncidenceData <- function(data) {
 ########################################
 
 ##### Swiss Data #######
+sumGreaterRegions <- function(chData){
+   greaterRegions <- tribble(
+    ~greaterRegion,             ~region,
+    "grR Lake Geneva Region",       c("VD", "VS", "GE"),
+    "grR Espace Mittelland",        c("BE", "FR", "SO", "NE", "JU"),
+    "grR Northwestern Switzerland", c("BS", "BL", "AG"),
+    "grR Zurich",                   c("ZH"),
+    "grR Eastern Switzerland",      c("GL", "SH", "AR", "AI", "SG", "GR", "TG"),
+    "grR Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
+    "grR Ticino",                   c("TI")
+  ) %>% unnest(cols = c(region))
+
+  greaterRegionsData <- chData %>%
+    filter(country == "CH", region != "FL") %>%
+    left_join(greaterRegions, by = "region") %>%
+    ungroup() %>%
+    mutate(region = greaterRegion) %>%
+    dplyr::select(-greaterRegion) %>%
+    group_by(date, region, source, data_type, variable) %>%
+    dplyr::summarize(
+      value = sum(value),
+      country = "CH")
+  return(greaterRegionsData)
+}
+
 getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
   openZHurl <- "https://raw.githubusercontent.com/openZH/covid_19/master/COVID19_Fallzahlen_CH_total_v2.csv"
 
@@ -164,27 +189,7 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
       value = sum(value),
       region = "CH")
 
-  greaterRegions <- tribble(
-    ~greaterRegion,             ~region,
-    "grR Lake Geneva Region",       c("VD", "VS", "GE"),
-    "grR Espace Mittelland",        c("BE", "FR", "SO", "NE", "JU"),
-    "grR Northwestern Switzerland", c("BS", "BL", "AG"),
-    "grR Zurich",                   c("ZH"),
-    "grR Eastern Switzerland",      c("GL", "SH", "AR", "AI", "SG", "GR", "TG"),
-    "grR Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
-    "grR Ticino",                   c("TI")
-  ) %>% unnest(cols = c(region))
-
-  openZHgreaterRegions <- openZHsum %>%
-    filter(country == "CH") %>%
-    left_join(greaterRegions, by = "region") %>%
-    ungroup() %>%
-    mutate(region = greaterRegion) %>%
-    dplyr::select(-greaterRegion) %>%
-    group_by(date, region, source, data_type, variable) %>%
-    dplyr::summarize(
-      value = sum(value),
-      country = "CH")
+  openZHgreaterRegions <- sumGreaterRegions(openZHsum)
 
   openZHincidence <- bind_rows(openZHcantons, openZHswitzerland, openZHgreaterRegions) %>%
     group_by(data_type, region) %>%
@@ -201,6 +206,25 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
   arrange(country, region, data_type, variable, date)
 
   return(openZHdata)
+}
+
+getSwissDataFromBAG <- function(path, filename = "incidence_data_CH.csv"){
+  filePath <- file.path(path, filename)
+  bagData <- read_csv(filePath,
+    col_types = cols(
+      date = col_date(format = ""),
+      region = col_character(),
+      country = col_character(),
+      source = col_character(),
+      data_type = col_character(),
+      value = col_double(),
+      variable = col_character()))
+
+  bagDataGreaterRegions <- sumGreaterRegions(filter(bagData, region != "CH"))
+
+  bagDataAll <- bind_rows(bagData, bagDataGreaterRegions)
+
+  return(bagDataAll)
 }
 
 ## Include hospitalization counts from local csv files
@@ -226,13 +250,15 @@ getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases", d
   return(out)
 }
 
-## Combine openZH data with hospitalization data
+## Combine swiss data with hospitalization data
 getAllSwissData <- function(stoppingAfter = (Sys.Date() - 1), pathToHospData) {
-  openZHData <- getSwissDataFromOpenZH(stopAfter = stoppingAfter)
+  #openZHData <- getSwissDataFromOpenZH(stopAfter = stoppingAfter)
+  bagData <- getSwissDataFromBAG(path = pathToHospData)
+
   hospitalData <- getHospitalData(path = pathToHospData, region = "CH", dataTypeSuffix = "")
   hospitalData_onsets <- getHospitalData(path = pathToHospData, region = "CH", dataTypeSuffix = "_onsets")
   hospitalData_admissions <- getHospitalData(path = pathToHospData, region = "CH", dataTypeSuffix = "_admissions")
-  swissData <- bind_rows(openZHData, hospitalData, hospitalData_onsets, hospitalData_admissions) %>% ungroup()
+  swissData <- bind_rows(bagData, hospitalData, hospitalData_onsets, hospitalData_admissions) %>% ungroup()
   return(swissData)
 }
 
@@ -720,7 +746,20 @@ getExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = "..
 
 getLongECDCData <- function(countries = NULL) {
   urlfile <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
-  world_data <- read_csv(urlfile)
+  world_data <- read_csv(urlfile,
+    col_types = cols(
+      dateRep = col_character(),
+      day = col_double(),
+      month = col_double(),
+      year = col_double(),
+      cases = col_double(),
+      deaths = col_double(),
+      countriesAndTerritories = col_character(),
+      geoId = col_character(),
+      countryterritoryCode = col_character(),
+      popData2019 = col_double(),
+      continentExp = col_character()
+    ))
   longData <- world_data %>%
     dplyr::select(
       c(date = "dateRep", country = "countriesAndTerritories",
@@ -731,7 +770,8 @@ getLongECDCData <- function(countries = NULL) {
       variable = "incidence",
       country = gsub("_", " ", country),
       region = country,
-      source = "ECDC")
+      source = "ECDC") %>%
+    filter(!is.na(value))
 
   cumulData <- longData %>%
     group_by(country, data_type) %>%
@@ -892,7 +932,8 @@ delays <- tibble(
 estimateDatesDf <- rawData %>%
   filter(
     !(country == "Switzerland" & region == "Switzerland" & source == "ECDC"),
-    variable == "cumul"
+    variable == "cumul",
+    !(is.na(value))
   ) %>%
   group_by(region, country, source, data_type) %>%
   top_n(n = 1, date) %>%
@@ -940,7 +981,7 @@ latestData <- rawData %>%
   dplyr::summarize(date = max(date)) %>%
   left_join(tribble(
       ~source, ~sourceLong, ~url,
-      "openZH", "Data for Cantons and the Principality of Liechtenstein, aggregated by the statistical office of the canton Zürich", "https://github.com/openZH/covid_19/",
+      #"openZH", "Data for Cantons and the Principality of Liechtenstein, aggregated by the statistical office of the canton Zürich", "https://github.com/openZH/covid_19/",
       "FOPH",   "Data from the Swiss Federal Office of Public Health", "",
       "BFS",    "Data from the Swiss Federal Office of Statistics", "https://www.bfs.admin.ch/bfsstatic/dam/assets/12727505/master",
       "RIVM",   "Data from the Dutch National Institute for Public Health and the Environment", "https://github.com/J535D165/CoronaWatchNL",
