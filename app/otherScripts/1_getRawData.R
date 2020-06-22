@@ -833,7 +833,7 @@ CHrawData <- getAllSwissData(pathToHospData = dataCHHospitalPath) %>%
 # save data
 # pathToCHRawDataSave <- file.path(dataDir, "CH_Raw_data.Rdata")
 # save(CHrawData, file = pathToCHRawDataSave)
-cat(paste("CH"))
+cat("CH\n")
 
 ##### European data
 countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
@@ -841,22 +841,22 @@ countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
 
 ECDCdata <- getLongECDCData(setdiff(countryList, c("Switzerland", "Netherlands")))
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
-cat(paste("Swiss Excess"))
+cat("Swiss Excess\n")
 
 NLdata <- try(getDataNL(stopAfter = Sys.Date() - 1))
 if ('try-error' %in% class(NLdata)){
   NLdata <- NULL
 }
-cat(paste("NL"))
+cat("NL\n")
 
 ExcessDeathData <- getExcessDeathHMD() %>%
   filter(country %in% countryList)
-cat(paste("HMD"))
+cat("HMD\n")
 
 pathToExcessDeathIT <- here::here("../covid19-additionalData/excessDeath/Excess_death_IT.csv")
 ITExcessDeath <- getExcessDeathIT(filePath = pathToExcessDeathIT, 
                  startAt = as.Date("2020-02-20"))
-cat(paste("IT"))
+cat("IT\n")
 
 hospitalDataFR <- getHospitalDataFR()
 ExcessDeathFR <- getExcessDeathFR()
@@ -878,7 +878,7 @@ EUrawData <- bind_rows(ECDCdata, swissExcessDeath, NLdata, ExcessDeathData,
                        ITExcessDeath, hospitalDataFR, ExcessDeathFR,
                        hospitalDataBE) %>%
   as_tibble()
-print("Bound")
+cat("Bound\n")
 # save data
 # pathToEURawDataSave <- file.path(dataDir, "EU_Raw_data.Rdata")
 # save(EUrawData, file = pathToEURawDataSave)
