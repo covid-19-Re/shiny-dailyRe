@@ -763,7 +763,7 @@ getLongECDCData <- function(countries = NULL) {
     )) %>% mutate(dateRep = dmy(date)))
 
   if ("try-error" %in% class(world_data)) {
-    cat("ECDC csv not available... \nTrying .xlsx \n")
+    cat("ECDC csv not available... \nTrying .xlsx ... \n")
     xlsFile <- "https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide.xlsx"
     downloadOK <- try(download.file(xlsFile, destfile = here::here("app/data/temp", "ECDCdataTemp.xlsx")))
     if ("try-error" %in% class (downloadOK)) {
@@ -772,6 +772,7 @@ getLongECDCData <- function(countries = NULL) {
       file.copy(
         from = here::here("app/data/temp", "ECDCdataTemp.xlsx"),
         to = here::here("app/data", "ECDCdata.xlsx"))
+      cat(".xlsx ok!... \n")
     }
     world_data <- try(readxl::read_excel(here::here("app/data", "ECDCdata.xlsx")) %>%
       mutate(dateRep = ymd(as.character(dateRep))))
@@ -779,6 +780,7 @@ getLongECDCData <- function(countries = NULL) {
       cat("ECDC data not available... \n")
       return(NULL)
     }
+    
   }
 
   longData <- world_data %>%
