@@ -746,7 +746,8 @@ getExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = "..
 
 getLongECDCData <- function(countries = NULL) {
   urlfile <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
-  world_data <- read_csv(urlfile,
+   
+  world_data <- try(read_csv(urlfile,
     col_types = cols(
       dateRep = col_character(),
       day = col_double(),
@@ -759,12 +760,33 @@ getLongECDCData <- function(countries = NULL) {
       countryterritoryCode = col_character(),
       popData2019 = col_double(),
       continentExp = col_character()
-    ))
+    )) %>% mutate(dateRep = dmy(date)))
+
+  if ("try-error" %in% class(world_data)) {
+    cat("ECDC csv not available... \nTrying .xlsx ... \n")
+    xlsFile <- "https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide.xlsx"
+    downloadOK <- try(download.file(xlsFile, destfile = here::here("app/data/temp", "ECDCdataTemp.xlsx")))
+    if ("try-error" %in% class (downloadOK)) {
+      cat("Coulnd't get new xlsx file. Trying to read older xslx file...")
+    } else {
+      file.copy(
+        from = here::here("app/data/temp", "ECDCdataTemp.xlsx"),
+        to = here::here("app/data", "ECDCdata.xlsx"))
+      cat(".xlsx ok!... \n")
+    }
+    world_data <- try(readxl::read_excel(here::here("app/data", "ECDCdata.xlsx")) %>%
+      mutate(dateRep = ymd(as.character(dateRep))))
+    if ("try-error" %in% class(world_data)) {
+      cat("ECDC data not available... \n")
+      return(NULL)
+    }
+    
+  }
+
   longData <- world_data %>%
     dplyr::select(
       c(date = "dateRep", country = "countriesAndTerritories",
         confirmed = "cases", deaths = "deaths")) %>%
-    mutate(date = dmy(date)) %>%
     pivot_longer(cols = c(confirmed, deaths), names_to = "data_type") %>%
     mutate(
       variable = "incidence",
@@ -811,9 +833,10 @@ CHrawData <- getAllSwissData(pathToHospData = dataCHHospitalPath) %>%
     region = recode(region, "CH" = "Switzerland", "FL" = "Liechtenstein"),
     country = recode(country, "CH" = "Switzerland", "FL" = "Liechtenstein"))
 # save data
-# pathToCHRawDataSave <- file.path(dataDir, "CH_Raw_data.rds")
-# saveRDS(CHrawData, file = pathToCHRawDataSave)
-cat(paste("CH"))
+
+# pathToCHRawDataSave <- file.path(dataDir, "CH_Raw_data.Rdata")
+# save(CHrawData, file = pathToCHRawDataSave)
+cat("CH\n")
 
 ##### European data
 countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
@@ -822,22 +845,22 @@ countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
 ECDCdata <- getLongECDCData(setdiff(countryList, c("Switzerland", "Netherlands")))
 
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
-cat(paste("Swiss Excess"))
+cat("Swiss Excess\n")
 
 NLdata <- try(getDataNL(stopAfter = Sys.Date() - 1))
 if ('try-error' %in% class(NLdata)){
   NLdata <- NULL
 }
-cat(paste("NL"))
+cat("NL\n")
 
 ExcessDeathData <- getExcessDeathHMD() %>%
   filter(country %in% countryList)
-cat(paste("HMD"))
+cat("HMD\n")
 
 pathToExcessDeathIT <- here::here("../covid19-additionalData/excessDeath/Excess_death_IT.csv")
 ITExcessDeath <- getExcessDeathIT(filePath = pathToExcessDeathIT, 
                  startAt = as.Date("2020-02-20"))
-cat(paste("IT"))
+cat("IT\n")
 
 hospitalDataFR <- getHospitalDataFR()
 ExcessDeathFR <- getExcessDeathFR()
@@ -859,7 +882,7 @@ EUrawData <- bind_rows(ECDCdata, swissExcessDeath, NLdata, ExcessDeathData,
                        ITExcessDeath, hospitalDataFR, ExcessDeathFR,
                        hospitalDataBE) %>%
   as_tibble()
-print("Bound")
+cat("Bound\n")
 # save data
 # pathToEURawDataSave <- file.path(dataDir, "EU_Raw_data.rds")
 # saveRDS(EUrawData, file = pathToEURawDataSave)
