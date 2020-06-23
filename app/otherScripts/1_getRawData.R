@@ -301,17 +301,17 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
 
 getExcessDeathHMD <- function(startAt = as.Date("2020-02-20")) {
   # Human mortality database
-  
+
   url <- "https://www.mortality.org/Public/STMF/Outputs/stmf.csv"
   rawData <- try(read_csv(url, comment = "#"))
 
-  if ("try-error" %in% class(rawData)){
+  if ("try-error" %in% class(rawData)) {
     return(NULL)
   }
   
   tidy_data <- rawData %>%
     dplyr::select(country = CountryCode, year = Year,
-           week = Week, sex = Sex, deaths = DTotal) %>%
+      week = Week, sex = Sex, deaths = DTotal) %>%
     filter(sex == 'b') %>%
     mutate(country = recode(country, 
                 AUT="Austria", BEL="Belgium",
@@ -320,7 +320,7 @@ getExcessDeathHMD <- function(startAt = as.Date("2020-02-20")) {
                 FIN="Finland", GBRTENW="United Kingdom", ISL="Island",
                 NLD="Netherlands", NOR="Norway", PRT="Portugal", SWE="Sweden",
                 USA="USA"))
-  
+
   past_data <- tidy_data %>%
     filter(year %in% seq(2015, 2019)) %>%
     group_by(country, week) %>%
@@ -851,9 +851,15 @@ if ('try-error' %in% class(NLdata)){
 }
 cat("NL\n")
 
-ExcessDeathData <- getExcessDeathHMD() %>%
+ExcessDeathData <- getExcessDeathHMD()
+if(!is.null(ExcessDeathData)) {
+  ExcessDeathData <- ExcessDeathData %>%
   filter(country %in% countryList)
-cat("HMD\n")
+  cat("HMD\n")
+} else {
+  cat("get HMD data failed")
+}
+
 
 pathToExcessDeathIT <- here::here("../covid19-additionalData/excessDeath/Excess_death_IT.csv")
 ITExcessDeath <- getExcessDeathIT(filePath = pathToExcessDeathIT, 
