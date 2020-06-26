@@ -113,7 +113,8 @@ estimateRe <- function(
           mean_si = mean_si,
           std_si = std_si,
           t_start = t_start,
-          t_end = t_end)
+          t_end = t_end,
+          mean_prior = 1)
       )
     )
   } else if (method == "WallingaTeunis") {
@@ -406,7 +407,7 @@ swissRegions <- infect_data %>%
   .$region
 
 ### Window
-window <- 1
+window <- 3
 
 ### Delays applied
 all_delays <- list(

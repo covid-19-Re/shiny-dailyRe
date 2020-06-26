@@ -9,12 +9,10 @@ dataDir <- here::here("app/data/temp")
 pathToEstimatesReRaw <- file.path(dataDir, "Estimates_Re_raw.rds")
 pathToEstimatesRe <- file.path(dataDir, "Estimates_Re.rds")
 pathToEstimatesReSum <- file.path(dataDir, "Estimates_Re_sum.rds")
-# pathToLatestData <- file.path(dataDir, "latestData.rds") #TODO remove
 pathToValidEstimates <- file.path(dataDir, "valid_estimates.rds")
 
 
 estimatesReRaw <- readRDS(file = pathToEstimatesReRaw)
-# readRDS(file = pathToLatestData)
 validEstimates <- readRDS(file = pathToValidEstimates)
 
 #############################
