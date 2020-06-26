@@ -120,7 +120,7 @@ calcIncidenceData <- function(data) {
 ########################################
 
 ##### Swiss Data #######
-sumGreaterRegions <- function(chData){
+sumGreaterRegions <- function(chData) {
    greaterRegions <- tribble(
     ~greaterRegion,             ~region,
     "grR Lake Geneva Region",       c("VD", "VS", "GE"),
@@ -208,7 +208,7 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
   return(openZHdata)
 }
 
-getSwissDataFromBAG <- function(path, filename = "incidence_data_CH.csv"){
+getSwissDataFromBAG <- function(path, filename = "incidence_data_CH.csv") {
   filePath <- file.path(path, filename)
   bagData <- read_csv(filePath,
     col_types = cols(
@@ -229,7 +229,7 @@ getSwissDataFromBAG <- function(path, filename = "incidence_data_CH.csv"){
 
 ## Include hospitalization counts from local csv files
 getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases", dataTypeSuffix="") {
-  filePath <- file.path(path, str_c(csvBaseName,dataTypeSuffix, "_", region, ".csv"))
+  filePath <- file.path(path, str_c(csvBaseName, dataTypeSuffix, "_", region, ".csv"))
 
   if (file.exists(filePath)) {
     cumData <- read_csv(filePath,
@@ -269,7 +269,7 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
   url2020 <- "https://www.bfs.admin.ch/bfsstatic/dam/assets/13047388/master"
   data2020 <- try(read_delim(url2020, delim = ";"))
 
-  if ("try-error" %in% class(data2020)){
+  if ("try-error" %in% class(data2020)) {
     return(NULL)
   }
 
@@ -308,15 +308,15 @@ getExcessDeathHMD <- function(startAt = as.Date("2020-02-20")) {
   if ("try-error" %in% class(rawData)) {
     return(NULL)
   }
-  
+
   tidy_data <- rawData %>%
     dplyr::select(country = CountryCode, year = Year,
       week = Week, sex = Sex, deaths = DTotal) %>%
     filter(sex == "b") %>%
-    mutate(country = recode(country, 
+    mutate(country = recode(country,
       AUT = "Austria", BEL = "Belgium",
-      BGR = "Bulgaria", CZE = "Czech Republic", 
-      DEUTNP = "Germany", DNK = "Denmark", ESP = "Spain",     
+      BGR = "Bulgaria", CZE = "Czech Republic",
+      DEUTNP = "Germany", DNK = "Denmark", ESP = "Spain",
       FIN = "Finland", GBRTENW = "United Kingdom", ISL = "Island",
       NLD = "Netherlands", NOR = "Norway", PRT = "Portugal", SWE = "Sweden",
       USA = "USA"))
@@ -353,9 +353,9 @@ getExcessDeathHMD <- function(startAt = as.Date("2020-02-20")) {
   return(longData)
 }
 
-getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/excessDeath/Excess_death_IT.csv"), 
+getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/excessDeath/Excess_death_IT.csv"),
                              startAt = as.Date("2020-02-20")) {
-  #https://www.istat.it/it/archivio/240401 
+  #https://www.istat.it/it/archivio/240401
   if (file.exists(filePath)) {
     rawData <- read_csv(filePath,
                         col_types = cols(
@@ -396,7 +396,7 @@ getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/ex
                   paste0("T_", seq(15, 20))) %>%
     mutate(T_20 = parse_double(T_20, na = "n.d.")) %>%
     pivot_longer(cols = paste0("T_", seq(15, 20)), names_to = "year", values_to = "deaths") %>%
-    mutate(year = gsub("T_","20", year),
+    mutate(year = gsub("T_", "20", year),
            day = date,
            date = paste0(year, date)) %>%
     filter(day != "0229") %>%
@@ -445,7 +445,7 @@ getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/ex
 
 ##### French Data ##########################################
 
-getHospitalDataFR <- function(){
+getHospitalDataFR <- function() {
   # nouveaux file contains the incidence
   url <- "https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c"
   rawData <- try(read_delim(url, delim = ";",
@@ -457,7 +457,7 @@ getHospitalDataFR <- function(){
                          incid_dc = col_double(),
                          incid_rad = col_double()
                        )))
-  if("try-error" %in% class(rawData)){
+  if ("try-error" %in% class(rawData)) {
     return(NULL)
   }
 
@@ -482,7 +482,8 @@ getHospitalDataFR <- function(){
 }
 
 getExcessDeathFR <- function(startAt = as.Date("2020-02-20")) {
-  url <- "https://raw.githubusercontent.com/TheEconomist/covid-19-excess-deaths-tracker/master/output-data/excess-deaths/france_excess_deaths.csv"
+  url <- str_c("https://raw.githubusercontent.com/TheEconomist/",
+    "covid-19-excess-deaths-tracker/master/output-data/excess-deaths/france_excess_deaths.csv")
   rawData <- try(
     read_csv(url,
       col_types = cols(
@@ -503,7 +504,7 @@ getExcessDeathFR <- function(startAt = as.Date("2020-02-20")) {
     )
   )
 
-  if('try-error' %in% class(rawData)){
+  if ("try-error" %in% class(rawData)) {
     return(NULL)
   }
 
@@ -526,7 +527,7 @@ getExcessDeathFR <- function(startAt = as.Date("2020-02-20")) {
 
 ##### Belgian Data ##########################################
 
-getHospitalDataBE <- function(){
+getHospitalDataBE <- function() {
   url <- "https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv"
   rawData <- try(
     read_csv(url,
@@ -545,27 +546,27 @@ getHospitalDataBE <- function(){
     )
   )
 
-  if('try-error' %in% class(rawData)) {
+  if ("try-error" %in% class(rawData)) {
     return(NULL)
   }
-  
+
   longData <- rawData %>%
     select(date = DATE,
            value = NEW_IN) %>%
     group_by(date) %>%
-    summarise_at(vars(value), list(value = sum) ) %>%
+    summarise_at(vars(value), list(value = sum)) %>%
     ungroup() %>%
     arrange(date) %>%
     mutate(
-      data_type = 'hospitalized',
+      data_type = "hospitalized",
       country = "Belgium",
       variable = "incidence",
       region = country,
       source = "Sciensano")
-  
+
   cumulData <- getCumulData(longData)
   longData <- bind_rows(longData, cumulData)
-  
+
   return(longData)
 }
 
@@ -578,7 +579,7 @@ getDataNL <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
   urlfile <- paste0(baseurl, stopAfter, ".csv")
   raw_data <- try(read_csv(urlfile))
 
-  if ('try-error' %in% class(raw_data)){
+  if ("try-error" %in% class(raw_data)) {
     urlfile <- paste0(baseurl, "latest.csv")
     raw_data <- read_csv(urlfile)
   }
@@ -753,7 +754,7 @@ getExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = "..
 
 getLongECDCData <- function(countries = NULL) {
   urlfile <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
-   
+
   world_data <- try(read_csv(urlfile,
     col_types = cols(
       dateRep = col_character(),
@@ -771,9 +772,10 @@ getLongECDCData <- function(countries = NULL) {
 
   if ("try-error" %in% class(world_data)) {
     cat("ECDC csv not available... \nTrying .xlsx ... \n")
-    xlsFile <- "https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide.xlsx"
+    xlsFile <- str_c("https://www.ecdc.europa.eu/sites/default/files/documents/",
+    "COVID-19-geographic-disbtribution-worldwide.xlsx")
     downloadOK <- try(download.file(xlsFile, destfile = here::here("app/data/temp", "ECDCdataTemp.xlsx")))
-    if ("try-error" %in% class (downloadOK)) {
+    if ("try-error" %in% class(downloadOK)) {
       cat("Coulnd't get new xlsx file. Trying to read older xslx file...")
     } else {
       file.rename(
@@ -856,13 +858,13 @@ swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
 cat("Swiss Excess\n")
 
 NLdata <- try(getDataNL(stopAfter = Sys.Date() - 1))
-if ('try-error' %in% class(NLdata)){
+if ("try-error" %in% class(NLdata)) {
   NLdata <- NULL
 }
 cat("NL\n")
 
 ExcessDeathData <- getExcessDeathHMD()
-if(!is.null(ExcessDeathData)) {
+if (!is.null(ExcessDeathData)) {
   ExcessDeathData <- ExcessDeathData %>%
   filter(country %in% countryList)
   cat("HMD\n")
@@ -871,8 +873,7 @@ if(!is.null(ExcessDeathData)) {
 }
 
 pathToExcessDeathIT <- here::here("../covid19-additionalData/excessDeath/Excess_death_IT.csv")
-ITExcessDeath <- getExcessDeathIT(filePath = pathToExcessDeathIT, 
-                 startAt = as.Date("2020-02-20"))
+ITExcessDeath <- getExcessDeathIT(filePath = pathToExcessDeathIT, startAt = as.Date("2020-02-20"))
 cat("IT\n")
 
 hospitalDataFR <- getHospitalDataFR()
@@ -922,16 +923,16 @@ rawData <- rawDataAll %>%
   mutate(
     data_type = factor(
       data_type,
-      levels = c("confirmed", 
+      levels = c("confirmed",
                  "hospitalized",
                  "hospitalized_onsets",
-                 "hospitalized_admissions", 
-                 "deaths", 
+                 "hospitalized_admissions",
+                 "deaths",
                  "excess_deaths"),
-      labels = c("Confirmed cases", 
-                 "Hospitalized patients", 
-                 "Hospitalized patients - onset", 
-                 "Hospitalized patients - admission", 
+      labels = c("Confirmed cases",
+                 "Hospitalized patients",
+                 "Hospitalized patients - onset",
+                 "Hospitalized patients - admission",
                  "Deaths",
                  "Excess deaths"))) %>%
   dplyr::select(country, region, source, data_type, variable, date, value) %>%
@@ -1031,9 +1032,9 @@ latestData <- rawData %>%
       "ECDC",   "Data from the European Center for Disease Prevention and Control", "https://opendata.ecdc.europa.eu/covid19/casedistribution/",
       "HMD",    "Data from the Human Mortality Database - Short-term Mortality Fluctuations Data Series", "https://www.mortality.org/",
       "Istat",  "Data from the Italian National Institute of Statistics", "https://www.istat.it/it/archivio/240401",
-      "SpF-DMI","Data from the French National Public Health Agency", "https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/",
-      "Economist","Data from the Economist Excess Death Tracker", "https://github.com/TheEconomist/covid-19-excess-deaths-tracker",
-      "Sciensano","Data from the Belgian Institute for Health", "https://epistat.wiv-isp.be/covid/"
+      "SpF-DMI", "Data from the French National Public Health Agency", "https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/",
+      "Economist", "Data from the Economist Excess Death Tracker", "https://github.com/TheEconomist/covid-19-excess-deaths-tracker",
+      "Sciensano", "Data from the Belgian Institute for Health", "https://epistat.wiv-isp.be/covid/"
     ), by = "source")
 
 save(latestData, file = pathToLatestData)
