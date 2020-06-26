@@ -14,6 +14,10 @@ rEffPlotly <- function(
   endDate = max(caseData$date) + 1,
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
+  logCaseYaxis = FALSE,
+  caseAverage = 1,
+  caseNormalize = FALSE,
+  popSizes = NULL,
   language,
   translator,
   widgetID = "rEffplots") {
@@ -71,10 +75,33 @@ rEffPlotly <- function(
   caseData <- caseData %>%
     mutate(data_type = fct_recode(data_type, !!!newLevels))
 
+  pCasesTitle <- translator$t("New observations")
+
+  if (caseNormalize) {
+    caseData <- caseData %>%
+      left_join(popSizes, by = c("country", "region")) %>%
+      mutate(incidence = incidence / popSize * 100000)
+    pCasesTitle <- str_c(pCasesTitle, " / 100'000")
+  }
+
+  if (caseAverage > 1) {
+    caseData <- caseData %>%
+      group_by(data_type) %>%
+      mutate(
+        incidence = slide_index_dbl(incidence, date, mean, .before = lubridate::days(caseAverage))
+      ) %>%
+      ungroup()
+    pCasesTitle <- str_c(pCasesTitle, "\n(", translator$t("7 day avarage"), ")")
+  }
+
+  if (logCaseYaxis) {
+    zoomRange <- makeZoomRange(log10(max(caseData$incidence, na.rm = TRUE)), extra = log10(5), stepSize = log10(10))
+  } else {
+    zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
+  }
+
   estimatesPlot <- estimates %>%
     mutate(data_type = fct_recode(data_type, !!!newLevels))
-
-  zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
 
   pCases <- plot_ly(data = caseData) %>%
     add_bars(x = ~date, y = ~incidence, color = ~data_type,
@@ -84,10 +111,11 @@ rEffPlotly <- function(
       hovertemplate = "%{text}",
       legendgroup = ~data_type) %>%
     layout(
-      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = TRUE, rSelector = TRUE),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = FALSE, rSelector = TRUE),
       yaxis = plotlyYaxis(
-        title = translator$t("New observations"),
-        fixedRange = fixedRangeY[1]),
+        title = pCasesTitle,
+        fixedRange = fixedRangeY[1],
+        logAxis = logCaseYaxis),
       legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>"))),
       sliders = list(
         makeSlider(zoomRange)
@@ -227,6 +255,10 @@ rEffPlotlyRegion <- function(
   endDate = max(caseData$date) + 1,
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
+  logCaseYaxis = FALSE,
+  caseAverage = 1,
+  caseNormalize = FALSE,
+  popSizes = NULL,
   regionColors,
   translator,
   language,
@@ -287,11 +319,30 @@ rEffPlotlyRegion <- function(
     names(regionColors),
     Switzerland = translator$t("Switzerland (Total)"))
 
+  pCasesTitle <- translator$t("New observations")
+
+  if (caseNormalize) {
+    caseData <- caseData %>%
+      left_join(popSizes, by = c("country", "region")) %>%
+      mutate(incidence = incidence / popSize * 100000)
+    pCasesTitle <- str_c(pCasesTitle, " / 100'000")
+  }
+
   caseData <- caseData %>%
     filter(data_type == "Confirmed cases") %>%
     mutate(
       data_type = fct_recode(data_type, !!!newLevels),
       region = recode(region, Switzerland = translator$t("Switzerland (Total)")))
+
+  if (caseAverage > 1) {
+    caseData <- caseData %>%
+      group_by(data_type, country, region) %>%
+      mutate(
+        incidence = slide_index_dbl(incidence, date, mean, .before = lubridate::days(caseAverage))
+      ) %>%
+      ungroup()
+    pCasesTitle <- str_c(pCasesTitle, "\n(", translator$t("7 day avarage"), ")")
+  }
 
   caseDataCH <- filter(caseData, region == translator$t("Switzerland (Total)"))
 
@@ -303,7 +354,11 @@ rEffPlotlyRegion <- function(
 
   estimatesPlotCH <- filter(estimatesPlot, region == translator$t("Switzerland (Total)"))
 
-  zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
+  if (logCaseYaxis) {
+    zoomRange <- makeZoomRange(log10(max(caseData$incidence, na.rm = TRUE)), extra = log10(5), stepSize = log10(10))
+  } else {
+    zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
+  }
 
   pCases <- plot_ly(data = caseData) %>%
     filter(region != translator$t("Switzerland (Total)")) %>%
@@ -318,10 +373,11 @@ rEffPlotlyRegion <- function(
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     layout(
-      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = TRUE, rSelector = TRUE),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = FALSE, rSelector = TRUE),
       yaxis = plotlyYaxis(
-        title = translator$t("New observations"),
-        fixedRange = fixedRangeY[1]),
+        title = pCasesTitle,
+        fixedRange = fixedRangeY[1],
+        logAxis = logCaseYaxis),
       legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>"))),
       sliders = list(
         makeSlider(zoomRange)
@@ -492,6 +548,10 @@ rEffPlotlyComparison <- function(
   focusCountry = "Switzerland",
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
+  logCaseYaxis = FALSE,
+  caseAverage = 1,
+  caseNormalize = FALSE,
+  popSizes = NULL,
   countryColors,
   translator,
   language,
@@ -543,14 +603,35 @@ rEffPlotlyComparison <- function(
     rightMargin <- 200
 
   # prepare Data
+  pCasesTitle <- translator$t("New observations")
 
+  if (caseNormalize) {
+    caseData <- caseData %>%
+      left_join(popSizes, by = c("country", "region")) %>%
+      mutate(incidence = incidence / popSize * 100000)
+    pCasesTitle <- str_c(pCasesTitle, " / 100'000")
+  }
+
+  if (caseAverage > 1) {
+    caseData <- caseData %>%
+      group_by(countr, region, data_type) %>%
+      mutate(
+        incidence = slide_index_dbl(incidence, date, mean, .before = lubridate::days(caseAverage))
+      ) %>%
+      ungroup()
+    pCasesTitle <- str_c(pCasesTitle, "\n(", translator$t("7 day avarage"), ")")
+  }
   caseDataFocus <- filter(caseData, country == focusCountry)
 
   estimatesPlot <- estimates
   estimatesPlotFocus <- filter(estimatesPlot, country == focusCountry)
 
-  zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
-
+  if (logCaseYaxis) {
+    zoomRange <- makeZoomRange(log10(max(caseData$incidence, na.rm = TRUE)), extra = log10(5), stepSize = log10(10))
+  } else {
+    zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
+  }
+  
   pCases <- plot_ly(data = caseData) %>%
     filter(country != focusCountry) %>%
     add_bars(x = ~date, y = ~incidence, color = ~country, colors = countryColors,
@@ -564,10 +645,11 @@ rEffPlotlyComparison <- function(
         incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     layout(
-      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = TRUE,  rSelector = TRUE),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = FALSE,  rSelector = TRUE),
       yaxis = plotlyYaxis(
-        title = translator$t("New observations"),
-        fixedRange = fixedRangeY[1]),
+        title = pCasesTitle,
+        fixedRange = fixedRangeY[1],
+        logAxis = logCaseYaxis),
       legend = list(title = list(text = "<b> Data Type </b>")),
       sliders = list(
         makeSlider(zoomRange)
@@ -758,7 +840,9 @@ plotlyYaxis <- function(
     range = NULL, fixedRange = TRUE,
     zeroline = TRUE,
     visible = TRUE,
-    axisTitleFontSize = 14) {
+    logAxis = FALSE,
+    axisTitleFontSize = 14
+    ) {
   out <- list(
     visible = visible,
     range = range,
@@ -767,6 +851,11 @@ plotlyYaxis <- function(
     title = list(
       text = title,
       font = list(size = axisTitleFontSize)))
+  
+  if(logAxis) {
+    out$type <- "log"
+  }
+
   return(out)
 }
 

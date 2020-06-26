@@ -785,7 +785,7 @@ getLongECDCData <- function(countries = NULL) {
 
   longData <- world_data %>%
     dplyr::select(
-      c(date = "dateRep", country = "countriesAndTerritories",
+      c(date = "dateRep", country = "countriesAndTerritories", popSize = popData2019,
         confirmed = "cases", deaths = "deaths")) %>%
     pivot_longer(cols = c(confirmed, deaths), names_to = "data_type") %>%
     mutate(
@@ -841,7 +841,11 @@ cat("CH\n")
 countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
   "Netherlands", "Spain", "Switzerland", "Sweden", "United Kingdom")
 
-ECDCdata <- getLongECDCData(setdiff(countryList, c("Switzerland", "Netherlands")))
+ECDCdataRaw <- getLongECDCData(setdiff(countryList, c("Switzerland")))
+ 
+ECDCdata <- ECDCdataRaw %>%
+  filter(!(country %in% c("Netherlands")))
+ 
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
 cat("Swiss Excess\n")
 
@@ -1024,5 +1028,45 @@ latestData <- rawData %>%
     ), by = "source")
 
 save(latestData, file = pathToLatestData)
+
+# population sizes for plotting
+pathToPopSizes <- file.path(dataDir, "popSizes.Rdata")
+
+popSizesECDC <- ECDCdataRaw %>%
+  group_by(country, region) %>%
+  summarize(popSize = popSize[1])
+
+popSizesCH <- read_csv(here("app/data/popSizesCHFL.csv"),
+  col_types = cols(
+    country = col_character(),
+    region = col_character(),
+    popSize = col_double()
+  )
+)
+
+greaterRegions <- tribble(
+    ~greaterRegion,             ~region,
+    "grR Lake Geneva Region",       c("VD", "VS", "GE"),
+    "grR Espace Mittelland",        c("BE", "FR", "SO", "NE", "JU"),
+    "grR Northwestern Switzerland", c("BS", "BL", "AG"),
+    "grR Zurich",                   c("ZH"),
+    "grR Eastern Switzerland",      c("GL", "SH", "AR", "AI", "SG", "GR", "TG"),
+    "grR Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
+    "grR Ticino",                   c("TI")
+  ) %>% unnest(cols = c(region))
+
+popSizesCHgrR <- popSizesCH %>%
+  filter(country == "Switzerland", region != "Switzerland") %>%
+  left_join(greaterRegions, by = "region") %>%
+  ungroup() %>%
+  mutate(region = greaterRegion) %>%
+  dplyr::select(-greaterRegion) %>%
+  group_by(country, region) %>%
+  dplyr::summarize(
+    popSize = sum(popSize),
+    country = "Switzerland")
+
+popSizes <- bind_rows(popSizesECDC, popSizesCH, popSizesCHgrR)
+save(popSizes, file = pathToPopSizes)
 
 cat(paste("###", Sys.time(), "- done 1_getRawData.R", "\n"))

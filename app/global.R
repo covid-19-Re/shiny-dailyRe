@@ -3,6 +3,7 @@ library(plotly)
 library(viridisLite)
 library(here)
 library(shiny.i18n)
+library(slider)
 
 source("otherScripts/ReffPlotly.R")
 
@@ -22,6 +23,7 @@ pathToInterventionData <- file.path("../../covid19-additionalData/interventions/
 pathToCountryList <- file.path(dataDir, "countryList.Rdata")
 pathToEstimateDates <- file.path(dataDir, "estimate_dates.Rdata")
 pathToValidEstimates <- file.path(dataDir, "valid_estimates.Rdata")
+pathToPopSizes <- file.path(dataDir, "popSizes.Rdata")
 
 load(pathToCountryList)
 
