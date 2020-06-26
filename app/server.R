@@ -25,6 +25,9 @@ server <- function(input, output, session) {
   estimatesDates <- readRDS(pathToEstimatesDates)
   validEstimates <- readRDS(pathToValidEstimates)
   latestData <- readRDS(pathTolatestData)
+
+  #TODO use rds
+  load(pathToPopSizes)
   lastCheck <- readLines(pathToLastCheck)
 
   # Render UI
@@ -43,16 +46,34 @@ server <- function(input, output, session) {
           menuSubItem(i, tabName = str_remove(i, " "), icon = icon("chart-area"))
         })
       ),
-      menuItem(HTML(i18n()$t("Download Re estimates")),
+      menuItem(HTML(i18n()$t("Download R<sub>e</sub> estimates")),
                   tabName = "download", icon = icon("download")),
       menuItem(i18n()$t("About"), tabName = "about", icon = icon("question-circle")),
-      radioButtons("estimation_type_select", "Select estimation type to show",
-          choices = c("sliding window" = "Cori_slidingWindow", "step-wise constant" = "Cori_step"),
-          selected = "Cori_slidingWindow", inline = FALSE),
+      uiOutput("plotOptions"),
       selectInput("lang", i18n()$t("Language"),
         languageSelect, selected = input$lang, multiple = FALSE,
         selectize = TRUE, width = NULL, size = NULL)
     )
+  })
+
+  output$plotOptions <- renderUI({
+      div(style = "background-color:#2F3B41; margin:15px; border-radius:5px; padding:10px",
+        h4("Plot Options", style = "margin-top:0px"),
+        HTML("<i>Plot 1 - Case Data</i>"),
+        div(style = "margin-left:10px !important;",
+          checkboxInput("logCases", "Logarithmic axis for cases", FALSE),
+          checkboxInput("caseNormalize", "Normalize cases to per 100'000 inhabitants", FALSE),
+          radioButtons("caseAverage", "Display case data as ...",
+            choices = c("daily case numbers" = 1, "7-day average" = 7),
+            selected = 1, inline = FALSE)
+        ),
+        HTML("<i>Plot 2 - R<sub>e</sub> estimates</i>"),
+        div(style = "margin-left:10px !important; margin-top:10px",
+          radioButtons("estimation_type_select", "Select estimation type to show",
+            choices = c("sliding window" = "Cori_slidingWindow", "step-wise constant" = "Cori_step"),
+            selected = "Cori_slidingWindow", inline = FALSE)
+        )
+      )
   })
 
   output$chUI <- renderUI({
@@ -294,6 +315,10 @@ server <- function(input, output, session) {
   })
 
   estimatesSwitzerlandPlot <- reactive({
+    validate(
+      need(input$estimation_type_select, "loading ...")
+    )
+
     estimatesSwitzerlandPlot <- estimatesSwitzerland() %>%
       filter(
         source %in% c("FOPH"),
@@ -380,6 +405,9 @@ server <- function(input, output, session) {
   })
 
   output$CHinteractivePlot <- renderPlotly({
+    validate(
+      need(input$caseAverage, "loading ...")
+    )
 
     caseDataCH <- caseDataSwitzerlandPlot() %>%
       filter(country == "Switzerland", region == "Switzerland")
@@ -404,6 +432,10 @@ server <- function(input, output, session) {
       latestDataCH,
       fixedRangeX = fixedRangeX,
       fixedRangeY = fixedRangeY,
+      logCaseYaxis = input$logCases,
+      caseAverage = input$caseAverage,
+      caseNormalize = input$caseNormalize,
+      popSizes = popSizes,
       language = input$lang,
       translator = i18n(),
       widgetID = NULL)
@@ -442,6 +474,10 @@ server <- function(input, output, session) {
       endDate = max(caseData$date) + 1,
       fixedRangeX = fixedRangeX,
       fixedRangeY = fixedRangeY,
+      logCaseYaxis = input$logCases,
+      caseAverage = input$caseAverage,
+      caseNormalize = input$caseNormalize,
+      popSizes = popSizes,
       regionColors = cantonColors,
       translator = i18n(),
       language = input$lang,
@@ -459,6 +495,10 @@ server <- function(input, output, session) {
     caseData <- caseDataSwitzerlandPlot() %>%
       mutate(region = str_remove(region, "grR ")) %>%
       filter(region %in% rEffData$region)
+
+    popSizesGrR <- popSizes %>%
+      filter(str_detect(region, "grR") | region == "Switzerland") %>%
+      mutate(region = str_remove(region, "grR "))
 
     greaterRegionColors <- viridis(length(unique(caseData$region)))
     names(greaterRegionColors) <- unique(caseData$region)
@@ -485,6 +525,10 @@ server <- function(input, output, session) {
       endDate = max(caseData$date) + 1,
       fixedRangeX = fixedRangeX,
       fixedRangeY = fixedRangeY,
+      logCaseYaxis = input$logCases,
+      caseAverage = input$caseAverage,
+      caseNormalize = input$caseNormalize,
+      popSizes = popSizesGrR,
       regionColors = greaterRegionColors,
       translator = i18n(),
       language = input$lang,
@@ -519,6 +563,10 @@ server <- function(input, output, session) {
       focusCountry = focusCountry,
       fixedRangeX = fixedRangeX,
       fixedRangeY = fixedRangeY,
+      logCaseYaxis = input$logCases,
+      caseAverage = input$caseAverage,
+      caseNormalize = input$caseNormalize,
+      popSizes = popSizes,
       countryColors = countryColors,
       translator = i18n(),
       language = input$lang,
@@ -574,6 +622,10 @@ server <- function(input, output, session) {
         startDate = min(estimatesCountry$date) - 14,
         fixedRangeX = fixedRangeX,
         fixedRangeY = fixedRangeY,
+        logCaseYaxis = input$logCases,
+        caseAverage = input$caseAverage,
+        caseNormalize = input$caseNormalize,
+      popSizes = popSizes,
         translator = i18n(),
         language = input$lang,
         widgetID = NULL)

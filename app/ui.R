@@ -8,6 +8,7 @@ dashboardPage(title = "COVID-19 Re",
     sidebarMenuOutput("menu")
   ),
   dashboardBody(
+      tags$style("section.sidebar .shiny-input-container {padding-top: 0px}"),
       uiOutput("dashboardBodyUI")
   )
 )

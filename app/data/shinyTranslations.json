@@ -25,10 +25,40 @@
       "de-ch": "R<sub>e</sub> in der Schweiz"
     },
     {
+      "en-gb": "R<sub>e</sub> for greater Regions",
+      "it-ch": "R<sub>e</sub> nei grandi regioni",
+      "fr-ch": "R<sub>e</sub> dans les grandes régions",
+      "de-ch": "R<sub>e</sub> in den Grossregionen"
+    },
+    {
+      "en-gb": "R<sub>e</sub> in Europe",
+      "it-ch": "R<sub>e</sub> nei Europa",
+      "fr-ch": "R<sub>e</sub> en Europe",
+      "de-ch": "R<sub>e</sub> in Europa"
+    },
+    {
       "en-gb": "About",
       "it-ch": "Informazioni su questo sito",
       "fr-ch": "À propos de ce site",
       "de-ch": "Über diese Seite"
+    },
+    {
+      "en-gb": "Download R<sub>e</sub> estimates",
+      "it-ch": "Scarica stime R<sub>e</sub>",
+      "fr-ch": "Télécharger R<sub>e</sub> estimations",
+      "de-ch": "R<sub>e</sub> Schätzungen herunterladen"
+    },
+    {
+      "en-gb": "Download estimates for Europe",
+      "it-ch": "Scarica stime Europa",
+      "fr-ch": "Télécharger estimations Europe",
+      "de-ch": "Schätzungen für Europa herunterladen"
+    },
+    {
+      "en-gb": "Download estimates for Switzerland",
+      "it-ch": "Scarica stime Svizzera",
+      "fr-ch": "Télécharger estimations Suisse",
+      "de-ch": "Schätzungen für die Schweiz herunterladen"
     },
     {
       "en-gb": "Language",
@@ -145,6 +175,12 @@
       "de-ch": "Verbot von Veranstaltungen mit > 1000 Personen"
     },
     {
+      "en-gb": "Ban of events > 300 people",
+      "it-ch": "Divieto di eventi > 300 persone",
+      "fr-ch": "Interdiction des évènements de plus de 300 personnes",
+      "de-ch": "Verbot von Veranstaltungen mit > 300 Personen"
+    },
+    {
       "en-gb": "Ban of events > 1000 people <br> SR 818.101.24 COVID-19 Ordinance 1, 28.2.2020",
       "it-ch": "Divieto di eventi > 1000 persone <br> SR 818.101.24 Ordinanza 2 COVID-19 1, 28.2.2020",
       "fr-ch": "Interdiction des évènements de plus de 1000 personnes <br> SR 818.101.24 Ordonnance 1 COVID-19, 28.2.2020",
@@ -155,6 +191,12 @@
       "it-ch": "Termine del divieto di eventi > 100 persone",
       "fr-ch": "Fin de l’interdiction des évènements de plus de 100 personnes",
       "de-ch": "Ende des Verbots von Veranstaltungen mit > 100 Personen"
+    },
+    {
+      "en-gb": "End of ban of events > 300 people",
+      "it-ch": "Termine del divieto di eventi > 300 persone",
+      "fr-ch": "Fin de l’interdiction des évènements de plus de 300 personnes",
+      "de-ch": "Ende des Verbots von Veranstaltungen mit > 300 Personen"
     },
     {
       "en-gb": "Ban of events > 100 people",
@@ -179,6 +221,18 @@
       "it-ch": "divieto di assembramenti > 5 persone",
       "fr-ch": "Interdiction des regroupements de plus de 5 personnes",
       "de-ch": "Verbot von Menschenansammlungen > 5 Personen"
+    },
+    {
+      "en-gb": "Ban of gatherings > 30 people",
+      "it-ch": "divieto di assembramenti > 30 persone",
+      "fr-ch": "Interdiction des regroupements de plus de 30 personnes",
+      "de-ch": "Verbot von Menschenansammlungen > 30 Personen"
+    },
+    {
+      "en-gb": "End of ban of gatherings > 30 people",
+      "it-ch": "Termine del divieto di assembramenti > 30 persone",
+      "fr-ch": "Fin de l’interdiction des groupes de plus de 30 personnes",
+      "de-ch": "Ende des Verbots von Menschenansammlungen > 30 Personen"
     },
     {
       "en-gb": "Ban of gatherings > 5 people <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 20.3.2020",
@@ -217,16 +271,28 @@
       "de-ch": "Teilweise Schliessung der Grenzen <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020"
     },
     {
-      "en-gb": "End of school closure <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020",
+      "en-gb": "End of full school closure <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020",
       "it-ch": "Termine della chiusura scuole<br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020",
       "fr-ch": "Réouverture des écoles <br> SR 818.101.24 COVID-19-Verordnung 3, 13.3.2020",
-      "de-ch": "ende der Schulschliessung <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020"
+      "de-ch": "Ende der Schulschliessung <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020"
     },
     {
       "en-gb": "School closure",
       "it-ch": "Chiusura scuole",
       "fr-ch": "Fermeture des écoles",
       "de-ch": "Schulschliessung"
+    },
+    {
+      "en-gb": "Partial School Closure",
+      "it-ch": "Parziale chiusura scuole",
+      "fr-ch": "Fermeture partielle des écoles",
+      "de-ch": "Teilweise Schulschliessung"
+    },
+    {
+      "en-gb": "End of partial School Closure",
+      "it-ch": "Termine della parziale chiusura scuole",
+      "fr-ch": "Réouverture des écoles",
+      "de-ch": "Ende der teilweisen Schulschliessung"
     },
     {
       "en-gb": "School closure <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020",

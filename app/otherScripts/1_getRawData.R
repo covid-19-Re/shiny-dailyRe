@@ -120,7 +120,7 @@ calcIncidenceData <- function(data) {
 ########################################
 
 ##### Swiss Data #######
-sumGreaterRegions <- function(chData){
+sumGreaterRegions <- function(chData) {
    greaterRegions <- tribble(
     ~greaterRegion,             ~region,
     "grR Lake Geneva Region",       c("VD", "VS", "GE"),
@@ -208,7 +208,7 @@ getSwissDataFromOpenZH <- function(stopAfter = (Sys.Date() - 1)) {
   return(openZHdata)
 }
 
-getSwissDataFromBAG <- function(path, filename = "incidence_data_CH.csv"){
+getSwissDataFromBAG <- function(path, filename = "incidence_data_CH.csv") {
   filePath <- file.path(path, filename)
   bagData <- read_csv(filePath,
     col_types = cols(
@@ -229,7 +229,7 @@ getSwissDataFromBAG <- function(path, filename = "incidence_data_CH.csv"){
 
 ## Include hospitalization counts from local csv files
 getHospitalData <- function(path, region = "CH", csvBaseName="Hospital_cases", dataTypeSuffix="") {
-  filePath <- file.path(path, str_c(csvBaseName,dataTypeSuffix, "_", region, ".csv"))
+  filePath <- file.path(path, str_c(csvBaseName, dataTypeSuffix, "_", region, ".csv"))
 
   if (file.exists(filePath)) {
     cumData <- read_csv(filePath,
@@ -268,8 +268,8 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
 
   url2020 <- "https://www.bfs.admin.ch/bfsstatic/dam/assets/13047388/master"
   data2020 <- try(read_delim(url2020, delim = ";"))
-  
-  if ("try-error" %in% class(data2020)){
+
+  if ("try-error" %in% class(data2020)) {
     return(NULL)
   }
 
@@ -301,26 +301,26 @@ getExcessDeathCH <- function(startAt = as.Date("2020-02-20")) {
 
 getExcessDeathHMD <- function(startAt = as.Date("2020-02-20")) {
   # Human mortality database
-  
+
   url <- "https://www.mortality.org/Public/STMF/Outputs/stmf.csv"
   rawData <- try(read_csv(url, comment = "#"))
 
-  if ("try-error" %in% class(rawData)){
+  if ("try-error" %in% class(rawData)) {
     return(NULL)
   }
-  
+
   tidy_data <- rawData %>%
     dplyr::select(country = CountryCode, year = Year,
-           week = Week, sex = Sex, deaths = DTotal) %>%
-    filter(sex == 'b') %>%
-    mutate(country = recode(country, 
-                AUT="Austria", BEL="Belgium",
-                BGR="Bulgaria", CZE="Czech Republic", 
-                DEUTNP="Germany", DNK="Denmark", ESP="Spain",     
-                FIN="Finland", GBRTENW="United Kingdom", ISL="Island",
-                NLD="Netherlands", NOR="Norway", PRT="Portugal", SWE="Sweden",
-                USA="USA"))
-  
+      week = Week, sex = Sex, deaths = DTotal) %>%
+    filter(sex == "b") %>%
+    mutate(country = recode(country,
+      AUT = "Austria", BEL = "Belgium",
+      BGR = "Bulgaria", CZE = "Czech Republic",
+      DEUTNP = "Germany", DNK = "Denmark", ESP = "Spain",
+      FIN = "Finland", GBRTENW = "United Kingdom", ISL = "Island",
+      NLD = "Netherlands", NOR = "Norway", PRT = "Portugal", SWE = "Sweden",
+      USA = "USA"))
+
   past_data <- tidy_data %>%
     filter(year %in% seq(2015, 2019)) %>%
     group_by(country, week) %>%
@@ -340,23 +340,22 @@ getExcessDeathHMD <- function(startAt = as.Date("2020-02-20")) {
         ), locale = "en_GB.UTF-8")) %>%
     dplyr::select(-year, -week)
 
-  
   longData <- excess_death %>%
     dplyr::select(date, country, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
     mutate(variable = "incidence",
            region = country, source = "HMD") %>%
     mutate(value = ifelse(value < 0, 0, value))
-  
+
   cumulData <- getCumulData(longData)
   longData <- bind_rows(longData, cumulData)
-  
+
   return(longData)
 }
 
-getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/excessDeath/Excess_death_IT.csv"), 
+getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/excessDeath/Excess_death_IT.csv"),
                              startAt = as.Date("2020-02-20")) {
-  #https://www.istat.it/it/archivio/240401 
+  #https://www.istat.it/it/archivio/240401
   if (file.exists(filePath)) {
     rawData <- read_csv(filePath,
                         col_types = cols(
@@ -396,22 +395,22 @@ getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/ex
     dplyr::select(commune_code = COD_PROVCOM, date = GE,
                   paste0("T_", seq(15, 20))) %>%
     mutate(T_20 = parse_double(T_20, na = "n.d.")) %>%
-    pivot_longer(cols = paste0("T_", seq(15, 20)), names_to = 'year', values_to = 'deaths') %>%
-    mutate(year = gsub('T_','20', year),
+    pivot_longer(cols = paste0("T_", seq(15, 20)), names_to = "year", values_to = "deaths") %>%
+    mutate(year = gsub("T_", "20", year),
            day = date,
            date = paste0(year, date)) %>%
     filter(day != "0229") %>%
     mutate(date = parse_date(date, format = "%Y%m%d"),
            commune_day = paste0(commune_code, "_", day))
   # we exclude the day 02-29 because it does not exist in all years
-  
+
   # in 2020 for some communes data is missing on some days
   # we exclude it, so we don't compare to a wrong total
   na_commune_days <- tidy_data %>%
     filter(year == "2020",
            is.na(deaths)) %>%
     pull(unique(commune_day))
-  
+
   past_data <- tidy_data %>%
     filter(!(commune_day %in% na_commune_days),
       year %in% seq(2015, 2019)) %>%
@@ -419,7 +418,7 @@ getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/ex
     summarise_at(vars(deaths), sum, na.rm = TRUE) %>%
     group_by(day) %>%
     summarise_at(vars(deaths), list(avg_deaths = mean))
-  
+
   excess_death <- tidy_data %>%
     group_by(date, year, day) %>%
     summarise_at(vars(deaths), sum, na.rm = TRUE) %>%
@@ -427,9 +426,9 @@ getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/ex
            day > "0220") %>%
     left_join(past_data, by = c("day")) %>%
     mutate(excess_deaths = ceiling(deaths - avg_deaths)) %>%
-    dplyr::select(-day) %>% 
+    dplyr::select(-day) %>%
     ungroup()
-  
+
   longData <- excess_death %>%
     dplyr::select(date, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
@@ -437,19 +436,19 @@ getExcessDeathIT <- function(filePath = here::here("../covid19-additionalData/ex
            region = country, source = "Istat") %>%
     mutate(value = ifelse(value < 0, 0, value)) %>%
     filter(!is.na(value))
-  
+
   cumulData <- getCumulData(longData)
   longData <- bind_rows(longData, cumulData)
-  
+
   return(longData)
 }
 
 ##### French Data ##########################################
 
-getHospitalDataFR <- function(){
+getHospitalDataFR <- function() {
   # nouveaux file contains the incidence
-  url = "https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c"
-  rawData = try(read_delim(url, delim = ";",
+  url <- "https://www.data.gouv.fr/fr/datasets/r/6fadff46-9efd-4c53-942a-54aca783c30c"
+  rawData <- try(read_delim(url, delim = ";",
                        col_types = cols(
                          dep = col_character(),
                          jour = col_date(format = ""),
@@ -458,7 +457,7 @@ getHospitalDataFR <- function(){
                          incid_dc = col_double(),
                          incid_rad = col_double()
                        )))
-  if('try-error' %in% class(rawData)){
+  if ("try-error" %in% class(rawData)) {
     return(NULL)
   }
 
@@ -467,44 +466,48 @@ getHospitalDataFR <- function(){
            region = dep,
            incid_hosp) %>%
     group_by(date) %>%
-    summarise_at(vars(incid_hosp), list(value = sum) ) %>%
+    summarise_at(vars(incid_hosp), list(value = sum)) %>%
     ungroup() %>%
     arrange(date) %>%
-    mutate(data_type = 'hospitalized',
+    mutate(data_type = "hospitalized",
            country = "France",
            variable = "incidence",
            region = country,
            source = "SpF-DMI")
-  
+
   cumulData <- getCumulData(longData)
   longData <- bind_rows(longData, cumulData)
 
   return(longData)
 }
 
-getExcessDeathFR <- function(startAt = as.Date("2020-02-20")){
-  url <- "https://raw.githubusercontent.com/TheEconomist/covid-19-excess-deaths-tracker/master/output-data/excess-deaths/france_excess_deaths.csv"
-  rawData = try(read_csv(url,
-                         col_types = cols(
-                           country = col_character(),
-                           region = col_character(),
-                           region_code = col_double(),
-                           start_date = col_date(format = ""),
-                           end_date = col_date(format = ""),
-                           year = col_double(),
-                           week = col_double(),
-                           population = col_double(),
-                           total_deaths = col_double(),
-                           covid_deaths = col_double(),
-                           expected_deaths = col_double(),
-                           excess_deaths = col_double(),
-                           non_covid_deaths = col_double()
-                         )))
-  
-  if('try-error' %in% class(rawData)){
+getExcessDeathFR <- function(startAt = as.Date("2020-02-20")) {
+  url <- str_c("https://raw.githubusercontent.com/TheEconomist/",
+    "covid-19-excess-deaths-tracker/master/output-data/excess-deaths/france_excess_deaths.csv")
+  rawData <- try(
+    read_csv(url,
+      col_types = cols(
+        country = col_character(),
+        region = col_character(),
+        region_code = col_double(),
+        start_date = col_date(format = ""),
+        end_date = col_date(format = ""),
+        year = col_double(),
+        week = col_double(),
+        population = col_double(),
+        total_deaths = col_double(),
+        covid_deaths = col_double(),
+        expected_deaths = col_double(),
+        excess_deaths = col_double(),
+        non_covid_deaths = col_double()
+      )
+    )
+  )
+
+  if ("try-error" %in% class(rawData)) {
     return(NULL)
   }
-  
+
   longData <- rawData %>%
     group_by(country, end_date, week) %>%
     summarise_at(vars(total_deaths, excess_deaths), list(sum)) %>%
@@ -515,50 +518,55 @@ getExcessDeathFR <- function(startAt = as.Date("2020-02-20")){
           source = "Economist") %>%
     mutate(value = ifelse(value < 0, 0, value)) %>%
     filter(date > startAt)
-  
+
   cumulData <- getCumulData(longData)
   longData <- bind_rows(longData, cumulData)
-  
+
   return(longData)
 }
 
 ##### Belgian Data ##########################################
 
-getHospitalDataBE <- function(){
-  url = "https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv"
-  rawData = try(read_csv(url,
-                           col_types = cols(
-                             DATE = col_date(format = ""),
-                             PROVINCE = col_character(),
-                             REGION = col_character(),
-                             NR_REPORTING = col_double(),
-                             TOTAL_IN = col_double(),
-                             TOTAL_IN_ICU = col_double(),
-                             TOTAL_IN_RESP = col_double(),
-                             TOTAL_IN_ECMO = col_double(),
-                             NEW_IN = col_double(),
-                             NEW_OUT = col_double()
-                           ) ))
-  if('try-error' %in% class(rawData)){
+getHospitalDataBE <- function() {
+  url <- "https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv"
+  rawData <- try(
+    read_csv(url,
+      col_types = cols(
+        DATE = col_date(format = ""),
+        PROVINCE = col_character(),
+        REGION = col_character(),
+        NR_REPORTING = col_double(),
+        TOTAL_IN = col_double(),
+        TOTAL_IN_ICU = col_double(),
+        TOTAL_IN_RESP = col_double(),
+        TOTAL_IN_ECMO = col_double(),
+        NEW_IN = col_double(),
+        NEW_OUT = col_double()
+      )
+    )
+  )
+
+  if ("try-error" %in% class(rawData)) {
     return(NULL)
   }
-  
+
   longData <- rawData %>%
     dplyr::select(date = DATE,
            value = NEW_IN) %>%
     group_by(date) %>%
-    summarise_at(vars(value), list(value = sum) ) %>%
+    summarise_at(vars(value), list(value = sum)) %>%
     ungroup() %>%
     arrange(date) %>%
-    mutate(data_type = 'hospitalized',
-           country = "Belgium",
-           variable = "incidence",
-           region = country,
-           source = "Sciensano")
-  
+    mutate(
+      data_type = "hospitalized",
+      country = "Belgium",
+      variable = "incidence",
+      region = country,
+      source = "Sciensano")
+
   cumulData <- getCumulData(longData)
   longData <- bind_rows(longData, cumulData)
-  
+
   return(longData)
 }
 
@@ -570,8 +578,8 @@ getDataNL <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
 
   urlfile <- paste0(baseurl, stopAfter, ".csv")
   raw_data <- try(read_csv(urlfile))
-  
-  if ('try-error' %in% class(raw_data)){
+
+  if ("try-error" %in% class(raw_data)) {
     urlfile <- paste0(baseurl, "latest.csv")
     raw_data <- read_csv(urlfile)
   }
@@ -746,7 +754,7 @@ getExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = "..
 
 getLongECDCData <- function(countries = NULL) {
   urlfile <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
-   
+
   world_data <- try(read_csv(urlfile,
     col_types = cols(
       dateRep = col_character(),
@@ -764,12 +772,13 @@ getLongECDCData <- function(countries = NULL) {
 
   if ("try-error" %in% class(world_data)) {
     cat("ECDC csv not available... \nTrying .xlsx ... \n")
-    xlsFile <- "https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide.xlsx"
+    xlsFile <- str_c("https://www.ecdc.europa.eu/sites/default/files/documents/",
+    "COVID-19-geographic-disbtribution-worldwide.xlsx")
     downloadOK <- try(download.file(xlsFile, destfile = here::here("app/data/temp", "ECDCdataTemp.xlsx")))
-    if ("try-error" %in% class (downloadOK)) {
+    if ("try-error" %in% class(downloadOK)) {
       cat("Coulnd't get new xlsx file. Trying to read older xslx file...")
     } else {
-      file.copy(
+      file.rename(
         from = here::here("app/data/temp", "ECDCdataTemp.xlsx"),
         to = here::here("app/data", "ECDCdata.xlsx"))
       cat(".xlsx ok!... \n")
@@ -780,12 +789,11 @@ getLongECDCData <- function(countries = NULL) {
       cat("ECDC data not available... \n")
       return(NULL)
     }
-    
   }
 
   longData <- world_data %>%
     dplyr::select(
-      c(date = "dateRep", country = "countriesAndTerritories",
+      c(date = "dateRep", country = "countriesAndTerritories", popSize = popData2019,
         confirmed = "cases", deaths = "deaths")) %>%
     pivot_longer(cols = c(confirmed, deaths), names_to = "data_type") %>%
     mutate(
@@ -821,7 +829,7 @@ getLongECDCData <- function(countries = NULL) {
 ###### Input #######
 ####################
 
-dataCHHospitalPath <- here::here("../ch-hospital-data/data/CH")
+dataCHHospitalPath <- here::here("app/data/CH")
 
 dataDir <- here::here("app/data/temp")
 
@@ -842,24 +850,32 @@ cat("CH\n")
 countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
   "Netherlands", "Spain", "Switzerland", "Sweden", "United Kingdom")
 
-ECDCdata <- getLongECDCData(setdiff(countryList, c("Switzerland", "Netherlands")))
+
+ECDCdataRaw <- getLongECDCData(setdiff(countryList, c("Switzerland")))
+ 
+ECDCdata <- ECDCdataRaw %>%
+  filter(!(country %in% c("Netherlands")))
 
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
 cat("Swiss Excess\n")
 
 NLdata <- try(getDataNL(stopAfter = Sys.Date() - 1))
-if ('try-error' %in% class(NLdata)){
+if ("try-error" %in% class(NLdata)) {
   NLdata <- NULL
 }
 cat("NL\n")
 
-ExcessDeathData <- getExcessDeathHMD() %>%
+ExcessDeathData <- getExcessDeathHMD()
+if (!is.null(ExcessDeathData)) {
+  ExcessDeathData <- ExcessDeathData %>%
   filter(country %in% countryList)
-cat("HMD\n")
+  cat("HMD\n")
+} else {
+  cat("get HMD data failed")
+}
 
 pathToExcessDeathIT <- here::here("../covid19-additionalData/excessDeath/Excess_death_IT.csv")
-ITExcessDeath <- getExcessDeathIT(filePath = pathToExcessDeathIT, 
-                 startAt = as.Date("2020-02-20"))
+ITExcessDeath <- getExcessDeathIT(filePath = pathToExcessDeathIT, startAt = as.Date("2020-02-20"))
 cat("IT\n")
 
 hospitalDataFR <- getHospitalDataFR()
@@ -909,16 +925,16 @@ rawData <- rawDataAll %>%
   mutate(
     data_type = factor(
       data_type,
-      levels = c("confirmed", 
+      levels = c("confirmed",
                  "hospitalized",
                  "hospitalized_onsets",
-                 "hospitalized_admissions", 
-                 "deaths", 
+                 "hospitalized_admissions",
+                 "deaths",
                  "excess_deaths"),
-      labels = c("Confirmed cases", 
-                 "Hospitalized patients", 
-                 "Hospitalized patients - onset", 
-                 "Hospitalized patients - admission", 
+      labels = c("Confirmed cases",
+                 "Hospitalized patients",
+                 "Hospitalized patients - onset",
+                 "Hospitalized patients - admission",
                  "Deaths",
                  "Excess deaths"))) %>%
   dplyr::select(country, region, source, data_type, variable, date, value) %>%
@@ -1000,7 +1016,11 @@ saveRDS(countryList, file = pathToCountryListSave)
 pathToLatestData <- file.path(dataDir, "latestData.rds")
   
 latestData <- rawData %>%
-  mutate(data_type=replace(data_type, data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"), "Hospitalized patients")) %>%
+  mutate(
+    data_type = replace(
+      data_type,
+      data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"),
+      "Hospitalized patients")) %>%
   group_by(country, region, source, data_type) %>%
   dplyr::summarize(date = max(date)) %>%
   left_join(tribble(
@@ -1014,11 +1034,50 @@ latestData <- rawData %>%
       "ECDC",   "Data from the European Center for Disease Prevention and Control", "https://opendata.ecdc.europa.eu/covid19/casedistribution/",
       "HMD",    "Data from the Human Mortality Database - Short-term Mortality Fluctuations Data Series", "https://www.mortality.org/",
       "Istat",  "Data from the Italian National Institute of Statistics", "https://www.istat.it/it/archivio/240401",
-      "SpF-DMI","Data from the French National Public Health Agency", "https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/",
-      "Economist","Data from the Economist Excess Death Tracker", "https://github.com/TheEconomist/covid-19-excess-deaths-tracker",
-      "Sciensano","Data from the Belgian Institute for Health", "https://epistat.wiv-isp.be/covid/"
+      "SpF-DMI", "Data from the French National Public Health Agency", "https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/",
+      "Economist", "Data from the Economist Excess Death Tracker", "https://github.com/TheEconomist/covid-19-excess-deaths-tracker",
+      "Sciensano", "Data from the Belgian Institute for Health", "https://epistat.wiv-isp.be/covid/"
     ), by = "source")
 
 saveRDS(latestData, file = pathToLatestData)
+
+# population sizes for plotting
+pathToPopSizes <- file.path(dataDir, "popSizes.Rdata")
+
+popSizesECDC <- ECDCdataRaw %>%
+  group_by(country, region) %>%
+  summarize(popSize = popSize[1])
+
+popSizesCH <- read_csv(here("app/data/popSizesCHFL.csv"),
+  col_types = cols(
+    country = col_character(),
+    region = col_character(),
+    popSize = col_double()
+  )
+)
+
+greaterRegions <- tribble(
+    ~greaterRegion,             ~region,
+    "grR Lake Geneva Region",       c("VD", "VS", "GE"),
+    "grR Espace Mittelland",        c("BE", "FR", "SO", "NE", "JU"),
+    "grR Northwestern Switzerland", c("BS", "BL", "AG"),
+    "grR Zurich",                   c("ZH"),
+    "grR Eastern Switzerland",      c("GL", "SH", "AR", "AI", "SG", "GR", "TG"),
+    "grR Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
+    "grR Ticino",                   c("TI")
+  ) %>% unnest(cols = c(region))
+
+popSizesCHgrR <- popSizesCH %>%
+  filter(country == "Switzerland", region != "Switzerland") %>%
+  left_join(greaterRegions, by = "region") %>%
+  ungroup() %>%
+  mutate(region = greaterRegion) %>%
+  dplyr::select(-greaterRegion) %>%
+  group_by(country, region) %>%
+  dplyr::summarize(
+    popSize = sum(popSize))
+
+popSizes <- bind_rows(popSizesECDC, popSizesCH, popSizesCHgrR)
+save(popSizes, file = pathToPopSizes)
 
 cat(paste("###", Sys.time(), "- done 1_getRawData.R", "\n"))

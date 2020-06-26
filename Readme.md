@@ -6,6 +6,7 @@ The R<sub>e</sub> for a particular day is the average R<sub>e</sub> over the thr
   - Jérémie Scire, ETH Zürich, D-BSSE
   - Jana S. Huisman, ETH Zürich, D-BSSE & D-USYS
   - Daniel Angst, ETH Zürich, D-USYS
+  - Gabriel Leventhal, MIT
   - Sebastian Bonhoeffer, ETH Zürich, D-USYS
   - Tanja Stadler, ETH Zürich, D-BSSE
 
