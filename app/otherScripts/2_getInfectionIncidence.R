@@ -558,7 +558,7 @@ deconvolved_main_data <- get_all_infection_incidence(
   shape_onset_to_count = shape_onset_to_count,
   scale_onset_to_count = scale_onset_to_count,
   min_chi_squared = 1,
-  maximum_iterations = 10,
+  maximum_iterations = 20,
   n_bootstrap = 50,
   verbose = F)
 
@@ -574,7 +574,7 @@ deconvolved_FOPH_hosp_data <- get_all_infection_incidence(
   shape_onset_to_count = shape_onset_to_count,
   scale_onset_to_count = scale_onset_to_count,
   min_chi_squared = 1,
-  maximum_iterations = 10,
+  maximum_iterations = 20,
   n_bootstrap = 50,
   verbose = F)
 
