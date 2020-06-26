@@ -56,7 +56,7 @@ server <- function(input, output, session) {
 
   output$plotOptions <- renderUI({
       div(style = "background-color:#2F3B41; margin:15px; border-radius:5px; padding:10px",
-        h4("Plot Options"),
+        h4("Plot Options", style = "margin-top:0px"),
         HTML("<i>Plot 1 - Case Data</i>"),
         div(style = "margin-left:10px !important;",
           checkboxInput("logCases", "Logarithmic axis for cases", FALSE),
