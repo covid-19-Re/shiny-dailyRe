@@ -852,8 +852,9 @@ plotlyYaxis <- function(
       text = title,
       font = list(size = axisTitleFontSize)))
   
-  if(logAxis) {
+  if (logAxis) {
     out$type <- "log"
+    out$dtick <- 1
   }
 
   return(out)
