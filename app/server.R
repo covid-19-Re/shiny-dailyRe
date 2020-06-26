@@ -62,7 +62,7 @@ server <- function(input, output, session) {
           checkboxInput("logCases", "Logarithmic axis for cases", FALSE),
           checkboxInput("caseNormalize", "Normalize cases to per 100'000 inhabitants", FALSE),
           radioButtons("caseAverage", "Display case data as ...",
-            choices = c("daily case numbers" = 1, "7-day rolling average" = 7),
+            choices = c("daily case numbers" = 1, "7-day average" = 7),
             selected = 1, inline = FALSE)
         ),
         HTML("<i>Plot 2 - R<sub>e</sub> estimates</i>"),

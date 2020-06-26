@@ -107,7 +107,10 @@ rEffPlotly <- function(
     add_bars(x = ~date, y = ~incidence, color = ~data_type,
       colors = plotColors,
       text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
+        round(incidence, 3), " ", toLowerFirst(data_type),
+        if_else(caseNormalize, " / 100'000", ""),
+        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+        "<extra></extra>"),
       hovertemplate = "%{text}",
       legendgroup = ~data_type) %>%
     layout(
@@ -365,12 +368,18 @@ rEffPlotlyRegion <- function(
     add_bars(x = ~date, y = ~incidence, color = ~region, colors = regionColors,
       legendgroup = ~region, visible = visibilityNonFocus,
       text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
+        round(incidence, 3), " ", toLowerFirst(data_type),
+        if_else(caseNormalize, " / 100'000", ""),
+        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+        "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_bars(data = caseDataCH, x = ~date, y = ~incidence, color = ~region, colors = regionColors,
       legendgroup = ~region,
       text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
+        round(incidence, 3), " ", toLowerFirst(data_type),
+        if_else(caseNormalize, " / 100'000", ""),
+        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+        "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     layout(
       xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = FALSE, rSelector = TRUE),
@@ -637,12 +646,18 @@ rEffPlotlyComparison <- function(
     add_bars(x = ~date, y = ~incidence, color = ~country, colors = countryColors,
       legendgroup = ~country, visible = "legendonly",
       text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
+        round(incidence, 3), " ", toLowerFirst(data_type),
+        if_else(caseNormalize, " / 100'000", ""),
+        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+        "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_bars(data = caseDataFocus, x = ~date, y = ~incidence, color = ~country, colors = countryColors,
       legendgroup = ~country,
       text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        incidence, " ", toLowerFirst(data_type), "<extra></extra>"),
+        round(incidence, 3), " ", toLowerFirst(data_type),
+        if_else(caseNormalize, " / 100'000", ""),
+        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+        "<extra></extra>"),
       hovertemplate = "%{text}") %>%
     layout(
       xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[1], rSlider = FALSE,  rSelector = TRUE),
@@ -851,7 +866,7 @@ plotlyYaxis <- function(
     title = list(
       text = title,
       font = list(size = axisTitleFontSize)))
-  
+
   if (logAxis) {
     out$type <- "log"
     out$dtick <- 1
