@@ -3,6 +3,9 @@ app/data/*.txt
 app/data/*.Rdata
 app/data/*.Rd
 app/data/temp
+app/data/BAG
+app/data/CH
+app/data/ECDCdata.xlsx
 app/otherScripts/*.Rout
 app/otherScripts/*.Rdata
 app/www/*

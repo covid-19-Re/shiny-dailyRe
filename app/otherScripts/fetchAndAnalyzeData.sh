@@ -7,10 +7,9 @@ echo "updating ch-hospital-data ..."
 cd "../../../ch-hospital-data"
 git reset --hard HEAD
 git pull
-echo "running R script to extract BAG data ..."
-Rscript --vanilla --verbose scripts/format_BAG_data.R >> messages.Rout 2>> errors.Rout
 echo "updating covid19-additionalData ..."
 cd "../covid19-additionalData"
+git reset --hard HEAD
 git pull
 
 cd "$parent_path"
@@ -18,7 +17,15 @@ rm *.Rout
 # make temp data directory and clean last temp files
 mkdir -p ../data/temp
 rm -f ../data/temp/*
-echo "running R scripts ..."
+echo "updating BAG Data (polybox sync)"
+# for development on local macOS machine (on Linux just install the owncloud cli tools)
+# symlink your polybox folder to ../data/BAG
+# i.e. ln -s 'path/to/polybox/shared/BAG COVID19 Data' 'path/to/app/data/BAG'
+owncloudcmd -n -s ../data/BAG \
+  https://polybox.ethz.ch/remote.php/webdav/BAG%20COVID19%20Data
+echo "running R script to extract BAG data ..."
+Rscript --vanilla --verbose format_BAG_data.R >> messages.Rout 2>> errors.Rout
+echo "running R data analysis scripts ..."
 Rscript --vanilla --verbose 1_getRawData.R >> messages.Rout 2>> errors.Rout
 Rscript --vanilla --verbose 2_getInfectionIncidence.R >> messages.Rout 2>> errors.Rout
 Rscript --vanilla --verbose 3_doReEstimates.R >> messages.Rout 2>> errors.Rout
