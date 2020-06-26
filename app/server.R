@@ -44,7 +44,7 @@ server <- function(input, output, session) {
           menuSubItem(i, tabName = str_remove(i, " "), icon = icon("chart-area"))
         })
       ),
-      menuItem(HTML(i18n()$t("Download Re estimates")),
+      menuItem(HTML(i18n()$t("Download R<sub>e</sub> estimates")),
                   tabName = "download", icon = icon("download")),
       menuItem(i18n()$t("About"), tabName = "about", icon = icon("question-circle")),
       uiOutput("plotOptions"),
