@@ -614,7 +614,7 @@ rEffPlotlyComparison <- function(
 
   if (caseAverage > 1) {
     caseData <- caseData %>%
-      group_by(countr, region, data_type) %>%
+      group_by(country, region, data_type) %>%
       mutate(
         incidence = slide_index_dbl(incidence, date, mean, .before = lubridate::days(caseAverage))
       ) %>%
