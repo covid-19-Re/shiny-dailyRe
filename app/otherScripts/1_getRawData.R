@@ -1013,7 +1013,11 @@ save(countryList, file = pathToCountryListSave)
 pathToLatestData <- file.path(dataDir, "latestData.Rdata")
   
 latestData <- rawData %>%
-  mutate(data_type=replace(data_type, data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"), "Hospitalized patients")) %>%
+  mutate(
+    data_type = replace(
+      data_type,
+      data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"),
+      "Hospitalized patients")) %>%
   group_by(country, region, source, data_type) %>%
   dplyr::summarize(date = max(date)) %>%
   left_join(tribble(
@@ -1068,8 +1072,7 @@ popSizesCHgrR <- popSizesCH %>%
   dplyr::select(-greaterRegion) %>%
   group_by(country, region) %>%
   dplyr::summarize(
-    popSize = sum(popSize),
-    country = "Switzerland")
+    popSize = sum(popSize))
 
 popSizes <- bind_rows(popSizesECDC, popSizesCH, popSizesCHgrR)
 save(popSizes, file = pathToPopSizes)
