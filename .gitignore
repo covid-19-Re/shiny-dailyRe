@@ -1,6 +1,7 @@
 dev-*
 app/data/*.txt
 app/data/*.Rdata
+app/data/*.rds
 app/data/*.Rd
 app/data/temp
 app/data/BAG
