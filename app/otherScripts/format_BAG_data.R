@@ -5,6 +5,7 @@ library("reshape2")
 #library("gdata")
 library("fitdistrplus")
 library(here)
+library(tidyverse)
 
 BAG_data_dir <- here::here("app", "data", "BAG")
 BAG_data_dir_Git <- here::here("../ch-hospital-data/data/CH")
@@ -215,3 +216,4 @@ allBAGdata <- bind_rows(allKtn, allCH) %>%
   arrange(data_type, variable, region, country, source, date)
 
 write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CH.csv"))
+

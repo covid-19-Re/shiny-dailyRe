@@ -467,7 +467,7 @@ raw_data_path <- file.path(data_dir, "Raw_data.rds")
 
 infect_data_path <- file.path(data_dir, "Deconvolved_infect_data.rds")
 
-FOPH_data_path <- here::here("../ch-hospital-data/data/CH")
+FOPH_data_path <- here::here("app/data/CH")
 delays_data_path <- file.path(FOPH_data_path, "FOPH_data_delays.csv")
 
 delays_onset_to_count <- read_csv(delays_data_path,

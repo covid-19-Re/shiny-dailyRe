@@ -966,7 +966,7 @@ delays <- tibble(
   data_type = factor(
     c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"),
     levels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")),
-  delay = c(10, 10, 15, 30)
+  delay = c(8, 10, 18, 30)
 )
 
 estimateDatesDf <- rawData %>%
