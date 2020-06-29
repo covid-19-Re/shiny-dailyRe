@@ -9,7 +9,7 @@ library(tidyverse)
 
 BAG_data_dir <- here::here("app", "data", "BAG")
 BAG_data_dir_Git <- here::here("../ch-hospital-data/data/CH")
-# output_data_dir <- "/Users/scirej/Documents/nCov19/Incidence_analysis/data"
+
 outDir <- here::here("app","data", "CH")
 dir.create(outDir, showWarnings = FALSE)
 
@@ -39,7 +39,10 @@ data_hospitalization <- read.csv(
   sep = ";", stringsAsFactors = F, header = T)
 
 ### Boundaries for curating dates
-max_date <- date(max(bagFileDates))
+
+right_truncation_consolidation <- 1
+
+max_date <- date(max(bagFileDates)) - right_truncation_consolidation
 min_date <- as.Date("2020-02-01")
 
 max_delay_hosp <- 30
@@ -213,6 +216,7 @@ allBAGdata <- bind_rows(allKtn, allCH) %>%
   mutate(cumul = cumsum(incidence)) %>%
   pivot_longer(incidence:cumul, names_to = "variable", values_to = "value") %>%
   dplyr::select(date, region, country, source, data_type, value, variable) %>%
+  filter(date <= max_date) %>% 
   arrange(data_type, variable, region, country, source, date)
 
 write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CH.csv"))
