@@ -53,7 +53,7 @@ checkScriptStatus
 cp -f ../data/temp/* ../data/
 # make app restart on next connection
 touch ../restart.txt
-
+echo "fetchAndAnalzeData.sh done ..."
 # crontab settings
 # run every 3h starting at 1am
 # 0 1,4,7,10,13,16,19,22 * * * /home/covid-19-re/covid-19-re-shiny-app/app/otherScripts/fetchAndAnalyzeData.sh
