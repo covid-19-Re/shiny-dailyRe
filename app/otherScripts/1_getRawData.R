@@ -48,7 +48,7 @@ countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
 ECDCdataRaw <- getLongECDCData(setdiff(countryList, c("Switzerland")))
  
 ECDCdata <- ECDCdataRaw %>%
-  filter(!(country %in% c("Netherlands", "Italy")))
+  filter(!(country %in% c("Netherlands")))
 
 swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
 cat("Swiss Excess\n")
@@ -70,7 +70,7 @@ if (!is.null(ExcessDeathData)) {
 
 # Italy
 
-ITdata <- getITDataPCM()
+#ITdata <- getITDataPCM() #WIP
 
 pathToExcessDeathIT <- here::here("../covid19-additionalData/excessDeath/Excess_death_IT.csv")
 ITExcessDeath <- getExcessDeathIT(filePath = pathToExcessDeathIT, startAt = as.Date("2020-02-20"))
