@@ -4,6 +4,14 @@ parent_path=$(
   pwd -P
 )
 
+checkScriptStatus () {
+  retVal=$?
+  if [ $retVal -ne 0 ]; then
+    echo "Script didn't run successfully (Error" $retVal ")"
+    exit 1
+  fi
+}
+
 cd "$parent_path"
 
 echo "updating ch-hospital-data ..."
@@ -28,13 +36,19 @@ owncloudcmd -n -s ../data/BAG \
   https://polybox.ethz.ch/remote.php/webdav/BAG%20COVID19%20Data
 echo "running R script to extract BAG data ..."
 Rscript --vanilla --verbose format_BAG_data.R >>messages.Rout 2>>errors.Rout
+checkScriptStatus
 echo "running R data analysis scripts ..."
 Rscript --vanilla --verbose 1_getRawData.R >>messages.Rout 2>>errors.Rout
+checkScriptStatus
 Rscript --vanilla --verbose 2_getInfectionIncidence.R >>messages.Rout 2>>errors.Rout
+checkScriptStatus
 Rscript --vanilla --verbose 3_doReEstimates.R >>messages.Rout 2>>errors.Rout
+checkScriptStatus
 # summarize data in seperate process to avoid C stack limit
 Rscript --vanilla --verbose 4_doReEstimatesSum.R >>messages.Rout 2>>errors.Rout
+checkScriptStatus
 Rscript --vanilla --verbose 5_makeReffPlotly.R >>messages.Rout 2>>errors.Rout
+checkScriptStatus
 # copy data
 cp -f ../data/temp/* ../data/
 # make app restart on next connection
