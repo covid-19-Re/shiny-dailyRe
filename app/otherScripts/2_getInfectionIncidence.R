@@ -82,21 +82,21 @@ raw_data <- readRDS(file = raw_data_path)
 # manually filtering out hosp in france, deaths in spain, deaths in austria: reporting issues cause some weird Re jumps.
 
 raw_data <- raw_data %>%
-  filter(!(region %in% c("Spain", "Austria") & data_type == "Deaths")) %>% 
+  filter(!(region %in% c("Spain", "Austria") & data_type == "Deaths")) %>%
   filter(!(region == "France" & data_type == "Hospitalized patients"))
 
 ##TODO remove
 # raw_data <- filter(raw_data, data_type == "Hospitalized patients", variable == "incidence")
 # View(raw_data)
-# 
+#
 # smoothed_incidence <- getLOESSCases( dates = raw_data$date,
 #                                      count_data = raw_data$value )
-# 
+#
 # raw_data <- mutate(raw_data, smoothed = smoothed_incidence)
-# 
-# ggplot(raw_data) + 
-#   geom_line(aes(x = date, y = value)) + 
-#   geom_line(aes(x = date, y = smoothed)) + 
+#
+# ggplot(raw_data) +
+#   geom_line(aes(x = date, y = value)) +
+#   geom_line(aes(x = date, y = smoothed)) +
 #   geom_line(data = deconvolved_main_data, aes(x = date, y = value))
 
 deconvolved_main_data <- get_all_infection_incidence(
@@ -122,7 +122,7 @@ deconvolved_main_data <- get_all_infection_incidence(
 deconvolved_FOPH_hosp_data <- get_all_infection_incidence(
   raw_data,
   onset_to_count_empirical_delays = delays_onset_to_count,
-  data_types = c("Hospitalized patients - admission", 
+  data_types = c("Hospitalized patients - admission",
                 "Hospitalized patients - onset"),
   shape_incubation = shape_incubation,
   scale_incubation = scale_incubation,
@@ -136,7 +136,7 @@ deconvolved_FOPH_hosp_data <- get_all_infection_incidence(
 ## sum infections from Hospitalized patients - admission and Hospitalized patients - onset
 deconvolved_FOPH_hosp_data <- deconvolved_FOPH_hosp_data %>%
   group_by(date, country, region, data_type, source, replicate, variable) %>%
-  summarise(value=sum(value)) %>%
+  summarise(value = sum(value)) %>%
   arrange(country, region, source, data_type, variable, replicate, date) %>%
   ungroup()
 
