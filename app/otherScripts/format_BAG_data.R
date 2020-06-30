@@ -10,7 +10,7 @@ library(tidyverse)
 BAG_data_dir <- here::here("app", "data", "BAG")
 BAG_data_dir_Git <- here::here("../ch-hospital-data/data/CH")
 # output_data_dir <- "/Users/scirej/Documents/nCov19/Incidence_analysis/data"
-outDir <- here::here("app","data", "CH")
+outDir <- here::here("app", "data", "CH")
 dir.create(outDir, showWarnings = FALSE)
 
 ### Find latest BAG data file
