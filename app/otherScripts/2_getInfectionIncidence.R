@@ -85,20 +85,6 @@ raw_data <- raw_data %>%
   filter(!(region %in% c("Spain", "Austria") & data_type == "Deaths")) %>%
   filter(!(region == "France" & data_type == "Hospitalized patients"))
 
-##TODO remove
-# raw_data <- filter(raw_data, data_type == "Hospitalized patients", variable == "incidence")
-# View(raw_data)
-#
-# smoothed_incidence <- getLOESSCases( dates = raw_data$date,
-#                                      count_data = raw_data$value )
-#
-# raw_data <- mutate(raw_data, smoothed = smoothed_incidence)
-#
-# ggplot(raw_data) +
-#   geom_line(aes(x = date, y = value)) +
-#   geom_line(aes(x = date, y = smoothed)) +
-#   geom_line(data = deconvolved_main_data, aes(x = date, y = value))
-
 deconvolved_main_data <- get_all_infection_incidence(
   raw_data,
   onset_to_count_empirical_delays = delays_onset_to_count,
