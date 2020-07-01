@@ -25,6 +25,17 @@ server <- function(input, output, session) {
   validEstimates <- readRDS(pathToValidEstimates)
   latestData <- readRDS(pathTolatestData)
 
+  deconvolutedData <- readRDS(file = infection_data_file_path) %>%
+    select(-variable) %>%
+    mutate(data_type = str_sub(data_type, 11)) %>%
+    group_by(date, region, country, source, data_type) %>%
+    summarise(
+        deconvoluted = mean(value),
+        deconvolutedLow = deconvoluted - sd(value),
+        deconvolutedHigh = deconvoluted + sd(value),
+        .groups = "keep"
+      )
+
   rawData <- readRDS(pathToRawData) %>%
     filter(variable == "incidence", data_type != "Excess deaths") %>%
     pivot_wider(names_from = "variable", values_from = "value") %>%
@@ -34,7 +45,8 @@ server <- function(input, output, session) {
       readRDS(pathToRawData) %>%
         filter(variable == "incidence", data_type == "Excess deaths")  %>%
         pivot_wider(names_from = "variable", values_from = "value")
-    )
+    ) %>%
+    left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date"))
 
   #TODO use rds
   load(pathToPopSizes)
@@ -76,7 +88,9 @@ server <- function(input, output, session) {
           radioButtons("caseAverage", "Display case data as ...",
             choices = c("daily case numbers" = 1, "7-day average" = 7),
             selected = 1, inline = FALSE),
+          HTML("<i>Debug Options:</i>"),
           checkboxInput("caseLoess", "Show Loess fit", FALSE),
+          checkboxInput("caseDeconvoluted", "Show deconvoluted case data", FALSE),
         ),
         HTML("<i>Plot 2 - R<sub>e</sub> estimates</i>"),
         div(style = "margin-left:10px !important; margin-top:10px",
@@ -447,6 +461,7 @@ server <- function(input, output, session) {
       caseAverage = input$caseAverage,
       caseNormalize = input$caseNormalize,
       caseLoess = input$caseLoess,
+      caseDeconvoluted = input$caseDeconvoluted,
       popSizes = popSizes,
       language = input$lang,
       translator = i18n(),
@@ -490,6 +505,7 @@ server <- function(input, output, session) {
       caseAverage = input$caseAverage,
       caseNormalize = input$caseNormalize,
       caseLoess = input$caseLoess,
+      caseDeconvoluted = input$caseDeconvoluted,
       popSizes = popSizes,
       regionColors = cantonColors,
       translator = i18n(),
@@ -542,6 +558,7 @@ server <- function(input, output, session) {
       caseAverage = input$caseAverage,
       caseNormalize = input$caseNormalize,
       caseLoess = input$caseLoess,
+      caseDeconvoluted = input$caseDeconvoluted,
       popSizes = popSizesGrR,
       regionColors = greaterRegionColors,
       translator = i18n(),
@@ -581,6 +598,7 @@ server <- function(input, output, session) {
       caseAverage = input$caseAverage,
       caseNormalize = input$caseNormalize,
       caseLoess = input$caseLoess,
+      caseDeconvoluted = input$caseDeconvoluted,
       popSizes = popSizes,
       countryColors = countryColors,
       translator = i18n(),
@@ -641,6 +659,7 @@ server <- function(input, output, session) {
         caseAverage = input$caseAverage,
         caseNormalize = input$caseNormalize,
         caseLoess = input$caseLoess,
+        caseDeconvoluted = input$caseDeconvoluted,
         popSizes = popSizes,
         translator = i18n(),
         language = input$lang,

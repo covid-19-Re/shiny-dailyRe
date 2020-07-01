@@ -26,6 +26,7 @@ pathToInterventionData <- file.path("../../covid19-additionalData/interventions/
 pathToCountryList <- file.path(dataDir, "countryList.rds")
 pathToEstimatesDates <- file.path(dataDir, "estimate_dates.rds")
 pathToValidEstimates <- file.path(dataDir, "valid_estimates.rds")
+infection_data_file_path <- file.path(dataDir,  "Deconvolved_infect_data.rds")
 
 pathToPopSizes <- file.path(dataDir, "popSizes.Rdata")
 

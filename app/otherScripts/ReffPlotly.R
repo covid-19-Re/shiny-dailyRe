@@ -18,6 +18,7 @@ rEffPlotly <- function(
   caseAverage = 1,
   caseNormalize = FALSE,
   caseLoess = FALSE,
+  caseDeconvoluted = FALSE,
   popSizes = NULL,
   language,
   translator,
@@ -133,6 +134,22 @@ rEffPlotly <- function(
       text = ~str_c("<i> Loess Fit </i><extra></extra>"),
       legendgroup = ~data_type, showlegend = FALSE,
       hovertemplate = "%{text}")
+  }
+
+  if (caseDeconvoluted) {
+    pCases <- pCases %>%
+      filter(!is.na(deconvoluted)) %>%
+      add_trace(x = ~date, y = ~deconvoluted, color = ~data_type, color = plotColors,
+        type = "scatter", mode = "lines",
+        text = ~str_c("<i> deconvoluted Data </i><extra></extra>"),
+        legendgroup = ~data_type, showlegend = FALSE,
+        hovertemplate = "%{text}") %>%
+      add_ribbons(
+        x = ~date, ymin = ~deconvolutedLow, ymax = ~deconvolutedHigh,
+        color = ~data_type, colors = plotColors,
+        opacity = 0.2,
+        legendgroup = ~data_type, showlegend = FALSE,
+        hoverinfo = "none")
   }
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
@@ -273,6 +290,7 @@ rEffPlotlyRegion <- function(
   caseAverage = 1,
   caseNormalize = FALSE,
   caseLoess = FALSE,
+  caseDeconvoluted = FALSE,
   popSizes = NULL,
   regionColors,
   translator,
@@ -419,6 +437,38 @@ rEffPlotlyRegion <- function(
         text = ~str_c("<i> Loess Fit </i><extra></extra>"),
         legendgroup = ~region, showlegend = FALSE,
         hovertemplate = "%{text}")
+  }
+
+  if (caseDeconvoluted) {
+    pCases <- pCases %>%
+      add_trace(
+        data = filter(caseData, region != translator$t("Switzerland (Total)"), !is.na(deconvoluted)),
+        x = ~date, y = ~deconvoluted, color = ~region, color = regionColors,
+        type = "scatter", mode = "lines", opacity = 0.5,
+        text = ~str_c("<i> deconvoluted Data </i><extra></extra>"),
+        legendgroup = ~region, showlegend = FALSE, visible = "legendonly",
+        hovertemplate = "%{text}") %>%
+      add_ribbons(
+        data =  filter(caseData, region != translator$t("Switzerland (Total)"), !is.na(deconvoluted)),
+        x = ~date, ymin = ~deconvolutedLow, ymax = ~deconvolutedHigh,
+        color = ~region, colors = regionColors,
+        line = list(color = "transparent"), opacity = 0.5,
+        legendgroup = ~region, showlegend = FALSE, visible = "legendonly",
+        hoverinfo = "none") %>%
+      add_trace(
+        data = filter(caseDataCH, !is.na(deconvoluted)),
+        x = ~date, y = ~deconvoluted, color = ~region, color = regionColors,
+        type = "scatter", mode = "lines", opacity = 0.5,
+        text = ~str_c("<i> deconvoluted Data </i><extra></extra>"),
+        legendgroup = ~region, showlegend = FALSE,
+        hovertemplate = "%{text}") %>%
+      add_ribbons(
+        data =  filter(caseDataCH, !is.na(deconvoluted)),
+        x = ~date, ymin = ~deconvolutedLow, ymax = ~deconvolutedHigh,
+        color = ~region, colors = regionColors,
+        line = list(color = "transparent"), opacity = 0.5,
+        legendgroup = ~region, showlegend = FALSE,
+        hoverinfo = "none")
   }
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
@@ -589,6 +639,7 @@ rEffPlotlyComparison <- function(
   caseAverage = 1,
   caseNormalize = FALSE,
   caseLoess = FALSE,
+  caseDeconvoluted = FALSE,
   popSizes = NULL,
   countryColors,
   translator,
@@ -714,6 +765,38 @@ rEffPlotlyComparison <- function(
         text = ~str_c("<i> Loess Fit </i><extra></extra>"),
         legendgroup = ~country, showlegend = FALSE,
         hovertemplate = "%{text}")
+  }
+
+  if (caseDeconvoluted) {
+    pCases <- pCases %>%
+      add_trace(
+        data = filter(caseData, country != focusCountry, !is.na(deconvoluted)),
+        x = ~date, y = ~deconvoluted, color = ~country, color = countryColors,
+        type = "scatter", mode = "lines", opacity = 0.5,
+        text = ~str_c("<i> deconvoluted Data </i><extra></extra>"),
+        legendgroup = ~country, showlegend = FALSE, visible = "legendonly",
+        hovertemplate = "%{text}") %>%
+      add_ribbons(
+        data =  filter(caseData, country != focusCountry, !is.na(deconvoluted)),
+        x = ~date, ymin = ~deconvolutedLow, ymax = ~deconvolutedHigh,
+        color = ~country, colors = countryColors,
+        line = list(color = "transparent"), opacity = 0.5,
+        legendgroup = ~country, showlegend = FALSE, visible = "legendonly",
+        hoverinfo = "none") %>%
+      add_trace(
+        data = filter(caseDataFocus, !is.na(deconvoluted)),
+        x = ~date, y = ~deconvoluted, color = ~country, color = countryColors,
+        type = "scatter", mode = "lines", opacity = 0.5,
+        text = ~str_c("<i> deconvoluted Data </i><extra></extra>"),
+        legendgroup = ~country, showlegend = FALSE,
+        hovertemplate = "%{text}") %>%
+      add_ribbons(
+        data =  filter(caseDataFocus, !is.na(deconvoluted)),
+        x = ~date, ymin = ~deconvolutedLow, ymax = ~deconvolutedHigh,
+        color = ~country, colors = countryColors,
+        line = list(color = "transparent"), opacity = 0.5,
+        legendgroup = ~country, showlegend = FALSE,
+        hoverinfo = "none")
   }
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
