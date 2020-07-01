@@ -4,6 +4,18 @@ parent_path=$(
   pwd -P
 )
 
+runRScript () {
+  echo "running" $1 "..."
+  Rscript --vanilla --verbose $1 >>messages.Rout 2>>errors.Rout
+  retVal=$?
+  if [ $retVal -ne 0 ]; then
+    echo "Script didn't run successfully (Error" $retVal ")"
+    exit 1
+  else
+    echo "       " $1 "done"
+  fi
+}
+
 cd "$parent_path"
 
 echo "updating ch-hospital-data ..."
@@ -27,18 +39,21 @@ echo "updating BAG Data (polybox sync)"
 owncloudcmd -n -s ../data/BAG \
   https://polybox.ethz.ch/remote.php/webdav/BAG%20COVID19%20Data
 echo "running R script to extract BAG data ..."
-Rscript --vanilla --verbose format_BAG_data.R >>messages.Rout 2>>errors.Rout
+runRScript format_BAG_data.R
 echo "running R data analysis scripts ..."
-Rscript --vanilla --verbose 1_getRawData.R >>messages.Rout 2>>errors.Rout
-Rscript --vanilla --verbose 2_getInfectionIncidence.R >>messages.Rout 2>>errors.Rout
-Rscript --vanilla --verbose 3_doReEstimates.R >>messages.Rout 2>>errors.Rout
+runRScript 1_getRawData.R
+runRScript 2_getInfectionIncidence.R
+runRScript 3_doReEstimates.R
 # summarize data in seperate process to avoid C stack limit
-Rscript --vanilla --verbose 4_doReEstimatesSum.R >>messages.Rout 2>>errors.Rout
-Rscript --vanilla --verbose 5_makeReffPlotly.R >>messages.Rout 2>>errors.Rout
+runRScript 4_doReEstimatesSum.R
+runRScript 5_makeReffPlotly.R
+
 # copy data
 cp -f ../data/temp/* ../data/
+
 # make app restart on next connection
 touch ../restart.txt
+echo "fetchAndAnalzeData.sh done ..."
 
 # crontab settings
 # run every 3h starting at 1am

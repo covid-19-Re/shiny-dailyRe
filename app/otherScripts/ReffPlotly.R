@@ -172,7 +172,6 @@ rEffPlotly <- function(
       xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[2]),
       yaxis = plotlyYaxis(
         title = translator$t("Reproductive number R<sub>e</sub>"),
-        # range = c(0, 3),
         range = c(0, 4),
         fixedRange = fixedRangeY[2],
         zeroline = TRUE),
@@ -471,7 +470,7 @@ rEffPlotlyRegion <- function(
       xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[2]),
       yaxis = plotlyYaxis(
         title = translator$t("Reproductive number R<sub>e</sub>"),
-        range = c(0, 3),
+        range = c(0, 4),
         fixedRange = fixedRangeY[2],
         zeroline = TRUE),
       legend = list(
@@ -749,7 +748,7 @@ rEffPlotlyComparison <- function(
       xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX[2]),
       yaxis = plotlyYaxis(
         title = translator$t("Reproductive number R<sub>e</sub>"),
-        range = c(0, 3),
+        range = c(0, 4),
         fixedRange = fixedRangeY[2],
         zeroline = TRUE),
       legend = list(
