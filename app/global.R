@@ -7,6 +7,9 @@ library(slider)
 
 source("otherScripts/ReffPlotly.R")
 
+# source for 
+source("otherScripts/2_utils_getInfectionIncidence.R")
+
 dataDir <- "data"
 
 translator <- Translator$new(translation_json_path = file.path(dataDir, "shinyTranslations.json"))

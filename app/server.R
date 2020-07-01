@@ -20,11 +20,21 @@ server <- function(input, output, session) {
     return(translator)
   })
 
-  rawData <- readRDS(pathToRawData)
   estimatesReSum <- readRDS(pathToEstimatesReSum)
   estimatesDates <- readRDS(pathToEstimatesDates)
   validEstimates <- readRDS(pathToValidEstimates)
   latestData <- readRDS(pathTolatestData)
+
+  rawData <- readRDS(pathToRawData) %>%
+    filter(variable == "incidence", data_type != "Excess deaths") %>%
+    pivot_wider(names_from = "variable", values_from = "value") %>%
+    group_by(country, region, source, data_type) %>%
+    mutate(incidenceLoess = getLOESSCases(date, incidence)) %>%
+    bind_rows(
+      readRDS(pathToRawData) %>%
+        filter(variable == "incidence", data_type == "Excess deaths")  %>%
+        pivot_wider(names_from = "variable", values_from = "value")
+    )
 
   #TODO use rds
   load(pathToPopSizes)
@@ -65,7 +75,8 @@ server <- function(input, output, session) {
           checkboxInput("caseNormalize", "Normalize cases to per 100'000 inhabitants", FALSE),
           radioButtons("caseAverage", "Display case data as ...",
             choices = c("daily case numbers" = 1, "7-day average" = 7),
-            selected = 1, inline = FALSE)
+            selected = 1, inline = FALSE),
+          checkboxInput("caseLoess", "Show Loess fit", FALSE),
         ),
         HTML("<i>Plot 2 - R<sub>e</sub> estimates</i>"),
         div(style = "margin-left:10px !important; margin-top:10px",
@@ -292,8 +303,8 @@ server <- function(input, output, session) {
         data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
       mutate(
         data_type = fct_drop(data_type)
-      ) %>%
-      pivot_wider(names_from = "variable", values_from = "value")
+      )
+
     return(caseDataSwitzerlandPlot)
   })
 
@@ -342,8 +353,8 @@ server <- function(input, output, session) {
       filter(country %in% validEstimates$country, region %in% validEstimates$region) %>%
       mutate(
         data_type = fct_drop(data_type)
-      ) %>%
-      pivot_wider(names_from = "variable", values_from = "value")
+      )
+
     return(caseDataOverview)
   })
 
@@ -370,8 +381,8 @@ server <- function(input, output, session) {
   # country raw data
   caseDataCountry <- lapply(countryList, function(i) {
     rawDataCountry <- rawData %>%
-      filter(country == i, region == i) %>%
-      pivot_wider(names_from = "variable", values_from = "value")
+      filter(country == i, region == i)
+
     if (i == "Switzerland") {
       rawDataCountry <- rawDataCountry %>%
         filter(source != "ECDC")
@@ -435,6 +446,7 @@ server <- function(input, output, session) {
       logCaseYaxis = input$logCases,
       caseAverage = input$caseAverage,
       caseNormalize = input$caseNormalize,
+      caseLoess = input$caseLoess,
       popSizes = popSizes,
       language = input$lang,
       translator = i18n(),
@@ -477,6 +489,7 @@ server <- function(input, output, session) {
       logCaseYaxis = input$logCases,
       caseAverage = input$caseAverage,
       caseNormalize = input$caseNormalize,
+      caseLoess = input$caseLoess,
       popSizes = popSizes,
       regionColors = cantonColors,
       translator = i18n(),
@@ -528,6 +541,7 @@ server <- function(input, output, session) {
       logCaseYaxis = input$logCases,
       caseAverage = input$caseAverage,
       caseNormalize = input$caseNormalize,
+      caseLoess = input$caseLoess,
       popSizes = popSizesGrR,
       regionColors = greaterRegionColors,
       translator = i18n(),
@@ -566,6 +580,7 @@ server <- function(input, output, session) {
       logCaseYaxis = input$logCases,
       caseAverage = input$caseAverage,
       caseNormalize = input$caseNormalize,
+      caseLoess = input$caseLoess,
       popSizes = popSizes,
       countryColors = countryColors,
       translator = i18n(),
@@ -625,7 +640,8 @@ server <- function(input, output, session) {
         logCaseYaxis = input$logCases,
         caseAverage = input$caseAverage,
         caseNormalize = input$caseNormalize,
-      popSizes = popSizes,
+        caseLoess = input$caseLoess,
+        popSizes = popSizes,
         translator = i18n(),
         language = input$lang,
         widgetID = NULL)
