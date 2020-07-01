@@ -131,8 +131,8 @@ rEffPlotly <- function(
       type = "scatter", mode = "lines",
       legendgroup = ~data_type, showlegend = FALSE,
       text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
+      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
+      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", data_type, ")<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_ribbons(
@@ -150,8 +150,8 @@ rEffPlotly <- function(
       legendgroup = ~data_type,
       marker = list(symbol = "asterisk-open"),
       text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
+      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
+      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", data_type, ")"),
       hoverinfo = "text",
       showlegend = FALSE) %>%
@@ -401,8 +401,8 @@ rEffPlotlyRegion <- function(
       type = "scatter", mode = "lines", showlegend = FALSE,
       legendgroup = ~region, visible = visibilityNonFocus,
       text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
+      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
+      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", region, ")<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_ribbons(
@@ -419,8 +419,8 @@ rEffPlotlyRegion <- function(
       legendgroup = ~region,
       marker = list(symbol = "asterisk-open"),
       text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
+      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
+      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", region, ")"),
       hoverinfo = "text",
       showlegend = FALSE) %>%
@@ -430,8 +430,8 @@ rEffPlotlyRegion <- function(
       type = "scatter", mode = "lines", showlegend = FALSE,
       legendgroup = ~region,
       text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
+      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
+      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", region, ")<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_ribbons(
@@ -449,8 +449,8 @@ rEffPlotlyRegion <- function(
       legendgroup = ~region,
       marker = list(symbol = "asterisk-open"),
       text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
+      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
+      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", region, ")"),
       hoverinfo = "text",
       showlegend = FALSE) %>%
@@ -679,8 +679,8 @@ rEffPlotlyComparison <- function(
       type = "scatter", mode = "lines", showlegend = FALSE,
       legendgroup = ~country, visible = "legendonly",
       text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
+      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
+      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", country, ")<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_ribbons(
@@ -697,8 +697,8 @@ rEffPlotlyComparison <- function(
       legendgroup = ~country,
       marker = list(symbol = "asterisk-open"),
       text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
+      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
+      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", country, ")"),
       hoverinfo = "text",
       showlegend = FALSE) %>%
@@ -708,8 +708,8 @@ rEffPlotlyComparison <- function(
       type = "scatter", mode = "lines", showlegend = FALSE,
       legendgroup = ~country,
       text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
+      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
+      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", country, ")<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_ribbons(
@@ -727,8 +727,8 @@ rEffPlotlyComparison <- function(
       legendgroup = ~country,
       marker = list(symbol = "asterisk-open"),
       text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", signif(median_R_mean, 3),
-      " (", signif(median_R_lowHPD, 3), "-", signif(median_R_highHPD, 3), ")",
+      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
+      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", region, ")"),
       hoverinfo = "text",
       showlegend = FALSE) %>%
