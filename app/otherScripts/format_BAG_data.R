@@ -42,7 +42,7 @@ data_hospitalization <- read.csv(
 
 ### Boundaries for curating dates
 
-right_truncation_consolidation <- 1
+right_truncation_consolidation <- 3
 
 max_date <- date(max(bagFileDates)) - right_truncation_consolidation
 min_date <- as.Date("2020-02-01")
@@ -129,8 +129,6 @@ cumul_onset <- cumsum(incidence_onset)
 
 df <- data.frame(Date = allDates_onset, Incidence = incidence_onset, CH = cumul_onset)
 
-#write_excel_csv(df, path=file.path(output_data_dir, paste0("Hospital_cases_onsets_CH_", format(Sys.Date(), "%y%m%d"), ".csv")), quote=F)
-#write_excel_csv(df, path=file.path(output_data_dir, "Hospital_cases_onsets_CH.csv"), quote=F)
 write_excel_csv(df, path = file.path(outDir, "Hospital_cases_onsets_CH.csv"), quote = F)
 
 
@@ -159,8 +157,6 @@ cumul_admission <- cumsum(incidence_admission)
 
 df <- data.frame(Date = allDates_admission, Incidence = incidence_admission, CH = cumul_admission)
 
-#write_excel_csv(df, path=file.path(output_data_dir, paste0("Hospital_cases_admissions_CH_", format(Sys.Date(), "%y%m%d"), ".csv")), quote=F)
-#write_excel_csv(df, path=file.path(output_data_dir, "Hospital_cases_admissions_CH.csv"), quote=F)
 write_excel_csv(df, path = file.path(outDir, "Hospital_cases_admissions_CH.csv"), quote = FALSE)
 
 #### transforming data to use in epiestim analysis
@@ -181,9 +177,6 @@ incidence <- sapply(allDates, function(x) {
 cumul <- cumsum(incidence)
 df <- data.frame(Date = allDates, Incidence = incidence, CH = cumul)
 
-
-#write_excel_csv(df, path=file.path(output_data_dir, paste0("Hospital_cases_CH_", format(Sys.Date(), "%y%m%d"), ".csv")), quote=F)
-#write_excel_csv(df, path=file.path(output_data_dir, "Hospital_cases_CH.csv"), quote=F)
 write_excel_csv(df, path = file.path(outDir, "Hospital_cases_CH.csv"), quote = FALSE)
 
 library(tidyverse)
