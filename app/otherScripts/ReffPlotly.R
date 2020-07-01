@@ -141,7 +141,7 @@ rEffPlotly <- function(
       filter(!is.na(deconvoluted)) %>%
       add_trace(x = ~date, y = ~deconvoluted, color = ~data_type, color = plotColors,
         type = "scatter", mode = "lines",
-        text = ~str_c("<i> deconvoluted Data </i><extra></extra>"),
+        text = ~str_c("<i> deconvoluted Data +/- sd.</i><extra></extra>"),
         legendgroup = ~data_type, showlegend = FALSE,
         hovertemplate = "%{text}") %>%
       add_ribbons(
@@ -445,7 +445,7 @@ rEffPlotlyRegion <- function(
         data = filter(caseData, region != translator$t("Switzerland (Total)"), !is.na(deconvoluted)),
         x = ~date, y = ~deconvoluted, color = ~region, color = regionColors,
         type = "scatter", mode = "lines", opacity = 0.5,
-        text = ~str_c("<i> deconvoluted Data </i><extra></extra>"),
+        text = ~str_c("<i> deconvoluted Data +/- sd.</i><extra></extra>"),
         legendgroup = ~region, showlegend = FALSE, visible = "legendonly",
         hovertemplate = "%{text}") %>%
       add_ribbons(
@@ -459,7 +459,7 @@ rEffPlotlyRegion <- function(
         data = filter(caseDataCH, !is.na(deconvoluted)),
         x = ~date, y = ~deconvoluted, color = ~region, color = regionColors,
         type = "scatter", mode = "lines", opacity = 0.5,
-        text = ~str_c("<i> deconvoluted Data </i><extra></extra>"),
+        text = ~str_c("<i> deconvoluted Data +/- sd.</i><extra></extra>"),
         legendgroup = ~region, showlegend = FALSE,
         hovertemplate = "%{text}") %>%
       add_ribbons(
@@ -773,7 +773,7 @@ rEffPlotlyComparison <- function(
         data = filter(caseData, country != focusCountry, !is.na(deconvoluted)),
         x = ~date, y = ~deconvoluted, color = ~country, color = countryColors,
         type = "scatter", mode = "lines", opacity = 0.5,
-        text = ~str_c("<i> deconvoluted Data </i><extra></extra>"),
+        text = ~str_c("<i> deconvoluted Data +/- sd.</i><extra></extra>"),
         legendgroup = ~country, showlegend = FALSE, visible = "legendonly",
         hovertemplate = "%{text}") %>%
       add_ribbons(
@@ -787,7 +787,7 @@ rEffPlotlyComparison <- function(
         data = filter(caseDataFocus, !is.na(deconvoluted)),
         x = ~date, y = ~deconvoluted, color = ~country, color = countryColors,
         type = "scatter", mode = "lines", opacity = 0.5,
-        text = ~str_c("<i> deconvoluted Data </i><extra></extra>"),
+        text = ~str_c("<i> deconvoluted Data +/- sd.</i><extra></extra>"),
         legendgroup = ~country, showlegend = FALSE,
         hovertemplate = "%{text}") %>%
       add_ribbons(

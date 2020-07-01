@@ -88,7 +88,7 @@ server <- function(input, output, session) {
           radioButtons("caseAverage", "Display case data as ...",
             choices = c("daily case numbers" = 1, "7-day average" = 7),
             selected = 1, inline = FALSE),
-          HTML("<i>Debug Options:</i>"),
+          HTML("<i>Diagnostics:</i>"),
           checkboxInput("caseLoess", "Show Loess fit", FALSE),
           checkboxInput("caseDeconvoluted", "Show deconvoluted case data", FALSE),
         ),
