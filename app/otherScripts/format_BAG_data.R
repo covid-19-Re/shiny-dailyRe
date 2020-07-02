@@ -127,6 +127,7 @@ incidence_onset <- sapply(allDates_onset, function(x) {
 cumul_onset <- cumsum(incidence_onset)
 
 df <- data.frame(Date = allDates_onset, Incidence = incidence_onset, CH = cumul_onset)
+df <- filter(df, Date <= max_date)
 
 write_excel_csv(df, path = file.path(outDir, "Hospital_cases_onsets_CH.csv"), quote = F)
 
@@ -155,6 +156,7 @@ incidence_admission <- sapply(allDates_admission, function(x) {
 cumul_admission <- cumsum(incidence_admission)
 
 df <- data.frame(Date = allDates_admission, Incidence = incidence_admission, CH = cumul_admission)
+df <- filter(df, Date <= max_date)
 
 write_excel_csv(df, path = file.path(outDir, "Hospital_cases_admissions_CH.csv"), quote = FALSE)
 

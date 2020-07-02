@@ -109,7 +109,7 @@ deconvolved_main_data <- get_all_infection_incidence(
   min_chi_squared = 1,
   maximum_iterations = 20,
   n_bootstrap = 50,
-  verbose = T)
+  verbose = F)
 
 
 deconvolved_FOPH_hosp_data <- get_all_infection_incidence(
@@ -124,7 +124,7 @@ deconvolved_FOPH_hosp_data <- get_all_infection_incidence(
   min_chi_squared = 1,
   maximum_iterations = 20,
   n_bootstrap = 50,
-  verbose = T)
+  verbose = F)
 
 ## sum infections from Hospitalized patients - admission and Hospitalized patients - onset
 deconvolved_FOPH_hosp_data <- deconvolved_FOPH_hosp_data %>%
