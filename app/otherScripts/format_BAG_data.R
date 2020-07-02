@@ -1,7 +1,6 @@
 library("lubridate")
 library("readr")
 library("gridExtra")
-library("reshape2")
 #library("gdata")
 library("fitdistrplus")
 library(here)
@@ -42,7 +41,7 @@ data_hospitalization <- read.csv(
 
 ### Boundaries for curating dates
 
-right_truncation_consolidation <- 3
+right_truncation_consolidation <- 1
 
 max_date <- date(max(bagFileDates)) - right_truncation_consolidation
 min_date <- as.Date("2020-02-01")

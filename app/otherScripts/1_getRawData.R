@@ -227,6 +227,7 @@ latestData <- rawData %>%
       "Hospitalized patients")) %>%
   group_by(country, region, source, data_type) %>%
   dplyr::summarize(date = max(date)) %>%
+  mutate(date = ifelse(source == "FOPH", date + 1, date) ) %>% 
   left_join(tribble(
       ~source, ~sourceLong, ~url,
       #"openZH", "Data for Cantons and the Principality of Liechtenstein, aggregated by the statistical office of the canton Zürich", "https://github.com/openZH/covid_19/",

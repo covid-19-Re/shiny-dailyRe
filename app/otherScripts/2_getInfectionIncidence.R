@@ -85,6 +85,13 @@ raw_data <- raw_data %>%
   filter(!(region %in% c("Spain", "Austria") & data_type == "Deaths")) %>%
   filter(!(region == "France" & data_type == "Hospitalized patients"))
 
+right_truncation <- 2
+
+raw_data <- raw_data %>% 
+  group_by(country, region, source, data_type) %>% 
+  filter(date <= (max(date) - right_truncation)) %>% 
+  ungroup()
+
 deconvolved_main_data <- get_all_infection_incidence(
   raw_data,
   onset_to_count_empirical_delays = delays_onset_to_count,
@@ -101,7 +108,7 @@ deconvolved_main_data <- get_all_infection_incidence(
   scale_onset_to_count = scale_onset_to_count,
   min_chi_squared = 1,
   maximum_iterations = 20,
-  n_bootstrap = 50,
+  n_bootstrap = 1,
   verbose = F)
 
 
@@ -116,7 +123,7 @@ deconvolved_FOPH_hosp_data <- get_all_infection_incidence(
   scale_onset_to_count = scale_onset_to_count,
   min_chi_squared = 1,
   maximum_iterations = 20,
-  n_bootstrap = 50,
+  n_bootstrap = 1,
   verbose = F)
 
 ## sum infections from Hospitalized patients - admission and Hospitalized patients - onset
