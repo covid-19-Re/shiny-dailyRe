@@ -1,5 +1,7 @@
 # TO-DO: deduplicate code & general clean up...
 
+library(shades)
+
 toLowerFirst <- function(string) {
   str_replace(string, ".{1}", tolower(str_extract(string, ".{1}")))
 }
@@ -12,6 +14,7 @@ rEffPlotly <- function(
   lastDataDate,
   startDate = min(caseData$date) - 1,
   endDate = max(caseData$date) + 1,
+  caseDataRightTruncation = 3,
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
   logCaseYaxis = FALSE,
@@ -105,7 +108,19 @@ rEffPlotly <- function(
   estimatesPlot <- estimates %>%
     mutate(data_type = fct_recode(data_type, !!!newLevels))
 
-  pCases <- plot_ly(data = caseData) %>%
+  if (caseDataRightTruncation > 0) {
+    caseDataTrunc <- caseData %>%
+      group_by(data_type) %>%
+      filter(date <= max(date) - caseDataRightTruncation)
+    caseDataRest <- caseData %>%
+      group_by(data_type) %>%
+      filter(date > max(date) - caseDataRightTruncation) %>%
+      mutate(data_type_plot = str_c(data_type, " truncated"))
+  } else {
+    caseDataTrunc <- caseData
+  } 
+
+  pCases <- plot_ly(data = caseDataTrunc) %>%
     add_bars(x = ~date, y = ~incidence, color = ~data_type,
       colors = plotColors,
       text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
@@ -126,6 +141,21 @@ rEffPlotly <- function(
         makeSlider(zoomRange)
       )
     )
+
+  if (caseDataRightTruncation > 0) {
+    pCases <- pCases %>%
+      add_bars(
+        data = caseDataRest,
+        x = ~date, y = ~incidence, color = ~data_type_plot,
+        colors = plotColors,
+        text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
+          round(incidence, 3), " ", toLowerFirst(data_type),
+          if_else(caseNormalize, " / 100'000", ""),
+          if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+          "<br>(not used for R<sub>e</sub> estimates)<extra></extra>"),
+        hovertemplate = "%{text}", inherit = FALSE,
+        legendgroup = ~data_type, showlegend = FALSE)
+  }
 
   if (caseLoess) {
     pCases <- pCases %>%

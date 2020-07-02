@@ -455,6 +455,7 @@ server <- function(input, output, session) {
       interventionsCH(),
       plotColors,
       latestDataCH,
+      caseDataRightTruncation = 3,
       fixedRangeX = fixedRangeX,
       fixedRangeY = fixedRangeY,
       logCaseYaxis = input$logCases,
