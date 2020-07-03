@@ -455,7 +455,7 @@ server <- function(input, output, session) {
       interventionsCH(),
       plotColors,
       latestDataCH,
-      caseDataRightTruncation = 3,
+      caseDataRightTruncation = 2,
       fixedRangeX = fixedRangeX,
       fixedRangeY = fixedRangeY,
       logCaseYaxis = input$logCases,
@@ -506,7 +506,7 @@ server <- function(input, output, session) {
       latestDataCH,
       startDate = min(caseData$date) - 1,
       endDate = max(caseData$date) + 1,
-      caseDataRightTruncation = 3,
+      caseDataRightTruncation = 2,
       fixedRangeX = fixedRangeX,
       fixedRangeY = fixedRangeY,
       logCaseYaxis = input$logCases,
@@ -567,6 +567,7 @@ server <- function(input, output, session) {
       latestDataCH,
       startDate = min(caseData$date) - 1,
       endDate = max(caseData$date) + 1,
+      caseDataRightTruncation = 2,
       fixedRangeX = fixedRangeX,
       fixedRangeY = fixedRangeY,
       logCaseYaxis = input$logCases,
@@ -591,9 +592,15 @@ server <- function(input, output, session) {
     estimates <- estimatesOverview()
 
     focusCountry <- "Switzerland"
-    countryColors <- viridis(length(countryList))
-    names(countryColors) <- countryList
-    countryColors[focusCountry] <- "#666666"
+    countryColors1 <- viridis(length(countryList))
+    names(countryColors1) <- countryList
+    countryColors1[focusCountry] <- "#666666"
+
+    countryColors2 <- saturation(countryColors1, value = 0.1)
+    names(countryColors2) <- str_c(names(countryColors1), " truncated")
+
+    countryColors <- c(countryColors1, countryColors2)
+    countryColors[str_c(focusCountry, " truncated")] <- "#BBBBBB"
 
     latestDataComparison <- latestDataComp() %>%
       ungroup() %>%
@@ -610,6 +617,7 @@ server <- function(input, output, session) {
       focusCountry = focusCountry,
       fixedRangeX = fixedRangeX,
       fixedRangeY = fixedRangeY,
+      caseDataRightTruncation = 2,
       logCaseYaxis = input$logCases,
       caseAverage = input$caseAverage,
       caseNormalize = input$caseNormalize,

@@ -14,7 +14,7 @@ rEffPlotly <- function(
   lastDataDate,
   startDate = min(caseData$date) - 1,
   endDate = max(caseData$date) + 1,
-  caseDataRightTruncation = 3,
+  caseDataRightTruncation = 2,
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
   logCaseYaxis = FALSE,
@@ -160,7 +160,7 @@ rEffPlotly <- function(
   if (caseLoess) {
     pCases <- pCases %>%
       add_trace(
-        data = caseData,
+        data = caseDataTrunc,
         x = ~date, y = ~incidenceLoess, color = ~data_type, color = plotColors,
         type = "scatter", mode = "lines", opacity = 0.5,
         text = ~str_c("<i> Loess Fit </i><extra></extra>"),
@@ -319,7 +319,7 @@ rEffPlotlyRegion <- function(
   endDate = max(caseData$date) + 1,
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
-  caseDataRightTruncation = 3,
+  caseDataRightTruncation = 2,
   logCaseYaxis = FALSE,
   caseAverage = 1,
   caseNormalize = FALSE,
@@ -347,7 +347,7 @@ rEffPlotlyRegion <- function(
   }
 
   # layout pars
-    xrNote <- 0.99
+    xrNote <- 0.90
     yrNote <- 0.60
     rNote <- translator$t(str_c(
       "<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>",
@@ -431,8 +431,6 @@ rEffPlotlyRegion <- function(
       mutate(region = fct_relevel(region, translator$t(focusRegion), after = Inf))
   }
 
-  estimatesPlotCH <- filter(estimatesPlot, region == translator$t("Switzerland (Total)"))
-
   if (logCaseYaxis) {
     zoomRange <- makeZoomRange(log10(max(caseData$incidence, na.rm = TRUE)), extra = log10(5), stepSize = log10(10))
   } else {
@@ -489,7 +487,7 @@ rEffPlotlyRegion <- function(
 
   if (caseLoess) {
     pCases <- pCases %>%
-      add_trace(data = caseData,
+      add_trace(data = caseDataTrunc,
         x = ~date, y = ~incidenceLoess, color = ~region, color = regionColors,
         type = "scatter", mode = "lines", opacity = 0.5,
         text = ~str_c("<i> Loess Fit </i><extra></extra>"),
@@ -530,20 +528,6 @@ rEffPlotlyRegion <- function(
       color = ~region, legendgroup = ~region,
       line = list(color = "transparent"), opacity = 0.5, showlegend = FALSE,
       hoverinfo = "none") %>%
-    group_by(region) %>%
-    filter(date == max(date)) %>%
-    add_trace(
-      x = ~as.POSIXct(date) + 10 * 60 * 60, y = ~median_R_mean,
-      type = "scatter", mode = "markers", visible = visibilityNonFocus,
-      color = ~region, colors = regionColors,
-      legendgroup = ~region,
-      marker = list(symbol = "asterisk-open"),
-      text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
-      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
-      " <br>(", region, ")"),
-      hoverinfo = "text",
-      showlegend = FALSE) %>%
     group_by(region) %>%
     filter(date == max(date)) %>%
     add_trace(
@@ -666,6 +650,7 @@ rEffPlotlyComparison <- function(
   focusCountry = "Switzerland",
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
+  caseDataRightTruncation = 2,
   logCaseYaxis = FALSE,
   caseAverage = 1,
   caseNormalize = FALSE,
@@ -690,8 +675,8 @@ rEffPlotlyComparison <- function(
   }
 
   # layout pars
-    xrNote <- 0.99
-    yrNote <- 0.35
+    xrNote <- 0.9
+    yrNote <- 0.4
     rNote <- translator$t(str_c(
       "<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>",
       "delays between infection and<br>",
@@ -741,10 +726,8 @@ rEffPlotlyComparison <- function(
       ungroup()
     pCasesTitle <- str_c(pCasesTitle, "\n(", translator$t("7 day avarage"), ")")
   }
-  caseDataFocus <- filter(caseData, country == focusCountry)
 
   estimatesPlot <- estimates
-  estimatesPlotFocus <- filter(estimatesPlot, country == focusCountry)
 
   if (logCaseYaxis) {
     zoomRange <- makeZoomRange(log10(max(caseData$incidence, na.rm = TRUE)), extra = log10(5), stepSize = log10(10))
@@ -752,17 +735,20 @@ rEffPlotlyComparison <- function(
     zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
   }
 
-  pCases <- plot_ly(data = caseData) %>%
-    filter(country != focusCountry) %>%
+  if (caseDataRightTruncation > 0) {
+    caseDataTrunc <- caseData %>%
+      group_by(country) %>%
+      filter(date <= max(date) - caseDataRightTruncation)
+    caseDataRest <- caseData %>%
+      group_by(country) %>%
+      filter(date > max(date) - caseDataRightTruncation) %>%
+      mutate(country_plot = str_c(country, " truncated"))
+  } else {
+    caseDataTrunc <- caseData
+  }
+
+  pCases <- plot_ly(data = caseDataTrunc) %>%
     add_bars(x = ~date, y = ~incidence, color = ~country, colors = countryColors,
-      legendgroup = ~country, visible = "legendonly",
-      text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        round(incidence, 3), " ", toLowerFirst(data_type),
-        if_else(caseNormalize, " / 100'000", ""),
-        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
-        "<extra></extra>"),
-      hovertemplate = "%{text}") %>%
-    add_bars(data = caseDataFocus, x = ~date, y = ~incidence, color = ~country, colors = countryColors,
       legendgroup = ~country,
       text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
         round(incidence, 3), " ", toLowerFirst(data_type),
@@ -782,15 +768,24 @@ rEffPlotlyComparison <- function(
       )
     )
 
+  if (caseDataRightTruncation > 0) {
+    pCases <- pCases %>%
+      add_bars(
+        data = caseDataRest,
+        x = ~date, y = ~incidence, color = ~country_plot,
+        colors = countryColors,
+        text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
+          round(incidence, 3), " ", toLowerFirst(data_type),
+          if_else(caseNormalize, " / 100'000", ""),
+          if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+          "<br>(not used for R<sub>e</sub> estimates)<extra></extra>"),
+        hovertemplate = "%{text}",
+        legendgroup = ~country, showlegend = FALSE)
+  }
+
   if (caseLoess) {
     pCases <- pCases %>%
-      add_trace(data = filter(caseData, country != focusCountry),
-        x = ~date, y = ~incidenceLoess, color = ~country, color = countryColors,
-        type = "scatter", mode = "lines", opacity = 0.5,
-        text = ~str_c("<i> Loess Fit </i><extra></extra>"),
-        legendgroup = ~country, showlegend = FALSE, visible = "legendonly",
-        hovertemplate = "%{text}") %>%
-      add_trace(data = caseDataFocus,
+      add_trace(data = caseDataTrunc,
         x = ~date, y = ~incidenceLoess, color = ~country, color = countryColors,
         type = "scatter", mode = "lines", opacity = 0.5,
         text = ~str_c("<i> Loess Fit </i><extra></extra>"),
@@ -801,28 +796,14 @@ rEffPlotlyComparison <- function(
   if (caseDeconvoluted) {
     pCases <- pCases %>%
       add_trace(
-        data = filter(caseData, country != focusCountry, !is.na(deconvoluted)),
-        x = ~date, y = ~deconvoluted, color = ~country, color = countryColors,
-        type = "scatter", mode = "lines", opacity = 0.5,
-        text = ~str_c("<i> deconvoluted Data +/- sd.</i><extra></extra>"),
-        legendgroup = ~country, showlegend = FALSE, visible = "legendonly",
-        hovertemplate = "%{text}") %>%
-      add_ribbons(
-        data =  filter(caseData, country != focusCountry, !is.na(deconvoluted)),
-        x = ~date, ymin = ~deconvolutedLow, ymax = ~deconvolutedHigh,
-        color = ~country, colors = countryColors,
-        line = list(color = "transparent"), opacity = 0.5,
-        legendgroup = ~country, showlegend = FALSE, visible = "legendonly",
-        hoverinfo = "none") %>%
-      add_trace(
-        data = filter(caseDataFocus, !is.na(deconvoluted)),
+        data = filter(caseData, !is.na(deconvoluted)),
         x = ~date, y = ~deconvoluted, color = ~country, color = countryColors,
         type = "scatter", mode = "lines", opacity = 0.5,
         text = ~str_c("<i> deconvoluted Data +/- sd.</i><extra></extra>"),
         legendgroup = ~country, showlegend = FALSE,
         hovertemplate = "%{text}") %>%
       add_ribbons(
-        data =  filter(caseDataFocus, !is.na(deconvoluted)),
+        data =  filter(caseData, !is.na(deconvoluted)),
         x = ~date, ymin = ~deconvolutedLow, ymax = ~deconvolutedHigh,
         color = ~country, colors = countryColors,
         line = list(color = "transparent"), opacity = 0.5,
@@ -831,37 +812,7 @@ rEffPlotlyComparison <- function(
   }
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
-    filter(country != focusCountry) %>%
     add_trace(
-      x = ~date, y = ~median_R_mean, color = ~country, colors = countryColors,
-      type = "scatter", mode = "lines", showlegend = FALSE,
-      legendgroup = ~country, visible = "legendonly",
-      text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
-      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
-      " <br>(", country, ")<extra></extra>"),
-      hovertemplate = "%{text}") %>%
-    add_ribbons(
-      x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
-      color = ~country, legendgroup = ~country, visible = "legendonly",
-      line = list(color = "transparent"), opacity = 0.5, showlegend = FALSE,
-      hoverinfo = "none") %>%
-    group_by(country) %>%
-    filter(date == max(date)) %>%
-    add_trace(
-      x = ~as.POSIXct(date) + 10 * 60 * 60, y = ~median_R_mean,
-      type = "scatter", mode = "markers", visible = "legendonly",
-      color = ~country, colors = countryColors,
-      legendgroup = ~country,
-      marker = list(symbol = "asterisk-open"),
-      text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
-      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
-      " <br>(", country, ")"),
-      hoverinfo = "text",
-      showlegend = FALSE) %>%
-    add_trace(
-      data = estimatesPlotFocus,
       x = ~date, y = ~median_R_mean, color = ~country, colors = countryColors,
       type = "scatter", mode = "lines", showlegend = FALSE,
       legendgroup = ~country,
@@ -871,7 +822,6 @@ rEffPlotlyComparison <- function(
       " <br>(", country, ")<extra></extra>"),
       hovertemplate = "%{text}") %>%
     add_ribbons(
-      data = estimatesPlotFocus,
       x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
       color = ~country, legendgroup = ~country,
       line = list(color = "transparent"), opacity = 0.5, showlegend = FALSE,
@@ -887,7 +837,7 @@ rEffPlotlyComparison <- function(
       text = ~str_c("<i>", format(date, dateFormatLong),
       "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
       " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
-      " <br>(", region, ")"),
+      " <br>(", country, ")"),
       hoverinfo = "text",
       showlegend = FALSE) %>%
     add_annotations(
@@ -959,6 +909,10 @@ rEffPlotlyComparison <- function(
       locale = locale, scrollZoom = FALSE)
 
   plot$elementId <- widgetID
+
+  if(!is.null(focusCountry)) {
+    plot <- plotlyShowOnly(plot, focusCountry)
+  }
 
   return(plot)
 }
