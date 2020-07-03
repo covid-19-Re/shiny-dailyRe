@@ -45,6 +45,7 @@ plotColors <-  c(
 
 plotColorsTruncated <- saturation(plotColors, value = 0.1)
 names(plotColorsTruncated) <- str_c(names(plotColors), " truncated")
+plotColorsTruncated[1] <- "#aba3ad"
 
 plotColors <- c(plotColors, plotColorsTruncated)
 
