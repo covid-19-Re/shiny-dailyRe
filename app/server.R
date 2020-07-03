@@ -455,6 +455,7 @@ server <- function(input, output, session) {
       interventionsCH(),
       plotColors,
       latestDataCH,
+      caseDataRightTruncation = 3,
       fixedRangeX = fixedRangeX,
       fixedRangeY = fixedRangeY,
       logCaseYaxis = input$logCases,
@@ -476,9 +477,15 @@ server <- function(input, output, session) {
     caseData <- caseDataSwitzerlandPlot() %>%
       filter(region %in% estimates$region)
 
-    cantonColors <- viridis(length(unique(caseData$region)))
-    names(cantonColors) <- unique(caseData$region)
-    cantonColors["Switzerland"] <- "#666666"
+    cantonColors1 <- viridis(length(unique(caseData$region)))
+    names(cantonColors1) <- unique(caseData$region)
+    cantonColors1["Switzerland"] <- "#666666"
+
+    cantonColors2 <- saturation(cantonColors1, value = 0.1)
+    names(cantonColors2) <- str_c(names(cantonColors1), " truncated")
+
+    cantonColors <- c(cantonColors1, cantonColors2)
+    cantonColors["Switzerland truncated"] <- "#BBBBBB"
 
     latestDataCH <- latestData %>%
       filter(
@@ -499,6 +506,7 @@ server <- function(input, output, session) {
       latestDataCH,
       startDate = min(caseData$date) - 1,
       endDate = max(caseData$date) + 1,
+      caseDataRightTruncation = 3,
       fixedRangeX = fixedRangeX,
       fixedRangeY = fixedRangeY,
       logCaseYaxis = input$logCases,
@@ -511,6 +519,7 @@ server <- function(input, output, session) {
       translator = i18n(),
       language = input$lang,
       widgetID = NULL,
+      focusRegion = "Switzerland (Total)",
       visibilityNonFocus = "legendonly")
 
       return(plot)
@@ -529,9 +538,15 @@ server <- function(input, output, session) {
       filter(str_detect(region, "grR") | region == "Switzerland") %>%
       mutate(region = str_remove(region, "grR "))
 
-    greaterRegionColors <- viridis(length(unique(caseData$region)))
-    names(greaterRegionColors) <- unique(caseData$region)
-    greaterRegionColors["Switzerland"] <- "#666666"
+    greaterRegionColors1 <- viridis(length(unique(caseData$region)))
+    names(greaterRegionColors1) <- unique(caseData$region)
+    greaterRegionColors1["Switzerland"] <- "#666666"
+
+    greaterRegionColors2 <- saturation(greaterRegionColors1, value = 0.1)
+    names(greaterRegionColors2) <- str_c(names(greaterRegionColors1), " truncated")
+
+    greaterRegionColors <- c(greaterRegionColors1, greaterRegionColors2)
+    greaterRegionColors["Switzerland truncated"] <- "#BBBBBB"
 
     latestDataCH <- latestData %>%
       filter(
@@ -564,6 +579,7 @@ server <- function(input, output, session) {
       translator = i18n(),
       language = input$lang,
       widgetID = NULL,
+      focusRegion = "Switzerland (Total)",
       visibilityNonFocus = "legendonly")
 
     return(plot)

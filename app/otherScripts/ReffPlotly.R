@@ -1,5 +1,7 @@
 # TO-DO: deduplicate code & general clean up...
 
+library(shades)
+
 toLowerFirst <- function(string) {
   str_replace(string, ".{1}", tolower(str_extract(string, ".{1}")))
 }
@@ -12,6 +14,7 @@ rEffPlotly <- function(
   lastDataDate,
   startDate = min(caseData$date) - 1,
   endDate = max(caseData$date) + 1,
+  caseDataRightTruncation = 3,
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
   logCaseYaxis = FALSE,
@@ -105,7 +108,19 @@ rEffPlotly <- function(
   estimatesPlot <- estimates %>%
     mutate(data_type = fct_recode(data_type, !!!newLevels))
 
-  pCases <- plot_ly(data = caseData) %>%
+  if (caseDataRightTruncation > 0) {
+    caseDataTrunc <- caseData %>%
+      group_by(data_type) %>%
+      filter(date <= max(date) - caseDataRightTruncation)
+    caseDataRest <- caseData %>%
+      group_by(data_type) %>%
+      filter(date > max(date) - caseDataRightTruncation) %>%
+      mutate(data_type_plot = str_c(data_type, " truncated"))
+  } else {
+    caseDataTrunc <- caseData
+  }
+
+  pCases <- plot_ly(data = caseDataTrunc) %>%
     add_bars(x = ~date, y = ~incidence, color = ~data_type,
       colors = plotColors,
       text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
@@ -127,19 +142,37 @@ rEffPlotly <- function(
       )
     )
 
+  if (caseDataRightTruncation > 0) {
+    pCases <- pCases %>%
+      add_bars(
+        data = caseDataRest,
+        x = ~date, y = ~incidence, color = ~data_type_plot,
+        colors = plotColors,
+        text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
+          round(incidence, 3), " ", toLowerFirst(data_type),
+          if_else(caseNormalize, " / 100'000", ""),
+          if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+          "<br>(not used for R<sub>e</sub> estimates)<extra></extra>"),
+        hovertemplate = "%{text}", inherit = FALSE,
+        legendgroup = ~data_type, showlegend = FALSE)
+  }
+
   if (caseLoess) {
     pCases <- pCases %>%
-      add_trace(x = ~date, y = ~incidenceLoess, color = ~data_type, color = plotColors,
-      type = "scatter", mode = "lines", opacity = 0.5,
-      text = ~str_c("<i> Loess Fit </i><extra></extra>"),
-      legendgroup = ~data_type, showlegend = FALSE,
-      hovertemplate = "%{text}")
+      add_trace(
+        data = caseData,
+        x = ~date, y = ~incidenceLoess, color = ~data_type, color = plotColors,
+        type = "scatter", mode = "lines", opacity = 0.5,
+        text = ~str_c("<i> Loess Fit </i><extra></extra>"),
+        legendgroup = ~data_type, showlegend = FALSE,
+        hovertemplate = "%{text}")
   }
 
   if (caseDeconvoluted) {
     pCases <- pCases %>%
-      filter(!is.na(deconvoluted)) %>%
-      add_trace(x = ~date, y = ~deconvoluted, color = ~data_type, color = plotColors,
+      add_trace(
+        data = filter(caseData, !is.na(deconvoluted)),
+        x = ~date, y = ~deconvoluted, color = ~data_type, color = plotColors,
         type = "scatter", mode = "lines",
         text = ~str_c("<i> deconvoluted Data +/- sd.</i><extra></extra>"),
         legendgroup = ~data_type, showlegend = FALSE,
@@ -286,6 +319,7 @@ rEffPlotlyRegion <- function(
   endDate = max(caseData$date) + 1,
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
+  caseDataRightTruncation = 3,
   logCaseYaxis = FALSE,
   caseAverage = 1,
   caseNormalize = FALSE,
@@ -296,6 +330,7 @@ rEffPlotlyRegion <- function(
   translator,
   language,
   widgetID = "rEffplotsRegions",
+  focusRegion = NULL,
   visibilityNonFocus = "legendonly"
   ) {
 
@@ -350,7 +385,8 @@ rEffPlotlyRegion <- function(
 
   names(regionColors) <- recode(
     names(regionColors),
-    Switzerland = translator$t("Switzerland (Total)"))
+    Switzerland = translator$t("Switzerland (Total)"),
+    "Switzerland truncated" = str_c(translator$t("Switzerland (Total)"), " truncated"))
 
   pCasesTitle <- translator$t("New observations")
 
@@ -367,6 +403,12 @@ rEffPlotlyRegion <- function(
       data_type = fct_recode(data_type, !!!newLevels),
       region = recode(region, Switzerland = translator$t("Switzerland (Total)")))
 
+  if (!is.null(focusRegion)){
+    caseData <- caseData %>%
+      mutate(region = as_factor(region)) %>%
+      mutate(region = fct_relevel(region, translator$t(focusRegion), after = Inf))
+  }
+
   if (caseAverage > 1) {
     caseData <- caseData %>%
       group_by(data_type, country, region) %>%
@@ -377,13 +419,17 @@ rEffPlotlyRegion <- function(
     pCasesTitle <- str_c(pCasesTitle, "\n(", translator$t("7 day avarage"), ")")
   }
 
-  caseDataCH <- filter(caseData, region == translator$t("Switzerland (Total)"))
-
   estimatesPlot <- estimates %>%
     filter(data_type == "Confirmed cases") %>%
     mutate(
       data_type = fct_recode(data_type, !!!newLevels),
       region = recode(region, Switzerland = translator$t("Switzerland (Total)")))
+
+  if (!is.null(focusRegion)){
+    estimatesPlot <- estimatesPlot %>%
+      mutate(region = as_factor(region)) %>%
+      mutate(region = fct_relevel(region, translator$t(focusRegion), after = Inf))
+  }
 
   estimatesPlotCH <- filter(estimatesPlot, region == translator$t("Switzerland (Total)"))
 
@@ -393,17 +439,20 @@ rEffPlotlyRegion <- function(
     zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
   }
 
-  pCases <- plot_ly(data = caseData) %>%
-    filter(region != translator$t("Switzerland (Total)")) %>%
+  if (caseDataRightTruncation > 0) {
+    caseDataTrunc <- caseData %>%
+      group_by(region) %>%
+      filter(date <= max(date) - caseDataRightTruncation)
+    caseDataRest <- caseData %>%
+      group_by(region) %>%
+      filter(date > max(date) - caseDataRightTruncation) %>%
+      mutate(region_plot = str_c(region, " truncated"))
+  } else {
+    caseDataTrunc <- caseData
+  }
+
+  pCases <- plot_ly(data = caseDataTrunc) %>%
     add_bars(x = ~date, y = ~incidence, color = ~region, colors = regionColors,
-      legendgroup = ~region, visible = visibilityNonFocus,
-      text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        round(incidence, 3), " ", toLowerFirst(data_type),
-        if_else(caseNormalize, " / 100'000", ""),
-        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
-        "<extra></extra>"),
-      hovertemplate = "%{text}") %>%
-    add_bars(data = caseDataCH, x = ~date, y = ~incidence, color = ~region, colors = regionColors,
       legendgroup = ~region,
       text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
         round(incidence, 3), " ", toLowerFirst(data_type),
@@ -423,15 +472,24 @@ rEffPlotlyRegion <- function(
       )
     )
 
+  if (caseDataRightTruncation > 0) {
+    pCases <- pCases %>%
+      add_bars(
+        data = caseDataRest,
+        x = ~date, y = ~incidence, color = ~region_plot,
+        colors = regionColors,
+        text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
+          round(incidence, 3), " ", toLowerFirst(data_type),
+          if_else(caseNormalize, " / 100'000", ""),
+          if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+          "<br>(not used for R<sub>e</sub> estimates)<extra></extra>"),
+        hovertemplate = "%{text}",
+        legendgroup = ~region, showlegend = FALSE)
+  }
+
   if (caseLoess) {
     pCases <- pCases %>%
-      add_trace(data = filter(caseData, region != translator$t("Switzerland (Total)")),
-        x = ~date, y = ~incidenceLoess, color = ~region, color = regionColors,
-        type = "scatter", mode = "lines", opacity = 0.5,
-        text = ~str_c("<i> Loess Fit </i><extra></extra>"),
-        legendgroup = ~region, showlegend = FALSE, visible = "legendonly",
-        hovertemplate = "%{text}") %>%
-      add_trace(data = caseDataCH,
+      add_trace(data = caseData,
         x = ~date, y = ~incidenceLoess, color = ~region, color = regionColors,
         type = "scatter", mode = "lines", opacity = 0.5,
         text = ~str_c("<i> Loess Fit </i><extra></extra>"),
@@ -442,28 +500,14 @@ rEffPlotlyRegion <- function(
   if (caseDeconvoluted) {
     pCases <- pCases %>%
       add_trace(
-        data = filter(caseData, region != translator$t("Switzerland (Total)"), !is.na(deconvoluted)),
-        x = ~date, y = ~deconvoluted, color = ~region, color = regionColors,
-        type = "scatter", mode = "lines", opacity = 0.5,
-        text = ~str_c("<i> deconvoluted Data +/- sd.</i><extra></extra>"),
-        legendgroup = ~region, showlegend = FALSE, visible = "legendonly",
-        hovertemplate = "%{text}") %>%
-      add_ribbons(
-        data =  filter(caseData, region != translator$t("Switzerland (Total)"), !is.na(deconvoluted)),
-        x = ~date, ymin = ~deconvolutedLow, ymax = ~deconvolutedHigh,
-        color = ~region, colors = regionColors,
-        line = list(color = "transparent"), opacity = 0.5,
-        legendgroup = ~region, showlegend = FALSE, visible = "legendonly",
-        hoverinfo = "none") %>%
-      add_trace(
-        data = filter(caseDataCH, !is.na(deconvoluted)),
+        data = filter(caseData, !is.na(deconvoluted)),
         x = ~date, y = ~deconvoluted, color = ~region, color = regionColors,
         type = "scatter", mode = "lines", opacity = 0.5,
         text = ~str_c("<i> deconvoluted Data +/- sd.</i><extra></extra>"),
         legendgroup = ~region, showlegend = FALSE,
         hovertemplate = "%{text}") %>%
       add_ribbons(
-        data =  filter(caseDataCH, !is.na(deconvoluted)),
+        data =  filter(caseData, !is.na(deconvoluted)),
         x = ~date, ymin = ~deconvolutedLow, ymax = ~deconvolutedHigh,
         color = ~region, colors = regionColors,
         line = list(color = "transparent"), opacity = 0.5,
@@ -472,11 +516,10 @@ rEffPlotlyRegion <- function(
   }
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
-    filter(region != translator$t("Switzerland (Total)")) %>%
     add_trace(
       x = ~date, y = ~median_R_mean, color = ~region, colors = regionColors,
       type = "scatter", mode = "lines", showlegend = FALSE,
-      legendgroup = ~region, visible = visibilityNonFocus,
+      legendgroup = ~region,
       text = ~str_c("<i>", format(date, dateFormatLong),
       "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
       " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
@@ -484,7 +527,7 @@ rEffPlotlyRegion <- function(
       hovertemplate = "%{text}") %>%
     add_ribbons(
       x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
-      color = ~region, legendgroup = ~region, visible = visibilityNonFocus,
+      color = ~region, legendgroup = ~region,
       line = list(color = "transparent"), opacity = 0.5, showlegend = FALSE,
       hoverinfo = "none") %>%
     group_by(region) %>%
@@ -501,22 +544,6 @@ rEffPlotlyRegion <- function(
       " <br>(", region, ")"),
       hoverinfo = "text",
       showlegend = FALSE) %>%
-    add_trace(
-      data = estimatesPlotCH,
-      x = ~date, y = ~median_R_mean, color = ~region, colors = regionColors,
-      type = "scatter", mode = "lines", showlegend = FALSE,
-      legendgroup = ~region,
-      text = ~str_c("<i>", format(date, dateFormatLong),
-      "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
-      " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
-      " <br>(", region, ")<extra></extra>"),
-      hovertemplate = "%{text}") %>%
-    add_ribbons(
-      data = estimatesPlotCH,
-      x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
-      color = ~region, legendgroup = ~region,
-      line = list(color = "transparent"), opacity = 0.5, showlegend = FALSE,
-      hoverinfo = "none") %>%
     group_by(region) %>%
     filter(date == max(date)) %>%
     add_trace(
@@ -620,6 +647,10 @@ rEffPlotlyRegion <- function(
     )) %>%
     config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
       locale = locale, scrollZoom = FALSE)
+
+  if(!is.null(focusRegion)) {
+    plot <- plotlyShowOnly(plot, focusRegion)
+  }
 
   plot$elementId <- widgetID
 
@@ -1029,4 +1060,14 @@ makeSlider <- function(zoomRange, x = 0.01, y = 1, anchor = c("top", "left")) {
     ticklen = 0, minorticklen = 0
   )
   return(slider)
+}
+
+plotlyShowOnly <- function(plot, focusRegion){
+  for (i in seq_len(length(plot$x$data))) {
+    if (!str_detect(plot$x$data[[i]]$name, fixed(focusRegion)) &
+      plot$x$data[[i]]$yaxis != "y3") {
+        plot$x$data[[i]]$visible <- "legendonly"
+    }
+  }
+  return(plot)
 }

@@ -4,6 +4,7 @@ library(viridisLite)
 library(here)
 library(shiny.i18n)
 library(slider)
+library(shades)
 
 source("otherScripts/ReffPlotly.R")
 
@@ -97,6 +98,11 @@ plotColors <-  c(
   "Hospitalized patients" = allCols[3],
   "Deaths" = allCols[5],
   "Excess deaths" = allCols[6])
+
+plotColorsTruncated <- saturation(plotColors, value = 0.1)
+names(plotColorsTruncated) <- str_c(names(plotColors), " truncated")
+
+plotColors <- c(plotColors, plotColorsTruncated)
 
 fixedRangeX <- c(FALSE, FALSE, FALSE)
 fixedRangeY <- c(TRUE, TRUE, TRUE)

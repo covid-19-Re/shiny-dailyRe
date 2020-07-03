@@ -6,6 +6,7 @@ library(htmlwidgets)
 library(here)
 library(viridisLite)
 library(shiny.i18n)
+library(shades)
 
 # load data
 dataDir <- here::here("app/data/temp")
@@ -41,6 +42,11 @@ plotColors <-  c(
   "Confirmed cases" = allCols[1],
   "Hospitalized patients" = allCols[3],
   "Deaths" = allCols[5])
+
+plotColorsTruncated <- saturation(plotColors, value = 0.1)
+names(plotColorsTruncated) <- str_c(names(plotColors), " truncated")
+
+plotColors <- c(plotColors, plotColorsTruncated)
 
 # prepare Data
 caseDataPlot <- rawData %>%
