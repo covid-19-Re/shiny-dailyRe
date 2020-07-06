@@ -6,7 +6,7 @@ app/data/*.Rd
 app/data/temp
 app/data/BAG
 app/data/CH
-app/data/ECDCdata.xlsx
+app/data/E*.xlsx
 app/otherScripts/*.Rout
 app/otherScripts/*.Rdata
 app/www/*
@@ -15,3 +15,4 @@ app/restart.txt
 .vscode
 .Rproj.user
 *.Rdata
+*.rds
