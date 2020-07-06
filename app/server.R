@@ -40,7 +40,7 @@ server <- function(input, output, session) {
     filter(variable == "incidence", data_type != "Excess deaths") %>%
     pivot_wider(names_from = "variable", values_from = "value") %>%
     group_by(country, region, source, data_type) %>%
-    mutate(incidenceLoess = getLOESSCases(date, incidence)) %>%
+    mutate(incidenceLoess = getLOESSCases(date, incidence, truncation = 2)) %>%
     bind_rows(
       readRDS(pathToRawData) %>%
         filter(variable == "incidence", data_type == "Excess deaths")  %>%
