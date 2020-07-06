@@ -22,15 +22,24 @@ make_ecdf_from_gammas <- function(shape, scale, numberOfSamples = 1E6) {
   return(Vectorize(ecdf(draws)))
 }
 
-make_ecdf_from_empirical_data <- function(shape_incubation,
-                                          scale_incubation,
-                                          empirical_distr_onset_to_count) {
-  numberOfSamples <- length(empirical_distr_onset_to_count) * 100
-  draws <- rgamma(numberOfSamples,
-    shape = shape_incubation[1],
-    scale = scale_incubation[1]) + rep(empirical_distr_onset_to_count,
-    times = 100)
-  return(Vectorize(ecdf(draws)))
+make_ecdf_from_empirical_data <- function(gamma_draws,
+                                          empirical_distr_onset_to_count){
+  
+  multiplier <- 100
+  
+  while(length(gamma_draws) < (length(empirical_distr_onset_to_count)*multiplier) & multiplier > 1) {
+    multiplier <- floor(multiplier * 0.8)
+  }
+  
+  if(multiplier == 1) {
+    final_length <- min(length(gamma_draws), length(empirical_distr_onset_to_count))
+    
+    draws <- sample(gamma_draws, final_length, replace = F) + sample(empirical_distr_onset_to_count, final_length, replace = F)
+  } else {
+    draws <- gamma_draws[1:(length(empirical_distr_onset_to_count)*multiplier)] + rep(empirical_distr_onset_to_count, times=multiplier)
+  }
+  
+  return(ecdf(draws))
 }
 
 get_dates_to_average_over <- function(i, dates, weeks_averaged) {
@@ -41,80 +50,95 @@ get_dates_to_average_over <- function(i, dates, weeks_averaged) {
   }
 }
 
-discretize_waiting_time_distr <- function(
-  is_empirical = FALSE,
-  shape,
-  scale,
-  onset_to_count_empirical_delays = tibble(),
-  all_dates,
-  min_number_cases = 100,
-  length_out = 250,
-  upper_quantile_threshold = 0.99) {
-
+discretize_waiting_time_distr <- function(is_empirical = F,
+                                          shape,
+                                          scale,
+                                          onset_to_count_empirical_delays = tibble(),
+                                          all_dates,
+                                          min_number_cases = 100,
+                                          length_out = 250,
+                                          upper_quantile_threshold = 0.99){
+  
   result_distributions <- list()
-
-  if (!is_empirical) {
+  
+  if(!is_empirical) {
     #TODO implement checks that shape and scale have the right structure
     F_h <- make_ecdf_from_gammas(shape, scale)
-  } else {
-    all_delays <- (onset_to_count_empirical_delays %>% pull(delay))
-    parms_gamma <- fitdist(all_delays + 1, "gamma")$estimate
-    shape_gamma <- parms_gamma["shape"]
-    rate_gamma <- parms_gamma["rate"]
-    threshold_right_truncation <- ceiling(qgamma(upper_quantile_threshold, shape = shape_gamma, rate = rate_gamma) - 1)
-  }
-
-  for (i in seq_len(length(all_dates))) {
-
-    if (is_empirical) {
-      if (i > (length(all_dates) - threshold_right_truncation) & length(all_dates) > threshold_right_truncation) {
-        result_distributions[[i]] <- result_distributions[[length(all_dates) - threshold_right_truncation]]
-        next
-      }
-
-      weeks_averaged <- 0
-      repeat {
-        weeks_averaged <- weeks_averaged + 1
-        recent_counts_distribution <- onset_to_count_empirical_delays %>%
-          filter(infection_date %in% get_dates_to_average_over(i, all_dates, weeks_averaged)) %>%
-          pull(delay)
-
-        if (length(recent_counts_distribution) >= min_number_cases) {
-          break
-        }
-      }
-
-      F_h <- make_ecdf_from_empirical_data(
-        shape,
-        scale,
-        recent_counts_distribution)
-    }
-
-    f <- Vectorize(function(x) {
-      if (x < 0) {
+    
+    f <- Vectorize(function(x){
+      if(x < 0) {
         return(0)
-      } else if (x < 0.5) {
+      } else if(x < 0.5) {
         return(F_h(0.5))
       } else {
         return(F_h(round(x + 1E-8) + 0.5) - F_h(round(x + 1E-8) - 0.5))
       }
     })
     x <- 0:length_out
-    result_distributions[[i]] <- f(x)
+    for(i in 1:length(all_dates)) {
+      result_distributions[[i]] <- f(x)
+    }
+    
+  } else {
+    all_delays <- (onset_to_count_empirical_delays %>% pull(delay))
+    
+    parms_gamma <- fitdist(all_delays + 1, "gamma")$estimate
+    shape_gamma <- parms_gamma["shape"]
+    rate_gamma <- parms_gamma["rate"]
+    
+    threshold_right_truncation <- ceiling(qgamma(upper_quantile_threshold, shape = shape_gamma, rate = rate_gamma) - 1)
+    
+    numberOfSamples <- 1E6
+    gamma_draws <-  rgamma(numberOfSamples, shape=shape[1], scale=scale[1])
+    
+    for(i in 1:length(all_dates)) {
+      
+      
+      if(i > (length(all_dates) - threshold_right_truncation) & length(all_dates) > threshold_right_truncation ) {
+        result_distributions[[i]] <- result_distributions[[length(all_dates) - threshold_right_truncation]]
+        next
+      }
+      
+      weeks_averaged <- 0
+      repeat{
+        weeks_averaged <- weeks_averaged + 1
+        recent_counts_distribution <- onset_to_count_empirical_delays %>%
+          filter( infection_date %in% get_dates_to_average_over(i, all_dates, weeks_averaged)) %>%
+          pull( delay )
+        
+        if(length( recent_counts_distribution ) >= min_number_cases) {
+          break
+        }
+      }
+      
+      F_h <- make_ecdf_from_empirical_data(gamma_draws,
+                                           recent_counts_distribution)
+      
+      f <- Vectorize(function(x){
+        if(x < 0) {
+          return(0)
+        } else if(x < 0.5) {
+          return(F_h(0.5))
+        } else {
+          return(F_h(round(x + 1E-8) + 0.5) - F_h(round(x + 1E-8) - 0.5))
+        }
+      })
+      x <- 0:length_out
+      result_distributions[[i]] <- f(x)
+    }
   }
-
-  return(result_distributions)
+  
+  return( result_distributions )
 }
 
 prob_being_observed <- function(discretized_distr, currentIdx, lastObservedIdx) {
-
+  
   p <- sum(sapply(currentIdx:lastObservedIdx, function(x) {
     discretized_distr[[currentIdx]][x + 1 - currentIdx]
   }))
-
+  
   return(p)
 }
-
 get_original_extended_incidence <- function(original_data, max_delay = 20) {
   extension <- rep(0, times = max_delay)
   return(c(extension, original_data$value))
@@ -143,14 +167,13 @@ get_chi_squared <- function(estimated_incidence, original_incidence, discretized
 }
 
 get_expected_number_of_reports <- function(estimated_incidence, discretized_distr, stop_idx) {
-  return(
-    sum(unlist(
-      lapply(seq_len(stop_idx), function(begin_idx) {
-        return(discretized_distr[[begin_idx]][stop_idx - begin_idx  + 1] * estimated_incidence[begin_idx])
-      }
-      )
-    ))
-  )
+  partial_sum <- 0
+  
+  for(begin_idx in 1:stop_idx) {
+    partial_sum <- partial_sum + discretized_distr[[begin_idx]][stop_idx - begin_idx  + 1] * estimated_incidence[begin_idx]
+  }
+  
+  return( partial_sum )
 }
 
 update_single_estimate_incidence_RL <- function(
@@ -294,8 +317,12 @@ get_infection_incidence_by_deconvolution <- function(
     }
 
     if (smooth_incidence == T) {
-      smoothed_incidence_data <- time_series %>%
-        mutate(value = getLOESSCases(dates = date, count_data = value)) %>%
+      # smoothed_incidence_data <- time_series %>%
+      #   mutate(value = getLOESSCases(dates = date, count_data = value)) %>%
+      #   complete(date = seq.Date(minimal_date, maximal_date, by = "days"), fill = list(value = 0))
+      
+      smoothed_incidence_data <- time_series %>% 
+        mutate(value = zoo::rollmeanr(value, k = 7, fill = 0 )) %>% 
         complete(date = seq.Date(minimal_date, maximal_date, by = "days"), fill = list(value = 0))
 
       raw_total_incidence <- sum(time_series$value, na.rm = TRUE)

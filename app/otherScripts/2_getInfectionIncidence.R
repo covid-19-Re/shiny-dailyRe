@@ -7,6 +7,7 @@ library(tidyverse)
 library(here)
 library(fitdistrplus)
 library(parallel)
+library(zoo)
 
 source(here::here("app/otherScripts/2_utils_getInfectionIncidence.R"))
 
