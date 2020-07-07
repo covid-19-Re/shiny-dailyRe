@@ -30,14 +30,7 @@ dataDir <- here::here("app/data/temp")
 ##### Pull data
 
 ##### Swiss data
-CHrawData <- getAllSwissData(pathToHospData = dataCHHospitalPath) %>%
-  mutate(
-    region = recode(region, "CH" = "Switzerland", "FL" = "Liechtenstein"),
-    country = recode(country, "CH" = "Switzerland", "FL" = "Liechtenstein"))
-# save data
-
-# pathToCHRawDataSave <- file.path(dataDir, "CH_Raw_data.Rdata")
-# save(CHrawData, file = pathToCHRawDataSave)
+CHrawData <- getDataCHAll(pathToHospData = dataCHHospitalPath)
 cat("CH\n")
 
 ##### European data
@@ -46,12 +39,10 @@ countryList <- c("Austria", "Belgium", "France", "Germany", "Italy",
 
 
 ECDCdataRaw <- getLongECDCData(setdiff(countryList, c("Switzerland")))
+
  
 ECDCdata <- ECDCdataRaw %>%
   filter(!(country %in% c("Netherlands")))
-
-swissExcessDeath <- getExcessDeathCH(startAt = as.Date("2020-02-20"))
-cat("Swiss Excess\n")
 
 NLdata <- try(getDataNL(stopAfter = Sys.Date() - 1))
 if ("try-error" %in% class(NLdata)) {
