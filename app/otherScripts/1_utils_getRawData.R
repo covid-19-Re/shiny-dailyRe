@@ -77,12 +77,6 @@ curateLongTimeSeries <- function(data, isIncidenceData = TRUE) {
   return(data)
 }
 
-getCountryData <- function(countries, data = getDataECDC()) {
-  subset_data <- data %>%
-    filter(country %in% countries)
-  return(subset_data)
-}
-
 getCumulData <- function(data) {
   cumulData <- data %>%
     group_by(country, data_type) %>%
@@ -153,7 +147,8 @@ getDataECDC <- function(countries = NULL) {
     filter(!is.na(value))
 
   if (!is.null(countries)) {
-    longData <- getCountryData(countries, data = longData)
+    longData <- longData %>%
+      filter(country %in% countries)
   }
 
   longData[longData$value < 0, "value"] <- 0
@@ -220,8 +215,8 @@ getExcessDeathHMD <- function(startAt = as.Date("2020-02-20"), countries = NULL)
     mutate(value = ifelse(value < 0, 0, value))
 
   if (!is.null(countries)) {
-    longdata <- filter(
-      longdata,
+    longData <- filter(
+      longData,
       country %in% countries
     )
   }
@@ -251,7 +246,8 @@ sumGreaterRegions <- function(chData) {
     group_by(date, region, source, data_type, variable) %>%
     dplyr::summarize(
       value = sum(value),
-      country = "CH")
+      country = "CH",
+      .groups = "keep")
   return(greaterRegionsData)
 }
 
@@ -354,7 +350,7 @@ getHospitalDataCH <- function(path,
       dataSource = "FOPH")) %>%
       mutate(region = as.character(region))
   } else {
-    cat("Swiss Hospital Data file not found. Ignoring... \n")
+    warning("Swiss Hospital Data file not found. Ignoring...")
     out <- NULL
   }
   return(out)
@@ -365,9 +361,18 @@ getDataCHExcessDeath <- function(startAt = as.Date("2020-02-20")) {
   # pastData <- read_delim(urlPastData, delim = ";", comment = "#")
 
   url2020 <- "https://www.bfs.admin.ch/bfsstatic/dam/assets/13047388/master"
-  data2020 <- try(read_delim(url2020, delim = ";"))
+  data2020 <- try(
+    read_delim(url2020, delim = ";",
+      col_types = cols(
+        .default = col_double(),
+        Ending = col_character(),
+        Age = col_character()
+      )
+    )
+  )
 
   if ("try-error" %in% class(data2020)) {
+    warning(str_c("Couldn't read swiss excess death data at ", url))
     return(NULL)
   }
 
@@ -388,9 +393,6 @@ getDataCHExcessDeath <- function(startAt = as.Date("2020-02-20")) {
     mutate(country = "Switzerland", variable = "incidence",
            region = country, source = "BFS") %>%
     mutate(value = ifelse(value < 0, 0, value))
-
-  cumulData <- getCumulData(longData)
-  longData <- bind_rows(longData, cumulData)
 
   return(longData)
 }
@@ -896,20 +898,20 @@ getCountryData <- function(countries) {
   allDataList <- list()
 
   for (i in seq_len(length(countries))) {
-    if (country[i] == "Belgium") {
+    if (countries[i] == "Belgium") {
       allDataList[[i]] <- getDataBE()
-    } else if (country[i] == "France") {
+    } else if (countries[i] == "France") {
       allDataList[[i]] <- getDataFR()
-    } else if (country[i] == "Italy") {
+    } else if (countries[i] == "Italy") {
       allDataList[[i]] <- getDataIT()
-    } else if (country[i] == "Netherlands") {
+    } else if (countries[i] == "Netherlands") {
       allDataList[[i]] <- getDataNE()
-    } else if (country[i] == "Switzerland") {
-      allDataList[[i]] <- getDataCH()
-    } else if (country[i] == "United Kingdom") {
+    } else if (countries[i] == "Switzerland") {
+      allDataList[[i]] <- getDataCH(pathToHospData = here::here("app/data/CH"))
+    } else if (countries[i] == "United Kingdom") {
       allDataList[[i]] <- getDataUK()
     } else {
-      allDataList[[i]] <- getDataGeneric(country[i])
+      allDataList[[i]] <- getDataGeneric(countries[i])
     }
   }
 

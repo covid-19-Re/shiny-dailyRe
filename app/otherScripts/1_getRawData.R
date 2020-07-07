@@ -30,7 +30,7 @@ dataDir <- here::here("app/data/temp")
 ##### Pull data
 
 ##### Swiss data
-CHrawData <- getDataCHAll(pathToHospData = dataCHHospitalPath)
+CHrawData <- getDataCHAll(pathToHospData = here::here("app/data/CH"))
 cat("CH\n")
 
 ##### European data
