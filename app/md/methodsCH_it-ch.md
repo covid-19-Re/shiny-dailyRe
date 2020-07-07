@@ -1,6 +1,7 @@
 <h4>Assessment of current epidemiological situation</h4>
 
-The effective reproductive number R<sub>e</sub> in early March was 2-3.5, which is in the range of reproductive numbers reported for other places. The R<sub>e</sub> fell below the critical value of 1 in mid March. R<sub>e</sub> has increased continuously since mid April. Since the second week of June, R<sub>e</sub> is again significantly above one.
+<p>The effective reproductive number R<sub>e</sub> in early March was 2-3.5, which is in the range of reproductive numbers reported for other places. The R<sub>e</sub> fell below the critical value of 1 in mid March. R<sub>e</sub>has increased continuously since mid April. Estimates may vary between individual days. However, since mid-June, the R<sub>e</sub>is significantly above one.</p>
+<p>The number of weekly tests increased recently. Incorporating this increase confirms that R<sub>e</sub> is significantly above 1. This result reflects the recent observed increase in test positivity. The specificity of PCR tests is very high, resulting essentially in no false positive results which could bias our estimates. In addition to an increase in the number of confirmed cases, we currently observe an increase in the number of hospitalizations. In summary, all considered data and analyses points towards an exponential spread of COVID-19.</p>
  
 <h4>Methods</h4>
 
