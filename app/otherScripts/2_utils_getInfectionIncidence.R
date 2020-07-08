@@ -1,4 +1,23 @@
 ### Utilities ###
+filterRegions <- function(df, threshholdConfirmedCases = 500) {
+  regionsIncluded <- df %>%
+    filter(data_type == "Confirmed cases") %>%
+    group_by(region) %>%
+    summarize(nCases = sum(value), .groups = "drop") %>%
+    filter(nCases >= threshholdConfirmedCases)
+  excludedRegions <- setdiff(unique(df$region), regionsIncluded$region)
+  dfout <- df %>%
+    filter(region %in% regionsIncluded$region)
+
+  cat(str_c(
+  "\tDiscarded ", length(excludedRegions), " regions because threshold of ",
+  threshholdConfirmedCases, " confirmed cases wasn't reached.\n",
+  "\tDiscarded regions: ", str_c(excludedRegions, collapse = ", "), "\n"))
+
+  return(dfout)
+}
+
+
 getLOESSCases <- function(dates, count_data, span = 0.25) {
   n_pad <- round(length(count_data) * span * 0.5)
   c_data <- data.frame(value = c(rep(0, n_pad), count_data),
@@ -12,7 +31,6 @@ getLOESSCases <- function(dates, count_data, span = 0.25) {
     raw_smoothed_counts * sum(count_data, na.rm = T) / sum(raw_smoothed_counts, na.rm = T))
   return(normalized_smoothed_counts)
 }
-
 
 #### Build empirical CDF from draws summing samples from two gamma distributions
 make_ecdf_from_gammas <- function(shape, scale, numberOfSamples = 1E6) {
@@ -388,7 +406,7 @@ get_all_infection_incidence <- function(data,
 
     for (source_i in unique(data$source)) {
 
-      cat("   Data source:", source_i, "\n")
+      cat("  Data source:", source_i, "\n")
       # nCores <- max(1, parallel::detectCores() - 1)
       # cat("   calculating on", nCores, "cores...\n")
       # cl <- parallel::makeCluster(nCores, type = "FORK", outfile = "")

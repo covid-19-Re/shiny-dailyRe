@@ -15,7 +15,7 @@ meltCumulativeData <- function(
   cumulData <- rawData
   cumulData$Date <- ymd(cumulData$Date, locale = "en_GB.UTF-8")
   cumulData <- cumulData[cumulData$Date <= stoppingDate, ]
-  cumulData <- melt(cumulData, id.vars = nameDateCol)
+  cumulData <- reshape2::melt(cumulData, id.vars = nameDateCol)
   colnames(cumulData) <- c("date", "region", "value")
 
   cumulData <- bind_rows(lapply(
@@ -663,7 +663,7 @@ getHospitalDataBE <- function() {
   )
 
   if ("try-error" %in% class(rawData)) {
-    warning(str_c("Couldn't read french hospital data at ", url))
+    warning(str_c("Couldn't read belgian hospital data at ", url))
     return(NULL)
   }
 
@@ -684,13 +684,11 @@ getHospitalDataBE <- function() {
   return(longData)
 }
 
-getDataBE <- function(){
+getDataBE <- function() {
   caseData <- getDataECDC(countries = "Belgium")
   excessDeath <- getExcessDeathHMD(countries = "Belgium")
   hospitalData <- getHospitalDataBE()
-
   allData <- bind_rows(caseData, excessDeath, hospitalData)
-
   return(allData)
 }
 
@@ -801,12 +799,10 @@ getExcessDeathNL <- function(startAt = as.Date("2020-02-20")) {
   return(longData)
 }
 
-getDataNL <- function(){
+getDataNL <- function() {
   caseData <- getCaseDataNL()
   excessDeath <- getExcessDeathNL()
-
   allData <- bind_rows(caseData, excessDeath)
-
   return(allData)
 }
 
@@ -870,12 +866,10 @@ getExcessDeathUK <- function(startAt = as.Date("2020-02-20"), path_to_data = "..
   return(longData)
 }
 
-getDataUK <- function(){
+getDataUK <- function(v = TRUE){
   caseData <- getDataECDC(countries = "United Kingdom")
   excessDeath <- getExcessDeathUK()
-
   allData <- bind_rows(caseData, excessDeath)
-
   return(allData)
 }
 
@@ -884,20 +878,21 @@ getDataUK <- function(){
 # currently implemented
 # Austria, Belgium*, France*, Germany, Italy*, Netherlands*, Spain, Switzerland*, Sweden, United Kingdom*
 
-getDataGeneric <- function(countries){
+getDataGeneric <- function(countries, v = TRUE){
   caseData <- getDataECDC(countries = countries)
   excessDeath <- getExcessDeathHMD(countries = countries)
-
   allData <- bind_rows(caseData, excessDeath)
-
   return(allData)
 }
 
-getCountryData <- function(countries) {
+getCountryData <- function(countries, v = TRUE) {
 
   allDataList <- list()
 
   for (i in seq_len(length(countries))) {
+    if (v) {
+      cat(countries[i], ": getting data... ")
+    }
     if (countries[i] == "Belgium") {
       allDataList[[i]] <- getDataBE()
     } else if (countries[i] == "France") {
@@ -913,8 +908,27 @@ getCountryData <- function(countries) {
     } else {
       allDataList[[i]] <- getDataGeneric(countries[i])
     }
+    if (v) {
+      cat("done. \n")
+    }
   }
 
-  allData <- bind_rows(allDataList)
-
+  allData <- bind_rows(allDataList) %>%
+    mutate(
+      data_type = factor(data_type,
+        levels = c("confirmed",
+                  "hospitalized",
+                  "hospitalized_onsets",
+                  "hospitalized_admissions",
+                  "deaths",
+                  "excess_deaths"),
+        labels = c("Confirmed cases",
+                  "Hospitalized patients",
+                  "Hospitalized patients - onset",
+                  "Hospitalized patients - admission",
+                  "Deaths",
+                  "Excess deaths")
+      )
+    ) %>%
+    filter(variable == "incidence")
 }
