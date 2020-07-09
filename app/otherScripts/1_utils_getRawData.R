@@ -103,15 +103,18 @@ calcIncidenceData <- function(data) {
 getDataECDC <- function(countries = NULL) {
   urlfile <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
 
-  world_data <- try(read_csv(urlfile,
-    col_types = cols(
-      .default = col_double(),
-      dateRep = col_character(),
-      countriesAndTerritories = col_character(),
-      geoId = col_character(),
-      countryterritoryCode = col_character(),
-      continentExp = col_character()
-    )) %>% mutate(dateRep = dmy(date)))
+  world_data <- try(
+    read_csv(urlfile,
+      col_types = cols_only(
+        dateRep = col_date(format = "%d/%m/%Y"),
+        countriesAndTerritories = col_character(),
+        geoId = col_character(),
+        countryterritoryCode = col_character(),
+        continentExp = col_character(),
+        popData2019 = col_double()
+      )
+    )
+  )
 
   if ("try-error" %in% class(world_data)) {
     cat("ECDC csv not available... \nTrying .xlsx ... \n")
@@ -135,9 +138,8 @@ getDataECDC <- function(countries = NULL) {
   }
 
   longData <- world_data %>%
-    dplyr::select(
-      c(date = "dateRep", country = "countriesAndTerritories", popSize = popData2019,
-        confirmed = "cases", deaths = "deaths")) %>%
+    select(date = "dateRep", country = "countriesAndTerritories", popSize = popData2019,
+        confirmed = "cases", deaths = "deaths") %>%
     pivot_longer(cols = c(confirmed, deaths), names_to = "data_type") %>%
     mutate(
       variable = "incidence",
@@ -900,7 +902,7 @@ getCountryData <- function(countries, v = TRUE) {
     } else if (countries[i] == "Italy") {
       allDataList[[i]] <- getDataIT()
     } else if (countries[i] == "Netherlands") {
-      allDataList[[i]] <- getDataNE()
+      allDataList[[i]] <- getDataNL()
     } else if (countries[i] == "Switzerland") {
       allDataList[[i]] <- getDataCH(pathToHospData = here::here("app/data/CH"))
     } else if (countries[i] == "United Kingdom") {
