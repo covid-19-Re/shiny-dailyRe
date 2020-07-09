@@ -6,7 +6,7 @@ library("tidyverse")
 library("here")
 
 source(here("app/otherScripts/1_utils_getRawData.R"))
-source(here("app/otherScripts/countryScripts/utils.R"))
+source(here("app/otherScripts/utils.R"))
 
 args <- commandArgs(trailingOnly = TRUE)
 # testing
@@ -16,7 +16,25 @@ if (length(args) == 0) {
 }
 names(args) <- "country"
 
-# Fetch Data
+# Fetch Population Data (do once)
+  popDataPath <- here("app", "data", "popData.rds")
+  if (!file.exists(popDataPath)) {
+    popDataWorldBank <- getCountryPopData() %>%
+      filter(!(iso3 %in% c("LIE", "CHE"))) %>%
+      mutate(region = country)
+    popDataCH <- read_csv(
+      file = here("app/data/popSizesCHFL.csv"),
+      col_types = cols(
+        .default = col_character(),
+        value = col_double()
+      )
+    ) 
+    popData <- bind_rows(popDataWorldBank, popDataCH) %>%
+      select(id, iso3, country, region, year, value)
+    saveRDS(popData, file = popDataPath)
+  }
+
+# Fetch Country Data
   countryData <- getCountryData(args["country"])
   
   # check for changes in country data
@@ -25,15 +43,42 @@ names(args) <- "country"
     countryDataOld <- readRDS(countryDataPath)
     dataUnchanged <- all.equal(countryData, countryDataOld)
   } else {
-    countryDataOld <- tibble()
     dataUnchanged <- FALSE
   }
+
+# save updated data
+updateDataPath <- here("app", "data", "updateData.rds")
+if (file.exists(updateDataPath)){
+  updateData <- readRDS(updateDataPath)
+} else {
+  updateData <- list()
+}
+
+if (!isTRUE(dataUnchanged)) {
+  saveRDS(countryData, file = countryDataPath)
+  lastChanged <- file.mtime(countryDataPath)
+}
+
+updateData[[args["country"]]] <- countryData %>%
+  mutate(
+    data_type = replace(
+      data_type,
+      data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"),
+      "Hospitalized patients")) %>%
+  group_by(country, region, source, data_type) %>%
+  summarize(lastData = max(date), .groups = "keep") %>%
+  mutate(
+    lastChanged = file.mtime(countryDataPath),
+    lastChecked = Sys.time())
+
+saveRDS(updateData, updateDataPath)
+
+cleanEnv(keepObjects = c("countryData", "dataUnchanged", "args"))
 
 # calculate Re
 # only if data has changed
 if (!isTRUE(dataUnchanged)) {
-  saveRDS(countryData, file = countryDataPath)
-  cleanEnv(keepObjects = c("countryData", "dataUnchanged", "args"))
+
   cat(str_c("\n", args["country"], ": New data available. Calculating Re ...\n"))
   
   # get Infection Incidence

@@ -108,10 +108,9 @@ getDataECDC <- function(countries = NULL) {
       col_types = cols_only(
         dateRep = col_date(format = "%d/%m/%Y"),
         countriesAndTerritories = col_character(),
-        geoId = col_character(),
-        countryterritoryCode = col_character(),
-        continentExp = col_character(),
-        popData2019 = col_double()
+        popData2019 = col_double(),
+        cases = col_double(),
+        deaths = col_double()
       )
     )
   )
@@ -933,4 +932,24 @@ getCountryData <- function(countries, v = TRUE) {
       )
     ) %>%
     filter(variable == "incidence")
+}
+
+getCountryPopData <- function() {
+  wbdataJSON <- jsonlite::fromJSON(
+    str_c("http://api.worldbank.org/v2/country/all/indicator/",
+      "SP.POP.TOTL?MRV=1&format=json&per_page=300"
+    ),
+    flatten = TRUE)
+
+  wbdata <- wbdataJSON[[2]] %>%
+    as_tibble() %>%
+    select(
+      id = country.id,
+      iso3 = countryiso3code,
+      country = country.value,
+      year = date,
+      value = value
+    )
+
+  return(wbdata)
 }
