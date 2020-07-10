@@ -12,7 +12,7 @@ args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
   warning("Testing mode!!")
-  args <- c("Switzerland")
+  args <- c("Austria")
 }
 names(args) <- "country"
 
@@ -243,7 +243,7 @@ if (!isTRUE(dataUnchanged)) {
           median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
         arrange(country, region, source, data_type, estimate_type, date) %>%
         ungroup()
-      countryDataPath <- here("app", "data", "countries", str_c(args["country"], "Estimates.rds"))
+      countryDataPath <- here("app", "data", str_c(args["country"], "Estimates.rds"))
       saveRDS(countryEstimates, file = countryDataPath)
 } else {
   cat(str_c(args["country"], ": No new data available. Skipping Re calculation.\n"))
