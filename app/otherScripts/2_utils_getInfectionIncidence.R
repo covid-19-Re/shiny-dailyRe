@@ -1,5 +1,7 @@
 ### Utilities ###
-getLOESSCases <- function(dates, count_data, span = 0.25) {
+# smooth time series with LOESS method
+getLOESSCases <- function(dates, count_data, days = 14) {
+  span <- days / length(count_data)
   n_pad <- round(length(count_data) * span * 0.5)
   c_data <- data.frame(value = c(rep(0, n_pad), count_data),
                        date_num = c(seq(as.numeric(dates[1]) - n_pad, as.numeric(dates[1]) - 1),
@@ -273,7 +275,7 @@ get_infection_incidence_by_deconvolution <- function(
     length_out = length(all_dates) - max_first_guess_delay + absolute_max_reporting_delay)
 
   ## TODO this is temporary
-  first_guess_delay <- which.max(infect_to_count_discretized_distr[[length(infect_to_count_discretized_distr)]])[1]
+  first_guess_delay <- which.max(infect_to_count_discretized_distr[[length(infect_to_count_discretized_distr)]])
 
   if (verbose) {
     cat("\tDelay on first guess: ", first_guess_delay, "\n")
@@ -310,11 +312,18 @@ get_infection_incidence_by_deconvolution <- function(
       smoothed_incidence_data <- time_series  %>%
         complete(date = seq.Date(minimal_date, maximal_date, by = "days"), fill = list(value = 0))
     }
+    
+    first_recorded_incidence <-  with(filter(smoothed_incidence_data, cumsum(value) > 0), value[which.min(date)])
+    last_recorded_incidence <- with(smoothed_incidence_data, value[which.max(date)])
 
     first_guess <- smoothed_incidence_data %>%
       mutate(date = date - first_guess_delay) %>%
-      complete(date = seq.Date(minimal_date, maximal_date, by = "days"),
-               fill = list(value = 0)) %>%
+      filter(cumsum(value) > 0) %>% # remove leading zeroes
+      complete(date = seq.Date(minimal_date, min(date), by = "days"),
+               fill = list(value = first_recorded_incidence)) %>%
+      complete(date = seq.Date(max(date), maximal_date, by = "days"),
+               fill = list(value = last_recorded_incidence)) %>% # pad with last recorded value
+      arrange(date) %>% 
       filter(date >=  minimal_date)
 
     final_estimate <- iterate_RL(
@@ -327,12 +336,14 @@ get_infection_incidence_by_deconvolution <- function(
       max_delay = first_guess_delay,
       verbose = verbose)
 
-    ## right-truncate trailing zeroes induced by initial shift by 'first_guess_delay'
+    
+    #TODO decide whether to truncate or not
     deconvolved_dates <- first_guess %>%
-      filter(date <= maximal_date - first_guess_delay) %>%
+      # filter(date <= maximal_date - first_guess_delay) %>% 
       pull(date)
 
-    deconvolved_infections <- final_estimate[seq_len(length(final_estimate) - first_guess_delay)]
+    # deconvolved_infections <- final_estimate[seq_len(length(final_estimate) - first_guess_delay)]
+    deconvolved_infections <- final_estimate
 
     ## prepare metadata for result dataframe
     data_type_subset <- unique(time_series$data_type)[1]
