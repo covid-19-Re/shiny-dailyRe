@@ -1,11 +1,23 @@
 # TO-DO: deduplicate code & general clean up...
-
+library(viridisLite)
 library(shades)
 
-toLowerFirst <- function(string) {
-  str_replace(string, ".{1}", tolower(str_extract(string, ".{1}")))
-}
+# colors
+allCols <- viridis(6)
+plotColors <-  c(
+  "Confirmed cases" = allCols[1],
+  "Hospitalized patients" = allCols[3],
+  "Deaths" = allCols[5])
+plotColorsTruncated <- saturation(plotColors, value = 0.1)
+names(plotColorsTruncated) <- str_c(names(plotColors), " truncated")
+plotColorsTruncated[1] <- "#aba3ad"
+plotColors <- c(plotColors, plotColorsTruncated)
 
+fixedRangeX <- c(FALSE, FALSE, FALSE)
+fixedRangeY <- c(TRUE, TRUE, TRUE)
+
+
+# functions
 rEffPlotly <- function(
   caseData,
   estimates,
@@ -272,7 +284,7 @@ rEffPlotly <- function(
     nPlots <- 2
   }
 
-  plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
+  plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.1, 0)) %>%
     layout(
       margin = list(b = bottomMargin),
       annotations = list(
@@ -1024,4 +1036,18 @@ plotlyShowOnly <- function(plot, focusRegion){
     }
   }
   return(plot)
+}
+
+dataUpdatesString <- function(latestData, name = "Data Source", dateFormat = "%Y-%m-%d") {
+  outList <- list(str_c(name, ": "))
+  for (i in 1:dim(latestData)[1]) {
+    outList[[i + 1]] <- str_c(
+      latestData[i, ]$source, " (", format(latestData[i, ]$date, dateFormat),
+      "); ")
+  }
+  return(str_sub(str_c(outList, collapse = ""), end = -3))
+}
+
+toLowerFirst <- function(string) {
+  str_replace(string, ".{1}", tolower(str_extract(string, ".{1}")))
 }
