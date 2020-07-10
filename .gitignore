@@ -4,6 +4,7 @@ app/data/*.Rdata
 app/data/*.rds
 app/data/*.Rd
 app/data/temp
+app/data/exploration
 app/data/BAG
 app/data/CH
 app/data/*.xlsx

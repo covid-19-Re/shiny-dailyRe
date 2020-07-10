@@ -223,14 +223,14 @@ iterate_RL <- function(
 
 get_bootstrap_replicate <- function(original_time_series) {
   replicate <- original_time_series %>%
-    slice_sample(n = sum(original_time_series$value, na.rm = T),
+    dplyr::slice_sample(n = sum(original_time_series$value, na.rm = T),
                  weight_by = replace_na(value, 0),
                  replace = T) %>%
-    group_by(country, region, source, data_type, variable, date) %>%
-    mutate(value = n()) %>%
+    dplyr::group_by(country, region, source, data_type, variable, date) %>%
+    dplyr::mutate(value = n()) %>%
     distinct(date, .keep_all = T) %>%
     ungroup() %>%
-    group_by(country, region, source, data_type, variable) %>%
+    dplyr::group_by(country, region, source, data_type, variable) %>%
     complete(date = seq.Date(min(date), max(date), by = "days"),
              fill = list(value = 0)) %>%
     arrange(date)

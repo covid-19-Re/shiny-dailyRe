@@ -218,7 +218,7 @@ allKtn <- bind_rows(confirmedKtn, deathsKtn)
 allCH <- allKtn %>%
   ungroup() %>%
   dplyr::group_by(date, data_type) %>%
-  summarize(
+  dplyr::summarize(
     region = "CH",
     country = "CH",
     source = "FOPH",
