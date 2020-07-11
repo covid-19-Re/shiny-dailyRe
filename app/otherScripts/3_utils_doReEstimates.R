@@ -229,7 +229,7 @@ doReEstimation <- function(
 getIntervalEnds <- function(
   interval_ends,
   region_i,
-  swissRegions = c("Liechtenstein", "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL",
+  swissRegions = c("LIE", "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL",
                    "GR", "grR Central Switzerland", "grR Eastern Switzerland",
                    "grR Espace Mittelland", "grR Lake Geneva Region", "grR Northwestern Switzerland",
                    "grR Ticino", "grR Zurich", "JU", "LU", "NE", "NW", "OW", "SG",
@@ -237,7 +237,7 @@ getIntervalEnds <- function(
   
   if ("data.frame" %in% class(interval_ends)) {
     if (region_i %in% swissRegions) {
-      region_i <- "Switzerland"
+      region_i <- "CHE"
     }
 
     # in Re estimation, the interval starts on interval_end + 1
@@ -263,14 +263,14 @@ addCustomIntervalEnds <- function(region_interval_ends,
                                   additional_interval_ends,
                                   region_i,
                                   data_type_i,
-                                  swissRegions = c("Liechtenstein", "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL",
+                                  swissRegions = c("LIE", "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL",
                                                    "GR", "grR Central Switzerland", "grR Eastern Switzerland",
                                                    "grR Espace Mittelland", "grR Lake Geneva Region", "grR Northwestern Switzerland",
                                                    "grR Ticino", "grR Zurich", "JU", "LU", "NE", "NW", "OW", "SG",
                                                    "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH")) {
   
   if (region_i %in% swissRegions) {
-    region_i <- "Switzerland"
+    region_i <- "CHE"
   }
   interventionDataSubset <- additional_interval_ends %>%
     filter(region == region_i &

@@ -1,10 +1,16 @@
-library("lubridate")
-library("readr")
-library("gridExtra")
-#library("gdata")
-library("fitdistrplus")
-library(here)
-library(tidyverse)
+if (interactive()) {
+  library("lubridate")
+  library("fitdistrplus")
+  library(here)
+  library(tidyverse)
+} else {
+  suppressPackageStartupMessages({
+    library("lubridate")
+    library("fitdistrplus")
+    library(here)
+    library(tidyverse)
+  })
+}
 
 BAG_data_dir <- here::here("app", "data", "BAG")
 BAG_data_dir_Git <- here::here("../ch-hospital-data/data/CH")
@@ -70,22 +76,22 @@ restructured_data_FOPH <- first_curation_data_FOPH %>%
     "fall_dt" = "Confirmed cases"))
 
 final_delay_data_FOPH <- restructured_data_FOPH %>%
-  mutate(delay = count_date - onset_date) %>%
+  mutate(delay = as.integer(count_date - onset_date)) %>%
   mutate(delay = if_else(
     data_type == "Hospitalized patients - admission" & !between(delay, 0, max_delay_hosp),
-    as.difftime("NA"),
+    as.integer(NA),
     delay)) %>%
   mutate(delay = if_else(
     data_type == "Confirmed cases" & !between(delay, 0, max_delay_confirm),
-    as.difftime("NA"),
+    as.integer(NA),
     delay)) %>%
-  mutate(delay = if_else(data_type == "Deaths" & !between(delay, 0, max_delay_death), as.difftime("NA"), delay)) %>%
+  mutate(delay = if_else(data_type == "Deaths" & !between(delay, 0, max_delay_death), as.integer(NA), delay)) %>%
   filter(!is.na(delay)) %>%
   arrange(data_type, onset_date) %>%
   dplyr::group_by(data_type, onset_date) %>%
   slice_sample(count_date, prop = 1) %>% # shuffle rows with the same date
   ungroup() %>%
-  mutate(country = "Switzerland", region = "Switzerland", source = "FOPH")
+  mutate(country = "Switzerland", region = "CHE", source = "FOPH")
 
 
 ### Save file
@@ -180,8 +186,6 @@ df <- data.frame(Date = allDates, Incidence = incidence, CH = cumul)
 
 write_excel_csv(df, path = file.path(outDir, "Hospital_cases_CH.csv"), quote = FALSE)
 
-library(tidyverse)
-
 confirmedKtn <- data_hospitalization %>%
   dplyr::group_by(ktn, fall_dt) %>%
   dplyr::count() %>%
@@ -189,7 +193,7 @@ confirmedKtn <- data_hospitalization %>%
   transmute(
     date = fall_dt,
     region = ktn,
-    country = "CH",
+    countryIso3 = "CHE",
     source = "FOPH",
     data_type = "confirmed",
     incidence = n
@@ -205,7 +209,7 @@ deathsKtn <- data_hospitalization %>%
   transmute(
     date = pttoddat,
     region = ktn,
-    country = "CH",
+    countryIso3 = "CHE",
     source = "FOPH",
     data_type = "deaths",
     incidence = n
@@ -219,21 +223,23 @@ allCH <- allKtn %>%
   ungroup() %>%
   dplyr::group_by(date, data_type) %>%
   summarize(
-    region = "CH",
-    country = "CH",
+    region = "CHE",
+    countryIso3 = "CHE",
     source = "FOPH",
-    incidence = sum(incidence))
+    incidence = sum(incidence),
+    .groups = "keep")
 
 allBAGdata <- bind_rows(allKtn, allCH) %>%
   ungroup() %>%
-  complete(date, region, country, source, data_type) %>%
+  complete(date, countryIso3, region, source, data_type) %>%
   mutate(incidence = replace_na(incidence, 0)) %>%
-  arrange(country, region, data_type, date) %>%
-  dplyr::group_by(country, region, source, data_type) %>%
+  arrange(countryIso3, region, data_type, date) %>%
+  dplyr::group_by(countryIso3, region, source, data_type) %>%
   mutate(cumul = cumsum(incidence)) %>%
   pivot_longer(incidence:cumul, names_to = "variable", values_to = "value") %>%
-  dplyr::select(date, region, country, source, data_type, value, variable) %>%
+  dplyr::select(date, region, countryIso3, source, data_type, value, variable) %>%
   filter(date <= max_date) %>% 
-  arrange(data_type, variable, region, country, source, date)
+  arrange(data_type, variable, region, countryIso3, source, date) %>%
+  mutate(countryIso3 = if_else(region == "FL", "LIE", countryIso3))
 
 write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CH.csv"))

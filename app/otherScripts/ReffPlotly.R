@@ -7,7 +7,8 @@ allCols <- viridis(6)
 plotColors <-  c(
   "Confirmed cases" = allCols[1],
   "Hospitalized patients" = allCols[3],
-  "Deaths" = allCols[5])
+  "Deaths" = allCols[5],
+  "Excess deaths" = allCols[6])
 plotColorsTruncated <- saturation(plotColors, value = 0.1)
 names(plotColorsTruncated) <- str_c(names(plotColors), " truncated")
 plotColorsTruncated[1] <- "#aba3ad"
@@ -81,9 +82,9 @@ rEffPlotly <- function(
     ))
     helpBoxShift <- c(10, 0)
     xDataSource <- 1
-    yDataSource <- -0.2
+    yDataSource <- -0.1
     dataSourceAnchors <- c("right", "auto")
-    bottomMargin <- 0
+    bottomMargin <- 80
 
   # prepare Data
   newLevels <- levels(caseData$data_type)
@@ -284,7 +285,7 @@ rEffPlotly <- function(
     nPlots <- 2
   }
 
-  plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.1, 0)) %>%
+  plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
     layout(
       margin = list(b = bottomMargin),
       annotations = list(
@@ -1039,11 +1040,25 @@ plotlyShowOnly <- function(plot, focusRegion){
 }
 
 dataUpdatesString <- function(latestData, name = "Data Source", dateFormat = "%Y-%m-%d") {
+  latestDataSum <- latestData %>%
+    group_by(source, lastChanged) %>%
+    summarize(
+      data_type = str_c(data_type, collapse = ", "),
+      .groups = "keep")
+  
   outList <- list(str_c(name, ": "))
-  for (i in 1:dim(latestData)[1]) {
-    outList[[i + 1]] <- str_c(
-      latestData[i, ]$source, " (", format(latestData[i, ]$date, dateFormat),
-      "); ")
+  nSources <- dim(latestDataSum)[1]
+  if (nSources == 1) {
+    outList[[2]] <- str_c(
+      latestDataSum$source, ", ", format(latestDataSum$lastChanged, dateFormat),
+      "; ")
+  } else {
+    for (i in seq_len(nSources)) {
+      outList[[i + 1]] <- str_c(
+        latestDataSum[i, ]$source, ", ", format(latestDataSum[i, ]$lastChanged, dateFormat),
+        " (", latestDataSum[i, ]$data_type, ")",
+        "; ")
+    }
   }
   return(str_sub(str_c(outList, collapse = ""), end = -3))
 }

@@ -1,9 +1,21 @@
-library("lubridate")
-library("fitdistrplus")
-library("EpiEstim")
-library("cbsodataR")
-library("tidyverse")
-library("here")
+# only show package messages when in interactive mode to clean up error logs
+if (interactive()) {
+  library("lubridate")
+  library("fitdistrplus")
+  library("EpiEstim")
+  library("cbsodataR")
+  library("here")
+  library("tidyverse")
+} else {
+  suppressPackageStartupMessages({
+    library("lubridate")
+    library("fitdistrplus")
+    library("EpiEstim")
+    library("cbsodataR")
+    library("here")
+    library("tidyverse")
+  })
+}
 
 source(here("app/otherScripts/1_utils_getRawData.R"))
 source(here("app/otherScripts/utils.R"))
@@ -11,8 +23,8 @@ source(here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  warning("Testing mode!!")
-  args <- c("Austria")
+  args <- c("CHE")
+  warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
 
@@ -20,25 +32,35 @@ names(args) <- "country"
   popDataPath <- here("app", "data", "popData.rds")
   if (!file.exists(popDataPath)) {
     popDataWorldBank <- getCountryPopData() %>%
-      filter(!(iso3 %in% c("LIE", "CHE"))) %>%
-      mutate(region = country)
+      filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
+      mutate(region = countryIso3)
     popDataCH <- read_csv(
       file = here("app/data/popSizesCHFL.csv"),
       col_types = cols(
         .default = col_character(),
-        value = col_double()
+        populationSize = col_double()
       )
-    ) 
+    )
     popData <- bind_rows(popDataWorldBank, popDataCH) %>%
-      select(id, iso3, country, region, year, value)
+      select(countryIso3, country, region, populationSize)
     saveRDS(popData, file = popDataPath)
+  } else {
+    popData <- readRDS(popDataPath)
   }
 
 # Fetch Country Data
-  countryData <- getCountryData(args["country"])
+  countryData <- getCountryData(
+    args["country"],
+    ECDCtemp = here("app/data/temp/ECDCdata.csv"),
+    HMDtemp = here("app/data/temp/HMDdata.csv"),
+    tReload = 15) %>%
+    left_join(
+      popData,
+      by = c("countryIso3", "region")
+    )
   
   # check for changes in country data
-  countryDataPath <- here("app", "data", str_c(args["country"], "Data.rds"))
+  countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Data.rds"))
   if (file.exists(countryDataPath)) {
     countryDataOld <- readRDS(countryDataPath)
     dataUnchanged <- all.equal(countryData, countryDataOld)
@@ -48,7 +70,7 @@ names(args) <- "country"
 
 # save updated data
 updateDataPath <- here("app", "data", "updateData.rds")
-if (file.exists(updateDataPath)){
+if (file.exists(updateDataPath)) {
   updateData <- readRDS(updateDataPath)
 } else {
   updateData <- list()
@@ -56,7 +78,6 @@ if (file.exists(updateDataPath)){
 
 if (!isTRUE(dataUnchanged)) {
   saveRDS(countryData, file = countryDataPath)
-  lastChanged <- file.mtime(countryDataPath)
 }
 
 updateData[[args["country"]]] <- countryData %>%
@@ -65,7 +86,7 @@ updateData[[args["country"]]] <- countryData %>%
       data_type,
       data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"),
       "Hospitalized patients")) %>%
-  group_by(country, region, source, data_type) %>%
+  group_by(countryIso3, country, region, source, data_type) %>%
   summarize(lastData = max(date), .groups = "keep") %>%
   mutate(
     lastChanged = file.mtime(countryDataPath),
@@ -73,14 +94,12 @@ updateData[[args["country"]]] <- countryData %>%
 
 saveRDS(updateData, updateDataPath)
 
-cleanEnv(keepObjects = c("countryData", "dataUnchanged", "args"))
+cleanEnv(keepObjects = c("countryData", "dataUnchanged", "args", "popData"))
 
 # calculate Re
 # only if data has changed
 if (!isTRUE(dataUnchanged)) {
-
   cat(str_c("\n", args["country"], ": New data available. Calculating Re ...\n"))
-  
   # get Infection Incidence
     # load functions
       source(here("app/otherScripts/2_utils_getInfectionIncidence.R"))
@@ -98,19 +117,23 @@ if (!isTRUE(dataUnchanged)) {
       countryData <- countryData %>%
         filterRegions(threshholdConfirmedCases = 500)
     # country specific data filtering
-      if (args["country"] == "Spain") {
+      if (args["country"] == "ESP") {
         countryData <- countryData %>%
           filter(data_type != "Deaths")
-      } else if (args["country"] == "Austria") {
+        cat("ignoring data_type Deaths\n")
+      } else if (args["country"] == "AUT") {
         countryData <- countryData %>%
           filter(data_type != "Deaths")
-      } else if (args["country"] == "France") {
+        cat("ignoring data_type Deaths\n")
+      } else if (args["country"] == "FRA") {
         countryData <- countryData %>%
           filter(data_type != "Hospitalized patients")
-      } else if (args["country"] == "Switzerland") {
+        cat("ignoring data_type Hospitalized patients\n")
+      } else if (args["country"] == "CHE") {
         # no estimation for deaths per canton (too few cases)
         countryData <- countryData %>%
-          filter(!(region != "Switzerland" & data_type == "Deaths"))
+          filter(!(region != "CHE" & data_type == "Deaths"))
+        cat("ignoring data_type Deaths on regional level\n")
       }
       countryData <- countryData %>%
         mutate(
@@ -122,6 +145,7 @@ if (!isTRUE(dataUnchanged)) {
       countryData <- countryData %>%
         group_by(country, region, source, data_type) %>%
         filter(date <= (max(date) - right_truncation)) %>%
+        select(-countryIso3, -populationSize) %>%
         ungroup()
     # Deconvolution
       deconvolvedData <- list()
@@ -164,12 +188,12 @@ if (!isTRUE(dataUnchanged)) {
           arrange(country, region, source, data_type, variable, replicate, date) %>%
           ungroup()
       }
-      deconvolvedCountryData <- bind_rows(deconvolvedData) %>%
-        ungroup()
-      countryDataPath <- here("app", "data", str_c(args["country"], "DeconvolutedData.rds"))
+      deconvolvedCountryData <- bind_rows(deconvolvedData)
+      countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-DeconvolutedData.rds"))
       saveRDS(deconvolvedCountryData, file = countryDataPath)
+
     # Re Estimation
-      cleanEnv(keepObjects = c("deconvolvedCountryData", "args"))
+      cleanEnv(keepObjects = c("deconvolvedCountryData", "args", "popData"))
       source(here("app/otherScripts/3_utils_doReEstimates.R"))
       pathToAdditionalData <- here("../covid19-additionalData/interventions/")
 
@@ -228,9 +252,16 @@ if (!isTRUE(dataUnchanged)) {
         mutate(
           data_type = factor(
             data_type,
-            levels = c("infection_Confirmed cases", "infection_Hospitalized patients",
-                      "infection_Deaths", "infection_Excess deaths"),
-            labels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"))) %>%
+            levels = c(
+              "infection_Confirmed cases",
+              "infection_Hospitalized patients",
+              "infection_Deaths",
+              "infection_Excess deaths"),
+            labels = c(
+              "Confirmed cases",
+              "Hospitalized patients",
+              "Deaths",
+              "Excess deaths"))) %>%
         pivot_wider(names_from = "variable", values_from = "value") %>%
         group_by(date, country, region, data_type, source, estimate_type) %>%
         summarize(
@@ -242,8 +273,12 @@ if (!isTRUE(dataUnchanged)) {
         select(country, region, source, data_type, estimate_type, date,
           median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
         arrange(country, region, source, data_type, estimate_type, date) %>%
-        ungroup()
-      countryDataPath <- here("app", "data", str_c(args["country"], "Estimates.rds"))
+        ungroup() %>%
+        left_join(
+          select(popData, country, region, countryIso3),
+          by = c("country", "region")
+        )
+      countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Estimates.rds"))
       saveRDS(countryEstimates, file = countryDataPath)
 } else {
   cat(str_c(args["country"], ": No new data available. Skipping Re calculation.\n"))

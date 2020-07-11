@@ -1,5 +1,5 @@
-﻿id,iso3,country,region,year,value
-CH,CHE,Switzerland,Switzerland,2020,8544527
+countryIso2,countryIso3,country,region,year,populationSize
+CH,CHE,Switzerland,CHE,2020,8544527
 CH,CHE,Switzerland,ZH,2020,1520968
 CH,CHE,Switzerland,BE,2020,1034977
 CH,CHE,Switzerland,LU,2020,409557
@@ -26,4 +26,11 @@ CH,CHE,Switzerland,VS,2020,343955
 CH,CHE,Switzerland,NE,2020,176850
 CH,CHE,Switzerland,GE,2020,499480
 CH,CHE,Switzerland,JU,2020,73419
-CH,CHE,Liechtenstein,LI,2020,38553
+LI,LIE,Liechtenstein,LIE,2020,38553
+CH,CHE,Switzerland,grR Central Switzerland,2020,813056
+CH,CHE,Switzerland,grR Eastern Switzerland,2020,1176321
+CH,CHE,Switzerland,grR Espace Mittelland,2020,1877154
+CH,CHE,Switzerland,grR Lake Geneva Region,2020,1642580
+CH,CHE,Switzerland,grR Northwestern Switzerland,2020,1161105
+CH,CHE,Switzerland,grR Ticino,2020,353343
+CH,CHE,Switzerland,grR Zurich,2020,1520968

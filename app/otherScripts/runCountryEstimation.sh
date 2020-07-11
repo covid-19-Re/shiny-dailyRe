@@ -33,8 +33,7 @@ owncloudcmd -n -s ../data/BAG \
 echo "running R script to extract BAG data & calculate delays ..."
 runRScript format_BAG_data.R
 
-for i in "Switzerland" "Austria" "Belgium" "France" "Germany" \
-  "Italy" "Spain" "Sweden" "UK"
+for i in "CHE" "AUT" "BEL" "FRA" "DEU" "ITA" "ESP" "SWE" "GBR"
 do
 	runRScript ReCountry.R "$i"
 done
