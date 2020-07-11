@@ -1,6 +1,6 @@
 ### Utilities ###
 # smooth time series with LOESS method
-getLOESSCases <- function(dates, count_data, days = 21, degree = 1) {
+getLOESSCases <- function(dates, count_data, days = 35, degree = 2) {
   span <- days / length(count_data)
   n_pad <- round(length(count_data) * span * 0.5)
   c_data <- data.frame(value = c(rep(0, n_pad), count_data),
