@@ -299,14 +299,20 @@ get_infection_incidence_by_deconvolution <- function(
       smoothed_incidence_data <- time_series  %>%
         complete(date = seq.Date(minimal_date, maximal_date, by = "days"), fill = list(value = 0))
     }
-
-    ##TODO !!! change first guess !!!
+    
+    first_recorded_incidence <-  with(filter(smoothed_incidence_data, cumsum(value) > 0), value[which.min(date)])
+    last_recorded_incidence <- with(smoothed_incidence_data, value[which.max(date)])
+    
     first_guess <- smoothed_incidence_data %>%
       mutate(date = date - first_guess_delay) %>%
-      complete(date = seq.Date(minimal_date, maximal_date, by = "days"),
-               fill = list(value = 0)) %>%
+      filter(cumsum(value) > 0) %>% # remove leading zeroes
+      complete(date = seq.Date(minimal_date, min(date), by = "days"),
+               fill = list(value = first_recorded_incidence)) %>%
+      complete(date = seq.Date(max(date), maximal_date, by = "days"),
+               fill = list(value = last_recorded_incidence)) %>% # pad with last recorded value
+      arrange(date) %>% 
       filter(date >=  minimal_date)
-
+    
     final_estimate <- iterate_RL(
       first_guess$value,
       smoothed_incidence_data$value,
