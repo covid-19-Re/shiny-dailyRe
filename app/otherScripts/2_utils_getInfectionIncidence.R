@@ -232,7 +232,6 @@ get_infection_incidence_by_deconvolution <- function(
   max_first_guess_delay = 30,
   smooth_incidence = T,
   empirical_delays  = tibble(),
-  numCasesWindow = 250,
   n_bootstrap = 5,
   verbose = FALSE) {
 
