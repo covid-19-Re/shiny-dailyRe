@@ -1,6 +1,6 @@
 ### Utilities ###
 # smooth time series with LOESS method
-getLOESSCases <- function(dates, count_data, days = 14) {
+getLOESSCases <- function(dates, count_data, days = 50) {
   span <- days / length(count_data)
   n_pad <- round(length(count_data) * span * 0.5)
   c_data <- data.frame(value = c(rep(0, n_pad), count_data),
@@ -176,8 +176,8 @@ iterate_RL <- function(
 get_bootstrap_replicate <- function(original_time_series) {
   replicate <- original_time_series %>%
     dplyr::slice_sample(n = sum(original_time_series$value, na.rm = T),
-                 weight_by = replace_na(value, 0),
-                 replace = T) %>%
+                        weight_by = replace_na(value, 0),
+                        replace = T) %>%
     dplyr::group_by(country, region, source, data_type, variable, date) %>%
     dplyr::mutate(value = n()) %>%
     distinct(date, .keep_all = T) %>%
@@ -186,7 +186,7 @@ get_bootstrap_replicate <- function(original_time_series) {
     complete(date = seq.Date(min(date), max(date), by = "days"),
              fill = list(value = 0)) %>%
     arrange(date)
-
+  
   return(replicate)
 }
 
@@ -275,7 +275,8 @@ get_infection_incidence_by_deconvolution <- function(
     final_estimate <- iterate_RL(
       first_guess$value,
       smoothed_incidence_data$value,
-      delay_distribution_matrix = infect_to_count_discretized_distr,
+      delay_distribution_matrix = delay_distribution_matrix,
+      Q_matrix = Q_matrix,
       threshold_chi_squared = min_chi_squared,
       max_iterations = maximum_iterations,
       max_delay = first_guess_delay,
@@ -317,31 +318,31 @@ get_infection_incidence_by_deconvolution <- function(
 ### One gamma-distributed waiting time is the incubation period
 ### The second one is the period between symptom onset and report (of positive test, death, hospitalization...)
 get_all_infection_incidence <- function(data,
-  onset_to_count_empirical_delays = tibble(),
-  data_types,
-  shape_incubation,
-  scale_incubation,
-  shape_onset_to_count,
-  scale_onset_to_count,
-  min_chi_squared = 0.5,
-  maximum_iterations = 30,
-  minimum_iterations = 0,
-  n_bootstrap = 5,
-  verbose = FALSE) {
+                                        onset_to_count_empirical_delays = tibble(),
+                                        data_types,
+                                        shape_incubation,
+                                        scale_incubation,
+                                        shape_onset_to_count,
+                                        scale_onset_to_count,
+                                        min_chi_squared = 0.5,
+                                        maximum_iterations = 30,
+                                        minimum_iterations = 0,
+                                        n_bootstrap = 5,
+                                        verbose = FALSE) {
   results <- list(tibble())
-
+  
   is_delays_data_available <- (nrow(onset_to_count_empirical_delays) > 0)
-
+  
   median_incubation_delay <- round(qgamma(0.5, shape = shape_incubation, scale = scale_incubation))
-
+  
   for (count_type_i in data_types) {
-
+    
     cat("Deconvolve infections for data type:", count_type_i, "\n")
-
+    
     smooth <- (count_type_i != "Excess deaths")
-
+    
     for (source_i in unique(data$source)) {
-
+      
       cat("   Data source:", source_i, "\n")
       # nCores <- max(1, parallel::detectCores() - 1)
       # cat("   calculating on", nCores, "cores...\n")
@@ -357,11 +358,11 @@ get_all_infection_incidence <- function(data,
                    source == source_i,
                    data_type == count_type_i,
                    variable == "incidence")
-
+          
           if (nrow(subset_data) == 0) {
             return(tibble())
           }
-
+          
           if (count_type_i == "Hospitalized patients") {
             data_types_included <- data %>%
               filter(region == x,
@@ -369,12 +370,12 @@ get_all_infection_incidence <- function(data,
                      variable == "incidence") %>%
               distinct(data_type) %>%
               pull()
-
+            
             if ("Hospitalized patients - onset" %in% data_types_included) {
               return(tibble())
             }
           }
-
+          
           if (is_delays_data_available) {
             empirical_delays <- onset_to_count_empirical_delays %>%
               filter(
@@ -385,7 +386,7 @@ get_all_infection_incidence <- function(data,
           } else {
             empirical_delays <- tibble()
           }
-
+          
           get_infection_incidence_by_deconvolution(
             subset_data,
             shape_waiting_time = c(shape_incubation, shape_onset_to_count[[count_type_i]]),

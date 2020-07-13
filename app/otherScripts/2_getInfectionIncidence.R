@@ -107,8 +107,8 @@ deconvolved_main_data <- get_all_infection_incidence(
   shape_onset_to_count = shape_onset_to_count,
   scale_onset_to_count = scale_onset_to_count,
   min_chi_squared = 1,
-  maximum_iterations =100,
-  n_bootstrap = 100,
+  maximum_iterations =30,
+  n_bootstrap = 50,
   verbose = F)
 
 
@@ -122,14 +122,14 @@ deconvolved_FOPH_hosp_data <- get_all_infection_incidence(
   shape_onset_to_count = shape_onset_to_count,
   scale_onset_to_count = scale_onset_to_count,
   min_chi_squared = 1,
-  maximum_iterations = 100,
-  n_bootstrap = 100,
+  maximum_iterations = 30,
+  n_bootstrap = 50,
   verbose = F)
 
 ## sum infections from Hospitalized patients - admission and Hospitalized patients - onset
 deconvolved_FOPH_hosp_data <- deconvolved_FOPH_hosp_data %>%
-  group_by(date, country, region, data_type, source, replicate, variable) %>%
-  summarise(value = sum(value)) %>%
+  dplyr::group_by(date, country, region, data_type, source, replicate, variable) %>%
+  dplyr::summarise(value = sum(value)) %>%
   arrange(country, region, source, data_type, variable, replicate, date) %>%
   ungroup()
 
