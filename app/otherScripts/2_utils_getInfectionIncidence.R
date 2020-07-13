@@ -1,17 +1,18 @@
 ### Utilities ###
 # smooth time series with LOESS method
-getLOESSCases <- function(dates, count_data, days = 50) {
-  span <- days / length(count_data)
+getLOESSCases <- function(dates, count_data, span = 0.25, degree = 2) {
+
   n_pad <- round(length(count_data) * span * 0.5)
   c_data <- data.frame(value = c(rep(0, n_pad), count_data),
                        date_num = c(seq(as.numeric(dates[1]) - n_pad, as.numeric(dates[1]) - 1),
                                     as.numeric(dates)))
-  c_data.lo <- loess(value ~ date_num, data = c_data, span = span)
+  c_data.lo <- loess(value ~ date_num, data = c_data, span = span, degree = degree)
   smoothed <- predict(c_data.lo)
   smoothed[smoothed < 0] <- 0
   raw_smoothed_counts <- smoothed[(n_pad + 1):length(smoothed)]
   normalized_smoothed_counts <- round(
     raw_smoothed_counts * sum(count_data, na.rm = T) / sum(raw_smoothed_counts, na.rm = T))
+  
   return(normalized_smoothed_counts)
 }
 
