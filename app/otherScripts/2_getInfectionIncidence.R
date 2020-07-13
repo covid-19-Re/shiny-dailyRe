@@ -74,6 +74,18 @@ shape_onset_to_count <- c(mean_onset_to_count^2 / (sd_onset_to_count^2), "Hospit
 scale_onset_to_count <- c((sd_onset_to_count^2) / mean_onset_to_count, "Hospitalized patients - onset" = 0)
 
 
+constant_delay_distributions <- list()
+for(type_i in unique(names(shape_onset_to_count) )) {
+  m <- get_vector_constant_waiting_time_distr(
+    shape_incubation,
+    scale_incubation,
+    shape_onset_to_count[[type_i]],
+    scale_onset_to_count[[type_i]])
+
+  constant_delay_distributions <- c(constant_delay_distributions, list(m))
+}
+names(constant_delay_distributions) <- unique(names(shape_onset_to_count))
+
 ###############
 
 raw_data <- readRDS(file = raw_data_path)
@@ -94,6 +106,7 @@ raw_data <- raw_data %>%
 
 deconvolved_main_data <- get_all_infection_incidence(
   raw_data,
+  constant_delay_distributions = constant_delay_distributions,
   onset_to_count_empirical_delays = delays_onset_to_count,
   # data_types = c("Confirmed cases",
   #               "Hospitalized patients",
@@ -104,8 +117,6 @@ deconvolved_main_data <- get_all_infection_incidence(
                  "Deaths"),
   shape_incubation = shape_incubation,
   scale_incubation = scale_incubation,
-  shape_onset_to_count = shape_onset_to_count,
-  scale_onset_to_count = scale_onset_to_count,
   min_chi_squared = 1,
   maximum_iterations =30,
   n_bootstrap = 50,
@@ -114,13 +125,12 @@ deconvolved_main_data <- get_all_infection_incidence(
 
 deconvolved_FOPH_hosp_data <- get_all_infection_incidence(
   raw_data,
+  constant_delay_distributions = constant_delay_distributions,
   onset_to_count_empirical_delays = delays_onset_to_count,
   data_types = c("Hospitalized patients - admission",
                 "Hospitalized patients - onset"),
   shape_incubation = shape_incubation,
   scale_incubation = scale_incubation,
-  shape_onset_to_count = shape_onset_to_count,
-  scale_onset_to_count = scale_onset_to_count,
   min_chi_squared = 1,
   maximum_iterations = 30,
   n_bootstrap = 50,
