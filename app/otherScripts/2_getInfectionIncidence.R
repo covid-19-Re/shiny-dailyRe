@@ -118,8 +118,8 @@ deconvolved_main_data <- get_all_infection_incidence(
   shape_incubation = shape_incubation,
   scale_incubation = scale_incubation,
   min_chi_squared = 1,
-  maximum_iterations =30,
-  n_bootstrap = 50,
+  maximum_iterations =100,
+  n_bootstrap = 100,
   verbose = F)
 
 
@@ -132,8 +132,8 @@ deconvolved_FOPH_hosp_data <- get_all_infection_incidence(
   shape_incubation = shape_incubation,
   scale_incubation = scale_incubation,
   min_chi_squared = 1,
-  maximum_iterations = 30,
-  n_bootstrap = 50,
+  maximum_iterations = 100,
+  n_bootstrap = 100,
   verbose = F)
 
 ## sum infections from Hospitalized patients - admission and Hospitalized patients - onset
