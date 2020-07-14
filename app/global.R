@@ -1,10 +1,10 @@
-library(tidyverse)
 library(plotly)
 library(viridisLite)
 library(here)
 library(shiny.i18n)
 library(slider)
 library(shades)
+library(tidyverse)
 
 source("otherScripts/ReffPlotly.R")
 source("utils.R")
