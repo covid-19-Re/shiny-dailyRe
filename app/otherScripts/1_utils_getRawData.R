@@ -288,7 +288,7 @@ getDataCHEopenZH <- function(stopAfter = (Sys.Date() - 1)) {
     mutate(
       dataCurated = map(data, curateLongTimeSeries, isIncidenceData = FALSE),
     ) %>%
-    select(-data) %>%
+    dplyr::select(-data) %>%
     unnest(cols = "dataCurated")
 
   openZHsum <- openZHraw %>%
