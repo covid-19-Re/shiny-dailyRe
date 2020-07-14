@@ -1,12 +1,15 @@
 ### Utilities ###
 # smooth time series with LOESS method
-getLOESSCases <- function(dates, count_data, span = 0.25, degree = 2) {
+getLOESSCases <- function(dates, count_data, days_incl = 14, degree = 1) {
 
-  n_pad <- round(length(count_data) * span * 0.5)
+  n_points = length(unique(dates))
+  sel_span = days_incl/n_points
+  
+  n_pad <- round(length(count_data) * sel_span * 0.5)
   c_data <- data.frame(value = c(rep(0, n_pad), count_data),
                        date_num = c(seq(as.numeric(dates[1]) - n_pad, as.numeric(dates[1]) - 1),
                                     as.numeric(dates)))
-  c_data.lo <- loess(value ~ date_num, data = c_data, span = span, degree = degree)
+  c_data.lo <- loess(value ~ date_num, data = c_data, span = sel_span, degree = degree)
   smoothed <- predict(c_data.lo)
   smoothed[smoothed < 0] <- 0
   raw_smoothed_counts <- smoothed[(n_pad + 1):length(smoothed)]
@@ -181,6 +184,7 @@ iterate_RL <- function(
   
   current_estimate <- initial_estimate
   N <- length(current_estimate)
+  N0 <- N - max_delay
   chi_squared <- Inf
   count <- 1
   
@@ -191,14 +195,12 @@ iterate_RL <- function(
     }
     
     E <- as.vector(delay_distribution_matrix %*% current_estimate)
-    
-    N0 <- N - max_delay
-    chi_squared <- 1/N0 * sum((E - original_incidence)^2/E, na.rm = T)
-    
     B <- replace_na(original_incidence/E, 0)
     
     current_estimate <- current_estimate / Q_matrix *  as.vector(crossprod(B, delay_distribution_matrix))
     current_estimate <- replace_na(current_estimate, 0)
+    
+    chi_squared <- 1/N0 * sum((E - original_incidence)^2/E, na.rm = T)
     count <- count + 1
   }
   
@@ -319,7 +321,7 @@ get_infection_incidence_by_deconvolution <- function(
       Q_matrix = Q_matrix,
       threshold_chi_squared = min_chi_squared,
       max_iterations = maximum_iterations,
-      max_delay = first_guess_delay,
+      max_delay = max_first_guess_delay,
       verbose = verbose)
 
     ## right-truncate trailing zeroes induced by initial shift by 'first_guess_delay'
