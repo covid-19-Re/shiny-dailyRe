@@ -1,4 +1,3 @@
-cat("making CH plots for ncs-tf website ...\n")
 if (interactive()) {
   library(plotly)
   library(here)
@@ -18,25 +17,27 @@ if (interactive()) {
 source(here("app", "otherScripts", "ReffPlotly.R"))
 source(here("app", "utils.R"))
 
+iso3 <- "CHE"
+cat(str_c("making ", iso3, " plots for ncs-tf website ...\n"))
+
 # load data
-dataDir <- here("app/data/")
+dataDir <- here("app/data")
 plotOutDir <- here("app/www")
-pathToCaseData <- file.path(dataDir, "CHE-Data.rds")
-pathToEstimates <- file.path(dataDir, "CHE-Estimates.rds")
+pathToCaseData <- file.path(dataDir, str_c("countryData/", iso3, "-Data.rds"))
+pathToEstimates <- file.path(dataDir, str_c("countryData/", iso3, "-Estimates.rds"))
 pathToUpdateData <- file.path(dataDir, "updateData.rds")
 pathToInterventionData <- here("../covid19-additionalData/interventions/interventions.csv")
 
 caseData <- readRDS(pathToCaseData) %>%
   pivot_wider(names_from = "variable", values_from = "value")
 estimates <- readRDS(pathToEstimates)
-updateData <- readRDS(pathToUpdateData)[["Switzerland"]]
+updateData <- readRDS(pathToUpdateData)[[iso3]]
 
 # prepare Data
 caseDataPlot <- caseData %>%
   filter(
-    countryIso3 == "CHE",
-    region == "CHE",
-    source %in% c("FOPH"),
+    countryIso3 == iso3,
+    region == iso3,
     data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
   mutate(data_type = fct_drop(data_type))
 
@@ -47,9 +48,8 @@ estimatePlotRanges <- estimateRanges(caseDataPlot,
 estimatesPlot <- estimates %>%
   filter(
     estimate_type == "Cori_slidingWindow",
-    countryIso3 == "CHE",
-    region == "CHE",
-    source %in% c("FOPH"),
+    countryIso3 == iso3,
+    region == iso3,
     data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
   mutate(
     region = fct_drop(region),
@@ -59,16 +59,16 @@ estimatesPlot <- estimates %>%
   group_by(data_type) %>%
   filter(
     between(date,
-      left = estimatePlotRanges[["CHE"]][["CHE"]][["start"]][[as.character(data_type[1])]],
-      right = estimatePlotRanges[["CHE"]][["CHE"]][["end"]][[as.character(data_type[1])]]),
+      left = estimatePlotRanges[[iso3]][[iso3]][["start"]][[as.character(data_type[1])]],
+      right = estimatePlotRanges[[iso3]][[iso3]][["end"]][[as.character(data_type[1])]]),
   ) %>%
   ungroup()
 
 updateDataPlot <- updateData %>%
   ungroup() %>%
   filter(
-    countryIso3 == "CHE",
-    region == "CHE",
+    countryIso3 == iso3,
+    region == iso3,
     source %in% unique(estimates$source)) %>%
   distinct()
 
@@ -76,14 +76,10 @@ translator <- Translator$new(translation_json_path = here("app", "data", "shinyT
 
 interventions <- read_csv(file = pathToInterventionData,
   col_types = cols(
-    name = col_character(),
-    y = col_double(),
-    text = col_character(),
-    tooltip = col_character(),
-    type = col_character(),
-    date = col_date(format = ""),
-    plotTextPosition = col_character())) %>%
-  filter(country == "Switzerland")
+      .default = col_character(),
+      date = col_date(format = ""),
+      y = col_double())) %>%
+  filter(countryIso3 == iso3)
 
 
 for (i in translator$languages) {
