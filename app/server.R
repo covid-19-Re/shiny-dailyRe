@@ -22,7 +22,6 @@ server <- function(input, output, session) {
 
   # static Data
   popData <- readRDS(pathToPopData)
-
   countryList <- tibble(
     countryIso3 = unique(
       str_match(
@@ -31,6 +30,13 @@ server <- function(input, output, session) {
       )[, 2]
   )) %>%
   left_join(distinct(select(popData, countryIso3, country, continent)), by = "countryIso3")
+
+  countryListContinent <- countryList %>%
+    group_by(continent) %>%
+    group_split(.keep = FALSE) %>%
+    as.list()
+
+  names(countryListContinent) <- countryList %>% group_by(continent) %>% group_keys()
 
   interventions <- read_csv(
     str_c(pathToInterventionData, "interventions.csv"),
@@ -96,7 +102,7 @@ server <- function(input, output, session) {
         "Countries" = countries, "Data types" = data_type, "URL" = url)
 
     return(dataSources)
-  })  
+  })
 
   updateData <- reactivePoll(10 * 60 * 1000, session,
     checkFunc = function() {
@@ -174,7 +180,8 @@ server <- function(input, output, session) {
     })
   })
 
-  output$cantonPlot <- renderPlotly({
+  # Swiss Plots
+  output$CHEregionPlot <- renderPlotly({
 
     reData <- reData()
 
@@ -184,7 +191,7 @@ server <- function(input, output, session) {
         data_type = fct_drop(data_type)
       )
 
-    estimatePlotRanges <- reData$estimateRanges[[icountry]]
+    estimatePlotRanges <- reData$estimateRanges[["CHE"]]
 
     estimates <- reData$estimates[["CHE"]] %>%
       filter(
@@ -259,7 +266,7 @@ server <- function(input, output, session) {
       return(plot)
   })
 
-  output$greaterRegionPlot <- renderPlotly({
+  output$CHEgreaterRegionPlot <- renderPlotly({
 
     reData <- reData()
 
@@ -270,7 +277,7 @@ server <- function(input, output, session) {
         data_type = fct_drop(data_type)
       )
 
-    estimatePlotRanges <- reData$estimateRanges[[icountry]]
+    estimatePlotRanges <- reData$estimateRanges[["CHE"]]
 
     estimates <- reData$estimates[["CHE"]] %>%
       filter(
@@ -451,16 +458,21 @@ server <- function(input, output, session) {
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Switzerland")),
         expandedName = "chMenu", startExpanded = stateVals$sidebarExpanded == "chMenu",
         menuSubItem(HTML(i18n()$t("Switzerland")), tabName = "ch", icon = icon("chart-area")),
-        menuSubItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "cantons", icon = icon("chart-area")),
+        menuSubItem(HTML(i18n()$t("R<sub>e</sub> by canton")), tabName = "CHEregion", icon = icon("chart-area")),
         menuSubItem(HTML(i18n()$t("R<sub>e</sub> for greater Regions")),
-          tabName = "greaterRegions", icon = icon("chart-area"))
+          tabName = "CHEgreaterRegions", icon = icon("chart-area"))
       ),
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")),
         expandedName = "euMenu", startExpanded = stateVals$sidebarExpanded == "euMenu",
         menuSubItem("Comparison", tabName = "Comparison", icon = icon("chart-area")),
-        lapply(countryList$countryIso3, function(i) {
+        lapply(countryListContinent[["Europe"]]$countryIso3, function(i) {
           menuSubItem(countryList$country[countryList$countryIso3 == i], tabName = i, icon = icon("chart-area"))
         })
+      ),
+      menuItem(HTML(i18n()$t("R<sub>e</sub> in South Africa")),
+        expandedName = "ZAFmenu", startExpanded = stateVals$sidebarExpanded == "ZAFmenu",
+        menuSubItem(HTML(i18n()$t("South Africa")), tabName = "ZAF", icon = icon("chart-area")),
+        menuSubItem(HTML(i18n()$t("R<sub>e</sub> by province")), tabName = "ZAFregion", icon = icon("chart-area"))
       ),
       menuItem(HTML(i18n()$t("Download R<sub>e</sub> estimates")),
                   tabName = "download", icon = icon("download")),
@@ -495,6 +507,24 @@ server <- function(input, output, session) {
       )
   })
 
+  # dca: unfortunately not interactive... so mostly only confusing atm
+  # output$messageMenu <- renderMenu({
+  #   updateDataMsg <- bind_rows(updateData()) %>%
+  #     ungroup() %>%
+  #     select(-region, -source, -data_type) %>%
+  #     group_by(countryIso3) %>%
+  #     filter(lastChanged == max(lastChanged)) %>%
+  #     slice_head(n = 1)
+
+  #   msgs <- apply(updateDataMsg[1:5, ], 1, function(row) {
+  #     messageItem(
+  #       from = row[["country"]],
+  #       message = str_c("New data: ", row[["lastChanged"]]),
+  #       icon = icon("database"))
+  #   })
+  #   dropdownMenu(type = "messages", .list = msgs)
+  # })
+
   output$chUI <- renderUI({
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland")),
@@ -507,68 +537,68 @@ server <- function(input, output, session) {
             includeMarkdown(str_c("md/methodsCH_", input$lang, ".md"))
             )
         ),
-        column(width = 4#,
-          # infoBox(width = 12,
-          #   i18n()$t("Last Data Updates"),
-          #   HTML(
-          #     dataUpdatesTable(filter(latestData,
-          #       country == "Switzerland", source %in% c("FOPH")),
-          #       lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
-          #     icon = icon("exclamation-circle"),
-          #   color = "purple"
-          # )
+        column(width = 4,
+          infoBox(width = 12,
+            i18n()$t("Last Data Updates"),
+            HTML(
+              dataUpdatesTable(updateData()[["CHE"]],
+                dateFormat = i18n()$t("%Y-%m-%d"))),
+              icon = icon("exclamation-circle"),
+            color = "purple"
+          )
         )
       )
     )
   })
 
-  output$cantonsUI <- renderUI({
+  output$CHEregionUI <- renderUI({
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for cantons")),
       width = 12,
-          plotlyOutput("cantonPlot", width = "100%", height = "800px")
+          plotlyOutput("CHEregionPlot", width = "100%", height = "800px")
       ),
       fluidRow(
-        box(width = 12,
-          includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
-          )
-      )
-    )
-  })
-
-  output$greaterRegionsUI <- renderUI({
-    fluidRow(
-      box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for greater regions of Switzerland")),
-        width = 12,
-        plotlyOutput("greaterRegionPlot", width = "100%", height = "800px")
-      ),
-      fluidRow(
-        column(width = 7,
+        column(width = 8,
           box(width = 12,
             includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
-          )
+            )
         ),
-        column(width = 5
-          # infoBox(width = 12,
-          #   i18n()$t("Last Data Updates"),
-          #   HTML(dataUpdatesTable(filter(latestData,
-          #     country == "Switzerland", source %in% c("FOPH")),
-          #     lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
-          #     icon = icon("exclamation-circle"),
-          #   color = "purple"
-          # )
+        column(width = 4,
+          infoBox(width = 12,
+            i18n()$t("Last Data Updates"),
+            HTML(
+              dataUpdatesTable(updateData()[["CHE"]],
+                dateFormat = i18n()$t("%Y-%m-%d"))),
+              icon = icon("exclamation-circle"),
+            color = "purple"
+          )
         )
       )
     )
   })
 
-  output$aboutUI <- renderUI({
+  output$CHEgreaterRegionsUI <- renderUI({
     fluidRow(
-      box(title = i18n()$t("About"), width = 12,
-        includeMarkdown("md/about.md")
+      box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for greater regions of Switzerland")),
+        width = 12,
+        plotlyOutput("CHEgreaterRegionPlot", width = "100%", height = "800px")
       ),
-      box(title = i18n()$t("Data Sources"), width = 12,
-        dataTableOutput("sourcesTable")
+      fluidRow(
+        column(width = 8,
+          box(width = 12,
+            includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
+            )
+        ),
+        column(width = 4,
+          infoBox(width = 12,
+            i18n()$t("Last Data Updates"),
+            HTML(
+              dataUpdatesTable(updateData()[["CHE"]],
+                dateFormat = i18n()$t("%Y-%m-%d"))),
+              icon = icon("exclamation-circle"),
+            color = "purple"
+          )
+        )
       )
     )
   })
@@ -607,8 +637,8 @@ server <- function(input, output, session) {
                 includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
               )
           ),
-          column(width = 4#,
-            #uiOutput("ComparisonDataSourceUI")
+          column(width = 4,
+            uiOutput("ComparisonDataSourceUI")
           )
         )
       )
@@ -619,11 +649,22 @@ server <- function(input, output, session) {
         i18n()$t("Last Data Updates"),
         HTML(
           dataUpdatesTable(
-            latestDataComp(),
-            lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+            updateData(),
+            dateFormat = i18n()$t("%Y-%m-%d"))),
         icon = icon("exclamation-circle"),
         color = "purple"
       )
+  })
+
+  output$aboutUI <- renderUI({
+    fluidRow(
+      box(title = i18n()$t("About"), width = 12,
+        includeMarkdown("md/about.md")
+      ),
+      box(title = i18n()$t("Data Sources"), width = 12,
+        dataTableOutput("sourcesTable")
+      )
+    )
   })
 
   output$downloadUI <- renderUI({
@@ -642,7 +683,7 @@ server <- function(input, output, session) {
   })
 
   output$dashboardBodyUI <- renderUI({
-    tabList <- c("ch", "cantons", "greaterRegions", "download", "Comparison", countryList$countryIso3, "about")
+    tabList <- c("ch", "CHEregion", "CHEgreaterRegions", "download", "Comparison", countryList$countryIso3, "about")
     tabs <- lapply(
       tabList,
       function(i) {

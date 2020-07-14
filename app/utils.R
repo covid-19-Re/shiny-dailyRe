@@ -1,31 +1,30 @@
 # helpers
 
 dataUpdatesTable <- function(
-  latestData,
-  lastCheck,
+  updateData,
   dateFormat = "%Y-%m-%d",
   showDataType = FALSE) {
 
-  latestData <- latestData %>%
+  updateData <- bind_rows(updateData) %>%
     group_by(country, source) %>%
     slice(1L)
-  showCountry <- length(unique(latestData$country)) > 1
+  showCountry <- length(unique(updateData$country)) > 1
 
   outList <- list("<table style=\"width:100%\">")
-  for (i in 1:dim(latestData)[1]) {
+  for (i in 1:dim(updateData)[1]) {
     if (i == 1) {
       printCountry <- showCountry
     } else {
-      printCountry <- (showCountry & latestData[i - 1, ]$country != latestData[i, ]$country)
+      printCountry <- (showCountry & updateData[i - 1, ]$country != updateData[i, ]$country)
     }
 
     if (printCountry) {
-      countryString <- str_c("<tr><td colspan=\"3\">", latestData[i, ]$country, "</td></tr>")
+      countryString <- str_c("<tr><td colspan=\"3\">", updateData[i, ]$country, "</td></tr>")
     } else {
       countryString <- ""
     }
 
-    sourceString <- str_c("<td style = \"font-weight: normal;\">", latestData[i, ]$source, "</td>")
+    sourceString <- str_c("<td style = \"font-weight: normal;\">", updateData[i, ]$source, "</td>")
     if (showCountry) {
       sourceString <- str_c("<td>&nbsp;&nbsp;</td>", sourceString)
     }
@@ -34,12 +33,14 @@ dataUpdatesTable <- function(
       countryString,
       "<tr>",
         sourceString,
-        "<td style = \"font-weight: normal;font-style: italic;\">", format(latestData[i, ]$date, dateFormat), "</td>",
+        "<td style = \"font-weight: normal;font-style: italic;\">",
+          format(updateData[i, ]$lastData, dateFormat),
+        "</td>",
       "</tr>")
   }
   outList[[i + 2]] <- "</table>"
   out <- str_c(outList, collapse = "")
-  out <- str_c(out, "<small style=\"font-weight: normal\">", lastCheck, "</small>")
+  out <- str_c(out, "<small style=\"font-weight: normal\"> last check: ", max(updateData$lastChecked), "</small>")
   return(out)
 }
 
