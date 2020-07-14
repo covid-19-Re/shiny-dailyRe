@@ -11,4 +11,5 @@ source,sourceLong,url
 "Economist","Data from the Economist Excess Death Tracker","https://github.com/TheEconomist/covid-19-excess-deaths-tracker"
 "Sciensano","Data from the Belgian Institute for Health","https://epistat.wiv-isp.be/covid/"
 "DSFSI", "Data from Data Science for Social Impact Research Group @ University of Pretoria", "https://github.com/dsfsi/covid19za"
+"PCM-DPC","Data from Presidenza del Consiglio dei Ministri - Dipartimento della Protezione Civile","https://github.com/pcm-dpc/COVID-19"
 
