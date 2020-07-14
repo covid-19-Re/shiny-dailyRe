@@ -1,6 +1,6 @@
 ### Utilities ###
 # smooth time series with LOESS method
-getLOESSCases <- function(dates, count_data, days_incl = 14, degree = 1) {
+getLOESSCases <- function(dates, count_data, days_incl = 28, degree = 1) {
 
   n_points = length(unique(dates))
   sel_span = days_incl/n_points
