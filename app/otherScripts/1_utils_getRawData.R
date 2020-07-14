@@ -548,8 +548,10 @@ getITADataPCM <- function(){
       confirmed = nuovi_positivi,
       deaths = diff(c(0, deceduti))
     ) %>%
+    # fix negative deaths
+    mutate(deaths = if_else(deaths < 0, 0, deaths)) %>%
     pivot_longer(cols = confirmed:deaths, names_to = "data_type", values_to = "value") %>%
-    arrange(country, region, source, variable, data_type, date)
+    arrange(countryIso3, region, source, variable, data_type, date)
 
     return(data)
 }
