@@ -397,10 +397,21 @@ rEffPlotlyRegion <- function(
   newLevels <- levels(caseData$data_type)
   names(newLevels) <- sapply(newLevels, translator$t,  USE.NAMES = FALSE)
 
-  names(regionColors) <- recode(
-    names(regionColors),
-    "CHE" = translator$t("Switzerland (Total)"),
-    "CHE truncated" = str_c(translator$t("Switzerland (Total)"), " truncated"))
+  if (!is.null(focusRegion)) {
+    countryNames <- caseData %>% ungroup() %>% select(countryIso3, country) %>% distinct()
+    focusRegionLong <- str_c(countryNames$country[countryNames$countryIso3 == focusRegion], " (Total)")
+    focusRegionRecodeKey <- c(
+      translator$t(focusRegionLong),
+      translator$t(str_c(focusRegionLong, " truncated"))
+    )
+    names(focusRegionRecodeKey) <- c(focusRegion, str_c(focusRegion, " truncated"))
+
+    names(regionColors) <- recode(
+      names(regionColors),
+      !!!focusRegionRecodeKey)
+  } else {
+    focusRegionRecodeKey <- c()
+  }
 
   pCasesTitle <- translator$t("New observations")
 
@@ -414,12 +425,12 @@ rEffPlotlyRegion <- function(
     filter(data_type == "Confirmed cases") %>%
     mutate(
       data_type = fct_recode(data_type, !!!newLevels),
-      region = recode(region, CHE = translator$t("Switzerland (Total)")))
+      region = recode(region, !!!focusRegionRecodeKey))
 
   if (!is.null(focusRegion)) {
     caseData <- caseData %>%
       mutate(region = as_factor(region)) %>%
-      mutate(region = fct_relevel(region, translator$t(focusRegion), after = Inf))
+      mutate(region = fct_relevel(region, translator$t(focusRegionLong), after = Inf))
   }
 
   if (caseAverage > 1) {
@@ -436,12 +447,12 @@ rEffPlotlyRegion <- function(
     filter(data_type == "Confirmed cases") %>%
     mutate(
       data_type = fct_recode(data_type, !!!newLevels),
-      region = recode(region, CHE = translator$t("Switzerland (Total)")))
+      region = recode(region, !!!focusRegionRecodeKey))
 
   if (!is.null(focusRegion)) {
     estimatesPlot <- estimatesPlot %>%
       mutate(region = as_factor(region)) %>%
-      mutate(region = fct_relevel(region, translator$t(focusRegion), after = Inf))
+      mutate(region = fct_relevel(region, translator$t(focusRegionLong), after = Inf))
   }
 
   if (logCaseYaxis) {
@@ -650,7 +661,7 @@ rEffPlotlyRegion <- function(
       locale = locale, scrollZoom = FALSE)
 
   if(!is.null(focusRegion)) {
-    plot <- plotlyShowOnly(plot, focusRegion)
+    plot <- plotlyShowOnly(plot, focusRegionLong)
   }
 
   plot$elementId <- widgetID
