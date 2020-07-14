@@ -23,7 +23,7 @@ source(here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("ZAF")
+  args <- c("ITA")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -82,17 +82,21 @@ if (!isTRUE(dataUnchanged)) {
   saveRDS(countryData, file = countryDataPath)
 }
 
-updateData[[args["country"]]] <- countryData %>%
-  mutate(
-    data_type = replace(
-      data_type,
-      data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"),
-      "Hospitalized patients")) %>%
-  group_by(countryIso3, country, region, source, data_type) %>%
-  summarize(lastData = max(date), .groups = "keep") %>%
-  mutate(
-    lastChanged = file.mtime(countryDataPath),
-    lastChecked = Sys.time())
+# fix because swiss data contains data for two countries (CHE & LIE)
+for (i in unique(countryData$countryIso3)) {
+  updateData[[i]] <- countryData %>%
+    filter(countryIso3 == i) %>%
+    mutate(
+      data_type = replace(
+        data_type,
+        data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"),
+        "Hospitalized patients")) %>%
+    group_by(countryIso3, country, region, source, data_type) %>%
+    summarize(lastData = max(date), .groups = "keep") %>%
+    mutate(
+      lastChanged = file.mtime(countryDataPath),
+      lastChecked = Sys.time())
+}
 
 saveRDS(updateData, updateDataPath)
 
