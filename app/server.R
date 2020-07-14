@@ -184,6 +184,72 @@ server <- function(input, output, session) {
   })
 
   # Swiss Plots
+  output$CHEcountryPlot <- renderPlotly({
+    validate(
+      need(input$estimation_type_select, "loading ...")
+    )
+
+    updateDataCountry <- updateData()[["CHE"]] %>%
+      filter(region == "CHE")
+
+    reData <- reData()
+
+    caseData <- reData$caseData[["CHE"]] %>%
+      filter(
+        region == "CHE",
+        data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
+      mutate(
+        data_type = fct_drop(data_type)
+      )
+
+    estimatePlotRanges <- reData$estimateRanges[["CHE"]]
+
+    estimates <- reData$estimates[["CHE"]] %>%
+      filter(
+        estimate_type == input$estimation_type_select,
+        region == "CHE",
+        data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
+      mutate(
+        region = fct_drop(region),
+        country = fct_drop(country),
+        data_type = fct_drop(data_type)
+      ) %>%
+      group_by(data_type) %>%
+      filter(
+        between(date,
+          left = estimatePlotRanges[["CHE"]][["start"]][[as.character(data_type[1])]],
+          right = estimatePlotRanges[["CHE"]][["end"]][[as.character(data_type[1])]]),
+      ) %>%
+      ungroup()
+
+    interventionsCountry <- interventions[["CHE"]]
+
+    if(!is.null(interventionsCountry)){
+      interventionsCountry <- mutate(interventionsCountry,
+        text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
+        tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
+    }
+
+    plot <- rEffPlotly(
+      caseData = caseData,
+      estimates = estimates,
+      interventions = interventionsCountry,
+      plotColors = plotColors,
+      lastDataDate = updateDataCountry,
+      startDate = min(estimates$date) - 14,
+      fixedRangeX = fixedRangeX,
+      fixedRangeY = fixedRangeY,
+      logCaseYaxis = input$logCases,
+      caseAverage = input$caseAverage,
+      caseNormalize = input$caseNormalize,
+      caseLoess = input$caseLoess,
+      caseDeconvoluted = input$caseDeconvoluted,
+      translator = i18n(),
+      language = input$lang,
+      widgetID = NULL)
+    return(plot)
+  })
+
   output$CHEregionPlot <- renderPlotly({
 
     reData <- reData()
@@ -692,7 +758,7 @@ server <- function(input, output, session) {
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland")),
         width = 12,
-        plotlyOutput("CHEPlot", width = "100%", height = "800px")
+        plotlyOutput("CHEcountryPlot", width = "100%", height = "800px")
       ),
       fluidRow(
         column(width = 8,
@@ -802,8 +868,20 @@ server <- function(input, output, session) {
           plotlyOutput(str_c(i, "Plot"), width = "100%", height = "700px")
         ),
         fluidRow(
-          box(width = 12,
-            includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
+          column(width = 8,
+              box(width = 12,
+                includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
+              )
+          ),
+          column(width = 4,
+            infoBox(width = 12,
+              i18n()$t("Last Data Updates"),
+              HTML(
+                dataUpdatesTable(updateData()[[i]], dateFormat = i18n()$t("%Y-%m-%d"))
+              ),
+              icon = icon("exclamation-circle"),
+              color = "purple"
+            )
           )
         )
       )
