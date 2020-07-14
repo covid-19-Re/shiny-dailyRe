@@ -509,7 +509,6 @@ getExcessDeathITA <- function(filePath = here::here("../covid19-additionalData/e
   return(longData)
 }
 
-# WIP not functional
 getITADataPCM <- function(){
   url <- str_c("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-nazionale/",
     "dpc-covid19-ita-andamento-nazionale.csv")
@@ -542,7 +541,7 @@ getITADataPCM <- function(){
   data <- rawData %>%
     transmute(
       date = as.Date(data),
-      country = "ITA",
+      countryIso3 = "ITA",
       region = "ITA",
       source = "PCM-DPC",
       variable = "incidence",
@@ -550,23 +549,13 @@ getITADataPCM <- function(){
       deaths = diff(c(0, deceduti))
     ) %>%
     pivot_longer(cols = confirmed:deaths, names_to = "data_type", values_to = "value") %>%
-    arrange(country, region, source, variable, data_type, date) %>%
-    group_by(country, region, source, variable, data_type) %>%
-    mutate(
-      cumul = cumsum(value))
-
-  cumulData <- data %>%
-    group_by(data_type) %>%
-    mutate(
-      variable = "cumul",
-      value = cumsum(value)) %>%
-    filter(data_type == "deaths")
+    arrange(country, region, source, variable, data_type, date)
 
     return(data)
 }
 
 getDataITA <- function(ECDCtemp = NULL, tReload = 15) {
-  caseData <- getDataECDC(countries = "ITA", tempFileName = ECDCtemp, tReload = tReload)
+  caseData <- getITADataPCM()
   excessDeath <- NULL#getExcessDeathITA()
 
   allData <- bind_rows(caseData, excessDeath)
