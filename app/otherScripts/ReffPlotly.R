@@ -35,7 +35,6 @@ rEffPlotly <- function(
   caseNormalize = FALSE,
   caseLoess = FALSE,
   caseDeconvoluted = FALSE,
-  popSizes = NULL,
   language,
   translator,
   widgetID = "rEffplots") {
@@ -97,8 +96,7 @@ rEffPlotly <- function(
 
   if (caseNormalize) {
     caseData <- caseData %>%
-      left_join(popSizes, by = c("country", "region")) %>%
-      mutate(incidence = incidence / popSize * 100000)
+      mutate(incidence = incidence / populationSize * 100000)
     pCasesTitle <- str_c(pCasesTitle, " / 100'000")
   }
 
@@ -171,9 +169,13 @@ rEffPlotly <- function(
   }
 
   if (caseLoess) {
+    caseDataTruncLoess <- caseDataTrunc %>%
+      filter(data_type != "Excess deaths") %>%
+      group_by(country, region, source, data_type) %>%
+      mutate(incidenceLoess = getLOESSCases(date, incidence))
     pCases <- pCases %>%
       add_trace(
-        data = caseDataTrunc,
+        data = caseDataTruncLoess,
         x = ~date, y = ~incidenceLoess, color = ~data_type, color = plotColors,
         type = "scatter", mode = "lines", opacity = 0.5,
         text = ~str_c("<i> Loess Fit </i><extra></extra>"),
@@ -338,7 +340,6 @@ rEffPlotlyRegion <- function(
   caseNormalize = FALSE,
   caseLoess = FALSE,
   caseDeconvoluted = FALSE,
-  popSizes = NULL,
   regionColors,
   translator,
   language,
@@ -389,7 +390,7 @@ rEffPlotlyRegion <- function(
     xDataSource <- 1
     yDataSource <- -0.2
     dataSourceAnchors <- c("right", "auto")
-    bottomMargin <- 0
+    bottomMargin <- 80
     rightMargin <- 200
 
   # prepare Data
@@ -398,15 +399,14 @@ rEffPlotlyRegion <- function(
 
   names(regionColors) <- recode(
     names(regionColors),
-    Switzerland = translator$t("Switzerland (Total)"),
-    "Switzerland truncated" = str_c(translator$t("Switzerland (Total)"), " truncated"))
+    "CHE" = translator$t("Switzerland (Total)"),
+    "CHE truncated" = str_c(translator$t("Switzerland (Total)"), " truncated"))
 
   pCasesTitle <- translator$t("New observations")
 
   if (caseNormalize) {
     caseData <- caseData %>%
-      left_join(popSizes, by = c("country", "region")) %>%
-      mutate(incidence = incidence / popSize * 100000)
+      mutate(incidence = incidence / populationSize * 100000)
     pCasesTitle <- str_c(pCasesTitle, " / 100'000")
   }
 
@@ -414,9 +414,9 @@ rEffPlotlyRegion <- function(
     filter(data_type == "Confirmed cases") %>%
     mutate(
       data_type = fct_recode(data_type, !!!newLevels),
-      region = recode(region, Switzerland = translator$t("Switzerland (Total)")))
+      region = recode(region, CHE = translator$t("Switzerland (Total)")))
 
-  if (!is.null(focusRegion)){
+  if (!is.null(focusRegion)) {
     caseData <- caseData %>%
       mutate(region = as_factor(region)) %>%
       mutate(region = fct_relevel(region, translator$t(focusRegion), after = Inf))
@@ -436,9 +436,9 @@ rEffPlotlyRegion <- function(
     filter(data_type == "Confirmed cases") %>%
     mutate(
       data_type = fct_recode(data_type, !!!newLevels),
-      region = recode(region, Switzerland = translator$t("Switzerland (Total)")))
+      region = recode(region, CHE = translator$t("Switzerland (Total)")))
 
-  if (!is.null(focusRegion)){
+  if (!is.null(focusRegion)) {
     estimatesPlot <- estimatesPlot %>%
       mutate(region = as_factor(region)) %>%
       mutate(region = fct_relevel(region, translator$t(focusRegion), after = Inf))
@@ -499,8 +499,12 @@ rEffPlotlyRegion <- function(
   }
 
   if (caseLoess) {
+    caseDataTruncLoess <- caseDataTrunc %>%
+      filter(data_type != "Excess deaths") %>%
+      group_by(country, region, source, data_type) %>%
+      mutate(incidenceLoess = getLOESSCases(date, incidence))
     pCases <- pCases %>%
-      add_trace(data = caseDataTrunc,
+      add_trace(data = caseDataTruncLoess,
         x = ~date, y = ~incidenceLoess, color = ~region, color = regionColors,
         type = "scatter", mode = "lines", opacity = 0.5,
         text = ~str_c("<i> Loess Fit </i><extra></extra>"),
@@ -669,7 +673,6 @@ rEffPlotlyComparison <- function(
   caseNormalize = FALSE,
   caseLoess = FALSE,
   caseDeconvoluted = FALSE,
-  popSizes = NULL,
   countryColors,
   translator,
   language,
@@ -717,7 +720,7 @@ rEffPlotlyComparison <- function(
     xDataSource <- 1
     yDataSource <- -0.18
     dataSourceAnchors <- c("right", "top")
-    bottomMargin <- 0
+    bottomMargin <- 80
     rightMargin <- 200
 
   # prepare Data
@@ -725,8 +728,7 @@ rEffPlotlyComparison <- function(
 
   if (caseNormalize) {
     caseData <- caseData %>%
-      left_join(popSizes, by = c("country", "region")) %>%
-      mutate(incidence = incidence / popSize * 100000)
+      mutate(incidence = incidence / populationSize * 100000)
     pCasesTitle <- str_c(pCasesTitle, " / 100'000")
   }
 
@@ -797,8 +799,12 @@ rEffPlotlyComparison <- function(
   }
 
   if (caseLoess) {
+    caseDataTruncLoess <- caseDataTrunc %>%
+      filter(data_type != "Excess deaths") %>%
+      group_by(country, region, source, data_type) %>%
+      mutate(incidenceLoess = getLOESSCases(date, incidence))
     pCases <- pCases %>%
-      add_trace(data = caseDataTrunc,
+      add_trace(data = caseDataTruncLoess,
         x = ~date, y = ~incidenceLoess, color = ~country, color = countryColors,
         type = "scatter", mode = "lines", opacity = 0.5,
         text = ~str_c("<i> Loess Fit </i><extra></extra>"),
