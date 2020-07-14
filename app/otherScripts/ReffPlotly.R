@@ -317,7 +317,8 @@ rEffPlotly <- function(
           font = list(size = 11, color = "black")
         )
     )) %>%
-    config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
+    config(doubleClick = "reset", displaylogo = FALSE, modeBarButtons = list(list("toImage")),
+      toImageButtonOptions = list(format = "png", width = 1200, height = 800, scale = 1, filename = "ReEstimates"),
       locale = locale, scrollZoom = FALSE)
 
   plot$elementId <- widgetID
@@ -657,7 +658,8 @@ rEffPlotlyRegion <- function(
           font = list(size = 11, color = "black")
         )
     )) %>%
-    config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
+    config(doubleClick = "reset", displaylogo = FALSE, modeBarButtons = list(list("toImage")),
+      toImageButtonOptions = list(format = "png", width = 1200, height = 800, scale = 1, filename = "ReEstimates"),
       locale = locale, scrollZoom = FALSE)
 
   if(!is.null(focusRegion)) {
@@ -935,7 +937,8 @@ rEffPlotlyComparison <- function(
           font = list(size = 11, color = "black")
         )
     )) %>%
-    config(doubleClick = "reset", displaylogo = FALSE, displayModeBar = FALSE,
+    config(doubleClick = "reset", displaylogo = FALSE, modeBarButtons = list(list("toImage")),
+      toImageButtonOptions = list(format = "png", width = 1200, height = 800, scale = 1, filename = "ReEstimates"),
       locale = locale, scrollZoom = FALSE)
 
   plot$elementId <- widgetID
