@@ -419,7 +419,7 @@ getDataCHE <- function(stoppingAfter = (Sys.Date() - 1), pathToHospData) {
   hospitalData <- getHospitalDataCHE(path = pathToHospData, region = "CH", dataTypeSuffix = "")
   hospitalData_onsets <- getHospitalDataCHE(path = pathToHospData, region = "CH", dataTypeSuffix = "_onsets")
   hospitalData_admissions <- getHospitalDataCHE(path = pathToHospData, region = "CH", dataTypeSuffix = "_admissions")
-  swissExcessDeath <- getDataCHEexcessDeath(startAt = as.Date("2020-02-20"))
+  swissExcessDeath <- NULL #getDataCHEexcessDeath(startAt = as.Date("2020-02-20"))
   swissData <- bind_rows(
     bagData,
     hospitalData,
@@ -567,7 +567,7 @@ getITADataPCM <- function(){
 
 getDataITA <- function(ECDCtemp = NULL, tReload = 15) {
   caseData <- getDataECDC(countries = "ITA", tempFileName = ECDCtemp, tReload = tReload)
-  excessDeath <- getExcessDeathITA()
+  excessDeath <- NULL#getExcessDeathITA()
 
   allData <- bind_rows(caseData, excessDeath)
 
@@ -658,7 +658,7 @@ getExcessDeathFRA <- function(startAt = as.Date("2020-02-20")) {
 
 getDataFRA <- function(ECDCtemp = NULL, tReload = 15){
   caseData <- getDataECDC(countries = "FRA", tempFileName = ECDCtemp, tReload = tReload)
-  excessDeath <- getExcessDeathFRA()
+  excessDeath <- NULL #getExcessDeathFRA()
   hospitalData <- getHospitalDataFRA()
 
   allData <- bind_rows(caseData, excessDeath, hospitalData)
@@ -705,7 +705,7 @@ getHospitalDataBEL <- function() {
 
 getDataBEL <- function(ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
   caseData <- getDataECDC(countries = "BEL", tempFileName = ECDCtemp, tReload = tReload)
-  excessDeath <- getExcessDeathHMD(countries = "BEL", tempFileName = HMDtemp, tReload = tReload)
+  excessDeath <- NULL#getExcessDeathHMD(countries = "BEL", tempFileName = HMDtemp, tReload = tReload)
   hospitalData <- getHospitalDataBEL()
   allData <- bind_rows(caseData, excessDeath, hospitalData)
   return(allData)
@@ -820,7 +820,7 @@ getExcessDeathNLD <- function(startAt = as.Date("2020-02-20")) {
 
 getDataNLD <- function() {
   caseData <- getCaseDataNLD()
-  excessDeath <- getExcessDeathNLD()
+  excessDeath <- NULL#getExcessDeathNLD()
   allData <- bind_rows(caseData, excessDeath)
   return(allData)
 }
@@ -884,7 +884,7 @@ getExcessDeathGBR <- function(startAt = as.Date("2020-02-20"), path_to_data = ".
 
 getDataGBR <- function(ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
   caseData <- getDataECDC(countries = "GBR", tempFileName = ECDCtemp, tReload = tReload)
-  excessDeath <- getExcessDeathHMD(countries = "GBR", tempFileName = HMDtemp, tReload = tReload)
+  excessDeath <- NULL#getExcessDeathHMD(countries = "GBR", tempFileName = HMDtemp, tReload = tReload)
   allData <- bind_rows(caseData, excessDeath)
   return(allData)
 }
@@ -983,7 +983,7 @@ getDataZAF <- function() {
 
 getDataGeneric <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
   caseData <- getDataECDC(countries = countries, tempFileName = ECDCtemp, tReload = tReload)
-  excessDeath <- getExcessDeathHMD(countries = countries, tempFileName = HMDtemp, tReload = tReload)
+  excessDeath <- NULL#getExcessDeathHMD(countries = countries, tempFileName = HMDtemp, tReload = tReload)
   allData <- bind_rows(caseData, excessDeath)
   return(allData)
 }
