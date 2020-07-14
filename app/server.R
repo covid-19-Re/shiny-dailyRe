@@ -26,7 +26,7 @@ server <- function(input, output, session) {
   countryList <- tibble(
     countryIso3 = unique(
       str_match(
-        string = list.files(path = pathToCountryData),
+        string = list.files(path = pathToCountryData, pattern = ".*-Estimates"),
         pattern = "(.*)-.*"
       )[, 2]
   )) %>%
