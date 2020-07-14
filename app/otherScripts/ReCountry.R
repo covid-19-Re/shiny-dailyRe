@@ -55,7 +55,7 @@ names(args) <- "country"
     args["country"],
     ECDCtemp = here("app/data/temp/ECDCdata.csv"),
     HMDtemp = here("app/data/temp/HMDdata.csv"),
-    tReload = 15) %>%
+    tReload = 30) %>%
     left_join(
       popData,
       by = c("countryIso3", "region")
