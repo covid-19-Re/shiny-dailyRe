@@ -55,34 +55,33 @@ estimateRanges <- function(
   delays = delaysDf) {
 
   estimateStartDates <- caseData %>%
-    group_by(region, country, source, data_type) %>%
+    group_by(countryIso3, region, source, data_type) %>%
+    arrange(countryIso3, region, source, data_type, date) %>%
     filter(
       data_type == "Confirmed cases",
-      !(country == "Switzerland" & region == "Switzerland" & source == "ECDC"),
       cumsum(incidence) > 100) %>%
     filter(date == min(date)) %>%
     ungroup() %>%
-    select(country, region, estimateStart = date)
+    select(countryIso3, region, estimateStart = date)
 
   # figuring out when estimation ends i.e. applying the delays
   estimateDatesDf <- caseData %>%
     filter(
-      !(country == "Switzerland" & region == "Switzerland" & source == "ECDC"),
       !(is.na(incidence))
     ) %>%
-    group_by(region, country, source, data_type) %>%
+    group_by(region, countryIso3, source, data_type) %>%
     top_n(n = 1, date) %>%
-    arrange(country, region) %>%
+    arrange(countryIso3, region) %>%
     left_join(delays, by = "data_type") %>%
     ungroup() %>%
     transmute(
-      country = country, region = region, data_type = data_type, estimateEnd = date - delay) %>%
-    left_join(estimateStartDates, by = c("country", "region"))
+      countryIso3 = countryIso3, region = region, data_type = data_type, estimateEnd = date - delay) %>%
+    left_join(estimateStartDates, by = c("countryIso3", "region"))
 
   estimatesDates <- list()
 
-  for (iCountry in unique(estimateDatesDf$country)) {
-    tmpCountry <- filter(estimateDatesDf, country == iCountry)
+  for (iCountry in unique(estimateDatesDf$countryIso3)) {
+    tmpCountry <- filter(estimateDatesDf, countryIso3 == iCountry)
     for (iRegion in unique(tmpCountry$region)) {
       tmpRegion <- filter(tmpCountry, region == iRegion)
       tmpListEnd <- tmpRegion$estimateEnd
