@@ -17,7 +17,6 @@ filterRegions <- function(df, threshholdConfirmedCases = 500) {
   return(dfout)
 }
 
-
 getLOESSCases <- function(dates, count_data, span = 0.25) {
   n_pad <- round(length(count_data) * span * 0.5)
   c_data <- data.frame(value = c(rep(0, n_pad), count_data),
