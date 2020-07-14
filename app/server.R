@@ -23,24 +23,23 @@ server <- function(input, output, session) {
   # static Data
   popData <- readRDS(pathToPopData)
 
-  countryList <- unique(
-    str_match(
-      string = list.files(path = pathToCountryData),
-      pattern = "(.*)-.*"
-    )[, 2]
-  )
+  countryList <- tibble(
+    countryIso3 = unique(
+      str_match(
+        string = list.files(path = pathToCountryData),
+        pattern = "(.*)-.*"
+      )[, 2]
+  )) %>%
+  left_join(distinct(select(popData, countryIso3, country, continent)), by = "countryIso3")
 
   interventions <- read_csv(
     str_c(pathToInterventionData, "interventions.csv"),
     col_types = cols(
-      name = col_character(),
-      y = col_double(),
-      text = col_character(),
-      tooltip = col_character(),
-      type = col_character(),
+      .default = col_character(),
       date = col_date(format = ""),
-      plotTextPosition = col_character())) %>%
-    split(f = .$country)
+      y = col_double()
+    )) %>%
+    split(f = .$countryIso3)
 
   # reactive Data
   reData <- reactivePoll(10 * 60 * 1000, session,
@@ -49,32 +48,55 @@ server <- function(input, output, session) {
       file.mtime(list.files(path = pathToCountryData, full.names = TRUE, pattern = ".*-Estimates"))
     },
     valueFunc = function() {
-      reData <- list()
-      for (icountry in countryList) {
+      reData <- list(caseData = list(), estimates = list(), estimateRanges = list())
+      for (icountry in countryList$countryIso3) {
         deconvolutedData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-DeconvolutedData.rds"))) %>%
           select(-variable) %>%
-            mutate(data_type = str_sub(data_type, 11)) %>%
-            group_by(date, region, country, source, data_type) %>%
-            summarise(
-                deconvoluted = mean(value),
-                deconvolutedLow = deconvoluted - sd(value),
-                deconvolutedHigh = deconvoluted + sd(value),
-                .groups = "keep"
-              )
+          mutate(data_type = str_sub(data_type, 11)) %>%
+          group_by(date, region, country, source, data_type) %>%
+          summarise(
+            deconvoluted = mean(value),
+            deconvolutedLow = deconvoluted - sd(value),
+            deconvolutedHigh = deconvoluted + sd(value),
+            .groups = "keep"
+          )
+
         caseData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Data.rds"))) %>%
           pivot_wider(names_from = "variable", values_from = "value") %>%
-          left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date"))
+          left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
+          arrange(countryIso3, region, source, data_type, date)
 
         estimates <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Estimates.rds")))
 
-        reData[[icountry]] <- list(
-          caseData = caseData,
-          estimates = estimates
-        )
+        reData$caseData[[icountry]] <- caseData
+        reData$estimates[[icountry]] <- estimates
+        reData$estimateRanges[[icountry]] <- estimateRanges(
+          caseData,
+          minConfirmedCases = 100,
+          delays = delaysDf)[[icountry]]
       }
       return(reData)
     }
   )
+
+  dataSources <- reactive({
+    sourceInfo <- read_csv("data/dataSources.csv", col_types = cols(.default = col_character()))
+
+    dataSources <- bind_rows(reData()$caseData) %>%
+      select(countryIso3, country, source, data_type) %>%
+      filter(data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
+      left_join(sourceInfo, by = "source") %>%
+      group_by(source, sourceLong, url) %>%
+      summarize(
+        countries = str_c(unique(country), collapse = ", "),
+        data_type = str_c(unique(data_type), collapse = ", "),
+        .groups = "drop_last") %>% 
+      mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
+      select("Source" = source, "Description" = sourceLong,
+        "Countries" = countries, "Data types" = data_type, "URL" = url)
+
+    return(dataSources)
+  })  
 
   updateData <- reactivePoll(10 * 60 * 1000, session,
     checkFunc = function() {
@@ -85,19 +107,20 @@ server <- function(input, output, session) {
       return(updateData)
     }
   )
+
   # country plots
-  lapply(countryList, function(icountry) {
+  lapply(countryList$countryIso3, function(icountry) {
     output[[str_c(icountry, "Plot")]] <- renderPlotly({
       validate(
         need(input$estimation_type_select, "loading ...")
       )
 
-      updateData <- updateData()[[icountry]] %>%
-        filter(country == icountry, region == icountry)
+      updateDataCountry <- updateData()[[icountry]] %>%
+        filter(region == icountry)
 
       reData <- reData()
 
-      caseData <- reData[[icountry]][["caseData"]] %>%
+      caseData <- reData$caseData[[icountry]] %>%
         filter(
           region == icountry,
           data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
@@ -105,13 +128,9 @@ server <- function(input, output, session) {
           data_type = fct_drop(data_type)
         )
 
-      estimatePlotRanges <- estimateRanges(caseData,
-        minConfirmedCases = 100,
-        delays = delaysDf)
+      estimatePlotRanges <- reData$estimateRanges[[icountry]]
 
-      
-
-      estimates <- reData[[icountry]][["estimates"]]  %>%
+      estimates <- reData$estimates[[icountry]] %>%
         filter(
           estimate_type == input$estimation_type_select,
           region == icountry,
@@ -124,12 +143,12 @@ server <- function(input, output, session) {
         group_by(data_type) %>%
         filter(
           between(date,
-            left = estimatePlotRanges[[icountry]][[icountry]][["start"]][[as.character(data_type[1])]],
-            right = estimatePlotRanges[[icountry]][[icountry]][["end"]][[as.character(data_type[1])]]),
+            left = estimatePlotRanges[[icountry]][["start"]][[as.character(data_type[1])]],
+            right = estimatePlotRanges[[icountry]][["end"]][[as.character(data_type[1])]]),
         ) %>%
         ungroup()
 
-      interventions <- interventions[[icountry]] %>%
+      interventionsCountry <- interventions[[icountry]] %>%
         mutate(
           text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
           tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
@@ -137,9 +156,9 @@ server <- function(input, output, session) {
       plot <- rEffPlotly(
         caseData = caseData,
         estimates = estimates,
-        interventions = interventions,
+        interventions = interventionsCountry,
         plotColors = plotColors,
-        lastDataDate = updateData,
+        lastDataDate = updateDataCountry,
         startDate = min(estimates$date) - 14,
         fixedRangeX = fixedRangeX,
         fixedRangeY = fixedRangeY,
@@ -148,7 +167,6 @@ server <- function(input, output, session) {
         caseNormalize = input$caseNormalize,
         caseLoess = input$caseLoess,
         caseDeconvoluted = input$caseDeconvoluted,
-        popSizes = popData,
         translator = i18n(),
         language = input$lang,
         widgetID = NULL)
@@ -156,281 +174,276 @@ server <- function(input, output, session) {
     })
   })
 
-  # caseDataOverview <- reactive({
-  #   caseDataOverview <- rawData %>%
-  #     filter(data_type == input$data_type_select, region %in% countryList,
-  #       !(country == "Switzerland" & source == "ECDC")
-  #     ) %>%
-  #     filter(country %in% validEstimates$country, region %in% validEstimates$region) %>%
-  #     mutate(
-  #       data_type = fct_drop(data_type)
-  #     )
+  output$cantonPlot <- renderPlotly({
 
-  #   return(caseDataOverview)
-  # })
+    reData <- reData()
 
-  # estimatesOverview <- reactive({
-  #   estimatesOverview <- estimatesReSum %>%
-  #     filter(data_type == input$data_type_select, region %in% countryList,
-  #     !(country == "Switzerland" & source == "ECDC")) %>%
-  #     filter(country %in% validEstimates$country, region %in% validEstimates$region) %>%
-  #     mutate(
-  #       data_type = fct_drop(data_type)
-  #     ) %>%
-  #     group_by(country, data_type) %>%
-  #     filter(
-  #       estimate_type == input$estimation_type_select,
-  #       between(date,
-  #         left = estimatesDates[[country[1]]][[country[1]]][["start"]][[as.character(data_type[1])]],
-  #         right = estimatesDates[[country[1]]][[country[1]]][["end"]][[as.character(data_type[1])]]),
-  #     ) %>%
-  #     ungroup()
+    caseData <- reData$caseData[["CHE"]] %>%
+      filter(!str_detect(region, "grR")) %>%
+      mutate(
+        data_type = fct_drop(data_type)
+      )
 
-  #     return(estimatesOverview)
-  # })
+    estimatePlotRanges <- reData$estimateRanges[[icountry]]
 
+    estimates <- reData$estimates[["CHE"]] %>%
+      filter(
+        !str_detect(region, "grR"),
+        estimate_type == input$estimation_type_select,
+        data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
+      mutate(
+        region = fct_drop(region),
+        country = fct_drop(country),
+        data_type = fct_drop(data_type)
+      ) %>%
+      group_by(data_type) %>%
+      filter(
+        between(date,
+          left = estimatePlotRanges[["CHE"]][["start"]][[as.character(data_type[1])]],
+          right = estimatePlotRanges[["CHE"]][["end"]][[as.character(data_type[1])]]),
+      ) %>%
+      ungroup()
 
-  # estimatesEU <- reactive({
-  #   estimatesEU <- bind_rows(estimatesCountry)
-  #   return(estimatesEU)
-  # })
+    #filter out regions without estimations due to low case counts
+    caseData <- caseData %>%
+      filter(region %in% unique(estimates$region))
 
-  # output$CHinteractivePlot <- renderPlotly({
-  #   validate(
-  #     need(input$caseAverage, "loading ...")
-  #   )
+    interventionsCH <- interventions[["CHE"]] %>%
+      mutate(
+        text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
+        tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
 
-  #   caseDataCH <- caseDataSwitzerlandPlot() %>%
-  #     filter(country == "Switzerland", region == "Switzerland")
+    updateDataCHE <- updateData()[["CHE"]] %>%
+      filter(
+        region %in% unique(caseData$region),
+        source %in% unique(caseData$source)) %>%
+      group_by(source) %>%
+      filter(lastChanged == max(lastChanged)) %>%
+      ungroup() %>%
+      dplyr::select(source, data_type, lastChanged) %>%
+      distinct() %>%
+      mutate(source = sapply(source, i18n()$t,  USE.NAMES = FALSE))
 
-  #   estimatesCH <- estimatesSwitzerlandPlot() %>%
-  #     filter(country == "Switzerland", region == "Switzerland")
+    cantonColors1 <- viridis(length(unique(caseData$region)))
+    names(cantonColors1) <- unique(caseData$region)
+    cantonColors1["CHE"] <- "#666666"
 
-  #   latestDataCH <- filter(latestData, country == "Switzerland", region == "Switzerland",
-  #     source %in% unique(estimatesCH$source)) %>%
-  #     group_by(source) %>%
-  #     filter(date == max(date)) %>%
-  #     ungroup() %>%
-  #     dplyr::select(source, date) %>%
-  #     distinct() %>%
-  #     mutate(source = sapply(source, i18n()$t,  USE.NAMES = FALSE))
+    cantonColors2 <- saturation(cantonColors1, value = 0.1)
+    names(cantonColors2) <- str_c(names(cantonColors1), " truncated")
 
-  #   plot <- rEffPlotly(
-  #     caseDataCH,
-  #     estimatesCH,
-  #     interventionsCH(),
-  #     plotColors,
-  #     latestDataCH,
-  #     caseDataRightTruncation = 2,
-  #     fixedRangeX = fixedRangeX,
-  #     fixedRangeY = fixedRangeY,
-  #     logCaseYaxis = input$logCases,
-  #     caseAverage = input$caseAverage,
-  #     caseNormalize = input$caseNormalize,
-  #     caseLoess = input$caseLoess,
-  #     caseDeconvoluted = input$caseDeconvoluted,
-  #     popSizes = popSizes,
-  #     language = input$lang,
-  #     translator = i18n(),
-  #     widgetID = NULL)
-  #   return(plot)
-  # })
+    cantonColors <- c(cantonColors1, cantonColors2)
+    cantonColors["CHE truncated"] <- "#BBBBBB"
 
-  # output$cantonInteractivePlot <- renderPlotly({
+    plot <- rEffPlotlyRegion(
+      caseData = caseData,
+      estimates = estimates,
+      interventionsCH,
+      updateDataCHE,
+      startDate = min(caseData$date) - 1,
+      endDate = max(caseData$date) + 1,
+      caseDataRightTruncation = 2,
+      fixedRangeX = fixedRangeX,
+      fixedRangeY = fixedRangeY,
+      logCaseYaxis = input$logCases,
+      caseAverage = input$caseAverage,
+      caseNormalize = input$caseNormalize,
+      caseLoess = input$caseLoess,
+      caseDeconvoluted = input$caseDeconvoluted,
+      regionColors = cantonColors,
+      translator = i18n(),
+      language = input$lang,
+      widgetID = NULL,
+      focusRegion = "Switzerland (Total)",
+      visibilityNonFocus = "legendonly")
 
-  #   estimates <- estimatesSwitzerlandPlot() %>%
-  #     filter(!str_detect(region, "grR"))
-  #   caseData <- caseDataSwitzerlandPlot() %>%
-  #     filter(region %in% estimates$region)
+      return(plot)
+  })
 
-  #   cantonColors1 <- viridis(length(unique(caseData$region)))
-  #   names(cantonColors1) <- unique(caseData$region)
-  #   cantonColors1["Switzerland"] <- "#666666"
+  output$greaterRegionPlot <- renderPlotly({
 
-  #   cantonColors2 <- saturation(cantonColors1, value = 0.1)
-  #   names(cantonColors2) <- str_c(names(cantonColors1), " truncated")
+    reData <- reData()
 
-  #   cantonColors <- c(cantonColors1, cantonColors2)
-  #   cantonColors["Switzerland truncated"] <- "#BBBBBB"
+    caseData <- reData$caseData[["CHE"]] %>%
+      filter(str_detect(region, "grR") | region == "CHE") %>%
+      mutate(
+        region = str_remove(region, "grR "),
+        data_type = fct_drop(data_type)
+      )
 
-  #   latestDataCH <- latestData %>%
-  #     filter(
-  #       country == "Switzerland",
-  #       region %in% unique(caseData$region),
-  #       source %in% unique(caseData$source)) %>%
-  #     group_by(source) %>%
-  #     filter(date == max(date)) %>%
-  #     ungroup() %>%
-  #     dplyr::select(source, date) %>%
-  #     distinct() %>%
-  #     mutate(source = sapply(source, i18n()$t,  USE.NAMES = FALSE))
+    estimatePlotRanges <- reData$estimateRanges[[icountry]]
 
-  #   plot <- rEffPlotlyRegion(
-  #     caseData = caseData,
-  #     estimates = estimates,
-  #     interventionsCH(),
-  #     latestDataCH,
-  #     startDate = min(caseData$date) - 1,
-  #     endDate = max(caseData$date) + 1,
-  #     caseDataRightTruncation = 2,
-  #     fixedRangeX = fixedRangeX,
-  #     fixedRangeY = fixedRangeY,
-  #     logCaseYaxis = input$logCases,
-  #     caseAverage = input$caseAverage,
-  #     caseNormalize = input$caseNormalize,
-  #     caseLoess = input$caseLoess,
-  #     caseDeconvoluted = input$caseDeconvoluted,
-  #     popSizes = popSizes,
-  #     regionColors = cantonColors,
-  #     translator = i18n(),
-  #     language = input$lang,
-  #     widgetID = NULL,
-  #     focusRegion = "Switzerland (Total)",
-  #     visibilityNonFocus = "legendonly")
+    estimates <- reData$estimates[["CHE"]] %>%
+      filter(
+        str_detect(region, "grR") | region == "CHE",
+        estimate_type == input$estimation_type_select,
+        data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
+      mutate(
+        region = fct_drop(str_remove(region, "grR ")),
+        country = fct_drop(country),
+        data_type = fct_drop(data_type)
+      ) %>%
+      group_by(data_type) %>%
+      filter(
+        between(date,
+          left = estimatePlotRanges[["CHE"]][["start"]][[as.character(data_type[1])]],
+          right = estimatePlotRanges[["CHE"]][["end"]][[as.character(data_type[1])]]),
+      ) %>%
+      ungroup()
 
-  #     return(plot)
-  # })
+    #filter out regions without estimations due to low case counts
+    caseData <- caseData %>%
+      filter(region %in% unique(estimates$region))
 
-  # output$greaterRegionInteractivePlot <- renderPlotly({
+    interventionsCH <- interventions[["CHE"]] %>%
+      mutate(
+        text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
+        tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
 
-  #   rEffData <- estimatesSwitzerlandPlot() %>%
-  #     filter(str_detect(region, "grR") | region == "Switzerland") %>%
-  #     mutate(region = str_remove(region, "grR "))
-  #   caseData <- caseDataSwitzerlandPlot() %>%
-  #     mutate(region = str_remove(region, "grR ")) %>%
-  #     filter(region %in% rEffData$region)
+    updateDataCHE <- updateData()[["CHE"]] %>%
+      filter(
+        region %in% unique(caseData$region),
+        source %in% unique(caseData$source)) %>%
+      group_by(source) %>%
+      filter(lastChanged == max(lastChanged)) %>%
+      ungroup() %>%
+      dplyr::select(source, data_type, lastChanged) %>%
+      distinct() %>%
+      mutate(source = sapply(source, i18n()$t,  USE.NAMES = FALSE))
 
-  #   popSizesGrR <- popSizes %>%
-  #     filter(str_detect(region, "grR") | region == "Switzerland") %>%
-  #     mutate(region = str_remove(region, "grR "))
+    greaterRegionsColors1 <- viridis(length(unique(caseData$region)))
+    names(greaterRegionsColors1) <- unique(caseData$region)
+    greaterRegionsColors1["CHE"] <- "#666666"
 
-  #   greaterRegionColors1 <- viridis(length(unique(caseData$region)))
-  #   names(greaterRegionColors1) <- unique(caseData$region)
-  #   greaterRegionColors1["Switzerland"] <- "#666666"
+    greaterRegionsColors2 <- saturation(greaterRegionsColors1, value = 0.1)
+    names(greaterRegionsColors2) <- str_c(names(greaterRegionsColors1), " truncated")
 
-  #   greaterRegionColors2 <- saturation(greaterRegionColors1, value = 0.1)
-  #   names(greaterRegionColors2) <- str_c(names(greaterRegionColors1), " truncated")
+    greaterRegionsColors <- c(greaterRegionsColors1, greaterRegionsColors2)
+    greaterRegionsColors["CHE truncated"] <- "#BBBBBB"
 
-  #   greaterRegionColors <- c(greaterRegionColors1, greaterRegionColors2)
-  #   greaterRegionColors["Switzerland truncated"] <- "#BBBBBB"
+    plot <- rEffPlotlyRegion(
+      caseData = caseData,
+      estimates = estimates,
+      interventionsCH,
+      updateDataCHE,
+      startDate = min(caseData$date) - 1,
+      endDate = max(caseData$date) + 1,
+      caseDataRightTruncation = 2,
+      fixedRangeX = fixedRangeX,
+      fixedRangeY = fixedRangeY,
+      logCaseYaxis = input$logCases,
+      caseAverage = input$caseAverage,
+      caseNormalize = input$caseNormalize,
+      caseLoess = input$caseLoess,
+      caseDeconvoluted = input$caseDeconvoluted,
+      regionColors = greaterRegionsColors,
+      translator = i18n(),
+      language = input$lang,
+      widgetID = NULL,
+      focusRegion = "Switzerland (Total)",
+      visibilityNonFocus = "legendonly")
 
-  #   latestDataCH <- latestData %>%
-  #     filter(
-  #       country == "Switzerland",
-  #       region %in% unique(caseData$region),
-  #       source %in% unique(caseData$source)) %>%
-  #     group_by(source) %>%
-  #     filter(date == max(date)) %>%
-  #     ungroup() %>%
-  #     dplyr::select(source, date) %>%
-  #     distinct() %>%
-  #     mutate(source = sapply(source, i18n()$t,  USE.NAMES = FALSE))
+      return(plot)
+  })
 
-  #   plot <- rEffPlotlyRegion(
-  #     caseData = caseData,
-  #     estimates = rEffData,
-  #     interventionsCH(),
-  #     latestDataCH,
-  #     startDate = min(caseData$date) - 1,
-  #     endDate = max(caseData$date) + 1,
-  #     caseDataRightTruncation = 2,
-  #     fixedRangeX = fixedRangeX,
-  #     fixedRangeY = fixedRangeY,
-  #     logCaseYaxis = input$logCases,
-  #     caseAverage = input$caseAverage,
-  #     caseNormalize = input$caseNormalize,
-  #     caseLoess = input$caseLoess,
-  #     caseDeconvoluted = input$caseDeconvoluted,
-  #     popSizes = popSizesGrR,
-  #     regionColors = greaterRegionColors,
-  #     translator = i18n(),
-  #     language = input$lang,
-  #     widgetID = NULL,
-  #     focusRegion = "Switzerland (Total)",
-  #     visibilityNonFocus = "legendonly")
+  output$ComparisonPlot <- renderPlotly({
 
-  #   return(plot)
-  # })
+    reData <- reData()
 
-  # output$ComparisonPlot <- renderPlotly({
+    caseData <- bind_rows(reData$caseData) %>%
+      filter(
+        data_type == input$data_type_select,
+        region %in% countryList$countryIso3) %>%
+      mutate(
+        data_type = fct_drop(data_type)
+      )
 
-  #   caseData <- caseDataOverview()
-  #   estimates <- estimatesOverview()
+    estimatePlotRanges <- reData$estimateRanges
 
-  #   focusCountry <- "Switzerland"
-  #   countryColors1 <- viridis(length(countryList))
-  #   names(countryColors1) <- countryList
-  #   countryColors1[focusCountry] <- "#666666"
+    estimates <- bind_rows(reData$estimates) %>%
+      filter(
+        data_type == input$data_type_select,
+        estimate_type == input$estimation_type_select,
+        region %in% countryList$countryIso3) %>%
+      group_by(countryIso3, data_type) %>%
+      filter(
+        between(date,
+          left = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["start"]][[as.character(data_type[1])]],
+          right = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["end"]][[as.character(data_type[1])]]),
+      ) %>%
+      ungroup() %>%
+      mutate(
+        data_type = fct_drop(data_type)
+      )
 
-  #   countryColors2 <- saturation(countryColors1, value = 0.1)
-  #   names(countryColors2) <- str_c(names(countryColors1), " truncated")
+    #filter out regions without estimations due to low case counts
+    caseData <- caseData %>%
+      filter(region %in% unique(estimates$region))
 
-  #   countryColors <- c(countryColors1, countryColors2)
-  #   countryColors[str_c(focusCountry, " truncated")] <- "#BBBBBB"
+    focusCountry <- "Switzerland"
+    countryColors1 <- viridis(length(countryList$country))
+    names(countryColors1) <- countryList$country
+    countryColors1[focusCountry] <- "#666666"
 
-  #   latestDataComparison <- latestDataComp() %>%
-  #     ungroup() %>%
-  #     dplyr::select(source, date) %>%
-  #     group_by(source) %>%
-  #     filter(date == max(date)) %>%
-  #     distinct()
+    countryColors2 <- saturation(countryColors1, value = 0.1)
+    names(countryColors2) <- str_c(names(countryColors1), " truncated")
 
-  #   rEffPlotlyComparison(
-  #     caseData = caseData,
-  #     estimates = estimates,
-  #     lastDataDate = latestDataComparison,
-  #     startDate = min(estimates$date) - 14,
-  #     focusCountry = focusCountry,
-  #     fixedRangeX = fixedRangeX,
-  #     fixedRangeY = fixedRangeY,
-  #     caseDataRightTruncation = 2,
-  #     logCaseYaxis = input$logCases,
-  #     caseAverage = input$caseAverage,
-  #     caseNormalize = input$caseNormalize,
-  #     caseLoess = input$caseLoess,
-  #     caseDeconvoluted = input$caseDeconvoluted,
-  #     popSizes = popSizes,
-  #     countryColors = countryColors,
-  #     translator = i18n(),
-  #     language = input$lang,
-  #     widgetID = NULL)
+    countryColors <- c(countryColors1, countryColors2)
+    countryColors[str_c(focusCountry, " truncated")] <- "#BBBBBB"
 
-  # })
+    updateDataComparison <- bind_rows(updateData()) %>%
+      filter(data_type == input$data_type_select) %>%
+      ungroup() %>%
+      select(-region) %>%
+      group_by(countryIso3, country, source, data_type) %>%
+      summarize(
+        lastChanged = max(lastChanged),
+        .groups = "keep") %>%
+      ungroup()
 
+    rEffPlotlyComparison(
+      caseData = caseData,
+      estimates = estimates,
+      lastDataDate = updateDataComparison,
+      startDate = min(estimates$date) - 14,
+      focusCountry = focusCountry,
+      fixedRangeX = fixedRangeX,
+      fixedRangeY = fixedRangeY,
+      caseDataRightTruncation = 2,
+      logCaseYaxis = input$logCases,
+      caseAverage = input$caseAverage,
+      caseNormalize = input$caseNormalize,
+      caseLoess = input$caseLoess,
+      caseDeconvoluted = input$caseDeconvoluted,
+      countryColors = countryColors,
+      translator = translator,
+      language = input$lang,
+      widgetID = NULL)
 
-  # # download
-  # output$downloadCHestimates <- downloadHandler(
-  #   filename = function() {
-  #     str_c(format(Sys.Date(), "%Y%m%d"), "-ReEstimatesCH.csv")
-  #   },
-  #   content = function(file) {
-  #     write_csv(estimatesSwitzerland(), file)
-  #   }
-  # )
+  })
 
-  # output$downloadEUestimates <- downloadHandler(
-  #   filename = function() {
-  #     str_c(format(Sys.Date(), "%Y%m%d"), "-ReEstimatesEU.csv")
-  #   },
-  #   content = function(file) {
-  #     write_csv(estimatesEU(), file)
-  #   }
-  # )
+  # download
+  output$downloadCHEstimates <- downloadHandler(
+    filename = function() {
+      str_c(format(Sys.Date(), "%Y%m%d"), "-ReEstimatesCH.csv")
+    },
+    content = function(file) {
+      write_csv(reData()$estimates[["CHE"]], file)
+    }
+  )
 
-  # # source table
-  # output$sourcesTable <- renderDataTable({
-  #   tableData <- latestData %>%
-  #     ungroup() %>%
-  #     dplyr::select(source, sourceLong, data_type, url) %>%
-  #     distinct() %>%
-  #     group_by(source, sourceLong, url) %>%
-  #     dplyr::summarize(data_type = str_c(data_type, collapse = ", ")) %>%
-  #     mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
-  #     dplyr::select("Source" = source, "Description" = sourceLong, "Data types" = data_type, "URL" = url) %>%
-  #     arrange(Source)
+  output$downloadAllEstimates <- downloadHandler(
+    filename = function() {
+      str_c(format(Sys.Date(), "%Y%m%d"), "-ReEstimates.csv")
+    },
+    content = function(file) {
+      write_csv(bind_rows(reData()$estimates), file)
+    }
+  )
 
-  #   return(tableData)
-  # }, escape = FALSE, options = list(paging = FALSE, searching = FALSE))
+  # source table
+  output$sourcesTable <- renderDataTable({
+    dataSources()
+  }, escape = FALSE, options = list(paging = FALSE, searching = FALSE))
 
   # Render UI
   output$menu <- renderMenu({
@@ -444,8 +457,9 @@ server <- function(input, output, session) {
       ),
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")),
         expandedName = "euMenu", startExpanded = stateVals$sidebarExpanded == "euMenu",
-        lapply(c("Comparison", countryList), function(i) {
-          menuSubItem(i, tabName = str_remove(i, " "), icon = icon("chart-area"))
+        menuSubItem("Comparison", tabName = "Comparison", icon = icon("chart-area")),
+        lapply(countryList$countryIso3, function(i) {
+          menuSubItem(countryList$country[countryList$countryIso3 == i], tabName = i, icon = icon("chart-area"))
         })
       ),
       menuItem(HTML(i18n()$t("Download R<sub>e</sub> estimates")),
@@ -485,7 +499,7 @@ server <- function(input, output, session) {
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland")),
         width = 12,
-        plotlyOutput("SwitzerlandPlot", width = "100%", height = "800px")
+        plotlyOutput("CHEPlot", width = "100%", height = "800px")
       ),
       fluidRow(
         column(width = 8,
@@ -512,7 +526,7 @@ server <- function(input, output, session) {
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for cantons")),
       width = 12,
-          plotlyOutput("cantonInteractivePlot", width = "100%", height = "800px")
+          plotlyOutput("cantonPlot", width = "100%", height = "800px")
       ),
       fluidRow(
         box(width = 12,
@@ -526,7 +540,7 @@ server <- function(input, output, session) {
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for greater regions of Switzerland")),
         width = 12,
-        plotlyOutput("greaterRegionInteractivePlot", width = "100%", height = "800px")
+        plotlyOutput("greaterRegionPlot", width = "100%", height = "800px")
       ),
       fluidRow(
         column(width = 7,
@@ -534,15 +548,15 @@ server <- function(input, output, session) {
             includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
           )
         ),
-        column(width = 5,
-          infoBox(width = 12,
-            i18n()$t("Last Data Updates"),
-            HTML(dataUpdatesTable(filter(latestData,
-              country == "Switzerland", source %in% c("FOPH")),
-              lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
-              icon = icon("exclamation-circle"),
-            color = "purple"
-          )
+        column(width = 5
+          # infoBox(width = 12,
+          #   i18n()$t("Last Data Updates"),
+          #   HTML(dataUpdatesTable(filter(latestData,
+          #     country == "Switzerland", source %in% c("FOPH")),
+          #     lastCheck, dateFormat = i18n()$t("%Y-%m-%d"))),
+          #     icon = icon("exclamation-circle"),
+          #   color = "purple"
+          # )
         )
       )
     )
@@ -560,13 +574,13 @@ server <- function(input, output, session) {
   })
 
   # country UIs
-  lapply(countryList, function(i) {
-    output[[str_c(str_remove(i, " "), "UI")]] <- renderUI({
+  lapply(countryList$countryIso3, function(i) {
+    output[[str_c(i, "UI")]] <- renderUI({
       fluidRow(
         box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) in Europe - ",
-          i))),
+          countryList$country[countryList$countryIso3 == i]))),
           width = 12,
-          plotlyOutput(str_c(str_remove(i, " "), "Plot"), width = "100%", height = "700px")
+          plotlyOutput(str_c(i, "Plot"), width = "100%", height = "700px")
         ),
         fluidRow(
           box(width = 12,
@@ -583,7 +597,7 @@ server <- function(input, output, session) {
           "Comparison"))),
           width = 12,
           radioButtons("data_type_select", "Select Data Type to compare",
-            choices = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"),
+            choices = c("Confirmed cases", "Hospitalized patients", "Deaths"),
             selected = "Confirmed cases", inline = TRUE),
           plotlyOutput("ComparisonPlot", width = "100%", height = "700px")
         ),
@@ -593,8 +607,8 @@ server <- function(input, output, session) {
                 includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
               )
           ),
-          column(width = 4,
-            uiOutput("ComparisonDataSourceUI")
+          column(width = 4#,
+            #uiOutput("ComparisonDataSourceUI")
           )
         )
       )
@@ -616,23 +630,23 @@ server <- function(input, output, session) {
     fluidPage(
       fluidRow(
         box(title = HTML(i18n()$t("Download estimates for Switzerland")), width = 12,
-          downloadLink("downloadCHestimates", "Download estimates (.csv)")
+          downloadLink("downloadCHEstimates", "Download estimates (.csv)")
         )
       ),
       fluidRow(
-        box(title = HTML(i18n()$t("Download estimates for Europe")), width = 12,
-            downloadLink("downloadEUestimates", "Download estimates (.csv)")
+        box(title = HTML(i18n()$t("Download all estimates")), width = 12,
+            downloadLink("downloadAllEstimates", "Download estimates (.csv)")
         )
       )
     )
   })
 
   output$dashboardBodyUI <- renderUI({
-    tabList <- c("ch", "cantons", "greaterRegions", "download", "Comparison", countryList, "about")
+    tabList <- c("ch", "cantons", "greaterRegions", "download", "Comparison", countryList$countryIso3, "about")
     tabs <- lapply(
       tabList,
       function(i) {
-        tabItem(tabName = str_c(str_remove(i, " ")), uiOutput(str_c(str_remove(i, " "), "UI")))
+        tabItem(tabName = str_c(i), uiOutput(str_c(i, "UI")))
       })
     return(do.call(tabItems, tabs))
   })
