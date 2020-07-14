@@ -8,7 +8,6 @@ library(tidyverse)
 
 source("otherScripts/ReffPlotly.R")
 source("utils.R")
-source("otherScripts/2_utils_getInfectionIncidence.R") # for Loess function
 
 # set up translation
 translator <- Translator$new(translation_json_path = file.path("data/shinyTranslations.json"))
