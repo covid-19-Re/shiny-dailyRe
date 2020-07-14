@@ -23,7 +23,7 @@ source(here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("CHE")
+  args <- c("ZAF")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -35,14 +35,16 @@ names(args) <- "country"
       filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
       mutate(region = countryIso3)
     popDataCH <- read_csv(
-      file = here("app/data/popSizesCHFL.csv"),
+      file = here("app/data/additionalPopSizes.csv"),
       col_types = cols(
         .default = col_character(),
         populationSize = col_double()
       )
     )
+    continents <- read_csv("app/data/continents.csv", col_types = cols(.default = col_character()))
     popData <- bind_rows(popDataWorldBank, popDataCH) %>%
-      select(countryIso3, country, region, populationSize)
+      select(countryIso3, country, region, populationSize) %>%
+      left_join(continents, by = "countryIso3")
     saveRDS(popData, file = popDataPath)
   } else {
     popData <- readRDS(popDataPath)
@@ -58,7 +60,7 @@ names(args) <- "country"
       popData,
       by = c("countryIso3", "region")
     )
-  
+
   # check for changes in country data
   countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Data.rds"))
   if (file.exists(countryDataPath)) {

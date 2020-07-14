@@ -33,7 +33,11 @@ owncloudcmd -n -s ../data/BAG \
 echo "running R script to extract BAG data & calculate delays ..."
 runRScript format_BAG_data.R
 
-for i in "CHE" "AUT" "BEL" "FRA" "DEU" "ITA" "ESP" "SWE" "GBR"
+for i in "CHE" "AUT" "BEL" "FRA" "DEU" "ITA" "ESP" "SWE" "GBR" "NLD" "ZAF"
 do
 	runRScript ReCountry.R "$i"
+  if [ "$i" = "CHE" ]
+  then
+    runRScript makeCHplots.R
+  fi
 done

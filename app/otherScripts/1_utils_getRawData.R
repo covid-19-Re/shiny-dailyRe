@@ -889,6 +889,93 @@ getDataGBR <- function(ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
   return(allData)
 }
 
+##### South Africa #####
+
+getConfirmedCasesZAF <- function(
+  url = paste0("https://raw.githubusercontent.com/dsfsi/covid19za/master/data/",
+  "covid19za_provincial_cumulative_timeline_confirmed.csv")) {
+    confirmedCases <- read_csv(url,
+        col_types = cols(
+          .default = col_double(),
+          date = col_date(format = "%d-%m-%Y"),
+          source = col_character())) %>%
+      select(-YYYYMMDD, -source) %>%
+      pivot_longer(cols = EC:total, names_to = "region") %>%
+      arrange(region, date) %>%
+      fill(value, .direction = "down") %>%
+      group_by(region) %>%
+      transmute(
+        date = date,
+        countryIso3 = "ZAF",
+        region = recode(region,
+          EC = "Eastern Cape",
+          FS = "Free State",
+          GP = "Gauteng",
+          KZN = "KwaZulu-Natal",
+          LP = "Limpopo",
+          MP = "Mpumalanga",
+          NC = "Northern Cape",
+          NW = "North West",
+          WC = "Western Cape",
+          UNKNOWN = "Unknown",
+          total = "ZAF"),
+        data_type = "confirmed",
+        value = diff(c(0, value)),
+        variable = "incidence",
+        source = "DSFSI"
+      )
+    # replace negative numbers by 0
+    confirmedCases$value[confirmedCases$value < 0] <- 0
+
+    return(confirmedCases)
+  }
+
+getDeathsZAF <- function(
+  url = paste0("https://raw.githubusercontent.com/dsfsi/covid19za/master/data/",
+  "covid19za_provincial_cumulative_timeline_deaths.csv")) {
+    deaths <- read_csv(url,
+        col_types = cols(
+          .default = col_double(),
+          date = col_date(format = "%d-%m-%Y"),
+          source = col_character())) %>%
+      select(-YYYYMMDD, -source) %>%
+      pivot_longer(cols = EC:total, names_to = "region") %>%
+      arrange(region, date) %>%
+      fill(value, .direction = "down") %>%
+      group_by(region) %>%
+      transmute(
+        date = date,
+        countryIso3 = "ZAF",
+        region = recode(region,
+          EC = "Eastern Cape",
+          FS = "Free State",
+          GP = "Gauteng",
+          KZN = "KwaZulu-Natal",
+          LP = "Limpopo",
+          MP = "Mpumalanga",
+          NC = "Northern Cape",
+          NW = "North West",
+          WC = "Western Cape",
+          UNKNOWN = "Unknown",
+          total = "ZAF"),
+        data_type = "deaths",
+        value = diff(c(0, value)),
+        variable = "incidence",
+        source = "DSFSI"
+      )
+    # replace negative numbers by 0
+    deaths$value[deaths$value < 0] <- 0
+
+    return(deaths)
+  }
+
+getDataZAF <- function() {
+  confirmedCases <- getConfirmedCasesZAF()
+  deaths <- getDeathsZAF()
+  allData <- bind_rows(confirmedCases, deaths)
+  return(allData)
+}
+
 ##### generic functions #####
 
 # currently implemented
@@ -921,6 +1008,8 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
       allDataList[[i]] <- getDataCHE(pathToHospData = here::here("app/data/CH"))
     } else if (countries[i] == "GBR") {
       allDataList[[i]] <- getDataGBR(ECDCtemp = ECDCtemp, HMDtemp = HMDtemp, tReload = tReload)
+    } else if (countries[i] == "ZAF") {
+      allDataList[[i]] <- getDataZAF()
     } else {
       allDataList[[i]] <- getDataGeneric(countries[i], ECDCtemp = ECDCtemp, HMDtemp = HMDtemp, tReload = tReload)
     }
