@@ -1,6 +1,8 @@
 <h4>Einschätzung der momentanen epidemiologischen Lage</h4>
 
-Die effektive Reproduktionszahl R<sub>e</sub> war Anfang März zwischen 2-3.5, was Schätzungen für andere Länder entspricht. R<sub>e</sub>  ist Mitte März 2020 unter den kritischen Schwellenwert von 1 gefallen. Das R<sub>e</sub> ist seit den niedrigsten Werten Mitte April kontinuierlich angestiegen. Seit der zweiten Juni-Woche ist R<sub>e</sub> wieder signifikant über 1.
+Die effektive Reproduktionszahl R<sub>e</sub> war Anfang März zwischen 2-3.5, was Schätzungen für andere Länder entspricht. R<sub>e</sub> ist Mitte März 2020 unter den kritischen Schwellenwert von 1 gefallen. Das R<sub>e</sub> ist ab der zweiten Mai-Woche wieder angestiegen. Mitte Juni wurde ein Höchststand des R<sub>e</sub> mit einem Wert von 1.4-1.9 erreicht. Momentan ist das R<sub>e</sub> wieder tiefer und das Unsicherheitsintervall schliesst den Wert von 1 ein.
+
+Im Juni ist die Anzahl der wöchentlichen Tests stark angestiegen. Auch bei Einbezug dieses Anstiegs lag der Schätzwert von R<sub>e</sub> Mitte Juni signifikant über 1. Dieses Resultat spiegelt den beobachteten Anstieg der Test-Positivität wieder. Die Spezifität der PCR-Tests ist sehr hoch, wodurch es zu praktisch keinen falsch positiven Resultaten kommt welche den Schätzwert beeinflussen könnten.  Zusätzlich zu den laborbestätigten Fällen war im Juni auch ein Anstieg der Hospitalisierungen zu beobachten. Insgesamt deuten alle von uns betrachteten Daten und Analysen auf eine exponentielle Ausbreitung von COVID-19 im Juni hin. Momentan hat sich die Situation etwas entspannt. Wir weisen jedoch generell darauf hin, dass die Schätzungen der letzten Tage leichten Schwankungen unterliegen können.
 
 <h4>Methoden</h4>
 

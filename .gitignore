@@ -4,9 +4,10 @@ app/data/*.Rdata
 app/data/*.rds
 app/data/*.Rd
 app/data/temp
+app/data/exploration
 app/data/BAG
 app/data/CH
-app/data/E*.xlsx
+app/data/*.xlsx
 app/otherScripts/*.Rout
 app/otherScripts/*.Rdata
 app/www/*

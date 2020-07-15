@@ -103,7 +103,7 @@ saveRDS(updateData, updateDataPath)
 # get number of test data
 if (args["country"] %in% c("CHE")) {
   testsDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Tests.rds"))
-  
+
   bagFiles <- list.files(here("app", "data", "BAG"),
     pattern = "*Time_series_tests.csv",
     full.names = TRUE,
@@ -141,7 +141,7 @@ if (!isTRUE(dataUnchanged)) {
     # load functions
       source(here("app/otherScripts/2_utils_getInfectionIncidence.R"))
     # load parameter
-      source(here("app/otherScripts/utils_InfectionIncidencePars.R"))
+      source(here("app/otherScripts/2_params_InfectionIncidencePars.R"))
     # load empirical delays
       delays_data_path <- here("app/data/CH/FOPH_data_delays.csv")
       delays_onset_to_count <- read_csv(delays_data_path,
@@ -150,6 +150,18 @@ if (!isTRUE(dataUnchanged)) {
           onset_date = col_date(format = ""),
           count_date = col_date(format = ""),
           delay = col_number()))
+    # constant delay distribution
+    constant_delay_distributions <- list()
+    for (type_i in unique(names(shape_onset_to_count))) {
+      m <- get_vector_constant_waiting_time_distr(
+        shape_incubation,
+        scale_incubation,
+        shape_onset_to_count[[type_i]],
+        scale_onset_to_count[[type_i]])
+
+      constant_delay_distributions <- c(constant_delay_distributions, list(m))
+    }
+    names(constant_delay_distributions) <- unique(names(shape_onset_to_count))
     # filter out regions with to few cases for estimation
       countryData <- countryData %>%
         filterRegions(threshholdConfirmedCases = 500)
@@ -189,17 +201,15 @@ if (!isTRUE(dataUnchanged)) {
 
       deconvolvedData[[1]] <- get_all_infection_incidence(
         countryData,
+        constant_delay_distributions = constant_delay_distributions,
         onset_to_count_empirical_delays = delays_onset_to_count,
-        data_types = c(
-          "Confirmed cases",
-          "Hospitalized patients",
-          "Deaths"),
+        data_types = c("Confirmed cases",
+                      "Hospitalized patients",
+                      "Deaths"),
         shape_incubation = shape_incubation,
         scale_incubation = scale_incubation,
-        shape_onset_to_count = shape_onset_to_count,
-        scale_onset_to_count = scale_onset_to_count,
         min_chi_squared = 1,
-        maximum_iterations = 20,
+        maximum_iterations = 100,
         n_bootstrap = 50,
         verbose = FALSE)
 
@@ -207,18 +217,16 @@ if (!isTRUE(dataUnchanged)) {
           "Hospitalized patients - onset" %in% countryData$data_type) {
         deconvolvedData[[2]] <- get_all_infection_incidence(
           countryData,
+          constant_delay_distributions = constant_delay_distributions,
           onset_to_count_empirical_delays = delays_onset_to_count,
-          data_types = c(
-            "Hospitalized patients - admission",
-            "Hospitalized patients - onset"),
+          data_types = c("Hospitalized patients - admission",
+                        "Hospitalized patients - onset"),
           shape_incubation = shape_incubation,
           scale_incubation = scale_incubation,
-          shape_onset_to_count = shape_onset_to_count,
-          scale_onset_to_count = scale_onset_to_count,
           min_chi_squared = 1,
-          maximum_iterations = 20,
+          maximum_iterations = 100,
           n_bootstrap = 50,
-          verbose = FALSE)
+          verbose = F)
         deconvolvedData[[2]] <- deconvolvedData[[2]] %>%
           group_by(date, country, region, data_type, source, replicate, variable) %>%
           summarise(value = sum(value), .groups = "keep") %>%

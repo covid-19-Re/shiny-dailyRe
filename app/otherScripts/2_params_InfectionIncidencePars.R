@@ -1,3 +1,5 @@
+### Waiting time distributions ##
+## hardcoded for now, but to be taken outside of script
 # incubation: mean = 5.3, sd = 3.2 (Linton et al., best gamma distr fit)
 mean_incubation <- 5.3
 sd_incubation <- 3.2
