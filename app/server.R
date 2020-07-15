@@ -23,39 +23,50 @@ server <- function(input, output, session) {
   # static Data
   popData <- readRDS(pathToPopData)
   countryList <- tibble(
-    countryIso3 = unique(
-      str_match(
-        string = list.files(path = pathToCountryData, pattern = ".*-Estimates"),
-        pattern = "(.*)-.*"
-      )[, 2]
-  )) %>%
-  left_join(distinct(select(popData, countryIso3, country, continent)), by = "countryIso3")
+      countryIso3 = unique(
+        str_match(
+          string = list.files(path = pathToCountryData, pattern = ".*-Estimates"),
+          pattern = "(.*)-.*"
+        )[, 2]
+        )
+    ) %>%
+    left_join(distinct(select(popData, countryIso3, country, continent)), by = "countryIso3")
 
   countryListContinent <- countryList %>%
-    group_by(continent) %>%
-    group_split(.keep = FALSE) %>%
-    as.list()
-
-  names(countryListContinent) <- countryList %>% group_by(continent) %>% group_keys() %>% .$continent
-
-  interventions <- read_csv(
-    str_c(pathToInterventionData, "interventions.csv"),
-    col_types = cols(
-      .default = col_character(),
-      date = col_date(format = ""),
-      y = col_double()
-    )) %>%
-    split(f = .$countryIso3)
+    split(f = .$continent)
 
   # reactive Data
-  reData <- reactivePoll(10 * 60 * 1000, session,
+  interventions <- reactivePoll(1000, session,
+    checkFunc = function() {
+      file.mtime(str_c(pathToInterventionData, "interventions.csv"))
+    },
+    valueFunc = function() {
+      interventions <- read_csv(
+        str_c(pathToInterventionData, "interventions.csv"),
+        col_types = cols(
+          .default = col_character(),
+          date = col_date(format = ""),
+          y = col_double()
+        )) %>%
+        split(f = .$countryIso3)
+      return(interventions)
+    }
+  )
+
+
+  reData <- reactivePoll(1000, session,
     checkFunc = function() {
       # check estimates (only load data & deconvoluted once script is complete)
       file.mtime(list.files(path = pathToCountryData, full.names = TRUE, pattern = ".*-Estimates"))
     },
     valueFunc = function() {
       reData <- list(caseData = list(), estimates = list(), estimateRanges = list(), tests = list())
-      for (icountry in countryList$countryIso3) {
+      countries <- unique(
+        str_match(
+          string = list.files(path = pathToCountryData, pattern = ".*-Estimates"),
+          pattern = "(.*)-.*"
+        )[, 2])
+      for (icountry in countries) {
         deconvolutedData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-DeconvolutedData.rds"))) %>%
           select(-variable) %>%
           mutate(data_type = str_sub(data_type, 11)) %>%
@@ -109,7 +120,7 @@ server <- function(input, output, session) {
     return(dataSources)
   })
 
-  updateData <- reactivePoll(10 * 60 * 1000, session,
+  updateData <- reactivePoll(1000, session,
     checkFunc = function() {
       file.mtime(pathToUpdataData)
     },
@@ -159,7 +170,7 @@ server <- function(input, output, session) {
         ) %>%
         ungroup()
 
-      interventionsCountry <- interventions[[icountry]]
+      interventionsCountry <- interventions()[[icountry]]
 
       if(!is.null(interventionsCountry)){
         interventionsCountry <- mutate(interventionsCountry,
@@ -228,7 +239,7 @@ server <- function(input, output, session) {
       ) %>%
       ungroup()
 
-    interventionsCountry <- interventions[["CHE"]]
+    interventionsCountry <- interventions()[["CHE"]]
 
     if(!is.null(interventionsCountry)){
       interventionsCountry <- mutate(interventionsCountry,
@@ -297,7 +308,7 @@ server <- function(input, output, session) {
     caseData <- caseData %>%
       filter(region %in% unique(estimates$region))
 
-    interventionsCHE <- interventions[["CHE"]] %>%
+    interventionsCHE <- interventions()[["CHE"]] %>%
       mutate(
         text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
         tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
@@ -383,7 +394,7 @@ server <- function(input, output, session) {
     caseData <- caseData %>%
       filter(region %in% unique(estimates$region))
 
-    interventionsCHE <- interventions[["CHE"]] %>%
+    interventionsCHE <- interventions()[["CHE"]] %>%
       mutate(
         text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
         tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
@@ -616,7 +627,7 @@ server <- function(input, output, session) {
     caseData <- caseData %>%
       filter(region %in% unique(estimates$region))
 
-    interventionsZAF <- interventions[["ZAF"]]
+    interventionsZAF <- interventions()[["ZAF"]]
     if (!is.null(interventionsZAF)) {
       interventionsZAF <- mutate(interventionsZAF,
         text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
