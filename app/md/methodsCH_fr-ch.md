@@ -1,6 +1,7 @@
 <h4>Evaluation de la situation épidémique</h4>
 
 Le nombre de reproduction effectif R<sub>e</sub> à la début mars était 2-3.5, ce qui correspond à la fourchette de valeurs estimées dans d’autres endroits. Le R<sub>e</sub> est passé sous le seuil critique de 1 à la mi-mars. R<sub>e</sub> a augmenté de manière continue depuis la deuxième semaine de mai jusqu’à atteindre un pic à la mi-juin, avec des valeurs entre 1.4 et 1.9. Actuellement, R<sub>e</sub> est redescendu et l’intervalle de confiance inclut la valeur critique de 1.
+
 Le nombre de tests hebdomadaires a augmenté pendant le mois de juin. La prise en compte de cette augmentation confirme que R<sub>e</sub> était au-dessus de 1 et ce de manière significative à la mi-juin. Ce résultat reflète une augmentation du taux de tests positifs. La spécificité des tests PCR étant très élevée, le nombre de faux-positifs est très faible et ils ne biaisent donc pas les résultats. En plus de l’augmentation du nombre de tests positifs, une augmentation du nombre de personnes hospitalisées pour COVID-19 a été observée en juin. En résumé, toutes les données prises en compte ainsi que leurs analyses pointent vers une phase de croissance exponentielle de l’épidémie de COVID-19 en juin. Actuellement, la situation est moins inquiétante. Nous notons cependant que, de manière générale, les estimations récentes peuvent fluctuer légèrement d’un jour à l’autre.
 
 <h4>Méthodes</h4>
