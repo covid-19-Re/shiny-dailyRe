@@ -15,6 +15,6 @@ languageSelect <- translator$languages
 names(languageSelect) <- c("EN", "IT", "FR", "DE")
 
 pathToInterventionData <- file.path("../../covid19-additionalData/interventions/")
-pathToPopData <- file.path("data/popData.Rds")
-pathToUpdataData <- file.path("data/updateData.Rds")
+pathToPopData <- file.path("data/popData.rds")
+pathToUpdataData <- file.path("data/updateData.rds")
 pathToCountryData <- "data/countryData"
