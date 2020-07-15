@@ -135,7 +135,7 @@ cleanEnv(keepObjects = c("countryData", "dataUnchanged", "args", "popData"))
 
 # calculate Re
 # only if data has changed
-if (!isTRUE(dataUnchanged)) {
+if (!isTRUE(dataUnchanged) | file.exists(here("app", "data", "forceUpdate.txt"))) {
   cat(str_c("\n", args["country"], ": New data available. Calculating Re ...\n"))
   # get Infection Incidence
     # load functions
