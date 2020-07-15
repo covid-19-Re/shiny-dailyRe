@@ -22,7 +22,7 @@ estimateRe <- function(
   windowLength= 4,
   mean_si = 4.8,
   std_si  = 2.3) {
-  
+
   offset <- 1
   cumulativeIncidence <- 0
   while (cumulativeIncidence < minimumCumul) {
@@ -34,16 +34,16 @@ estimateRe <- function(
   }
   ## offset needs to be at least two for EpiEstim
   offset <- max(2, offset)
-  
+
   rightBound <- length(incidenceData) - (windowLength - 1)
-  
+
   if (rightBound < offset) { ## no valid data point, return empty estimate
     return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
   }
-  
+
   ## generate start and end bounds for Re estimates
   if (variationType == "step") {
-    
+
     # index in incidenceData that corresponds to the interval_end date
     interval_end_indices <- sapply(
       interval_ends,
@@ -51,16 +51,16 @@ estimateRe <- function(
         which(dates == as.Date(x))[1]
       }
     )
-    
+
     #starts and end indices of the intervals (numeric vector)
     # t_start = interval_end + 1
     t_start <- c(offset, na.omit(interval_end_indices) + 1)
     t_end <- c(na.omit(interval_end_indices), length(incidenceData))
-    
+
     if (offset >= length(incidenceData)) {
       return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
     }
-    
+
     # remove intervals if the offset is greater than the
     # end of the interval
     while (offset > t_end[1]) {
@@ -68,15 +68,15 @@ estimateRe <- function(
       t_start[1] <- offset
       t_end <- t_end[-1]
     }
-    
+
     # make sure there are no intervals beyond the length of the data
     while (t_start[length(t_start)] >= length(incidenceData)) {
       t_end <- t_end[-length(t_end)]
       t_start <- t_start[-length(t_start)]
     }
-    
+
     outputDates <- dates[t_start[1]:t_end[length(t_end)]]
-    
+
   } else if (variationType == "slidingWindow") {
     # computation intervals corresponding to every position of the
     # sliding window
@@ -87,10 +87,10 @@ estimateRe <- function(
     print("Unknown time variation.")
     return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
   }
-  
+
   ## offset dates to account for delay between infection and recorded event (testing, hospitalization, death...)
   outputDates <- outputDates - estimateOffsetting
-  
+
   if (method == "Cori") {
     R_instantaneous <- estimate_R(
       incidenceData,
@@ -118,7 +118,7 @@ estimateRe <- function(
     print("Unknown estimation method")
     return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
   }
-  
+
   if (variationType == "step") {
     R_mean <- unlist(lapply(seq_along(t_start),
                             function(x) {
@@ -140,7 +140,7 @@ estimateRe <- function(
     R_highHPD <- R_instantaneous$R$`Quantile.0.975(R)`
     R_lowHPD <- R_instantaneous$R$`Quantile.0.025(R)`
   }
-  
+
   if (rightTruncation > 0) {
     if (rightTruncation >= length(outputDates)) {
       return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
@@ -151,7 +151,7 @@ estimateRe <- function(
     R_highHPD <- R_highHPD[-seq(originalLength, by = -1, length.out = rightTruncation)]
     R_lowHPD <- R_lowHPD[-seq(originalLength, by = -1, length.out = rightTruncation)]
   }
-  
+
   if (leftTruncation > 0) {
     if (leftTruncation >= length(outputDates)) {
       return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
@@ -162,17 +162,17 @@ estimateRe <- function(
     R_highHPD <- R_highHPD[-seq(1, leftTruncation)]
     R_lowHPD <- R_lowHPD[-seq(1, leftTruncation)]
   }
-  
+
   result <- data.frame(
     date = outputDates,
     R_mean = R_mean,
     R_highHPD = R_highHPD,
     R_lowHPD = R_lowHPD)
-  
+
   result <- reshape2::melt(result, id.vars = "date")
   colnames(result) <- c("date", "variable", "value")
   result$estimate_type <- paste0(method, "_", variationType)
-  
+
   return(result)
 }
 
@@ -184,19 +184,19 @@ doReEstimation <- function(
   interval_ends = c("2020-04-01"),
   delays,
   truncations) {
-  
+
   end_result <-  data.frame()
-  
+
   for (method_i in methods) {
     for (variation_i in variationTypes) {
       incidence_data <- data_subset$value[data_subset$variable == "incidence"]
       dates <- data_subset$date[data_subset$variable == "incidence"]
-      
+
       offsetting <- delays[method_i]
-      
+
       leftTrunc <- truncations$left[method_i]
       rightTrunc <- truncations$right[method_i]
-      
+
       result <- estimateRe(
         dates = dates,
         incidenceData = incidence_data,
@@ -221,7 +221,7 @@ doReEstimation <- function(
       }
     }
   }
-  
+
   return(end_result)
 }
 
@@ -303,10 +303,10 @@ doAllReEstimations <- function(
     cat("estimating Re for data source: ", source_i, "...\n")
     for (region_i in unique(data$region)) {
       cat("  Region: ", region_i, "\n")
-      
+
       ## take region specific interval_ends
       region_interval_ends <- getIntervalEnds(interval_ends, region_i, ...)
-      
+
       ## Run EpiEstim
       for (data_type_i in unique(data$data_type)) {
         subset_data <- data %>% filter(region == region_i & source == source_i & data_type == data_type_i)
@@ -314,13 +314,13 @@ doAllReEstimations <- function(
           next
         }
         cat("    Data type: ", data_type_i, "\n")
-        
+
         delay_i <- all_delays[[data_type_i]]
         all_interval_ends <- addCustomIntervalEnds(region_interval_ends,
                                                    additional_interval_ends,
                                                    region_i,
                                                    data_type_i)
-        
+
         for (replicate_i in unique(unique(subset_data$replicate))) {
           subset_data_rep <- subset(subset_data, subset_data$replicate == replicate_i)
           results_list <- c(results_list,
