@@ -23,7 +23,7 @@ source(here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("ITA")
+  args <- c("CHE")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -99,6 +99,37 @@ for (i in unique(countryData$countryIso3)) {
 }
 
 saveRDS(updateData, updateDataPath)
+
+# get number of test data
+if (args["country"] %in% c("CHE")) {
+  testsDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Tests.rds"))
+  
+  bagFiles <- list.files(here("app", "data", "BAG"),
+    pattern = "*Time_series_tests.csv",
+    full.names = TRUE,
+    recursive = TRUE)
+
+  bagFileDates <- strptime(
+    stringr::str_match(bagFiles, ".*\\/(\\d*-\\d*-\\d*_\\d*-\\d*-\\d*)")[, 2],
+    format = "%Y-%m-%d_%H-%M-%S")
+
+  newestFile <- bagFiles[which(bagFileDates == max(bagFileDates))[1]]
+  nTests <- read_delim(file = newestFile, delim = ";",
+    col_types = cols_only(
+      Datum = col_date(format = ""),
+      `Positive Tests` = col_double(),
+      `Negative Tests` = col_double()
+    )) %>%
+    transmute(
+      date = Datum,
+      countryIso3 = "CHE",
+      region = countryIso3,
+      positiveTests = `Positive Tests`,
+      negativeTests = `Negative Tests`,
+      totalTests = positiveTests + negativeTests)
+
+  saveRDS(nTests, testsDataPath)
+}
 
 cleanEnv(keepObjects = c("countryData", "dataUnchanged", "args", "popData"))
 

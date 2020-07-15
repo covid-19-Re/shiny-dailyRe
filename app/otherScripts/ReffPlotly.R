@@ -35,6 +35,7 @@ rEffPlotly <- function(
   caseNormalize = FALSE,
   caseLoess = FALSE,
   caseDeconvoluted = FALSE,
+  nTests = NULL,
   language,
   translator,
   widgetID = "rEffplots") {
@@ -93,6 +94,16 @@ rEffPlotly <- function(
     mutate(data_type = fct_recode(data_type, !!!newLevels))
 
   pCasesTitle <- translator$t("New observations")
+  
+  if (!is.null(nTests)) {
+    caseData <- caseData %>%
+      left_join(nTests, by = c("countryIso3", "region", "date")) %>%
+      mutate(
+        incidenceRaw = incidence,
+        incidence = incidence / totalTests,
+        testPositivity = positiveTests / totalTests)
+    pCasesTitle <- str_c(pCasesTitle, " / # tests")
+  }
 
   if (caseNormalize) {
     caseData <- caseData %>%
@@ -130,15 +141,26 @@ rEffPlotly <- function(
   } else {
     caseDataTrunc <- caseData
   }
+  
+  if (!is.null(nTests)) {
+    tooltipText <- ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
+        round(incidence, 3), " ", toLowerFirst(data_type), "/ # tests (", incidenceRaw, " cases)",
+        if_else(caseNormalize, " / 100'000", ""),
+        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+        str_c("<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, "/", negativeTests, ")"),
+        "<extra></extra>")
+  } else {
+    tooltipText <- ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
+        round(incidence, 3), " ", toLowerFirst(data_type),
+        if_else(caseNormalize, " / 100'000", ""),
+        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+        "<extra></extra>")
+  }
 
   pCases <- plot_ly(data = caseDataTrunc) %>%
     add_bars(x = ~date, y = ~incidence, color = ~data_type,
       colors = plotColors,
-      text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        round(incidence, 3), " ", toLowerFirst(data_type),
-        if_else(caseNormalize, " / 100'000", ""),
-        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
-        "<extra></extra>"),
+      text = tooltipText,
       hovertemplate = "%{text}",
       legendgroup = ~data_type) %>%
     layout(

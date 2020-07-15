@@ -54,7 +54,7 @@ server <- function(input, output, session) {
       file.mtime(list.files(path = pathToCountryData, full.names = TRUE, pattern = ".*-Estimates"))
     },
     valueFunc = function() {
-      reData <- list(caseData = list(), estimates = list(), estimateRanges = list())
+      reData <- list(caseData = list(), estimates = list(), estimateRanges = list(), tests = list())
       for (icountry in countryList$countryIso3) {
         deconvolutedData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-DeconvolutedData.rds"))) %>%
           select(-variable) %>%
@@ -73,6 +73,11 @@ server <- function(input, output, session) {
           arrange(countryIso3, region, source, data_type, date)
 
         estimates <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Estimates.rds")))
+
+        testsPath <- file.path(pathToCountryData, str_c(icountry, "-Tests.rds"))
+        if (file.exists(testsPath)) {
+          reData$tests[[icountry]] <- readRDS(testsPath)
+        }
 
         reData$caseData[[icountry]] <- caseData
         reData$estimates[[icountry]] <- estimates
@@ -176,6 +181,7 @@ server <- function(input, output, session) {
         caseNormalize = input$caseNormalize,
         caseLoess = input$caseLoess,
         caseDeconvoluted = input$caseDeconvoluted,
+        nTests = NULL,
         translator = i18n(),
         language = input$lang,
         widgetID = NULL)
@@ -230,6 +236,12 @@ server <- function(input, output, session) {
         tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
     }
 
+    if(input$caseTests) {
+      nTests <- reData$tests$CHE
+    } else {
+      nTests <- NULL
+    }
+
     plot <- rEffPlotly(
       caseData = caseData,
       estimates = estimates,
@@ -244,6 +256,7 @@ server <- function(input, output, session) {
       caseNormalize = input$caseNormalize,
       caseLoess = input$caseLoess,
       caseDeconvoluted = input$caseDeconvoluted,
+      nTests = nTests,
       translator = i18n(),
       language = input$lang,
       widgetID = NULL)
@@ -724,8 +737,8 @@ server <- function(input, output, session) {
             choices = c("daily case numbers" = 1, "7-day average" = 7),
             selected = 1, inline = FALSE),
           HTML("<i>Diagnostics:</i>"),
-          checkboxInput("caseLoess", "Show Loess fit", FALSE),
-          checkboxInput("caseDeconvoluted", "Show deconvoluted case data", FALSE),
+          checkboxInput("caseLoess", "Show smoothed data (Loess Fit)", FALSE),
+          checkboxInput("caseDeconvoluted", "Show estimated infection times (deconvolution)", FALSE),
         ),
         HTML("<i>Plot 2 - R<sub>e</sub> estimates</i>"),
         div(style = "margin-left:10px !important; margin-top:10px",
@@ -758,7 +771,8 @@ server <- function(input, output, session) {
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland")),
         width = 12,
-        plotlyOutput("CHEcountryPlot", width = "100%", height = "800px")
+        plotlyOutput("CHEcountryPlot", width = "100%", height = "800px"),
+        checkboxInput("caseTests", "Normalize cases by # tests (not considered for R estimation)", FALSE)
       ),
       fluidRow(
         column(width = 8,
