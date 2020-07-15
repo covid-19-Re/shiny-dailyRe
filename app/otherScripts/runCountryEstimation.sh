@@ -38,6 +38,6 @@ do
 	runRScript ReCountry.R "$i"
   if [ "$i" = "CHE" ]
   then
-    runRScript makeCHplots.R
+    runRScript makeCHPlots.R
   fi
 done
