@@ -40,7 +40,7 @@ server <- function(input, output, session) {
     filter(variable == "incidence", data_type != "Excess deaths") %>%
     pivot_wider(names_from = "variable", values_from = "value") %>%
     group_by(country, region, source, data_type) %>%
-    mutate(incidenceLoess = getLOESSCases(date, incidence)) %>%
+    mutate(incidenceLoess = getLOESSCases(date, incidence, truncation = 2)) %>%
     bind_rows(
       readRDS(pathToRawData) %>%
         filter(variable == "incidence", data_type == "Excess deaths")  %>%
@@ -86,11 +86,11 @@ server <- function(input, output, session) {
           checkboxInput("logCases", "Logarithmic axis for cases", FALSE),
           checkboxInput("caseNormalize", "Normalize cases to per 100'000 inhabitants", FALSE),
           radioButtons("caseAverage", "Display case data as ...",
-            choices = c("daily case numbers" = 1, "7-day average" = 7),
+            choices = c("daily case numbers" = 1, "Average of last 7 days" = 7),
             selected = 1, inline = FALSE),
-          HTML("<i>Diagnostics:</i>"),
-          checkboxInput("caseLoess", "Show Loess fit", FALSE),
-          checkboxInput("caseDeconvoluted", "Show deconvoluted case data", FALSE),
+          HTML("<i>Diagnostics (for R<sub>e</sub> estimation):</i>"),
+          checkboxInput("caseLoess", "Show smoothed data (Loess Fit to daily case data)", FALSE),
+          checkboxInput("caseDeconvoluted", "Show estimated infection times (deconvolution)", FALSE),
         ),
         HTML("<i>Plot 2 - R<sub>e</sub> estimates</i>"),
         div(style = "margin-left:10px !important; margin-top:10px",
