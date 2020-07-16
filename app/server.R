@@ -782,8 +782,7 @@ server <- function(input, output, session) {
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland")),
         width = 12,
-        plotlyOutput("CHEcountryPlot", width = "100%", height = "800px"),
-        checkboxInput("caseTests", "Normalize cases by # tests (not considered for R estimation)", FALSE)
+        plotlyOutput("CHEcountryPlot", width = "100%", height = "800px")
       ),
       fluidRow(
         column(width = 8,
