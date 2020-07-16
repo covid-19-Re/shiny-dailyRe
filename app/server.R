@@ -145,7 +145,8 @@ server <- function(input, output, session) {
       caseData <- reData$caseData[[icountry]] %>%
         filter(
           region == icountry,
-          data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
+          data_type %in% c("Confirmed cases", "Confirmed cases / tests",
+            "Hospitalized patients", "Deaths", "Excess deaths")) %>%
         mutate(
           data_type = fct_drop(data_type)
         )
@@ -156,7 +157,8 @@ server <- function(input, output, session) {
         filter(
           estimate_type == input$estimation_type_select,
           region == icountry,
-          data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
+          data_type %in% c("Confirmed cases", "Confirmed cases / tests",
+            "Hospitalized patients", "Deaths", "Excess deaths")) %>%
         mutate(
           region = fct_drop(region),
           country = fct_drop(country),
@@ -192,7 +194,6 @@ server <- function(input, output, session) {
         caseNormalize = input$caseNormalize,
         caseLoess = input$caseLoess,
         caseDeconvoluted = input$caseDeconvoluted,
-        nTests = NULL,
         translator = i18n(),
         language = input$lang,
         widgetID = NULL)
@@ -214,7 +215,8 @@ server <- function(input, output, session) {
     caseData <- reData$caseData[["CHE"]] %>%
       filter(
         region == "CHE",
-        data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
+        data_type %in% c("Confirmed cases", "Hospitalized patients",
+          "Confirmed cases / tests", "Deaths", "Excess deaths")) %>%
       mutate(
         data_type = fct_drop(data_type)
       )
@@ -225,7 +227,8 @@ server <- function(input, output, session) {
       filter(
         estimate_type == input$estimation_type_select,
         region == "CHE",
-        data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
+        data_type %in% c("Confirmed cases", "Hospitalized patients",
+          "Confirmed cases / tests", "Deaths", "Excess deaths")) %>%
       mutate(
         region = fct_drop(region),
         country = fct_drop(country),
@@ -241,16 +244,10 @@ server <- function(input, output, session) {
 
     interventionsCountry <- interventions()[["CHE"]]
 
-    if(!is.null(interventionsCountry)){
+    if (!is.null(interventionsCountry)) {
       interventionsCountry <- mutate(interventionsCountry,
         text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
         tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
-    }
-
-    if(input$caseTests) {
-      nTests <- reData$tests$CHE
-    } else {
-      nTests <- NULL
     }
 
     plot <- rEffPlotly(
@@ -267,7 +264,8 @@ server <- function(input, output, session) {
       caseNormalize = input$caseNormalize,
       caseLoess = input$caseLoess,
       caseDeconvoluted = input$caseDeconvoluted,
-      nTests = nTests,
+      showTraces = "Confirmed cases / tests",
+      showTracesMode = "not",
       translator = i18n(),
       language = input$lang,
       widgetID = NULL)
@@ -520,7 +518,7 @@ server <- function(input, output, session) {
       language = input$lang,
       widgetID = NULL)
   })
-  
+
   output$EuropeComparisonPlot <- renderPlotly({
 
     reData <- reData()

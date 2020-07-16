@@ -60,6 +60,53 @@ names(args) <- "country"
       popData,
       by = c("countryIso3", "region")
     )
+  
+  # get number of tests data
+  if (args["country"] %in% c("CHE")) {
+    testsDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Tests.rds"))
+
+    bagFiles <- list.files(here("app", "data", "BAG"),
+      pattern = "*Time_series_tests.csv",
+      full.names = TRUE,
+      recursive = TRUE)
+
+    bagFileDates <- strptime(
+      stringr::str_match(bagFiles, ".*\\/(\\d*-\\d*-\\d*_\\d*-\\d*-\\d*)")[, 2],
+      format = "%Y-%m-%d_%H-%M-%S")
+
+    newestFile <- bagFiles[which(bagFileDates == max(bagFileDates))[1]]
+    nTests <- read_delim(file = newestFile, delim = ";",
+      col_types = cols_only(
+        Datum = col_date(format = ""),
+        `Positive Tests` = col_double(),
+        `Negative Tests` = col_double()
+      )) %>%
+      transmute(
+        date = Datum,
+        countryIso3 = "CHE",
+        region = countryIso3,
+        positiveTests = `Positive Tests`,
+        negativeTests = `Negative Tests`,
+        totalTests = positiveTests + negativeTests,
+        testPositivity = positiveTests / totalTests
+        )
+
+    saveRDS(nTests, testsDataPath)
+
+    countryData <- countryData %>%
+      left_join(
+        mutate(nTests, data_type = "Confirmed cases"),
+        by = c("date", "region", "countryIso3", "data_type"))
+
+    countryDataTests <- countryData %>%
+      filter(data_type == "Confirmed cases", region == "CHE") %>%
+      mutate(
+        data_type = "Confirmed cases / tests",
+        value = value / totalTests
+      )
+
+    countryData <- bind_rows(countryData, countryDataTests)
+  }
 
   # check for changes in country data
   countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Data.rds"))
@@ -99,37 +146,6 @@ for (i in unique(countryData$countryIso3)) {
 }
 
 saveRDS(updateData, updateDataPath)
-
-# get number of test data
-if (args["country"] %in% c("CHE")) {
-  testsDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Tests.rds"))
-
-  bagFiles <- list.files(here("app", "data", "BAG"),
-    pattern = "*Time_series_tests.csv",
-    full.names = TRUE,
-    recursive = TRUE)
-
-  bagFileDates <- strptime(
-    stringr::str_match(bagFiles, ".*\\/(\\d*-\\d*-\\d*_\\d*-\\d*-\\d*)")[, 2],
-    format = "%Y-%m-%d_%H-%M-%S")
-
-  newestFile <- bagFiles[which(bagFileDates == max(bagFileDates))[1]]
-  nTests <- read_delim(file = newestFile, delim = ";",
-    col_types = cols_only(
-      Datum = col_date(format = ""),
-      `Positive Tests` = col_double(),
-      `Negative Tests` = col_double()
-    )) %>%
-    transmute(
-      date = Datum,
-      countryIso3 = "CHE",
-      region = countryIso3,
-      positiveTests = `Positive Tests`,
-      negativeTests = `Negative Tests`,
-      totalTests = positiveTests + negativeTests)
-
-  saveRDS(nTests, testsDataPath)
-}
 
 cleanEnv(keepObjects = c("countryData", "dataUnchanged", "args", "popData"))
 
@@ -226,13 +242,31 @@ if (!isTRUE(dataUnchanged) | file.exists(here("app", "data", "forceUpdate.txt"))
           min_chi_squared = 1,
           maximum_iterations = 100,
           n_bootstrap = 50,
-          verbose = F)
+          verbose = FALSE)
         deconvolvedData[[2]] <- deconvolvedData[[2]] %>%
           group_by(date, country, region, data_type, source, replicate, variable) %>%
           summarise(value = sum(value), .groups = "keep") %>%
           arrange(country, region, source, data_type, variable, replicate, date) %>%
           ungroup()
       }
+
+      if (args["country"] %in% c("CHE")) {
+        countryDataTests <- countryData %>%
+          filter(region == args["country"], data_type == "Confirmed cases / tests") %>%
+          mutate(value = value * 100000)
+        deconvolvedData[[3]] <- get_all_infection_incidence(
+          countryDataTests,
+          constant_delay_distributions = constant_delay_distributions,
+          onset_to_count_empirical_delays = delays_onset_to_count,
+          data_types = c("Confirmed cases / tests"),
+          shape_incubation = shape_incubation,
+          scale_incubation = scale_incubation,
+          min_chi_squared = 1,
+          maximum_iterations = 100,
+          n_bootstrap = 50,
+          verbose = FALSE)
+      }
+
       deconvolvedCountryData <- bind_rows(deconvolvedData)
       countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-DeconvolutedData.rds"))
       saveRDS(deconvolvedCountryData, file = countryDataPath)
@@ -270,9 +304,11 @@ if (!isTRUE(dataUnchanged) | file.exists(here("app", "data", "forceUpdate.txt"))
       ### Delays applied
       all_delays <- list(
         "infection_Confirmed cases" = c(Cori = 0, WallingaTeunis = -5),
+        "infection_Confirmed cases / tests" = c(Cori = 0, WallingaTeunis = -5),
         "infection_Deaths" = c(Cori = 0, WallingaTeunis = -5),
         "infection_Hospitalized patients" = c(Cori = 0, WallingaTeunis = -5),
         "Confirmed cases" = c(Cori = 10, WallingaTeunis = 5),
+        "Confirmed cases / tests" = c(Cori = 10, WallingaTeunis = 5),
         "Deaths" = c(Cori = 20, WallingaTeunis = 15),
         "Hospitalized patients" = c(Cori = 8, WallingaTeunis = 3),
         "infection_Excess deaths" = c(Cori = 0, WallingaTeunis = -5),
@@ -299,11 +335,13 @@ if (!isTRUE(dataUnchanged) | file.exists(here("app", "data", "forceUpdate.txt"))
             data_type,
             levels = c(
               "infection_Confirmed cases",
+              "infection_Confirmed cases / tests",
               "infection_Hospitalized patients",
               "infection_Deaths",
               "infection_Excess deaths"),
             labels = c(
               "Confirmed cases",
+              "Confirmed cases / tests",
               "Hospitalized patients",
               "Deaths",
               "Excess deaths"))) %>%
