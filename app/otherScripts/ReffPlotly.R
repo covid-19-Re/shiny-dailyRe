@@ -363,6 +363,7 @@ rEffPlotlyRegion <- function(
   caseNormalize = FALSE,
   caseLoess = FALSE,
   caseDeconvoluted = FALSE,
+  regionTitle = "Canton",
   regionColors,
   translator,
   language,
@@ -511,7 +512,7 @@ rEffPlotlyRegion <- function(
         title = pCasesTitle,
         fixedRange = fixedRangeY[1],
         logAxis = logCaseYaxis),
-      legend = list(title = list(text = str_c("<b>", translator$t("Data types"), "</b>"))),
+      legend = list(title = list(text = str_c("<b>", translator$t(regionTitle), "</b>"))),
       sliders = list(
         makeSlider(zoomRange)
       )
@@ -615,7 +616,7 @@ rEffPlotlyRegion <- function(
         zeroline = TRUE),
       legend = list(
         title = list(
-          text = str_c("<b>", translator$t("Canton"), "</b>"))
+          text = str_c("<b>", translator$t(regionTitle), "</b>"))
       ),
       shapes = list(
         list(
