@@ -349,6 +349,7 @@ server <- function(input, output, session) {
       caseNormalize = input$caseNormalize,
       caseLoess = input$caseLoess,
       caseDeconvoluted = input$caseDeconvoluted,
+      regionTitle = "Canton",
       regionColors = cantonColors,
       translator = i18n(),
       language = input$lang,
@@ -671,6 +672,7 @@ server <- function(input, output, session) {
       caseLoess = input$caseLoess,
       caseDeconvoluted = input$caseDeconvoluted,
       regionColors = regionColors,
+      regionTitle = "Province",
       translator = i18n(),
       language = input$lang,
       widgetID = NULL,
@@ -861,7 +863,11 @@ server <- function(input, output, session) {
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for provinces")),
       width = 12,
-          plotlyOutput("ZAFregionPlot", width = "100%", height = "800px")
+          plotlyOutput("ZAFregionPlot", width = "100%", height = "800px"),
+          HTML(str_c("Data provided by the ",
+            "<a href=\"https://github.com/dsfsi/covid19za\">Data Science and Social Impact Research",
+            "Group @ U Pretoria</a> and the <a href=\"https://www.krisp.org.za/ngs-sa/\">Network for Genomics",
+            "Surveillance in South Africa (NGS-SA)</a>"))
       ),
       fluidRow(
         column(width = 8,
@@ -884,10 +890,10 @@ server <- function(input, output, session) {
   })
 
   # country UIs
-  lapply(countryList$countryIso3, function(i) {
+  lapply(countryList$countryIso3[countryList$countryIso3 != "ZAF"], function(i) {
     output[[str_c(i, "UI")]] <- renderUI({
       fluidRow(
-        box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) in Europe - ",
+        box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) - ",
           countryList$country[countryList$countryIso3 == i]))),
           width = 12,
           plotlyOutput(str_c(i, "Plot"), width = "100%", height = "700px")
@@ -912,6 +918,37 @@ server <- function(input, output, session) {
       )
     })
   })
+
+    output$ZAFUI <- renderUI({
+      fluidRow(
+        box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) - ",
+          countryList$country[countryList$countryIso3 == "ZAF"]))),
+          width = 12,
+          plotlyOutput("ZAFPlot", width = "100%", height = "700px"),
+          HTML(str_c("Data provided by the ",
+            "<a href=\"https://github.com/dsfsi/covid19za\">Data Science and Social Impact Research",
+            "Group @ U Pretoria</a> and the <a href=\"https://www.krisp.org.za/ngs-sa/\">Network for Genomics",
+            "Surveillance in South Africa (NGS-SA)</a>"))
+        ),
+        fluidRow(
+          column(width = 8,
+              box(width = 12,
+                includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
+              )
+          ),
+          column(width = 4,
+            infoBox(width = 12,
+              i18n()$t("Last Data Updates"),
+              HTML(
+                dataUpdatesTable(updateData()[["ZAF"]], dateFormat = i18n()$t("%Y-%m-%d"))
+              ),
+              icon = icon("exclamation-circle"),
+              color = "purple"
+            )
+          )
+        )
+      )
+    })
 
   output$EuropeComparisonUI <- renderUI({
     fluidRow(
