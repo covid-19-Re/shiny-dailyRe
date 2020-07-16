@@ -218,8 +218,7 @@ rEffPlotly <- function(
         legendgroup = ~data_type, showlegend = FALSE,
         hoverinfo = "none")
   }
-  estimates %>% filter(data_type == "Confirmed cases / tests") %>% print()
-  estimatesPlot %>% filter(data_type == "Confirmed cases / tests") %>% print()
+
   pEstimates <- plot_ly(data = estimatesPlot) %>%
     add_trace(
       x = ~date, y = ~median_R_mean, color = ~data_type, colors = plotColors,
