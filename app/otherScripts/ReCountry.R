@@ -43,7 +43,7 @@ names(args) <- "country"
     )
     continents <- read_csv("app/data/continents.csv", col_types = cols(.default = col_character()))
     popData <- bind_rows(popDataWorldBank, popDataCH) %>%
-      select(countryIso3, country, region, populationSize) %>%
+      dplyr::select(countryIso3, country, region, populationSize) %>%
       left_join(continents, by = "countryIso3")
     saveRDS(popData, file = popDataPath)
   } else {
@@ -174,7 +174,7 @@ if (condition) {
     names(constant_delay_distributions) <- unique(names(shape_onset_to_count))
     # filter out regions with to few cases for estimation
       countryData <- countryData %>%
-        filterRegions(threshholdConfirmedCases = 500)
+        filterRegions(thresholdConfirmedCases = 500)
     # country specific data filtering
       if (args["country"] == "ESP") {
         countryData <- countryData %>%
@@ -204,7 +204,7 @@ if (condition) {
       countryData <- countryData %>%
         group_by(country, region, source, data_type) %>%
         filter(date <= (max(date) - right_truncation)) %>%
-        select(-countryIso3, -populationSize) %>%
+        dplyr::select(-countryIso3, -populationSize) %>%
         ungroup()
     # Deconvolution
       deconvolvedData <- list()
@@ -317,12 +317,12 @@ if (condition) {
           median_R_lowHPD = median(R_lowHPD),
           .groups = "keep"
         ) %>%
-        select(country, region, source, data_type, estimate_type, date,
+        dplyr::select(country, region, source, data_type, estimate_type, date,
           median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
         arrange(country, region, source, data_type, estimate_type, date) %>%
         ungroup() %>%
         left_join(
-          select(popData, country, region, countryIso3),
+          dplyr::select(popData, country, region, countryIso3),
           by = c("country", "region")
         )
       countryDataPath <- here::here("app", "data", "countryData", str_c(args["country"], "-Estimates.rds"))

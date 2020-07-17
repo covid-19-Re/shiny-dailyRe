@@ -128,7 +128,7 @@ getDataECDC <- function(countries = NULL, tempFileName = NULL, tReload = 15) {
   }
 
   longData <- world_data %>%
-    select(
+    dplyr::select(
       date = "dateRep",
       countryIso3 = "countryterritoryCode",
       region = "countryterritoryCode",
@@ -187,7 +187,7 @@ getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"),
   }
 
   tidy_data <- rawData %>%
-    select(countryIso3 = CountryCode, year = Year,
+    dplyr::select(countryIso3 = CountryCode, year = Year,
       week = Week, sex = Sex, deaths = DTotal) %>%
     filter(sex == "b") %>%
     mutate(
@@ -204,7 +204,7 @@ getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"),
   excess_death <- tidy_data %>%
     filter(year == 2020,
            week > isoweek(startAt)) %>%
-    select(countryIso3, region, year, week, deaths) %>%
+    dplyr::select(countryIso3, region, year, week, deaths) %>%
     left_join(past_data, by = c("countryIso3", "week")) %>%
     mutate(
       excess_deaths = ceiling(deaths - avg_deaths),
@@ -213,10 +213,10 @@ getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"),
           paste(year, week, "Mon", sep = "/"), "Y/W/a",
           locale = "en_GB.UTF-8"
         ), locale = "en_GB.UTF-8")) %>%
-    select(-year, -week)
+    dplyr::select(-year, -week)
 
   longData <- excess_death %>%
-    select(date, countryIso3, region, excess_deaths) %>%
+    dplyr::select(date, countryIso3, region, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
     mutate(
       variable = "incidence",
@@ -361,7 +361,7 @@ getHospitalDataCHE <- function(path,
       mutate(
         countryIso3 = recode(as.character(region), "CH" = "CHE"),
         region = recode(as.character(region), "CH" = "CHE")) %>%
-      select(-country)
+      dplyr::select(-country)
   } else {
     warning("Swiss Hospital Data file not found. Ignoring...")
     out <- NULL
@@ -634,7 +634,7 @@ getExcessDeathFRA <- function(startAt = as.Date("2020-02-20")) {
     summarise(
       across(c(total_deaths, excess_deaths), sum),
       .groups = "drop") %>%
-    select(date = end_date, excess_deaths) %>%
+    dplyr::select(date = end_date, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
     mutate(
       countryIso3 = "FRA",
@@ -890,7 +890,7 @@ getConfirmedCasesZAF <- function(
           .default = col_double(),
           date = col_date(format = "%d-%m-%Y"),
           source = col_character())) %>%
-      select(-YYYYMMDD, -source) %>%
+      dplyr::select(-YYYYMMDD, -source) %>%
       pivot_longer(cols = EC:total, names_to = "region") %>%
       arrange(region, date) %>%
       fill(value, .direction = "down") %>%
@@ -929,7 +929,7 @@ getDeathsZAF <- function(
           .default = col_double(),
           date = col_date(format = "%d-%m-%Y"),
           source = col_character())) %>%
-      select(-YYYYMMDD, -source) %>%
+      dplyr::select(-YYYYMMDD, -source) %>%
       pivot_longer(cols = EC:total, names_to = "region") %>%
       arrange(region, date) %>%
       fill(value, .direction = "down") %>%
@@ -1038,7 +1038,7 @@ getCountryPopData <- function() {
 
   wbdata <- wbdataJSON[[2]] %>%
     as_tibble() %>%
-    select(
+    dplyr::select(
       countryIso2 = country.id,
       countryIso3 = countryiso3code,
       country = country.value,

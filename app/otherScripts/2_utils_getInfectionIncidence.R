@@ -1,5 +1,5 @@
 ### Utilities ###
-filterRegions <- function(df, threshholdConfirmedCases = 500) {
+filterRegions <- function(df, thresholdConfirmedCases = 500) {
   regionsIncluded <- df %>%
     filter(data_type == "Confirmed cases") %>%
     group_by(region) %>%
@@ -270,7 +270,7 @@ do_deconvolution <- function(
   Q_vector <- apply(truncated_delay_distribution_matrix, MARGIN = 2, sum)
   
   # use mode of 'constant_delay_distribution'. -1 because indices are offset by one as the delay can be 0.
-  first_guess_delay <- which.max(constant_delay_distribution) - 1
+  first_guess_delay <- which.max(delay_distribution_matrix[,1]) - 1
   
   if (verbose) {
     cat("\tDelay on first guess: ", first_guess_delay, "\n")
