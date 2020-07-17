@@ -202,7 +202,7 @@ iterate_RL <- function(
   initial_estimate,
   original_incidence,
   delay_distribution_matrix,
-  Q_matrix,
+  Q_vector,
   threshold_chi_squared = 1,
   max_iterations = 20,
   max_delay,
@@ -223,7 +223,7 @@ iterate_RL <- function(
     E <- as.vector(delay_distribution_matrix %*% current_estimate)
     B <- replace_na(original_incidence/E, 0)
     
-    current_estimate <- current_estimate / Q_matrix *  as.vector(crossprod(B, delay_distribution_matrix))
+    current_estimate <- current_estimate / Q_vector *  as.vector(crossprod(B, delay_distribution_matrix))
     current_estimate <- replace_na(current_estimate, 0)
     
     chi_squared <- 1/N0 * sum((E - original_incidence)^2/E, na.rm = T)
@@ -257,7 +257,7 @@ get_infection_incidence_by_deconvolution <- function(
   scale_incubation = 0,
   min_chi_squared = 1,
   maximum_iterations = 30,
-  max_first_guess_delay = 30,
+  days_further_in_the_past = 30,
   smooth_incidence = T,
   empirical_delays  = tibble(),
   n_bootstrap = 5,
@@ -269,7 +269,7 @@ get_infection_incidence_by_deconvolution <- function(
     pull() %>%
     length()
 
-  minimal_date <- min(data_subset$date) - max_first_guess_delay
+  minimal_date <- min(data_subset$date) - days_further_in_the_past
   maximal_date <- max(data_subset$date)
 
   all_dates <- seq(minimal_date, maximal_date, by = "days")
@@ -286,7 +286,9 @@ get_infection_incidence_by_deconvolution <- function(
     delay_distribution_matrix <- get_matrix_constant_waiting_time_distr(constant_delay_distribution, all_dates)
   }
 
-  Q_matrix <- apply(delay_distribution_matrix, MARGIN = 2, sum)
+  truncated_delay_distribution_matrix <- delay_distribution_matrix[(days_further_in_the_past + 1):NROW(delay_distribution_matrix), ]
+  Q_vector <- apply(truncated_delay_distribution_matrix, MARGIN = 2, sum)
+  Q_vector <- apply(delay_distribution_matrix, MARGIN = 2, sum)
 
   # use mode of 'constant_delay_distribution'. -1 because indices are offset by one as the delay can be 0.
   first_guess_delay <- which.max(constant_delay_distribution) - 1
@@ -344,10 +346,10 @@ get_infection_incidence_by_deconvolution <- function(
       first_guess$value,
       smoothed_incidence_data$value,
       delay_distribution_matrix = delay_distribution_matrix,
-      Q_matrix = Q_matrix,
+      Q_vector = Q_vector,
       threshold_chi_squared = min_chi_squared,
       max_iterations = maximum_iterations,
-      max_delay = max_first_guess_delay,
+      max_delay = days_further_in_the_past,
       verbose = verbose)
 
     ## right-truncate trailing zeroes induced by initial shift by 'first_guess_delay'
