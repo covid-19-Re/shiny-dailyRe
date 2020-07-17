@@ -216,10 +216,6 @@ if (condition) {
         data_types = c("Confirmed cases",
                       "Hospitalized patients",
                       "Deaths"),
-        shape_incubation = shape_incubation,
-        scale_incubation = scale_incubation,
-        min_chi_squared = 1,
-        maximum_iterations = 100,
         n_bootstrap = 50,
         verbose = FALSE)
 
@@ -231,12 +227,8 @@ if (condition) {
           onset_to_count_empirical_delays = delays_onset_to_count,
           data_types = c("Hospitalized patients - admission",
                         "Hospitalized patients - onset"),
-          shape_incubation = shape_incubation,
-          scale_incubation = scale_incubation,
-          min_chi_squared = 1,
-          maximum_iterations = 100,
           n_bootstrap = 50,
-          verbose = F)
+          verbose = FALSE)
         deconvolvedData[[2]] <- deconvolvedData[[2]] %>%
           group_by(date, country, region, data_type, source, replicate, variable) %>%
           summarise(value = sum(value), .groups = "keep") %>%

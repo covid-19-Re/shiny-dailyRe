@@ -35,5 +35,5 @@ sd_onset_to_count <- c(
   "Excess deaths" = sd_onset_to_death)
 
 ### parameters for gamma distribution between symptom onset and report
-shape_onset_to_count <- c(mean_onset_to_count^2 / (sd_onset_to_count^2), "Hospitalized patients - onset" = 0)
-scale_onset_to_count <- c((sd_onset_to_count^2) / mean_onset_to_count, "Hospitalized patients - onset" = 0)
+shape_onset_to_count <- c(mean_onset_to_count^2 / (sd_onset_to_count^2), "Hospitalized patients - onset" = 0, "Symptoms" = 0)
+scale_onset_to_count <- c((sd_onset_to_count^2) / mean_onset_to_count, "Hospitalized patients - onset" = 0, "Symptoms" = 0)
