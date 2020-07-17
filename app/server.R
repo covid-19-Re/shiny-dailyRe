@@ -67,7 +67,16 @@ server <- function(input, output, session) {
           pattern = "(.*)-.*"
         )[, 2])
       for (icountry in countries) {
-        deconvolutedData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-DeconvolutedData.rds"))) %>%
+        deconvolutedData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-DeconvolutedData.rds")))
+        caseData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Data.rds")))
+        estimates <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Estimates.rds")))
+
+        if (is.null(caseData) | is.null(deconvolutedData) | is.null(estimates)){
+          # this should theoretically never happen (anymore)
+          next
+        }
+
+        deconvolutedData <- deconvolutedData %>%
           select(-variable) %>%
           mutate(data_type = str_sub(data_type, 11)) %>%
           group_by(date, region, country, source, data_type) %>%
@@ -78,12 +87,10 @@ server <- function(input, output, session) {
             .groups = "keep"
           )
 
-        caseData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Data.rds"))) %>%
+        caseData <- caseData %>%
           pivot_wider(names_from = "variable", values_from = "value") %>%
           left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
           arrange(countryIso3, region, source, data_type, date)
-
-        estimates <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Estimates.rds")))
 
         testsPath <- file.path(pathToCountryData, str_c(icountry, "-Tests.rds"))
         if (file.exists(testsPath)) {

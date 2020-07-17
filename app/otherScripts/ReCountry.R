@@ -23,7 +23,7 @@ source(here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("CHE")
+  args <- c("DEU")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -65,77 +65,85 @@ names(args) <- "country"
   countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Data.rds"))
   if (file.exists(countryDataPath)) {
     countryDataOld <- readRDS(countryDataPath)
+    # if new data is null, keep old data (can happen because of error in reading new data)
+    if (is.null(countryData)) {
+      countryData <- countryDataOld
+    }
     dataUnchanged <- all.equal(countryData, countryDataOld)
   } else {
     dataUnchanged <- FALSE
   }
 
-# save updated data
-updateDataPath <- here("app", "data", "updateData.rds")
-if (file.exists(updateDataPath)) {
-  updateData <- readRDS(updateDataPath)
-} else {
-  updateData <- list()
-}
+  if (!is.null(countryData)) {
+    updateDataPath <- here("app", "data", "updateData.rds")
+    if (file.exists(updateDataPath)) {
+      updateData <- readRDS(updateDataPath)
+    } else {
+      updateData <- list()
+    }
 
-if (!isTRUE(dataUnchanged)) {
-  saveRDS(countryData, file = countryDataPath)
-}
+    # save updated data
+    if (!isTRUE(dataUnchanged)) {
+      saveRDS(countryData, file = countryDataPath)
+    }
 
-# fix because swiss data contains data for two countries (CHE & LIE)
-for (i in unique(countryData$countryIso3)) {
-  updateData[[i]] <- countryData %>%
-    filter(countryIso3 == i) %>%
-    mutate(
-      data_type = replace(
-        data_type,
-        data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"),
-        "Hospitalized patients")) %>%
-    group_by(countryIso3, country, region, source, data_type) %>%
-    summarize(lastData = max(date), .groups = "keep") %>%
-    mutate(
-      lastChanged = file.mtime(countryDataPath),
-      lastChecked = Sys.time())
-}
+    # fix because swiss data contains data for two countries (CHE & LIE)
+    for (i in unique(countryData$countryIso3)) {
+      updateData[[i]] <- countryData %>%
+        filter(countryIso3 == i) %>%
+        mutate(
+          data_type = replace(
+            data_type,
+            data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"),
+            "Hospitalized patients")) %>%
+        group_by(countryIso3, country, region, source, data_type) %>%
+        summarize(lastData = max(date), .groups = "keep") %>%
+        mutate(
+          lastChanged = file.mtime(countryDataPath),
+          lastChecked = Sys.time())
+    }
 
-saveRDS(updateData, updateDataPath)
+    saveRDS(updateData, updateDataPath)
 
-# get number of test data
-if (args["country"] %in% c("CHE")) {
-  testsDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Tests.rds"))
+    # get number of test data
+    if (args["country"] %in% c("CHE")) {
+      testsDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Tests.rds"))
 
-  bagFiles <- list.files(here("app", "data", "BAG"),
-    pattern = "*Time_series_tests.csv",
-    full.names = TRUE,
-    recursive = TRUE)
+      bagFiles <- list.files(here("app", "data", "BAG"),
+        pattern = "*Time_series_tests.csv",
+        full.names = TRUE,
+        recursive = TRUE)
 
-  bagFileDates <- strptime(
-    stringr::str_match(bagFiles, ".*\\/(\\d*-\\d*-\\d*_\\d*-\\d*-\\d*)")[, 2],
-    format = "%Y-%m-%d_%H-%M-%S")
+      bagFileDates <- strptime(
+        stringr::str_match(bagFiles, ".*\\/(\\d*-\\d*-\\d*_\\d*-\\d*-\\d*)")[, 2],
+        format = "%Y-%m-%d_%H-%M-%S")
 
-  newestFile <- bagFiles[which(bagFileDates == max(bagFileDates))[1]]
-  nTests <- read_delim(file = newestFile, delim = ";",
-    col_types = cols_only(
-      Datum = col_date(format = ""),
-      `Positive Tests` = col_double(),
-      `Negative Tests` = col_double()
-    )) %>%
-    transmute(
-      date = Datum,
-      countryIso3 = "CHE",
-      region = countryIso3,
-      positiveTests = `Positive Tests`,
-      negativeTests = `Negative Tests`,
-      totalTests = positiveTests + negativeTests)
+      newestFile <- bagFiles[which(bagFileDates == max(bagFileDates))[1]]
+      nTests <- read_delim(file = newestFile, delim = ";",
+        col_types = cols_only(
+          Datum = col_date(format = ""),
+          `Positive Tests` = col_double(),
+          `Negative Tests` = col_double()
+        )) %>%
+        transmute(
+          date = Datum,
+          countryIso3 = "CHE",
+          region = countryIso3,
+          positiveTests = `Positive Tests`,
+          negativeTests = `Negative Tests`,
+          totalTests = positiveTests + negativeTests)
 
-  saveRDS(nTests, testsDataPath)
-}
+      saveRDS(nTests, testsDataPath)
+    }
+  }
 
 cleanEnv(keepObjects = c("countryData", "dataUnchanged", "args", "popData"))
 
 # calculate Re
-# only if data has changed
-if (!isTRUE(dataUnchanged) | file.exists(here("app", "data", "forceUpdate.txt"))) {
+# only if (data has changed OR forceUpdate.txt exists) AND countryData is not null
+condition <- (!isTRUE(dataUnchanged) | file.exists(here("app", "data", "forceUpdate.txt"))) & !is.null(countryData)
+
+if (condition) {
   cat(str_c("\n", args["country"], ": New data available. Calculating Re ...\n"))
   # get Infection Incidence
     # load functions
