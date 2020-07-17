@@ -71,7 +71,7 @@ server <- function(input, output, session) {
         caseData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Data.rds")))
         estimates <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Estimates.rds")))
 
-        if (is.null(caseData) | is.null(deconvolutedData) | is.null(estimates)){
+        if (is.null(caseData) | is.null(deconvolutedData) | is.null(estimates)) {
           # this should theoretically never happen (anymore)
           next
         }
@@ -119,7 +119,7 @@ server <- function(input, output, session) {
       summarize(
         countries = str_c(unique(country), collapse = ", "),
         data_type = str_c(unique(data_type), collapse = ", "),
-        .groups = "drop_last") %>% 
+        .groups = "drop_last") %>%
       mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
       select("Source" = source, "Description" = sourceLong,
         "Countries" = countries, "Data types" = data_type, "URL" = url)
@@ -179,7 +179,7 @@ server <- function(input, output, session) {
 
       interventionsCountry <- interventions()[[icountry]]
 
-      if(!is.null(interventionsCountry)){
+      if (!is.null(interventionsCountry)) {
         interventionsCountry <- mutate(interventionsCountry,
           text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
           tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
@@ -248,13 +248,13 @@ server <- function(input, output, session) {
 
     interventionsCountry <- interventions()[["CHE"]]
 
-    if(!is.null(interventionsCountry)){
+    if (!is.null(interventionsCountry)) {
       interventionsCountry <- mutate(interventionsCountry,
         text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
         tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
     }
 
-    if(input$caseTests) {
+    if (input$caseTests) {
       nTests <- reData$tests$CHE
     } else {
       nTests <- NULL
@@ -527,7 +527,7 @@ server <- function(input, output, session) {
       language = input$lang,
       widgetID = NULL)
   })
-  
+
   output$EuropeComparisonPlot <- renderPlotly({
 
     reData <- reData()
@@ -842,7 +842,8 @@ server <- function(input, output, session) {
 
   output$CHEgreaterRegionsUI <- renderUI({
     fluidRow(
-      box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for greater regions of Switzerland")),
+      box(title = HTML(i18n()$t(
+          "Estimating the effective reproductive number (R<sub>e</sub>) for greater regions of Switzerland")),
         width = 12,
         plotlyOutput("CHEgreaterRegionPlot", width = "100%", height = "800px")
       ),
