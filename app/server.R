@@ -67,7 +67,16 @@ server <- function(input, output, session) {
           pattern = "(.*)-.*"
         )[, 2])
       for (icountry in countries) {
-        deconvolutedData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-DeconvolutedData.rds"))) %>%
+        deconvolutedData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-DeconvolutedData.rds")))
+        caseData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Data.rds")))
+        estimates <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Estimates.rds")))
+
+        if (is.null(caseData) | is.null(deconvolutedData) | is.null(estimates)) {
+          # this should theoretically never happen (anymore)
+          next
+        }
+
+        deconvolutedData <- deconvolutedData %>%
           select(-variable) %>%
           mutate(data_type = str_sub(data_type, 11)) %>%
           group_by(date, region, country, source, data_type) %>%
@@ -78,12 +87,10 @@ server <- function(input, output, session) {
             .groups = "keep"
           )
 
-        caseData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Data.rds"))) %>%
+        caseData <- caseData %>%
           pivot_wider(names_from = "variable", values_from = "value") %>%
           left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
           arrange(countryIso3, region, source, data_type, date)
-
-        estimates <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Estimates.rds")))
 
         testsPath <- file.path(pathToCountryData, str_c(icountry, "-Tests.rds"))
         if (file.exists(testsPath)) {
@@ -112,7 +119,7 @@ server <- function(input, output, session) {
       summarize(
         countries = str_c(unique(country), collapse = ", "),
         data_type = str_c(unique(data_type), collapse = ", "),
-        .groups = "drop_last") %>% 
+        .groups = "drop_last") %>%
       mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
       select("Source" = source, "Description" = sourceLong,
         "Countries" = countries, "Data types" = data_type, "URL" = url)
@@ -172,7 +179,7 @@ server <- function(input, output, session) {
 
       interventionsCountry <- interventions()[[icountry]]
 
-      if(!is.null(interventionsCountry)){
+      if (!is.null(interventionsCountry)) {
         interventionsCountry <- mutate(interventionsCountry,
           text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
           tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
@@ -241,13 +248,13 @@ server <- function(input, output, session) {
 
     interventionsCountry <- interventions()[["CHE"]]
 
-    if(!is.null(interventionsCountry)){
+    if (!is.null(interventionsCountry)) {
       interventionsCountry <- mutate(interventionsCountry,
         text = sapply(text, i18n()$t,  USE.NAMES = FALSE),
         tooltip =  sapply(tooltip, i18n()$t,  USE.NAMES = FALSE))
     }
 
-    if(input$caseTests) {
+    if (input$caseTests) {
       nTests <- reData$tests$CHE
     } else {
       nTests <- NULL
@@ -520,7 +527,7 @@ server <- function(input, output, session) {
       language = input$lang,
       widgetID = NULL)
   })
-  
+
   output$EuropeComparisonPlot <- renderPlotly({
 
     reData <- reData()
@@ -835,7 +842,8 @@ server <- function(input, output, session) {
 
   output$CHEgreaterRegionsUI <- renderUI({
     fluidRow(
-      box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for greater regions of Switzerland")),
+      box(title = HTML(i18n()$t(
+          "Estimating the effective reproductive number (R<sub>e</sub>) for greater regions of Switzerland")),
         width = 12,
         plotlyOutput("CHEgreaterRegionPlot", width = "100%", height = "800px")
       ),
