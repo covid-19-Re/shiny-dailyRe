@@ -17,8 +17,8 @@ if (interactive()) {
   })
 }
 
-source(here("app/otherScripts/1_utils_getRawData.R"))
-source(here("app/otherScripts/utils.R"))
+source(here::here("app/otherScripts/1_utils_getRawData.R"))
+source(here::here("app/otherScripts/utils.R"))
 
 args <- commandArgs(trailingOnly = TRUE)
 # testing
@@ -29,13 +29,13 @@ if (length(args) == 0) {
 names(args) <- "country"
 
 # Fetch Population Data (do once)
-  popDataPath <- here("app", "data", "popData.rds")
+  popDataPath <- here::here("app", "data", "popData.rds")
   if (!file.exists(popDataPath)) {
     popDataWorldBank <- getCountryPopData() %>%
       filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
       mutate(region = countryIso3)
     popDataCH <- read_csv(
-      file = here("app/data/additionalPopSizes.csv"),
+      file = here::here("app/data/additionalPopSizes.csv"),
       col_types = cols(
         .default = col_character(),
         populationSize = col_double()
@@ -53,8 +53,8 @@ names(args) <- "country"
 # Fetch Country Data
   countryData <- getCountryData(
     args["country"],
-    ECDCtemp = here("app/data/temp/ECDCdata.csv"),
-    HMDtemp = here("app/data/temp/HMDdata.csv"),
+    ECDCtemp = here::here("app/data/temp/ECDCdata.csv"),
+    HMDtemp = here::here("app/data/temp/HMDdata.csv"),
     tReload = 30) %>%
     left_join(
       popData,
@@ -62,7 +62,7 @@ names(args) <- "country"
     )
 
   # check for changes in country data
-  countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Data.rds"))
+  countryDataPath <- here::here("app", "data", "countryData", str_c(args["country"], "-Data.rds"))
   if (file.exists(countryDataPath)) {
     countryDataOld <- readRDS(countryDataPath)
     dataUnchanged <- all.equal(countryData, countryDataOld)
@@ -71,7 +71,7 @@ names(args) <- "country"
   }
 
 # save updated data
-updateDataPath <- here("app", "data", "updateData.rds")
+updateDataPath <- here::here("app", "data", "updateData.rds")
 if (file.exists(updateDataPath)) {
   updateData <- readRDS(updateDataPath)
 } else {
@@ -102,9 +102,9 @@ saveRDS(updateData, updateDataPath)
 
 # get number of test data
 if (args["country"] %in% c("CHE")) {
-  testsDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Tests.rds"))
+  testsDataPath <- here::here("app", "data", "countryData", str_c(args["country"], "-Tests.rds"))
 
-  bagFiles <- list.files(here("app", "data", "BAG"),
+  bagFiles <- list.files(here::here("app", "data", "BAG"),
     pattern = "*Time_series_tests.csv",
     full.names = TRUE,
     recursive = TRUE)
@@ -135,15 +135,15 @@ cleanEnv(keepObjects = c("countryData", "dataUnchanged", "args", "popData"))
 
 # calculate Re
 # only if data has changed
-if (!isTRUE(dataUnchanged) | file.exists(here("app", "data", "forceUpdate.txt"))) {
+if (!isTRUE(dataUnchanged) | file.exists(here::here("app", "data", "forceUpdate.txt"))) {
   cat(str_c("\n", args["country"], ": New data available. Calculating Re ...\n"))
   # get Infection Incidence
     # load functions
-      source(here("app/otherScripts/2_utils_getInfectionIncidence.R"))
+      source(here::here("app/otherScripts/2_utils_getInfectionIncidence.R"))
     # load parameter
-      source(here("app/otherScripts/2_params_InfectionIncidencePars.R"))
+      source(here::here("app/otherScripts/2_params_InfectionIncidencePars.R"))
     # load empirical delays
-      delays_data_path <- here("app/data/CH/FOPH_data_delays.csv")
+      delays_data_path <- here::here("app/data/CH/FOPH_data_delays.csv")
       delays_onset_to_count <- read_csv(delays_data_path,
         col_types = cols(
           data_type = col_character(),
@@ -234,13 +234,13 @@ if (!isTRUE(dataUnchanged) | file.exists(here("app", "data", "forceUpdate.txt"))
           ungroup()
       }
       deconvolvedCountryData <- bind_rows(deconvolvedData)
-      countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-DeconvolutedData.rds"))
+      countryDataPath <- here::here("app", "data", "countryData", str_c(args["country"], "-DeconvolutedData.rds"))
       saveRDS(deconvolvedCountryData, file = countryDataPath)
 
     # Re Estimation
       cleanEnv(keepObjects = c("deconvolvedCountryData", "args", "popData"))
-      source(here("app/otherScripts/3_utils_doReEstimates.R"))
-      pathToAdditionalData <- here("../covid19-additionalData/interventions/")
+      source(here::here("app/otherScripts/3_utils_doReEstimates.R"))
+      pathToAdditionalData <- here::here("../covid19-additionalData/interventions/")
 
       interventionData <- read_csv(
         str_c(pathToAdditionalData, "interventions.csv"),
@@ -323,7 +323,7 @@ if (!isTRUE(dataUnchanged) | file.exists(here("app", "data", "forceUpdate.txt"))
           select(popData, country, region, countryIso3),
           by = c("country", "region")
         )
-      countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Estimates.rds"))
+      countryDataPath <- here::here("app", "data", "countryData", str_c(args["country"], "-Estimates.rds"))
       saveRDS(countryEstimates, file = countryDataPath)
 } else {
   cat(str_c(args["country"], ": No new data available. Skipping Re calculation.\n"))

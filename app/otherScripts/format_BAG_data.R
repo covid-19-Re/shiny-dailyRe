@@ -25,14 +25,14 @@ dir.create(outDir, showWarnings = FALSE)
 bagFiles <- c(
   # polybox
   list.files(BAG_data_dir,
-    pattern = "*FOPH_COVID19_data_extract.csv",
-    full.names = TRUE,
-    recursive = TRUE),
+             pattern = "*FOPH_COVID19_data_extract.csv",
+             full.names = TRUE,
+             recursive = TRUE),
   # git (legacy)
   list.files(BAG_data_dir_Git,
-    pattern = "*FOPH_COVID19_data_extract.csv",
-    full.names = TRUE,
-    recursive = TRUE))
+             pattern = "*FOPH_COVID19_data_extract.csv",
+             full.names = TRUE,
+             recursive = TRUE))
 
 bagFileDates <- strptime(
   stringr::str_match(bagFiles, ".*\\/(\\d*-\\d*-\\d*_\\d*-\\d*-\\d*)")[, 2],
@@ -71,9 +71,9 @@ restructured_data_FOPH <- first_curation_data_FOPH %>%
   dplyr::select(data_type, everything()) %>%
   dplyr::rename(onset_date = manifestation_dt) %>%
   mutate(data_type = recode(data_type,
-    "pttoddat" = "Deaths",
-    "hospdatin" = "Hospitalized patients - admission",
-    "fall_dt" = "Confirmed cases"))
+                            "pttoddat" = "Deaths",
+                            "hospdatin" = "Hospitalized patients - admission",
+                            "fall_dt" = "Confirmed cases"))
 
 final_delay_data_FOPH <- restructured_data_FOPH %>%
   mutate(delay = as.integer(count_date - onset_date)) %>%
@@ -92,6 +92,42 @@ final_delay_data_FOPH <- restructured_data_FOPH %>%
   slice_sample(count_date, prop = 1) %>% # shuffle rows with the same date
   ungroup() %>%
   mutate(country = "Switzerland", region = "CHE", source = "FOPH")
+
+## deconvolve symptom onset time series to get infection dates
+
+source(here::here("app/otherScripts/2_utils_getInfectionIncidence.R"))
+# load parameter
+source(here::here("app/otherScripts/2_params_InfectionIncidencePars.R"))
+# constant delay distribution
+incubation_delay_distribution <- get_vector_constant_waiting_time_distr(
+  shape_incubation,
+  scale_incubation,
+  0,
+  0)
+
+convolved_delays <- final_delay_data_FOPH %>%
+  rename(date = onset_date) %>% 
+  dplyr::select(date) %>% 
+  group_by(date) %>%  
+  tally(name = "value") %>% 
+  complete(date = seq.Date(min(date), max(date), by = "days"),
+           fill = list(value = 0)) %>% 
+  mutate(source = NA, country = NA, region = NA, data_type = NA)
+
+a <- get_infection_incidence_by_deconvolution(
+  convolved_delays,
+  incubation_delay_distribution,
+  min_chi_squared = 1,
+  smooth_incidence = F,
+  n_bootstrap = 0,
+  maximum_iterations = 1E3,
+  verbose = T)
+
+a <-  a %>% mutate(value = round(value))
+
+# sum(a$value)
+# 
+# sum(convolved_delays$value)
 
 
 ### Save file
@@ -119,15 +155,15 @@ datesSymptoms$timeFromOnsetToHosp[datesSymptoms$timeFromOnsetToHosp < 0 | datesS
 datesSymptoms <- datesSymptoms[complete.cases(datesSymptoms), ]
 
 cat("Mean Time from onset to Hospitalization:",
-  mean(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 6.1 (15/05/20)
+    mean(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 6.1 (15/05/20)
 cat("s.d. Time from onset to Hospitalization:",
-  sd(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 4.7
+    sd(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 4.7
 
 #### Build incidence time series of symptom onsets
 
 dates_onset <- unique(na.omit(data_hospitalization$manifestation_dt))
 allDates_onset <-  seq(max(min(as.Date(dates_onset)), min_date), min(max(as.Date(dates_onset)), max_date), by = "days")
- 
+
 incidence_onset <- sapply(allDates_onset, function(x) {
   sum(with(data_hospitalization, manifestation_dt == x & hospitalisation == 1), na.rm = TRUE)})
 cumul_onset <- cumsum(incidence_onset)
@@ -145,19 +181,19 @@ allDates_admission <-  seq(min_date, max_date, by = "days")
 ## if neither admission nor onset date is available, use "eingang_dt" as a proxy for the hospitalization date
 
 partialInfoAdmissions <- subset(data_hospitalization,
-  ymd(eingang_dt) %in% allDates_admission &
-  !(ymd(hospdatin) %in% allDates_admission) &
-  !(ymd(manifestation_dt) %in% allDates_onset) &
-  hospitalisation == 1)
+                                ymd(eingang_dt) %in% allDates_admission &
+                                  !(ymd(hospdatin) %in% allDates_admission) &
+                                  !(ymd(manifestation_dt) %in% allDates_onset) &
+                                  hospitalisation == 1)
 fullInfoAdmissions <- subset(data_hospitalization,
-  ymd(hospdatin) %in% allDates_admission &
-  !(ymd(manifestation_dt) %in% allDates_onset) &
-  hospitalisation == 1)
+                             ymd(hospdatin) %in% allDates_admission &
+                               !(ymd(manifestation_dt) %in% allDates_onset) &
+                               hospitalisation == 1)
 
 incidence_admission <- sapply(allDates_admission, function(x) {
-    sum(with(fullInfoAdmissions,  hospdatin == x), na.rm = T) +
+  sum(with(fullInfoAdmissions,  hospdatin == x), na.rm = T) +
     sum(with(partialInfoAdmissions,  eingang_dt == x), na.rm = T)
-  })
+})
 
 cumul_admission <- cumsum(incidence_admission)
 
@@ -173,13 +209,13 @@ allDates <-  seq(min_date, max_date, by = "days")
 ## if no admission data is available, use "eingang_dt" as a proxy for the hospitalization date
 
 partialInfoAdmissions <- subset(data_hospitalization,
-  ymd(eingang_dt) %in% allDates & !(ymd(hospdatin) %in% allDates) & hospitalisation == 1)
+                                ymd(eingang_dt) %in% allDates & !(ymd(hospdatin) %in% allDates) & hospitalisation == 1)
 fullInfoAdmissions <- subset(data_hospitalization,
-ymd(hospdatin) %in% allDates & hospitalisation == 1)
+                             ymd(hospdatin) %in% allDates & hospitalisation == 1)
 
 incidence <- sapply(allDates, function(x) {
   sum(with(fullInfoAdmissions,  hospdatin == x), na.rm = TRUE) +
-  sum(with(partialInfoAdmissions,  eingang_dt == x), na.rm = TRUE) })
+    sum(with(partialInfoAdmissions,  eingang_dt == x), na.rm = TRUE) })
 
 cumul <- cumsum(incidence)
 df <- data.frame(Date = allDates, Incidence = incidence, CH = cumul)

@@ -253,8 +253,8 @@ get_bootstrap_replicate <- function(original_time_series) {
 get_infection_incidence_by_deconvolution <- function(
   data_subset,
   constant_delay_distribution,
-  shape_incubation,
-  scale_incubation,
+  shape_incubation = 0,
+  scale_incubation = 0,
   min_chi_squared = 1,
   maximum_iterations = 30,
   max_first_guess_delay = 30,
