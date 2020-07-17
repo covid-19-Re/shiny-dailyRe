@@ -112,7 +112,7 @@ rEffPlotly <- function(
           ""
         ),
         if_else(data_type == "Confirmed cases / tests",
-          str_c("<br>", incidence * totalTests," cases",
+          str_c("<br>", incidence * totalTests, " cases",
             "<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"
           ),
           ""
