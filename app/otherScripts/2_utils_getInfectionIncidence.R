@@ -227,7 +227,6 @@ iterate_RL <- function(
   initial_estimate,
   original_incidence,
   delay_distribution_matrix,
-  Q_vector,
   threshold_chi_squared = 1,
   max_iterations = 100,
   max_delay,
@@ -238,6 +237,10 @@ iterate_RL <- function(
   N0 <- N - max_delay
   chi_squared <- Inf
   count <- 1
+  
+  delay_distribution_matrix <- delay_distribution_matrix[1:length(current_estimate), 1:length(current_estimate)]
+  truncated_delay_distribution_matrix <- delay_distribution_matrix[(1 + max_delay):NROW(delay_distribution_matrix),]
+  Q_vector <- apply(truncated_delay_distribution_matrix, MARGIN = 2, sum)
   
   while(chi_squared > threshold_chi_squared & count <= max_iterations) {
     
@@ -263,11 +266,9 @@ do_deconvolution <- function(
   incidence_data,
   days_further_in_the_past = 30,
   verbose = FALSE,
-  delay_distribution_matrix
+  delay_distribution_matrix,
+  max_iterations = 100
 ) {
-  
-  truncated_delay_distribution_matrix <- delay_distribution_matrix[(days_further_in_the_past + 1):NROW(delay_distribution_matrix), ]
-  Q_vector <- apply(truncated_delay_distribution_matrix, MARGIN = 2, sum)
   
   # use mode of 'constant_delay_distribution'. -1 because indices are offset by one as the delay can be 0.
   first_guess_delay <- which.max(delay_distribution_matrix[,1]) - 1
@@ -279,6 +280,9 @@ do_deconvolution <- function(
   first_recorded_incidence <-  with(filter(incidence_data, cumsum(value) > 0), value[which.min(date)])
   last_recorded_incidence <- with(incidence_data, value[which.max(date)])
   
+  minimal_date <- min(incidence_data$date) - days_further_in_the_past
+  maximal_date <- max(incidence_data$date)
+  
   first_guess <- incidence_data %>%
     mutate(date = date - first_guess_delay) %>%
     filter(cumsum(value) > 0) %>% # remove leading zeroes
@@ -289,25 +293,32 @@ do_deconvolution <- function(
     arrange(date) %>% 
     filter(date >=  minimal_date)
   
+  original_incidence <- incidence_data %>% 
+    complete(date = seq.Date(minimal_date, maximal_date, by = "days"),
+             fill = list(value = 0)) %>% 
+    pull(value)
+
   final_estimate <- iterate_RL(
     first_guess$value,
-    incidence_data$value,
+    original_incidence,
     delay_distribution_matrix = delay_distribution_matrix,
-    Q_vector = Q_vector,
-    threshold_chi_squared = min_chi_squared,
-    max_iterations = maximum_iterations,
     max_delay = days_further_in_the_past,
+    max_iterations = max_iterations,
     verbose = verbose)
   
+  deconvolved_dates <- first_guess %>% pull(date)
+  
+  result <- tibble(date = deconvolved_dates, value = final_estimate)
+  
   ## left and right-truncate to exclude parts with biggest uncertainty
-  deconvolved_dates <- first_guess %>%
-    filter(date <= maximal_date - first_guess_delay) %>%
-    filter(date >= min(incidence_data$date) - first_guess_delay) %>% 
-    pull(date)
+  # result <- result %>%
+  #   filter(date <= maximal_date - first_guess_delay) %>%
+  #   filter(date >= min(incidence_data$date) - first_guess_delay)
+
+  result <- result %>%
+    filter(date <= maximal_date - first_guess_delay)
   
-  deconvolved_infections <- final_estimate[seq_len(length(final_estimate) - first_guess_delay)]
-  
-  return(tibble(date = deconvolved_dates, value = deconvolved_infections))
+  return(result)
 }
 
 get_infection_incidence_by_deconvolution <- function(
@@ -318,17 +329,11 @@ get_infection_incidence_by_deconvolution <- function(
   empirical_delays  = tibble(),
   n_bootstrap = 5,
   days_further_in_the_past = 30,
+  max_iterations = 100,
   verbose = FALSE) {
-  
-  length_initial_time_series <- data_subset %>%
-    dplyr::select(date) %>%
-    complete(date = seq.Date(min(date), max(date), by = "days")) %>%
-    pull() %>%
-    length()
   
   minimal_date <- min(data_subset$date) - days_further_in_the_past
   maximal_date <- max(data_subset$date)
-  
   all_dates <- seq(minimal_date, maximal_date, by = "days")
   
   is_empirical = (nrow(empirical_delays) > 0)
@@ -346,7 +351,6 @@ get_infection_incidence_by_deconvolution <- function(
       all_dates)
   }
   
-  
   results <- list(tibble())
   
   for (bootstrap_replicate_i in 0:n_bootstrap) {
@@ -363,8 +367,8 @@ get_infection_incidence_by_deconvolution <- function(
     
     if (smooth_incidence == T) {
       smoothed_incidence_data <- time_series %>%
-        mutate(value = getLOESSCases(dates = date, count_data = value)) %>%
-        complete(date = seq.Date(minimal_date, maximal_date, by = "days"), fill = list(value = 0))
+        complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(value = 0)) %>% 
+        mutate(value = getLOESSCases(dates = date, count_data = value))
       
       raw_total_incidence <- sum(time_series$value, na.rm = TRUE)
       smoothed_total_incidence <- sum(smoothed_incidence_data$value, na.rm = T)
@@ -376,7 +380,7 @@ get_infection_incidence_by_deconvolution <- function(
       
     } else {
       smoothed_incidence_data <- time_series  %>%
-        complete(date = seq.Date(minimal_date, maximal_date, by = "days"), fill = list(value = 0))
+        complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(value = 0))
     }
     
     if(is_empirical) {
@@ -384,16 +388,19 @@ get_infection_incidence_by_deconvolution <- function(
       deconvolved_symptom_onsets <- do_deconvolution(smoothed_incidence_data,
                        delay_distribution_matrix = delay_distribution_matrix_onset_to_report,
                        days_further_in_the_past = days_further_in_the_past,
+                       max_iterations = max_iterations,
                        verbose = verbose)
       
       deconvolved_infections <- do_deconvolution(deconvolved_symptom_onsets,
                                                  delay_distribution_matrix = delay_distribution_matrix_incubation,
-                                                 days_further_in_the_past = days_further_in_the_past,
+                                                 days_further_in_the_past = 0,
+                                                 max_iterations = max_iterations,
                                                  verbose = verbose)
     } else {
       deconvolved_infections <-  do_deconvolution(smoothed_incidence_data,
                                                   delay_distribution_matrix = delay_distribution_matrix,
                                                   days_further_in_the_past = days_further_in_the_past,
+                                                  max_iterations = max_iterations,
                                                   verbose = verbose)
     }
     
