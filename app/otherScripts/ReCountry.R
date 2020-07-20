@@ -253,7 +253,8 @@ if (!isTRUE(dataUnchanged) | file.exists(here("app", "data", "forceUpdate.txt"))
       if (args["country"] %in% c("CHE")) {
         countryDataTests <- countryData %>%
           filter(region == args["country"], data_type == "Confirmed cases / tests") %>%
-          mutate(value = value * 100000)
+          # normalize to same range as original data
+          mutate(value = value * mean(totalTests))
         deconvolvedData[[3]] <- get_all_infection_incidence(
           countryDataTests,
           constant_delay_distributions = constant_delay_distributions,
