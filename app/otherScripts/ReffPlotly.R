@@ -6,6 +6,7 @@ library(shades)
 allCols <- viridis(6)
 plotColors <-  c(
   "Confirmed cases" = allCols[1],
+  "Confirmed cases / tests" = allCols[2],
   "Hospitalized patients" = allCols[3],
   "Deaths" = allCols[5],
   "Excess deaths" = allCols[6])
@@ -35,7 +36,8 @@ rEffPlotly <- function(
   caseNormalize = FALSE,
   caseLoess = FALSE,
   caseDeconvoluted = FALSE,
-  nTests = NULL,
+  showTraces = NULL,
+  showTracesMode = "only",
   language,
   translator,
   widgetID = "rEffplots") {
@@ -87,23 +89,37 @@ rEffPlotly <- function(
     bottomMargin <- 80
 
   # prepare Data
+  if (!("testPositivity" %in% colnames(caseData))) {
+    caseData$testPositivity <- NA
+    caseData$totalTests <- NA
+    caseData$positiveTests <- NA
+    caseData$negativeTests <- NA
+  }
+
   newLevels <- levels(caseData$data_type)
   names(newLevels) <- sapply(newLevels, translator$t,  USE.NAMES = FALSE)
 
   caseData <- caseData %>%
-    mutate(data_type = fct_recode(data_type, !!!newLevels))
+    mutate(data_type = fct_recode(data_type, !!!newLevels)) %>%
+    group_by(data_type) %>%
+    mutate(
+      tooltipText = str_c("<i>", format(date, dateFormatLong), "</i> <br>",
+        round(incidence, 3), " ", toLowerFirst(data_type),
+        if_else(caseNormalize, " / 100'000", ""),
+        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+        if_else(data_type == "Confirmed cases" & !is.na(testPositivity),
+          str_c("<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"),
+          ""
+        ),
+        if_else(data_type == "Confirmed cases / tests",
+          str_c("<br>", incidence * totalTests, " cases",
+            "<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"
+          ),
+          ""
+        ))
+    )
 
   pCasesTitle <- translator$t("New observations")
-  
-  if (!is.null(nTests)) {
-    caseData <- caseData %>%
-      left_join(nTests, by = c("countryIso3", "region", "date")) %>%
-      mutate(
-        incidenceRaw = incidence,
-        incidence = incidence / totalTests,
-        testPositivity = positiveTests / totalTests)
-    pCasesTitle <- str_c(pCasesTitle, " / # tests")
-  }
 
   if (caseNormalize) {
     caseData <- caseData %>%
@@ -141,26 +157,11 @@ rEffPlotly <- function(
   } else {
     caseDataTrunc <- caseData
   }
-  
-  if (!is.null(nTests)) {
-    tooltipText <- ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        round(incidence, 3), " ", toLowerFirst(data_type), "/ # tests (", incidenceRaw, " cases)",
-        if_else(caseNormalize, " / 100'000", ""),
-        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
-        str_c("<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, "/", negativeTests, ")"),
-        "<extra></extra>")
-  } else {
-    tooltipText <- ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        round(incidence, 3), " ", toLowerFirst(data_type),
-        if_else(caseNormalize, " / 100'000", ""),
-        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
-        "<extra></extra>")
-  }
 
   pCases <- plot_ly(data = caseDataTrunc) %>%
     add_bars(x = ~date, y = ~incidence, color = ~data_type,
       colors = plotColors,
-      text = tooltipText,
+      text = ~str_c(tooltipText, "<extra></extra>"),
       hovertemplate = "%{text}",
       legendgroup = ~data_type) %>%
     layout(
@@ -181,11 +182,7 @@ rEffPlotly <- function(
         data = caseDataRest,
         x = ~date, y = ~incidence, color = ~data_type_plot,
         colors = plotColors,
-        text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-          round(incidence, 3), " ", toLowerFirst(data_type),
-          if_else(caseNormalize, " / 100'000", ""),
-          if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
-          "<br>(not used for R<sub>e</sub> estimates)<extra></extra>"),
+        text = ~str_c(tooltipText, "<br>(not used for R<sub>e</sub> estimates)<extra></extra>"),
         hovertemplate = "%{text}", inherit = FALSE,
         legendgroup = ~data_type, showlegend = FALSE)
   }
@@ -344,6 +341,10 @@ rEffPlotly <- function(
       locale = locale, scrollZoom = FALSE)
 
   plot$elementId <- widgetID
+
+  if (!is.null(showTraces)) {
+    plot <- plotlyShowTraces(plot, showTraces, mode = showTracesMode)
+  }
 
   return(plot)
 }
@@ -686,7 +687,7 @@ rEffPlotlyRegion <- function(
       locale = locale, scrollZoom = FALSE)
 
   if(!is.null(focusRegion)) {
-    plot <- plotlyShowOnly(plot, focusRegionLong)
+    plot <- plotlyShowTraces(plot, focusRegionLong)
   }
 
   plot$elementId <- widgetID
@@ -967,7 +968,7 @@ rEffPlotlyComparison <- function(
   plot$elementId <- widgetID
 
   if(!is.null(focusCountry)) {
-    plot <- plotlyShowOnly(plot, focusCountry)
+    plot <- plotlyShowTraces(plot, focusCountry)
   }
 
   return(plot)
@@ -1072,11 +1073,12 @@ makeSlider <- function(zoomRange, x = 0.01, y = 1, anchor = c("top", "left")) {
   return(slider)
 }
 
-plotlyShowOnly <- function(plot, focusRegion){
+plotlyShowTraces <- function(plot, traceName, mode = "only") {
   for (i in seq_len(length(plot$x$data))) {
-    if (!str_detect(plot$x$data[[i]]$name, fixed(focusRegion)) &
-      plot$x$data[[i]]$yaxis != "y3") {
-        plot$x$data[[i]]$visible <- "legendonly"
+    if (mode == "only" & !str_detect(plot$x$data[[i]]$name, fixed(traceName)) & plot$x$data[[i]]$yaxis != "y3") {
+       plot$x$data[[i]]$visible <- "legendonly"
+    } else if (mode == "not" & str_detect(plot$x$data[[i]]$name, fixed(traceName)) & plot$x$data[[i]]$yaxis != "y3") {
+      plot$x$data[[i]]$visible <- "legendonly"
     }
   }
   return(plot)

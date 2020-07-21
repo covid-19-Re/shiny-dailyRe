@@ -46,9 +46,9 @@ dataUpdatesTable <- function(
 
 delaysDf <- tibble(
     data_type = factor(
-      c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"),
-      levels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")),
-    delay = c(8, 10, 18, 30))
+      c("Confirmed cases", "Confirmed cases / tests", "Hospitalized patients", "Deaths", "Excess deaths"),
+      levels = c("Confirmed cases", "Confirmed cases / tests", "Hospitalized patients", "Deaths", "Excess deaths")),
+    delay = c(8, 8, 10, 18, 30))
 
 estimateRanges <- function(
   caseData,

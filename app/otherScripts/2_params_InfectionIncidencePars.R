@@ -23,12 +23,14 @@ scale_incubation <- (sd_incubation^2) / mean_incubation
 
 mean_onset_to_count <- c(
   "Confirmed cases" = mean_onset_to_test,
+  "Confirmed cases / tests" = mean_onset_to_test,
   "Deaths" = mean_onset_to_death,
   "Hospitalized patients - admission" = mean_onset_to_hosp,
   "Hospitalized patients" = mean_onset_to_hosp,
   "Excess deaths" = mean_onset_to_death)
 sd_onset_to_count <- c(
   "Confirmed cases" = sd_onset_to_test,
+  "Confirmed cases / tests" = sd_onset_to_test,
   "Deaths" = sd_onset_to_death,
   "Hospitalized patients - admission" = sd_onset_to_hosp,
   "Hospitalized patients" = sd_onset_to_hosp,
