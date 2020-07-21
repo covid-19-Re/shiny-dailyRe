@@ -89,7 +89,7 @@ rEffPlotly <- function(
     bottomMargin <- 80
 
   # prepare Data
-  if (is.null(caseData$testPositivity)) {
+  if (!("testPositivity" %in% colnames(caseData))) {
     caseData$testPositivity <- NA
     caseData$totalTests <- NA
     caseData$positiveTests <- NA
