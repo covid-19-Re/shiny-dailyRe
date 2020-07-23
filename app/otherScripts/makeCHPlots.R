@@ -23,8 +23,8 @@ cat(str_c("making ", iso3, " plots for ncs-tf website ...\n"))
 # load data
 dataDir <- here("app/data")
 plotOutDir <- here("app/www")
-pathToCaseData <- file.path(dataDir, str_c("countryData/", iso3, "-Data.rds"))
-pathToEstimates <- file.path(dataDir, str_c("countryData/", iso3, "-Estimates.rds"))
+pathToCaseData <- file.path(dataDir, str_c("countryData/Europe/", iso3, "-Data.rds"))
+pathToEstimates <- file.path(dataDir, str_c("countryData/Europe/", iso3, "-Estimates.rds"))
 pathToUpdateData <- file.path(dataDir, "updateData.rds")
 pathToInterventionData <- here("../covid19-additionalData/interventions/interventions.csv")
 

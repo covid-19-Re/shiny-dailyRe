@@ -25,8 +25,8 @@ server <- function(input, output, session) {
   countryList <- tibble(
       countryIso3 = unique(
         str_match(
-          string = list.files(path = pathToCountryData, pattern = ".*-Estimates"),
-          pattern = "(.*)-.*"
+          string = list.files(path = pathToCountryData, pattern = ".*-Estimates", recursive = TRUE),
+          pattern = "/(.*)-.*"
         )[, 2]
         )
     ) %>%
@@ -53,23 +53,24 @@ server <- function(input, output, session) {
     }
   )
 
-
-  reData <- reactivePoll(1000, session,
+  reDataEurope <- reactivePoll(1000, session,
     checkFunc = function() {
       # check estimates (only load data & deconvoluted once script is complete)
-      file.mtime(list.files(path = pathToCountryData, full.names = TRUE, pattern = ".*-Estimates"))
+      file.mtime(
+        list.files(path = file.path(pathToCountryData, "Europe"),
+          full.names = TRUE, pattern = ".*-Estimates")
+      )
     },
     valueFunc = function() {
-      reData <- list(caseData = list(), estimates = list(), estimateRanges = list(), tests = list())
-      countries <- unique(
-        str_match(
-          string = list.files(path = pathToCountryData, pattern = ".*-Estimates"),
-          pattern = "(.*)-.*"
-        )[, 2])
+      reDataEurope <- list(caseData = list(), estimates = list(), estimateRanges = list(), tests = list())
+      countries <- str_match(
+          string = list.files(path = file.path(pathToCountryData, "Europe"), pattern = ".*-Estimates"),
+          pattern = "(.*)-.*")[, 2]
+
       for (icountry in countries) {
-        deconvolutedData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-DeconvolutedData.rds")))
-        caseData <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Data.rds")))
-        estimates <- readRDS(file.path(pathToCountryData, str_c(icountry, "-Estimates.rds")))
+        deconvolutedData <- readRDS(file.path(pathToCountryData, "Europe", str_c(icountry, "-DeconvolutedData.rds")))
+        caseData <- readRDS(file.path(pathToCountryData, "Europe", str_c(icountry, "-Data.rds")))
+        estimates <- readRDS(file.path(pathToCountryData, "Europe", str_c(icountry, "-Estimates.rds")))
 
         if (is.null(caseData) | is.null(deconvolutedData) | is.null(estimates)) {
           # this should theoretically never happen (anymore)
@@ -92,26 +93,90 @@ server <- function(input, output, session) {
           left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
           arrange(countryIso3, region, source, data_type, date)
 
-        testsPath <- file.path(pathToCountryData, str_c(icountry, "-Tests.rds"))
+        testsPath <- file.path(pathToCountryData, "Europe", str_c(icountry, "-Tests.rds"))
         if (file.exists(testsPath)) {
-          reData$tests[[icountry]] <- readRDS(testsPath)
+          reDataEurope$tests[[icountry]] <- readRDS(testsPath)
         }
 
-        reData$caseData[[icountry]] <- caseData
-        reData$estimates[[icountry]] <- estimates
-        reData$estimateRanges[[icountry]] <- estimateRanges(
+        reDataEurope$caseData[[icountry]] <- caseData
+        reDataEurope$estimates[[icountry]] <- estimates
+        reDataEurope$estimateRanges[[icountry]] <- estimateRanges(
           caseData,
           minConfirmedCases = 100,
           delays = delaysDf)[[icountry]]
       }
-      return(reData)
+      return(reDataEurope)
     }
   )
+
+  reDataAfrica <- reactivePoll(1000, session,
+    checkFunc = function() {
+      # check estimates (only load data & deconvoluted once script is complete)
+      file.mtime(
+        list.files(path = file.path(pathToCountryData, "Africa"),
+          full.names = TRUE, pattern = ".*-Estimates")
+      )
+    },
+    valueFunc = function() {
+      reDataAfrica <- list(caseData = list(), estimates = list(), estimateRanges = list(), tests = list())
+      countries <- str_match(
+          string = list.files(path = file.path(pathToCountryData, "Africa"), pattern = ".*-Estimates"),
+          pattern = "(.*)-.*")[, 2]
+
+      for (icountry in countries) {
+        deconvolutedData <- readRDS(file.path(pathToCountryData, "Africa", str_c(icountry, "-DeconvolutedData.rds")))
+        caseData <- readRDS(file.path(pathToCountryData, "Africa", str_c(icountry, "-Data.rds")))
+        estimates <- readRDS(file.path(pathToCountryData, "Africa", str_c(icountry, "-Estimates.rds")))
+
+        if (is.null(caseData) | is.null(deconvolutedData) | is.null(estimates)) {
+          # this should theoretically never happen (anymore)
+          next
+        }
+
+        deconvolutedData <- deconvolutedData %>%
+          select(-variable) %>%
+          mutate(data_type = str_sub(data_type, 11)) %>%
+          group_by(date, region, country, source, data_type) %>%
+          summarise(
+            deconvoluted = mean(value),
+            deconvolutedLow = deconvoluted - sd(value),
+            deconvolutedHigh = deconvoluted + sd(value),
+            .groups = "keep"
+          )
+
+        caseData <- caseData %>%
+          pivot_wider(names_from = "variable", values_from = "value") %>%
+          left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
+          arrange(countryIso3, region, source, data_type, date)
+
+        testsPath <- file.path(pathToCountryData, "Africa", str_c(icountry, "-Tests.rds"))
+        if (file.exists(testsPath)) {
+          reDataAfrica$tests[[icountry]] <- readRDS(testsPath)
+        }
+
+        reDataAfrica$caseData[[icountry]] <- caseData
+        reDataAfrica$estimates[[icountry]] <- estimates
+        reDataAfrica$estimateRanges[[icountry]] <- estimateRanges(
+          caseData,
+          minConfirmedCases = 100,
+          delays = delaysDf)[[icountry]]
+      }
+      return(reDataAfrica)
+    }
+  )
+
+  reDataWorld <- reactive({
+    reDataWorld <- list(
+      caseData = c(reDataEurope()$caseData, reDataAfrica()$caseData),
+      estimates = c(reDataEurope()$estimates, reDataAfrica()$estimates),
+      estimateRanges = c(reDataEurope()$estimateRanges, reDataAfrica()$estimateRanges),
+      tests = c(reDataEurope()$tests, reDataAfrica()$tests))
+  })
 
   dataSources <- reactive({
     sourceInfo <- read_csv("data/dataSources.csv", col_types = cols(.default = col_character()))
 
-    dataSources <- bind_rows(reData()$caseData) %>%
+    dataSources <- bind_rows(reDataWorld()) %>%
       select(countryIso3, country, source, data_type) %>%
       filter(data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
       left_join(sourceInfo, by = "source") %>%
@@ -147,9 +212,9 @@ server <- function(input, output, session) {
       updateDataCountry <- updateData()[[icountry]] %>%
         filter(region == icountry)
 
-      reData <- reData()
+      countryData <- loadCountryData(icountry, countryList$continent[countryList$countryIso3 == icountry])
 
-      caseData <- reData$caseData[[icountry]] %>%
+      caseData <- countryData$caseData %>%
         filter(
           region == icountry,
           data_type %in% c("Confirmed cases", "Confirmed cases / tests",
@@ -158,9 +223,9 @@ server <- function(input, output, session) {
           data_type = fct_drop(data_type)
         )
 
-      estimatePlotRanges <- reData$estimateRanges[[icountry]]
+      estimatePlotRanges <- countryData$estimateRanges[[icountry]]
 
-      estimates <- reData$estimates[[icountry]] %>%
+      estimates <- countryData$estimates %>%
         filter(
           estimate_type == input$estimation_type_select,
           region == icountry,
@@ -201,6 +266,7 @@ server <- function(input, output, session) {
         caseNormalize = input$caseNormalize,
         caseLoess = input$caseLoess,
         caseDeconvoluted = input$caseDeconvoluted,
+        showHelpBox = FALSE,
         translator = i18n(),
         language = input$lang,
         widgetID = NULL)
@@ -217,9 +283,9 @@ server <- function(input, output, session) {
     updateDataCountry <- updateData()[["CHE"]] %>%
       filter(region == "CHE")
 
-    reData <- reData()
+    countryData <- loadCountryData("CHE", "Europe")
 
-    caseData <- reData$caseData[["CHE"]] %>%
+    caseData <- countryData$caseData %>%
       filter(
         region == "CHE",
         data_type %in% c("Confirmed cases", "Hospitalized patients",
@@ -228,9 +294,9 @@ server <- function(input, output, session) {
         data_type = fct_drop(data_type)
       )
 
-    estimatePlotRanges <- reData$estimateRanges[["CHE"]]
+    estimatePlotRanges <- countryData$estimateRanges[["CHE"]]
 
-    estimates <- reData$estimates[["CHE"]] %>%
+    estimates <- countryData$estimates %>%
       filter(
         estimate_type == input$estimation_type_select,
         region == "CHE",
@@ -273,6 +339,7 @@ server <- function(input, output, session) {
       caseDeconvoluted = input$caseDeconvoluted,
       showTraces = "Confirmed cases / tests",
       showTracesMode = "not",
+      showHelpBox = FALSE,
       translator = i18n(),
       language = input$lang,
       widgetID = NULL)
@@ -281,17 +348,17 @@ server <- function(input, output, session) {
 
   output$CHEregionPlot <- renderPlotly({
 
-    reData <- reData()
+    countryData <- loadCountryData("CHE", "Europe")
 
-    caseData <- reData$caseData[["CHE"]] %>%
+    caseData <- countryData$caseData %>%
       filter(!str_detect(region, "grR")) %>%
       mutate(
         data_type = fct_drop(data_type)
       )
 
-    estimatePlotRanges <- reData$estimateRanges[["CHE"]]
+    estimatePlotRanges <- countryData$estimateRanges[["CHE"]]
 
-    estimates <- reData$estimates[["CHE"]] %>%
+    estimates <- countryData$estimates %>%
       filter(
         !str_detect(region, "grR"),
         estimate_type == input$estimation_type_select,
@@ -367,18 +434,18 @@ server <- function(input, output, session) {
 
   output$CHEgreaterRegionPlot <- renderPlotly({
 
-    reData <- reData()
+    countryData <- loadCountryData("CHE", "Europe")
 
-    caseData <- reData$caseData[["CHE"]] %>%
+    caseData <- countryData$caseData %>%
       filter(str_detect(region, "grR") | region == "CHE") %>%
       mutate(
         region = str_remove(region, "grR "),
         data_type = fct_drop(data_type)
       )
 
-    estimatePlotRanges <- reData$estimateRanges[["CHE"]]
+    estimatePlotRanges <- countryData$estimateRanges[["CHE"]]
 
-    estimates <- reData$estimates[["CHE"]] %>%
+    estimates <- countryData$estimates %>%
       filter(
         str_detect(region, "grR") | region == "CHE",
         estimate_type == input$estimation_type_select,
@@ -453,9 +520,9 @@ server <- function(input, output, session) {
 
   output$WorldComparisonPlot <- renderPlotly({
 
-    reData <- reData()
+    reDataWorld <- reDataWorld()
 
-    caseData <- bind_rows(reData$caseData) %>%
+    caseData <- bind_rows(reDataWorld$caseData) %>%
       filter(
         data_type == input$data_type_select_world,
         region %in% countryList$countryIso3) %>%
@@ -463,9 +530,9 @@ server <- function(input, output, session) {
         data_type = fct_drop(data_type)
       )
 
-    estimatePlotRanges <- reData$estimateRanges
+    estimatePlotRanges <- reDataWorld$estimateRanges
 
-    estimates <- bind_rows(reData$estimates) %>%
+    estimates <- bind_rows(reDataWorld$estimates) %>%
       filter(
         data_type == input$data_type_select_world,
         estimate_type == input$estimation_type_select,
@@ -528,9 +595,9 @@ server <- function(input, output, session) {
 
   output$EuropeComparisonPlot <- renderPlotly({
 
-    reData <- reData()
+    reDataEurope <- reDataEurope()
 
-    caseData <- bind_rows(reData$caseData) %>%
+    caseData <- bind_rows(reDataEurope$caseData) %>%
       filter(
         data_type == input$data_type_select_europe,
         region %in% countryListContinent[["Europe"]]$countryIso3) %>%
@@ -538,9 +605,9 @@ server <- function(input, output, session) {
         data_type = fct_drop(data_type)
       )
 
-    estimatePlotRanges <- reData$estimateRanges
+    estimatePlotRanges <- reDataEurope$estimateRanges
 
-    estimates <- bind_rows(reData$estimates) %>%
+    estimates <- bind_rows(reDataEurope$estimates) %>%
       filter(
         data_type == input$data_type_select_europe,
         estimate_type == input$estimation_type_select,
@@ -561,8 +628,8 @@ server <- function(input, output, session) {
       filter(region %in% unique(estimates$region))
 
     focusCountry <- "Switzerland"
-    countryColors1 <- viridis(length(countryList$country))
-    names(countryColors1) <- countryList$country
+    countryColors1 <- viridis(length(reDataEurope$caseData))
+    names(countryColors1) <- countryList$country[countryList$countryIso3 %in% names(reDataEurope$caseData)]
     countryColors1[focusCountry] <- "#666666"
 
     countryColors2 <- saturation(countryColors1, value = 0.1)
@@ -601,18 +668,93 @@ server <- function(input, output, session) {
       widgetID = NULL)
   })
 
-  output$ZAFregionPlot <- renderPlotly({
+  output$AfricaComparisonPlot <- renderPlotly({
 
-    reData <- reData()
+    reDataAfrica <- reDataAfrica()
 
-    caseData <- reData$caseData[["ZAF"]] %>%
+    caseData <- bind_rows(reDataAfrica$caseData) %>%
+      filter(
+        data_type == input$data_type_select_africa,
+        region %in% countryListContinent[["Africa"]]$countryIso3) %>%
       mutate(
         data_type = fct_drop(data_type)
       )
 
-    estimatePlotRanges <- reData$estimateRanges[["ZAF"]]
+    estimatePlotRanges <- reDataAfrica$estimateRanges
 
-    estimates <- reData$estimates[["ZAF"]] %>%
+    estimates <- bind_rows(reDataAfrica$estimates) %>%
+      filter(
+        data_type == input$data_type_select_africa,
+        estimate_type == input$estimation_type_select,
+        region %in% countryListContinent[["Africa"]]$countryIso3) %>%
+      group_by(countryIso3, data_type) %>%
+      filter(
+        between(date,
+          left = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["start"]][[as.character(data_type[1])]],
+          right = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["end"]][[as.character(data_type[1])]]),
+      ) %>%
+      ungroup() %>%
+      mutate(
+        data_type = fct_drop(data_type)
+      )
+
+    #filter out regions without estimations due to low case counts
+    caseData <- caseData %>%
+      filter(region %in% unique(estimates$region))
+
+    focusCountry <- "South Africa"
+    countryColors1 <- viridis(length(reDataAfrica$caseData))
+    names(countryColors1) <- countryList$country[countryList$countryIso3 %in% names(reDataAfrica$caseData)]
+    countryColors1[focusCountry] <- "#666666"
+
+    countryColors2 <- saturation(countryColors1, value = 0.1)
+    names(countryColors2) <- str_c(names(countryColors1), " truncated")
+
+    countryColors <- c(countryColors1, countryColors2)
+    countryColors[str_c(focusCountry, " truncated")] <- "#BBBBBB"
+
+    updateDataComparison <- bind_rows(updateData()) %>%
+      filter(data_type == input$data_type_select_africa) %>%
+      ungroup() %>%
+      select(-region) %>%
+      group_by(countryIso3, country, source, data_type) %>%
+      summarize(
+        lastChanged = max(lastChanged),
+        .groups = "keep") %>%
+      ungroup()
+
+    rEffPlotlyComparison(
+      caseData = caseData,
+      estimates = estimates,
+      lastDataDate = updateDataComparison,
+      startDate = min(estimates$date) - 14,
+      focusCountry = focusCountry,
+      fixedRangeX = fixedRangeX,
+      fixedRangeY = fixedRangeY,
+      caseDataRightTruncation = 2,
+      logCaseYaxis = input$logCases,
+      caseAverage = input$caseAverage,
+      caseNormalize = input$caseNormalize,
+      caseLoess = input$caseLoess,
+      caseDeconvoluted = input$caseDeconvoluted,
+      countryColors = countryColors,
+      translator = translator,
+      language = input$lang,
+      widgetID = NULL)
+  })
+
+  output$ZAFregionPlot <- renderPlotly({
+
+    countryData <- loadCountryData("ZAF", "Africa")
+
+    caseData <- countryData$caseData %>%
+      mutate(
+        data_type = fct_drop(data_type)
+      )
+
+    estimatePlotRanges <- countryData$estimateRanges[["ZAF"]]
+
+    estimates <- countryData$estimates %>%
       filter(
         estimate_type == input$estimation_type_select,
         data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
@@ -693,7 +835,7 @@ server <- function(input, output, session) {
       str_c(format(Sys.Date(), "%Y%m%d"), "-ReEstimatesCH.csv")
     },
     content = function(file) {
-      write_csv(reData()$estimates[["CHE"]], file)
+      write_csv(reDataEurope()$estimates[["CHE"]], file)
     }
   )
 
@@ -702,7 +844,7 @@ server <- function(input, output, session) {
       str_c(format(Sys.Date(), "%Y%m%d"), "-ReEstimates.csv")
     },
     content = function(file) {
-      write_csv(bind_rows(reData()$estimates), file)
+      write_csv(bind_rows(reDataWorld()$estimates), file)
     }
   )
 
@@ -721,7 +863,6 @@ server <- function(input, output, session) {
         menuSubItem(HTML(i18n()$t("R<sub>e</sub> for greater Regions")),
           tabName = "CHEgreaterRegions", icon = icon("chart-area"))
       ),
-      menuItem(HTML(i18n()$t("All countries")), tabName = "WorldComparison", icon = icon("chart-area")),
       menuItem(HTML(i18n()$t("R<sub>e</sub> in Europe")),
         expandedName = "euMenu", startExpanded = stateVals$sidebarExpanded == "euMenu",
         menuSubItem("All european countries", tabName = "EuropeComparison", icon = icon("chart-area")),
@@ -734,6 +875,14 @@ server <- function(input, output, session) {
         menuSubItem(HTML(i18n()$t("South Africa")), tabName = "ZAF", icon = icon("chart-area")),
         menuSubItem(HTML(i18n()$t("R<sub>e</sub> by province")), tabName = "ZAFregion", icon = icon("chart-area"))
       ),
+      menuItem(HTML(i18n()$t("R<sub>e</sub> in Africa")),
+        expandedName = "africaMenu", startExpanded = stateVals$sidebarExpanded == "africaMenu",
+        menuSubItem("All african countries", tabName = "AfricaComparison", icon = icon("chart-area")),
+        lapply(countryListContinent$Africa$countryIso3, function(i) {
+          menuSubItem(countryList$country[countryList$countryIso3 == i], tabName = i, icon = icon("chart-area"))
+        })
+      ),
+      menuItem(HTML(i18n()$t("All countries")), tabName = "WorldComparison", icon = icon("chart-area")),
       menuItem(HTML(i18n()$t("Download R<sub>e</sub> estimates")),
                   tabName = "download", icon = icon("download")),
       menuItem(i18n()$t("About"), tabName = "about", icon = icon("question-circle")),
@@ -789,7 +938,14 @@ server <- function(input, output, session) {
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland")),
         width = 12,
-        plotlyOutput("CHEcountryPlot", width = "100%", height = "800px")
+        plotlyOutput("CHEcountryPlot", width = "100%", height = "800px"),
+        HTML(
+          str_c("<p><small>",
+            i18n()$t(
+              str_c("<b>Interactive plot:</b> Click on legend toggles datatypes; doubleclick isolates datatypes. ",
+                "Hovering the mouse over data points shows details.")),
+            "</small></p>")
+        )
       ),
       fluidRow(
         column(width = 8,
@@ -815,7 +971,14 @@ server <- function(input, output, session) {
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for cantons")),
       width = 12,
-          plotlyOutput("CHEregionPlot", width = "100%", height = "800px")
+        plotlyOutput("CHEregionPlot", width = "100%", height = "800px"),
+        HTML(
+          str_c("<p><small>",
+            i18n()$t(
+              str_c("<b>Interactive plot:</b> Click on legend toggles datatypes; doubleclick isolates datatypes. ",
+                "Hovering the mouse over data points shows details.")),
+            "</small></p>")
+        )
       ),
       fluidRow(
         column(width = 8,
@@ -842,7 +1005,14 @@ server <- function(input, output, session) {
       box(title = HTML(i18n()$t(
           "Estimating the effective reproductive number (R<sub>e</sub>) for greater regions of Switzerland")),
         width = 12,
-        plotlyOutput("CHEgreaterRegionPlot", width = "100%", height = "800px")
+        plotlyOutput("CHEgreaterRegionPlot", width = "100%", height = "800px"),
+        HTML(
+          str_c("<p><small>",
+            i18n()$t(
+              str_c("<b>Interactive plot:</b> Click on legend toggles datatypes; doubleclick isolates datatypes. ",
+                "Hovering the mouse over data points shows details.")),
+            "</small></p>")
+        )
       ),
       fluidRow(
         column(width = 8,
@@ -868,11 +1038,18 @@ server <- function(input, output, session) {
     fluidRow(
       box(title = HTML(i18n()$t("Estimating the effective reproductive number (R<sub>e</sub>) for provinces")),
       width = 12,
-          plotlyOutput("ZAFregionPlot", width = "100%", height = "800px"),
-          HTML(str_c("Data provided by the ",
-            "<a href=\"https://github.com/dsfsi/covid19za\">Data Science and Social Impact Research",
-            "Group @ U Pretoria</a> and the <a href=\"https://www.krisp.org.za/ngs-sa/\">Network for Genomics",
-            "Surveillance in South Africa (NGS-SA)</a>"))
+        plotlyOutput("ZAFregionPlot", width = "100%", height = "800px"),
+        HTML(
+          str_c("<p><small>",
+            i18n()$t(
+              str_c("<b>Interactive plot:</b> Click on legend toggles datatypes; doubleclick isolates datatypes. ",
+                "Hovering the mouse over data points shows details.")),
+            "</small></p>")
+        ),
+        HTML(str_c("Data provided by the ",
+          "<a href=\"https://github.com/dsfsi/covid19za\">Data Science and Social Impact Research",
+          "Group @ U Pretoria</a> and the <a href=\"https://www.krisp.org.za/ngs-sa/\">Network for Genomics",
+          "Surveillance in South Africa (NGS-SA)</a>"))
       ),
       fluidRow(
         column(width = 8,
@@ -901,7 +1078,14 @@ server <- function(input, output, session) {
         box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) - ",
           countryList$country[countryList$countryIso3 == i]))),
           width = 12,
-          plotlyOutput(str_c(i, "Plot"), width = "100%", height = "700px")
+          plotlyOutput(str_c(i, "Plot"), width = "100%", height = "800px"),
+          HTML(
+            str_c("<p><small>",
+              i18n()$t(
+                str_c("<b>Interactive plot:</b> Click on legend toggles datatypes; doubleclick isolates datatypes. ",
+                  "Hovering the mouse over data points shows details.")),
+              "</small></p>")
+          )
         ),
         fluidRow(
           column(width = 8,
@@ -924,36 +1108,43 @@ server <- function(input, output, session) {
     })
   })
 
-    output$ZAFUI <- renderUI({
-      fluidRow(
-        box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) - ",
-          countryList$country[countryList$countryIso3 == "ZAF"]))),
-          width = 12,
-          plotlyOutput("ZAFPlot", width = "100%", height = "700px"),
-          HTML(str_c("Data provided by the ",
-            "<a href=\"https://github.com/dsfsi/covid19za\">Data Science and Social Impact Research",
-            "Group @ U Pretoria</a> and the <a href=\"https://www.krisp.org.za/ngs-sa/\">Network for Genomics",
-            "Surveillance in South Africa (NGS-SA)</a>"))
+  output$ZAFUI <- renderUI({
+    fluidRow(
+      box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) - ",
+        countryList$country[countryList$countryIso3 == "ZAF"]))),
+        width = 12,
+        plotlyOutput("ZAFPlot", width = "100%", height = "800px"),
+        HTML(
+          str_c("<p><small>",
+            i18n()$t(
+              str_c("<b>Interactive plot:</b> Click on legend toggles datatypes; doubleclick isolates datatypes. ",
+                "Hovering the mouse over data points shows details.")),
+            "</small></p>")
         ),
-        fluidRow(
-          column(width = 8,
-              box(width = 12,
-                includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
-              )
-          ),
-          column(width = 4,
-            infoBox(width = 12,
-              i18n()$t("Last Data Updates"),
-              HTML(
-                dataUpdatesTable(updateData()[["ZAF"]], dateFormat = i18n()$t("%Y-%m-%d"))
-              ),
-              icon = icon("exclamation-circle"),
-              color = "purple"
+        HTML(str_c("Data provided by the ",
+          "<a href=\"https://github.com/dsfsi/covid19za\">Data Science and Social Impact Research",
+          "Group @ U Pretoria</a> and the <a href=\"https://www.krisp.org.za/ngs-sa/\">Network for Genomics",
+          "Surveillance in South Africa (NGS-SA)</a>"))
+      ),
+      fluidRow(
+        column(width = 8,
+            box(width = 12,
+              includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
             )
+        ),
+        column(width = 4,
+          infoBox(width = 12,
+            i18n()$t("Last Data Updates"),
+            HTML(
+              dataUpdatesTable(updateData()[["ZAF"]], dateFormat = i18n()$t("%Y-%m-%d"))
+            ),
+            icon = icon("exclamation-circle"),
+            color = "purple"
           )
         )
       )
-    })
+    )
+  })
 
   output$EuropeComparisonUI <- renderUI({
     fluidRow(
@@ -963,7 +1154,14 @@ server <- function(input, output, session) {
           radioButtons("data_type_select_europe", "Select Data Type to compare",
             choices = c("Confirmed cases", "Hospitalized patients", "Deaths"),
             selected = "Confirmed cases", inline = TRUE),
-          plotlyOutput("EuropeComparisonPlot", width = "100%", height = "700px")
+          plotlyOutput("EuropeComparisonPlot", width = "100%", height = "800px"),
+          HTML(
+            str_c("<p><small>",
+              i18n()$t(
+                str_c("<b>Interactive plot:</b> Click on legend toggles datatypes; doubleclick isolates datatypes. ",
+                  "Hovering the mouse over data points shows details.")),
+              "</small></p>")
+          )
         ),
         fluidRow(
           column(width = 8,
@@ -990,6 +1188,48 @@ server <- function(input, output, session) {
       )
   })
 
+  output$AfricaComparisonUI <- renderUI({
+    fluidRow(
+        box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) in Africa - ",
+          "Comparison"))),
+          width = 12,
+          radioButtons("data_type_select_africa", "Select Data Type to compare",
+            choices = c("Confirmed cases", "Hospitalized patients", "Deaths"),
+            selected = "Confirmed cases", inline = TRUE),
+          plotlyOutput("AfricaComparisonPlot", width = "100%", height = "800px"),
+          HTML(
+            str_c("<p><small>",
+              i18n()$t(
+                str_c("<b>Interactive plot:</b> Click on legend toggles datatypes; doubleclick isolates datatypes. ",
+                  "Hovering the mouse over data points shows details.")),
+              "</small></p>")
+          )
+        ),
+        fluidRow(
+          column(width = 8,
+              box(width = 12,
+                includeMarkdown(str_c("md/methodsOnly_", input$lang, ".md"))
+              )
+          ),
+          column(width = 4,
+            uiOutput("AfricaComparisonDataSourceUI")
+          )
+        )
+      )
+  })
+
+  output$AfricaComparisonDataSourceUI <- renderUI({
+    infoBox(width = 12,
+        i18n()$t("Last Data Updates"),
+        HTML(
+          dataUpdatesTable(
+            updateData()[countryListContinent$Africa$countryIso3],
+            dateFormat = i18n()$t("%Y-%m-%d"))),
+        icon = icon("exclamation-circle"),
+        color = "purple"
+      )
+  })
+
   output$WorldComparisonUI <- renderUI({
     fluidRow(
         box(title = HTML(i18n()$t(str_c("Estimating the effective reproductive number (R<sub>e</sub>) - ",
@@ -998,7 +1238,14 @@ server <- function(input, output, session) {
           radioButtons("data_type_select_world", "Select Data Type to compare",
             choices = c("Confirmed cases", "Hospitalized patients", "Deaths"),
             selected = "Confirmed cases", inline = TRUE),
-          plotlyOutput("WorldComparisonPlot", width = "100%", height = "700px")
+          plotlyOutput("WorldComparisonPlot", width = "100%", height = "800px"),
+          HTML(
+            str_c("<p><small>",
+              i18n()$t(
+                str_c("<b>Interactive plot:</b> Click on legend toggles datatypes; doubleclick isolates datatypes. ",
+                  "Hovering the mouse over data points shows details.")),
+              "</small></p>")
+          )
         ),
         fluidRow(
           column(width = 8,
@@ -1018,7 +1265,7 @@ server <- function(input, output, session) {
         i18n()$t("Last Data Updates"),
         HTML(
           dataUpdatesTable(
-            updateData(),
+            updateData()[countryList$countryIso3],
             dateFormat = i18n()$t("%Y-%m-%d"))),
         icon = icon("exclamation-circle"),
         color = "purple"
@@ -1056,6 +1303,7 @@ server <- function(input, output, session) {
       "CHEcountry", "CHEregion", "CHEgreaterRegions",
       "EuropeComparison",
       "WorldComparison",
+      "AfricaComparison",
       countryList$countryIso3,
       "ZAFregion",
       "download", "about")

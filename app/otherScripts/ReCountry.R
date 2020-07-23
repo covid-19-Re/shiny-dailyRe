@@ -50,6 +50,11 @@ names(args) <- "country"
     popData <- readRDS(popDataPath)
   }
 
+basePath <- here("app", "data", "countryData", popData$continent[popData$countryIso3 == args["country"]][1])
+if (!dir.exists(basePath)) {
+  dir.create(basePath)
+}
+
 # Fetch Country Data
   countryData <- getCountryData(
     args["country"],
@@ -63,7 +68,7 @@ names(args) <- "country"
   
   # get number of tests data
   if (args["country"] %in% c("CHE")) {
-    testsDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Tests.rds"))
+    testsDataPath <- file.path(basePath, str_c(args["country"], "-Tests.rds"))
 
     bagFiles <- list.files(here("app", "data", "BAG"),
       pattern = "*Time_series_tests.csv",
@@ -109,7 +114,7 @@ names(args) <- "country"
   }
 
   # check for changes in country data
-  countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Data.rds"))
+  countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.rds"))
   if (file.exists(countryDataPath)) {
     countryDataOld <- readRDS(countryDataPath)
     # if new data is null, keep old data (can happen because of error in reading new data)
@@ -153,7 +158,7 @@ names(args) <- "country"
     saveRDS(updateData, updateDataPath)
   }
 
-cleanEnv(keepObjects = c("countryData", "dataUnchanged", "args", "popData"))
+cleanEnv(keepObjects = c("basePath", "countryData", "dataUnchanged", "args", "popData"))
 
 # calculate Re
 # only if (data has changed OR forceUpdate.txt exists) AND countryData is not null
@@ -189,6 +194,14 @@ if (condition) {
     # filter out regions with to few cases for estimation
       countryData <- countryData %>%
         filterRegions(threshholdConfirmedCases = 500)
+    # filter out data_types with 0 total cases
+      data_type0 <- countryData %>%
+        group_by(data_type) %>%
+        summarize(total = sum(value), .groups = "drop") %>%
+        filter(total == 0) %>%
+        .$data_type
+
+      countryData <- filter(countryData, !(data_type %in% data_type0))
     # country specific data filtering
       if (args["country"] == "ESP") {
         countryData <- countryData %>%
@@ -277,11 +290,11 @@ if (condition) {
       }
 
       deconvolvedCountryData <- bind_rows(deconvolvedData)
-      countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-DeconvolutedData.rds"))
+      countryDataPath <- file.path(basePath, str_c(args["country"], "-DeconvolutedData.rds"))
       saveRDS(deconvolvedCountryData, file = countryDataPath)
 
     # Re Estimation
-      cleanEnv(keepObjects = c("deconvolvedCountryData", "args", "popData"))
+      cleanEnv(keepObjects = c("basePath", "deconvolvedCountryData", "args", "popData"))
       source(here("app/otherScripts/3_utils_doReEstimates.R"))
       pathToAdditionalData <- here("../covid19-additionalData/interventions/")
 
@@ -370,7 +383,7 @@ if (condition) {
           select(popData, country, region, countryIso3),
           by = c("country", "region")
         )
-      countryDataPath <- here("app", "data", "countryData", str_c(args["country"], "-Estimates.rds"))
+      countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
       saveRDS(countryEstimates, file = countryDataPath)
 } else {
   cat(str_c(args["country"], ": No new data available. Skipping Re calculation.\n"))

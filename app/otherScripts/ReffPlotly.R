@@ -38,6 +38,7 @@ rEffPlotly <- function(
   caseDeconvoluted = FALSE,
   showTraces = NULL,
   showTracesMode = "only",
+  showHelpBox = TRUE,
   language,
   translator,
   widgetID = "rEffplots") {
@@ -306,10 +307,7 @@ rEffPlotly <- function(
     nPlots <- 2
   }
 
-  plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
-    layout(
-      margin = list(b = bottomMargin),
-      annotations = list(
+  plotAnnotations <- list(
         list(
           x = xDataSource, y = yDataSource, xref = "paper", yref = "paper",
           text = dataUpdatesString(lastDataDate, name = translator$t("Data Source"), dateFormatLong),
@@ -322,8 +320,11 @@ rEffPlotly <- function(
           showarrow = FALSE,
           xanchor = rNoteAnchors[1], yanchor = rNoteAnchors[2], align = "left",
           xshift = 10, yshift = 0,
-          font = list(size = 11, color = "black")),
-        list(
+          font = list(size = 11, color = "black"))
+      )
+
+  if (showHelpBox) {
+    plotAnnotations[[3]] <- list(
           x = xHelpBox, y = yHelpBox, xref = "paper", yref = "paper",
           width = wHelpBox,
           height = hHelpBox,
@@ -335,7 +336,13 @@ rEffPlotly <- function(
           xshift = helpBoxShift[1], yshift = helpBoxShift[2],
           font = list(size = 11, color = "black")
         )
-    )) %>%
+  }
+
+  plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
+    layout(
+      margin = list(b = bottomMargin),
+      annotations = plotAnnotations
+    ) %>%
     config(doubleClick = "reset", displaylogo = FALSE, modeBarButtons = list(list("toImage")),
       toImageButtonOptions = list(format = "png", width = 1200, height = 800, scale = 1, filename = "ReEstimates"),
       locale = locale, scrollZoom = FALSE)
@@ -393,25 +400,6 @@ rEffPlotlyRegion <- function(
       "delays between infection and<br>",
       "the last data observation."))
     rNoteAnchors <- c("right", "top")
-    xHelpBox <- 1
-    yHelpBox <- 0
-    helpBoxAnchors <- c("left", "bottom")
-    wHelpBox <- 174
-    hHelpBox <- 90
-    if (language %in% c("fr-ch", "it-ch")) {
-      hHelpBox <- 120
-    } else if (language == "de-ch") {
-      hHelpBox <- 130
-    }
-    helpBoxText <- translator$t(str_c(
-      "&nbsp;<b>Interactive plot</b><br>",
-      "&nbsp;&nbsp;• Click on legend toggles<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;datatypes; doubleclick<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;isolates datatypes.<br>",
-      "&nbsp;&nbsp;• Hovering the mouse over<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;data points shows details."
-    ))
-    helpBoxShift <- c(10, 0)
     xDataSource <- 1
     yDataSource <- -0.2
     dataSourceAnchors <- c("right", "auto")
@@ -668,20 +656,9 @@ rEffPlotlyRegion <- function(
           showarrow = FALSE,
           xanchor = rNoteAnchors[1], yanchor = rNoteAnchors[2], align = "left",
           xshift = 10, yshift = 0,
-          font = list(size = 11, color = "black")),
-        list(
-          x = xHelpBox, y = yHelpBox, xref = "paper", yref = "paper",
-          width = wHelpBox,
-          height = hHelpBox,
-          bgcolor = "#eeeeee",
-          text = helpBoxText,
-          valign = "top",
-          showarrow = FALSE,
-          xanchor = helpBoxAnchors[1], yanchor = helpBoxAnchors[2], align = "left",
-          xshift = helpBoxShift[1], yshift = helpBoxShift[2],
-          font = list(size = 11, color = "black")
-        )
-    )) %>%
+          font = list(size = 11, color = "black"))
+      )
+    ) %>%
     config(doubleClick = "reset", displaylogo = FALSE, modeBarButtons = list(list("toImage")),
       toImageButtonOptions = list(format = "png", width = 1200, height = 800, scale = 1, filename = "ReEstimates"),
       locale = locale, scrollZoom = FALSE)
@@ -735,25 +712,6 @@ rEffPlotlyComparison <- function(
       "delays between infection and<br>",
       "the last data observation."))
     rNoteAnchors <- c("right", "top")
-    xHelpBox <- 1
-    yHelpBox <- 0.2
-    helpBoxAnchors <- c("left", "bottom")
-    wHelpBox <- 174
-    hHelpBox <- 90
-    if (language %in% c("fr-ch", "it-ch")) {
-      hHelpBox <- 120
-    } else if (language == "de-ch") {
-      hHelpBox <- 130
-    }
-    helpBoxText <- translator$t(str_c(
-      "&nbsp;<b>Interactive plot</b><br>",
-      "&nbsp;&nbsp;• Click on legend toggles<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;datatypes; doubleclick<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;isolates datatypes.<br>",
-      "&nbsp;&nbsp;• Hovering the mouse over<br>",
-      "&nbsp;&nbsp;&nbsp;&nbsp;data points shows details."
-    ))
-    helpBoxShift <- c(10, 0)
     xDataSource <- 1
     yDataSource <- -0.18
     dataSourceAnchors <- c("right", "top")
@@ -947,19 +905,7 @@ rEffPlotlyComparison <- function(
           showarrow = FALSE,
           xanchor = rNoteAnchors[1], yanchor = rNoteAnchors[2], align = "left",
           xshift = 10, yshift = 0,
-          font = list(size = 11, color = "black")),
-        list(
-          x = xHelpBox, y = yHelpBox, xref = "paper", yref = "paper",
-          width = wHelpBox,
-          height = hHelpBox,
-          bgcolor = "#eeeeee",
-          text = helpBoxText,
-          valign = "top",
-          showarrow = FALSE,
-          xanchor = helpBoxAnchors[1], yanchor = helpBoxAnchors[2], align = "left",
-          xshift = helpBoxShift[1], yshift = helpBoxShift[2],
-          font = list(size = 11, color = "black")
-        )
+          font = list(size = 11, color = "black"))
     )) %>%
     config(doubleClick = "reset", displaylogo = FALSE, modeBarButtons = list(list("toImage")),
       toImageButtonOptions = list(format = "png", width = 1200, height = 800, scale = 1, filename = "ReEstimates"),
