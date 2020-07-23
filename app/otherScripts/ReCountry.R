@@ -377,11 +377,7 @@ if (condition) {
           dplyr::select(popData, country, region, countryIso3),
           by = c("country", "region")
         )
-<<<<<<< HEAD
-      countryDataPath <- here::here("app", "data", "countryData", str_c(args["country"], "-Estimates.rds"))
-=======
       countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
->>>>>>> master
       saveRDS(countryEstimates, file = countryDataPath)
 } else {
   cat(str_c(args["country"], ": No new data available. Skipping Re calculation.\n"))
