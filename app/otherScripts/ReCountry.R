@@ -284,23 +284,13 @@ if (condition) {
       }
 
       deconvolvedCountryData <- bind_rows(deconvolvedData)
-<<<<<<< HEAD
-      countryDataPath <- here::here("app", "data", "countryData", str_c(args["country"], "-DeconvolutedData.rds"))
-      saveRDS(deconvolvedCountryData, file = countryDataPath)
-
-    # Re Estimation
-      cleanEnv(keepObjects = c("deconvolvedCountryData", "args", "popData"))
-      source(here::here("app/otherScripts/3_utils_doReEstimates.R"))
-      pathToAdditionalData <- here::here("../covid19-additionalData/interventions/")
-=======
       countryDataPath <- file.path(basePath, str_c(args["country"], "-DeconvolutedData.rds"))
       saveRDS(deconvolvedCountryData, file = countryDataPath)
 
     # Re Estimation
       cleanEnv(keepObjects = c("basePath", "deconvolvedCountryData", "args", "popData"))
-      source(here("app/otherScripts/3_utils_doReEstimates.R"))
-      pathToAdditionalData <- here("../covid19-additionalData/interventions/")
->>>>>>> master
+      source(here::here("app/otherScripts/3_utils_doReEstimates.R"))
+      pathToAdditionalData <- here::here("../covid19-additionalData/interventions/")
 
       interventionData <- read_csv(
         str_c(pathToAdditionalData, "interventions.csv"),
