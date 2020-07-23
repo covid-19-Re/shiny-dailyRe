@@ -14,19 +14,19 @@ if (interactive()) {
   })
 }
 
-source(here("app", "otherScripts", "ReffPlotly.R"))
-source(here("app", "utils.R"))
+source(here::here("app", "otherScripts", "ReffPlotly.R"))
+source(here::here("app", "utils.R"))
 
 iso3 <- "CHE"
 cat(str_c("making ", iso3, " plots for ncs-tf website ...\n"))
 
 # load data
-dataDir <- here("app/data")
-plotOutDir <- here("app/www")
+dataDir <- here::here("app/data")
+plotOutDir <- here::here("app/www")
 pathToCaseData <- file.path(dataDir, str_c("countryData/", iso3, "-Data.rds"))
 pathToEstimates <- file.path(dataDir, str_c("countryData/", iso3, "-Estimates.rds"))
 pathToUpdateData <- file.path(dataDir, "updateData.rds")
-pathToInterventionData <- here("../covid19-additionalData/interventions/interventions.csv")
+pathToInterventionData <- here::here("../covid19-additionalData/interventions/interventions.csv")
 
 caseData <- readRDS(pathToCaseData) %>%
   pivot_wider(names_from = "variable", values_from = "value")
@@ -72,7 +72,7 @@ updateDataPlot <- updateData %>%
     source %in% unique(estimates$source)) %>%
   distinct()
 
-translator <- Translator$new(translation_json_path = here("app", "data", "shinyTranslations.json"))
+translator <- Translator$new(translation_json_path = here::here("app", "data", "shinyTranslations.json"))
 
 interventions <- read_csv(file = pathToInterventionData,
   col_types = cols(

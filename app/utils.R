@@ -63,7 +63,7 @@ estimateRanges <- function(
       cumsum(incidence) > 100) %>%
     filter(date == min(date)) %>%
     ungroup() %>%
-    select(countryIso3, region, estimateStart = date)
+    dplyr::select(countryIso3, region, estimateStart = date)
 
   # figuring out when estimation ends i.e. applying the delays
   estimateDatesDf <- caseData %>%

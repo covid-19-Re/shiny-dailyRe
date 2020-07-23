@@ -114,22 +114,6 @@ convolved_delays <- final_delay_data_FOPH %>%
            fill = list(value = 0)) %>% 
   mutate(source = NA, country = NA, region = NA, data_type = NA)
 
-a <- get_infection_incidence_by_deconvolution(
-  convolved_delays,
-  incubation_delay_distribution,
-  min_chi_squared = 1,
-  smooth_incidence = F,
-  n_bootstrap = 0,
-  maximum_iterations = 1E3,
-  verbose = T)
-
-a <-  a %>% mutate(value = round(value))
-
-# sum(a$value)
-# 
-# sum(convolved_delays$value)
-
-
 ### Save file
 write_csv(final_delay_data_FOPH, path = file.path(outDir, "FOPH_data_delays.csv"))
 
@@ -272,7 +256,7 @@ allBAGdata <- bind_rows(allKtn, allCH) %>%
   arrange(countryIso3, region, data_type, date) %>%
   dplyr::group_by(countryIso3, region, source, data_type) %>%
   mutate(cumul = cumsum(incidence)) %>%
-  pivot_longer(incidence:cumul, names_to = "variable", values_to = "value") %>%
+  pivot_longer(c(incidence,cumul), names_to = "variable", values_to = "value") %>%
   dplyr::select(date, region, countryIso3, source, data_type, value, variable) %>%
   filter(date <= max_date) %>% 
   arrange(data_type, variable, region, countryIso3, source, date) %>%

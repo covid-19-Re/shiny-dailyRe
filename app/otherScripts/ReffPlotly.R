@@ -422,7 +422,7 @@ rEffPlotlyRegion <- function(
   names(newLevels) <- sapply(newLevels, translator$t,  USE.NAMES = FALSE)
 
   if (!is.null(focusRegion)) {
-    countryNames <- caseData %>% ungroup() %>% select(countryIso3, country) %>% distinct()
+    countryNames <- caseData %>% ungroup() %>% dplyr::select(countryIso3, country) %>% distinct()
     focusRegionLong <- str_c(countryNames$country[countryNames$countryIso3 == focusRegion], " (Total)")
     focusRegionRecodeKey <- c(
       translator$t(focusRegionLong),

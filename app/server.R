@@ -30,7 +30,7 @@ server <- function(input, output, session) {
         )[, 2]
         )
     ) %>%
-    left_join(distinct(select(popData, countryIso3, country, continent)), by = "countryIso3")
+    left_join(distinct(dplyr::select(popData, countryIso3, country, continent)), by = "countryIso3")
 
   countryListContinent <- countryList %>%
     split(f = .$continent)
@@ -77,7 +77,7 @@ server <- function(input, output, session) {
         }
 
         deconvolutedData <- deconvolutedData %>%
-          select(-variable) %>%
+          dplyr::select(-variable) %>%
           mutate(data_type = str_sub(data_type, 11)) %>%
           group_by(date, region, country, source, data_type) %>%
           summarise(
@@ -112,16 +112,16 @@ server <- function(input, output, session) {
     sourceInfo <- read_csv("data/dataSources.csv", col_types = cols(.default = col_character()))
 
     dataSources <- bind_rows(reData()$caseData) %>%
-      select(countryIso3, country, source, data_type) %>%
+      dplyr::select(countryIso3, country, source, data_type) %>%
       filter(data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
       left_join(sourceInfo, by = "source") %>%
       group_by(source, sourceLong, url) %>%
-      summarize(
+      dplyr::summarize(
         countries = str_c(unique(country), collapse = ", "),
         data_type = str_c(unique(data_type), collapse = ", "),
         .groups = "drop_last") %>%
       mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
-      select("Source" = source, "Description" = sourceLong,
+      dplyr::select("Source" = source, "Description" = sourceLong,
         "Countries" = countries, "Data types" = data_type, "URL" = url)
 
     return(dataSources)
@@ -501,9 +501,9 @@ server <- function(input, output, session) {
     updateDataComparison <- bind_rows(updateData()) %>%
       filter(data_type == input$data_type_select_world) %>%
       ungroup() %>%
-      select(-region) %>%
+      dplyr::select(-region) %>%
       group_by(countryIso3, country, source, data_type) %>%
-      summarize(
+      dplyr::summarize(
         lastChanged = max(lastChanged),
         .groups = "keep") %>%
       ungroup()
@@ -576,9 +576,9 @@ server <- function(input, output, session) {
     updateDataComparison <- bind_rows(updateData()) %>%
       filter(data_type == input$data_type_select_europe) %>%
       ungroup() %>%
-      select(-region) %>%
+      dplyr::select(-region) %>%
       group_by(countryIso3, country, source, data_type) %>%
-      summarize(
+      dplyr::summarize(
         lastChanged = max(lastChanged),
         .groups = "keep") %>%
       ungroup()
