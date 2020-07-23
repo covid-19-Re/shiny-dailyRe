@@ -1,5 +1,43 @@
 # helpers
 
+loadCountryData <- function(iso3, continent) {
+  deconvolutedData <- readRDS(file.path("data/countryData", continent, str_c(iso3, "-DeconvolutedData.rds")))
+  caseData <- readRDS(file.path("data/countryData", continent, str_c(iso3, "-Data.rds")))
+  estimates <- readRDS(file.path("data/countryData", continent, str_c(iso3, "-Estimates.rds")))
+
+  deconvolutedData <- deconvolutedData %>%
+    select(-variable) %>%
+    mutate(data_type = str_sub(data_type, 11)) %>%
+    group_by(date, region, country, source, data_type) %>%
+    summarise(
+      deconvoluted = mean(value),
+      deconvolutedLow = deconvoluted - sd(value),
+      deconvolutedHigh = deconvoluted + sd(value),
+      .groups = "keep"
+    )
+
+  caseData <- caseData %>%
+    pivot_wider(names_from = "variable", values_from = "value") %>%
+    left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
+    arrange(countryIso3, region, source, data_type, date)
+
+  testsPath <- file.path("data/countryData", continent, str_c(iso3, "-Tests.rds"))
+  if (file.exists(testsPath)) {
+    tests <- readRDS(testsPath)
+  }
+
+  countryData <- list(
+    caseData = caseData,
+    estimates = estimates,
+    estimateRanges = estimateRanges(
+      caseData,
+      minConfirmedCases = 100,
+      delays = delaysDf))
+
+  return(countryData)
+}
+
+
 dataUpdatesTable <- function(
   updateData,
   dateFormat = "%Y-%m-%d",
@@ -46,9 +84,9 @@ dataUpdatesTable <- function(
 
 delaysDf <- tibble(
     data_type = factor(
-      c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths"),
-      levels = c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")),
-    delay = c(8, 10, 18, 30))
+      c("Confirmed cases", "Confirmed cases / tests", "Hospitalized patients", "Deaths", "Excess deaths"),
+      levels = c("Confirmed cases", "Confirmed cases / tests", "Hospitalized patients", "Deaths", "Excess deaths")),
+    delay = c(8, 8, 10, 18, 30))
 
 estimateRanges <- function(
   caseData,

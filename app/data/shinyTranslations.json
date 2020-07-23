@@ -397,6 +397,12 @@
       "it-ch": "&nbsp;<b>Grafico interattivo</b><br>&nbsp;&nbsp;• Cliccare sulla legenda per attivare/disattivare i tipi di dati. Doppio click per isolare i tipi di dati.<br>&nbsp;&nbsp;• passare con il mouse sulle barre/punti per piu' informazioni"
     },
     {
+      "en-gb": "<b>Interactive plot:</b> Click on legend toggles datatypes; doubleclick isolates datatypes. Hovering the mouse over data points shows details.",
+      "de-ch": "<b>Interaktive Grafik</b> Klick auf die Legende blendet einzelne Daten- typen ein/aus. Doppelklick isoliert Datentyp. Positionierung der Maus über Datenpunkten zeigt detaillierte Informationen an.",
+      "fr-ch": "<b>Graphe interactif</b> Cliquez sur la légende pour masquer le type de données. Double-cliquez pour sélectionner. Survolez le graphe avec la souris pour en voir le détail.",
+      "it-ch": "<b>Grafico interattivo</b> Cliccare sulla legenda per attivare/disattivare i tipi di dati. Doppio click per isolare i tipi di dati. passare con il mouse sulle barre/punti per piu' informazioni"
+    },
+    {
       "en-gb": "Data Source",
       "de-ch": "Datenquelle",
       "fr-ch": "Source",

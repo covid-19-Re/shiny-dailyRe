@@ -23,7 +23,7 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("DEU")
+  args <- c("CHE")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -50,6 +50,11 @@ names(args) <- "country"
     popData <- readRDS(popDataPath)
   }
 
+basePath <- here("app", "data", "countryData", popData$continent[popData$countryIso3 == args["country"]][1])
+if (!dir.exists(basePath)) {
+  dir.create(basePath)
+}
+
 # Fetch Country Data
   countryData <- getCountryData(
     args["country"],
@@ -60,9 +65,56 @@ names(args) <- "country"
       popData,
       by = c("countryIso3", "region")
     )
+  
+  # get number of tests data
+  if (args["country"] %in% c("CHE")) {
+    testsDataPath <- file.path(basePath, str_c(args["country"], "-Tests.rds"))
+
+    bagFiles <- list.files(here("app", "data", "BAG"),
+      pattern = "*Time_series_tests.csv",
+      full.names = TRUE,
+      recursive = TRUE)
+
+    bagFileDates <- strptime(
+      stringr::str_match(bagFiles, ".*\\/(\\d*-\\d*-\\d*_\\d*-\\d*-\\d*)")[, 2],
+      format = "%Y-%m-%d_%H-%M-%S")
+
+    newestFile <- bagFiles[which(bagFileDates == max(bagFileDates))[1]]
+    nTests <- read_delim(file = newestFile, delim = ";",
+      col_types = cols_only(
+        Datum = col_date(format = ""),
+        `Positive Tests` = col_double(),
+        `Negative Tests` = col_double()
+      )) %>%
+      transmute(
+        date = Datum,
+        countryIso3 = "CHE",
+        region = countryIso3,
+        positiveTests = `Positive Tests`,
+        negativeTests = `Negative Tests`,
+        totalTests = positiveTests + negativeTests,
+        testPositivity = positiveTests / totalTests
+        )
+
+    saveRDS(nTests, testsDataPath)
+
+    countryData <- countryData %>%
+      left_join(
+        mutate(nTests, data_type = "Confirmed cases"),
+        by = c("date", "region", "countryIso3", "data_type"))
+
+    countryDataTests <- countryData %>%
+      filter(data_type == "Confirmed cases", region == "CHE") %>%
+      mutate(
+        data_type = "Confirmed cases / tests",
+        value = value / totalTests
+      )
+
+    countryData <- bind_rows(countryData, countryDataTests)
+  }
 
   # check for changes in country data
-  countryDataPath <- here::here("app", "data", "countryData", str_c(args["country"], "-Data.rds"))
+  countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.rds"))
   if (file.exists(countryDataPath)) {
     countryDataOld <- readRDS(countryDataPath)
     # if new data is null, keep old data (can happen because of error in reading new data)
@@ -105,41 +157,9 @@ names(args) <- "country"
     }
 
     saveRDS(updateData, updateDataPath)
-
-
-    # get number of test data
-    if (args["country"] %in% c("CHE")) {
-      testsDataPath <- here::here("app", "data", "countryData", str_c(args["country"], "-Tests.rds"))
-
-      bagFiles <- list.files(here::here("app", "data", "BAG"),
-        pattern = "*Time_series_tests.csv",
-        full.names = TRUE,
-        recursive = TRUE)
-
-      bagFileDates <- strptime(
-        stringr::str_match(bagFiles, ".*\\/(\\d*-\\d*-\\d*_\\d*-\\d*-\\d*)")[, 2],
-        format = "%Y-%m-%d_%H-%M-%S")
-
-      newestFile <- bagFiles[which(bagFileDates == max(bagFileDates))[1]]
-      nTests <- read_delim(file = newestFile, delim = ";",
-        col_types = cols_only(
-          Datum = col_date(format = ""),
-          `Positive Tests` = col_double(),
-          `Negative Tests` = col_double()
-        )) %>%
-        transmute(
-          date = Datum,
-          countryIso3 = "CHE",
-          region = countryIso3,
-          positiveTests = `Positive Tests`,
-          negativeTests = `Negative Tests`,
-          totalTests = positiveTests + negativeTests)
-
-      saveRDS(nTests, testsDataPath)
-    }
   }
 
-cleanEnv(keepObjects = c("countryData", "dataUnchanged", "args", "popData"))
+cleanEnv(keepObjects = c("basePath", "countryData", "dataUnchanged", "args", "popData"))
 
 # calculate Re
 # only if (data has changed OR forceUpdate.txt exists) AND countryData is not null
@@ -175,6 +195,14 @@ if (condition) {
     # filter out regions with to few cases for estimation
       countryData <- countryData %>%
         filterRegions(thresholdConfirmedCases = 500)
+    # filter out data_types with 0 total cases
+      data_type0 <- countryData %>%
+        group_by(data_type) %>%
+        summarize(total = sum(value), .groups = "drop") %>%
+        filter(total == 0) %>%
+        .$data_type
+
+      countryData <- filter(countryData, !(data_type %in% data_type0))
     # country specific data filtering
       if (args["country"] == "ESP") {
         countryData <- countryData %>%
@@ -229,14 +257,34 @@ if (condition) {
           data_types = c("Hospitalized patients - admission",
                         "Hospitalized patients - onset"),
           n_bootstrap = 50,
-          verbose = F)
+          verbose = FALSE)
         deconvolvedData[[2]] <- deconvolvedData[[2]] %>%
           group_by(date, country, region, data_type, source, replicate, variable) %>%
           summarise(value = sum(value), .groups = "keep") %>%
           arrange(country, region, source, data_type, variable, replicate, date) %>%
           ungroup()
       }
+
+      if (args["country"] %in% c("CHE")) {
+        countryDataTests <- countryData %>%
+          filter(region == args["country"], data_type == "Confirmed cases / tests") %>%
+          # normalize to same range as original data
+          mutate(value = value * mean(totalTests))
+        deconvolvedData[[3]] <- get_all_infection_incidence(
+          countryDataTests,
+          constant_delay_distributions = constant_delay_distributions,
+          onset_to_count_empirical_delays = delays_onset_to_count,
+          data_types = c("Confirmed cases / tests"),
+          shape_incubation = shape_incubation,
+          scale_incubation = scale_incubation,
+          min_chi_squared = 1,
+          maximum_iterations = 100,
+          n_bootstrap = 50,
+          verbose = FALSE)
+      }
+
       deconvolvedCountryData <- bind_rows(deconvolvedData)
+<<<<<<< HEAD
       countryDataPath <- here::here("app", "data", "countryData", str_c(args["country"], "-DeconvolutedData.rds"))
       saveRDS(deconvolvedCountryData, file = countryDataPath)
 
@@ -244,6 +292,15 @@ if (condition) {
       cleanEnv(keepObjects = c("deconvolvedCountryData", "args", "popData"))
       source(here::here("app/otherScripts/3_utils_doReEstimates.R"))
       pathToAdditionalData <- here::here("../covid19-additionalData/interventions/")
+=======
+      countryDataPath <- file.path(basePath, str_c(args["country"], "-DeconvolutedData.rds"))
+      saveRDS(deconvolvedCountryData, file = countryDataPath)
+
+    # Re Estimation
+      cleanEnv(keepObjects = c("basePath", "deconvolvedCountryData", "args", "popData"))
+      source(here("app/otherScripts/3_utils_doReEstimates.R"))
+      pathToAdditionalData <- here("../covid19-additionalData/interventions/")
+>>>>>>> master
 
       interventionData <- read_csv(
         str_c(pathToAdditionalData, "interventions.csv"),
@@ -273,9 +330,11 @@ if (condition) {
       ### Delays applied
       all_delays <- list(
         "infection_Confirmed cases" = c(Cori = 0, WallingaTeunis = -5),
+        "infection_Confirmed cases / tests" = c(Cori = 0, WallingaTeunis = -5),
         "infection_Deaths" = c(Cori = 0, WallingaTeunis = -5),
         "infection_Hospitalized patients" = c(Cori = 0, WallingaTeunis = -5),
         "Confirmed cases" = c(Cori = 10, WallingaTeunis = 5),
+        "Confirmed cases / tests" = c(Cori = 10, WallingaTeunis = 5),
         "Deaths" = c(Cori = 20, WallingaTeunis = 15),
         "Hospitalized patients" = c(Cori = 8, WallingaTeunis = 3),
         "infection_Excess deaths" = c(Cori = 0, WallingaTeunis = -5),
@@ -302,11 +361,13 @@ if (condition) {
             data_type,
             levels = c(
               "infection_Confirmed cases",
+              "infection_Confirmed cases / tests",
               "infection_Hospitalized patients",
               "infection_Deaths",
               "infection_Excess deaths"),
             labels = c(
               "Confirmed cases",
+              "Confirmed cases / tests",
               "Hospitalized patients",
               "Deaths",
               "Excess deaths"))) %>%
@@ -326,7 +387,11 @@ if (condition) {
           dplyr::select(popData, country, region, countryIso3),
           by = c("country", "region")
         )
+<<<<<<< HEAD
       countryDataPath <- here::here("app", "data", "countryData", str_c(args["country"], "-Estimates.rds"))
+=======
+      countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
+>>>>>>> master
       saveRDS(countryEstimates, file = countryDataPath)
 } else {
   cat(str_c(args["country"], ": No new data available. Skipping Re calculation.\n"))
