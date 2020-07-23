@@ -18,31 +18,6 @@ filterRegions <- function(df, thresholdConfirmedCases = 500) {
 }
 
 # smooth time series with LOESS method
-# getLOESSCases <- function(dates, count_data, days_incl = 21, degree = 1, truncation = 0) {
-#   
-#   if (truncation != 0) {
-#     dates <- dates[1:(length(dates) - truncation)]
-#     count_data <- count_data[1:(length(count_data) - truncation)]
-#   }
-#   
-#   n_points <- length(unique(dates))
-#   sel_span <- days_incl / n_points
-#   
-#   c_data <- data.frame(value = count_data,
-#                        date_num = as.numeric(dates))
-#   c_data.lo <- loess(value ~ date_num, data = c_data, span = sel_span, degree = degree)
-#   smoothed <- predict(c_data.lo)
-#   smoothed[smoothed < 0] <- 0
-#   normalized_smoothed_counts <- round(
-#     smoothed * sum(count_data, na.rm = T) / sum(smoothed, na.rm = T))
-#   
-#   if (truncation != 0) {
-#     normalized_smoothed_counts <- append(normalized_smoothed_counts, rep(NA, truncation))
-#   }
-#   return(normalized_smoothed_counts)
-# }
-
-# smooth time series with LOESS method
 getLOESSCases <- function(dates, count_data, days_incl = 21, degree = 1, truncation = 0) {
   
   if (truncation != 0) {
@@ -203,9 +178,6 @@ get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_de
       next
     }
     
-    #TODO remove
-    # all_weeks_averages <- c()
-    # for(i in 1:N) {
     weeks_averaged <- 0
     repeat{
       weeks_averaged <- weeks_averaged + 1
@@ -216,10 +188,6 @@ get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_de
         break
       }
     }
-    
-    #TODO remove
-    # all_weeks_averages <- c(all_weeks_averages, weeks_averaged)
-    # }
     
      recent_delay_counts <-  recent_counts_distribution %>%
       dplyr::select(delay) %>% 
@@ -243,40 +211,11 @@ get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_de
      cdf_values <- pgamma(x, shape = shape_fit, rate = rate_fit)
      freq <- diff(cdf_values)
      
-     
-     # freq <- recent_delay_counts %>% 
-     #   mutate(freq = counts/sum(counts)) %>% 
-     #   pull(freq)
-     # last_index <- N - i + 1
-     
-     
      if(length(freq) >= last_index) {
-       # delay_distribution_matrix[, i ] <-  c(rep(0, times = i - 1 ), freq[1:last_index])
        delay_distribution_matrix[, i ] <-  c(rep(0, times = i - 1 ), freq[1:last_index])
      } else {
-       # delay_distribution_matrix[, i ] <-  c(rep(0, times = i - 1 ), freq[1:length(freq)], rep(0, times = last_index - length(freq)))
        delay_distribution_matrix[, i ] <-  c(rep(0, times = i - 1 ), freq[1:length(freq)], rep(0, times = last_index - length(freq)))
      }
-     
-     # View(delay_distribution_matrix)
-     # View(delay_distribution_matrix[, ])
-  
-     #TODO remove
-    # F_h <- ecdf(recent_counts_distribution)
-    # 
-    # f <- Vectorize(function(x){
-    #   if(x < 0) {
-    #     return(0)
-    #   } else if(x < 0.5) {
-    #     return(F_h(0.5))
-    #   } else {
-    #     return(F_h(round(x + 1E-8) + 0.5) - F_h(round(x + 1E-8) - 0.5))
-    #   }
-    # })
-    # 
-    # last_index <- N - i
-    # x <- 0:last_index
-    # delay_distribution_matrix[, i ] <-  c(rep(0, times = i - 1 ), f(x))
   }
   
   return( delay_distribution_matrix )
@@ -386,11 +325,6 @@ do_deconvolution <- function(
   deconvolved_dates <- first_guess %>% pull(date)
   
   result <- tibble(date = deconvolved_dates, value = final_estimate)
-  
-  ## left and right-truncate to exclude parts with biggest uncertainty
-  # result <- result %>%
-  #   filter(date <= maximal_date - first_guess_delay) %>%
-  #   filter(date >= min(incidence_data$date) - first_guess_delay)
 
   result <- result %>%
     filter(date <= maximal_date - first_guess_delay)
@@ -428,13 +362,6 @@ get_infection_incidence_by_deconvolution <- function(
       empirical_delays,
       all_dates[(days_further_in_the_past_incubation + 1):length(all_dates)])
     
-    # delay_distribution_matrix_onset_to_report <- get_matrix_empirical_waiting_time_distr(
-    #   empirical_delays,
-    #   all_dates)
-    
-    # delay_distribution_matrix_incubation <- get_matrix_constant_waiting_time_distr(
-    #   constant_delay_distribution_incubation,
-    #   seq(minimal_date - days_further_in_the_past_incubation, maximal_date, by = "days"))
     delay_distribution_matrix_incubation <- get_matrix_constant_waiting_time_distr(
       constant_delay_distribution_incubation,
       all_dates)
@@ -471,10 +398,6 @@ get_infection_incidence_by_deconvolution <- function(
           mutate(value = value * raw_total_incidence / smoothed_total_incidence)
       }
       
-      #TODO remove
-      # print(tail(smoothed_incidence_data))
-      # View(smoothed_incidence_data)
-      
     } else {
       smoothed_incidence_data <- time_series  %>%
         complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(value = 0))
@@ -487,14 +410,7 @@ get_infection_incidence_by_deconvolution <- function(
                        days_further_in_the_past = days_further_in_the_past - days_further_in_the_past_incubation,
                        max_iterations = max_iterations,
                        verbose = verbose)
-      # deconvolved_symptom_onsets <- do_deconvolution(smoothed_incidence_data,
-      #                                                delay_distribution_matrix = delay_distribution_matrix_onset_to_report,
-      #                                                days_further_in_the_past = days_further_in_the_past,
-      #                                                max_iterations = max_iterations,
-      #                                                verbose = verbose)
-      
-      # TODO remove
-      # deconvolved_infections <- deconvolved_symptom_onsets
+
       deconvolved_infections <- do_deconvolution(deconvolved_symptom_onsets,
                                                  delay_distribution_matrix = delay_distribution_matrix_incubation,
                                                  days_further_in_the_past = days_further_in_the_past_incubation,

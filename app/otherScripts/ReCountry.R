@@ -23,8 +23,7 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  # args <- c("DEU")
-  args <- c("CHE") #TODO remove
+  args <- c("DEU")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -146,7 +145,6 @@ cleanEnv(keepObjects = c("countryData", "dataUnchanged", "args", "popData"))
 # only if (data has changed OR forceUpdate.txt exists) AND countryData is not null
 condition <- (!isTRUE(dataUnchanged) | file.exists(here::here("app", "data", "forceUpdate.txt"))) & !is.null(countryData)
 
-#TODO remove comment
 if (condition) {
   cat(str_c("\n", args["country"], ": New data available. Calculating Re ...\n"))
   # get Infection Incidence
@@ -210,32 +208,6 @@ if (condition) {
         ungroup()
     # Deconvolution 
       deconvolvedData <- list()
-      #TODO remove
-      # countryData <- countryData %>% filter(region == "CHE", variable == "incidence", data_type == "Confirmed cases")
-      # countryData <- countryData %>% filter(region == "CHE", variable == "incidence", data_type == "Deaths", date > as.Date("2020-04-01"))
-      # countryData <- countryData %>% filter(region == "CHE", variable == "incidence", data_type == "Deaths")
-      # countryData <- countryData %>% filter(region == "DEU", data_type == "Deaths")
-      # x <- "DEU"
-      # count_type_i <- "Deaths"
-      # constant_delay_distribution = constant_delay_distributions[[count_type_i]]
-      # constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]]
-      # days_further_in_the_past = 30
-      # days_further_in_the_past_incubation = 5
-      # max_iterations = 100
-      # min_number_cases = 100
-      # upper_quantile_threshold = 0.99
-      # # 
-      # empirical_delays <- delays_onset_to_count %>%
-      #   filter(
-      #     region == x,
-      #     data_type == count_type_i)
-      # 
-      # data_subset <- countryData %>% arrange(date) %>% filter(cumsum(value) > 0)
-      # time_series <- data_subset
-      # onset_to_report_empirical_delays <- empirical_delays
-      
-      
-      # countryData <- countryData %>% filter(region == "CHE")
 
       deconvolvedData[[1]] <- get_all_infection_incidence(
         countryData,
