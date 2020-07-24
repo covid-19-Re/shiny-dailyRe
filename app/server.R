@@ -78,7 +78,7 @@ server <- function(input, output, session) {
         }
 
         deconvolutedData <- deconvolutedData %>%
-          select(-variable) %>%
+          dplyr::select(-variable) %>%
           mutate(data_type = str_sub(data_type, 11)) %>%
           group_by(date, region, country, source, data_type) %>%
           summarise(
@@ -716,7 +716,7 @@ server <- function(input, output, session) {
     updateDataComparison <- bind_rows(updateData()) %>%
       filter(data_type == input$data_type_select_africa) %>%
       ungroup() %>%
-      select(-region) %>%
+      dplyr::select(-region) %>%
       group_by(countryIso3, country, source, data_type) %>%
       summarize(
         lastChanged = max(lastChanged),

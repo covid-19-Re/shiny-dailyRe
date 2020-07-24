@@ -6,7 +6,7 @@ loadCountryData <- function(iso3, continent) {
   estimates <- readRDS(file.path("data/countryData", continent, str_c(iso3, "-Estimates.rds")))
 
   deconvolutedData <- deconvolutedData %>%
-    select(-variable) %>%
+    dplyr::select(-variable) %>%
     mutate(data_type = str_sub(data_type, 11)) %>%
     group_by(date, region, country, source, data_type) %>%
     summarise(
