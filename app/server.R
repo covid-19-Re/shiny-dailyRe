@@ -30,7 +30,8 @@ server <- function(input, output, session) {
         )[, 2]
         )
     ) %>%
-    left_join(distinct(dplyr::select(popData, countryIso3, country, continent)), by = "countryIso3")
+    left_join(distinct(dplyr::select(popData, countryIso3, country, continent)), by = "countryIso3") %>%
+    arrange(continent, country)
 
   countryListContinent <- countryList %>%
     split(f = .$continent)
