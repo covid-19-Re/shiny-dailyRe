@@ -144,7 +144,7 @@ get_matrix_constant_waiting_time_distr <- function(waiting_time_distr,
 
 get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_delays,
                                                     all_dates,
-                                                    min_number_cases = 500,
+                                                    min_number_cases = 200,
                                                     upper_quantile_threshold = 0.99){
   
   N <- length(all_dates)

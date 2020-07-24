@@ -93,6 +93,11 @@ final_delay_data_FOPH <- restructured_data_FOPH %>%
   ungroup() %>%
   mutate(country = "Switzerland", region = "CHE", source = "FOPH")
 
+normalized_test_delays <- final_delay_data_FOPH %>% filter(data_type == "Confirmed cases") %>% 
+  mutate(data_type = "Confirmed cases / tests")
+
+final_delay_data_FOPH <- bind_rows(final_delay_data_FOPH, normalized_test_delays)
+  
 ## deconvolve symptom onset time series to get infection dates
 
 source(here::here("app/otherScripts/2_utils_getInfectionIncidence.R"))
