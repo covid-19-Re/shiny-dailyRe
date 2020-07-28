@@ -988,10 +988,34 @@ getExcessDeathGBR <- function(startAt = as.Date("2020-02-20"), path_to_data = ".
   return(longData)
 }
 
+getHospitalDataGBR <- function() {
+  # nouveaux file contains the incidence
+  ##TODO change address once beta version becomes official
+  url <- "https://api.coronavirus-staging.data.gov.uk/v1/data?filters=areaName=United%2520Kingdom;areaType=overview&structure=%7B%22areaType%22:%22areaType%22,%22areaName%22:%22areaName%22,%22areaCode%22:%22areaCode%22,%22date%22:%22date%22,%22newAdmissions%22:%22newAdmissions%22,%22cumAdmissions%22:%22cumAdmissions%22%7D&format=csv"
+  rawData <- try(read_csv(url))
+  if ("try-error" %in% class(rawData)) {
+    warning(str_c("Couldn't read UK hospital data at ", url))
+    return(NULL)
+  }
+  
+  longData <- rawData %>%
+    dplyr::select(date,
+                  region = areaName,
+                  value = newAdmissions) %>%
+    arrange(date) %>% 
+    mutate(countryIso3 = "GBR",
+           data_type = "hospitalized",
+           variable = "incidence",
+           region = "GBR",
+           source = "Gov.UK")
+  return(longData)
+}
+
 getDataGBR <- function(ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
   caseData <- getDataECDC(countries = "GBR", tempFileName = ECDCtemp, tReload = tReload)
   excessDeath <- NULL#getExcessDeathHMD(countries = "GBR", tempFileName = HMDtemp, tReload = tReload)
-  allData <- bind_rows(caseData, excessDeath)
+  hospitalData <- getHospitalDataGBR()
+  allData <- bind_rows(caseData, excessDeath, hospitalData)
   return(allData)
 }
 

@@ -14,3 +14,4 @@ source,sourceLong,url
 "DSFSI", "Data from Data Science for Social Impact Research Group @ University of Pretoria", "https://github.com/dsfsi/covid19za"
 "PCM-DPC","Data from Presidenza del Consiglio dei Ministri - Dipartimento della Protezione Civile","https://github.com/pcm-dpc/COVID-19"
 "RENAVE", "Data from Spanish Red Nacional de Vigilancia Epidemiológica ", "https://cnecovid.isciii.es/covid19/#documentaci%C3%B3n-y-datos"
+"Gov.UK", "Data from UK government coronavirus database ", "https://coronavirus.data.gov.uk/"
