@@ -404,6 +404,7 @@ get_infection_incidence_by_deconvolution <- function(
     }
     
     if(is_empirical) {
+      
       # perform the deconvolution in two steps
       deconvolved_symptom_onsets <- do_deconvolution(smoothed_incidence_data,
                        delay_distribution_matrix = delay_distribution_matrix_onset_to_report,
@@ -432,6 +433,12 @@ get_infection_incidence_by_deconvolution <- function(
     if (data_type_subset %in% c("Hospitalized patients - onset", "Hospitalized patients - admission")) {
       data_type_subset <- "Hospitalized patients"
     }
+    
+    if (data_type_subset == "Confirmed cases - onset") {
+      data_type_subset <- "Confirmed cases"
+    }
+    
+    
     data_type_name <- paste0("infection_", data_type_subset)
     
     ## dataframe containing results
@@ -472,13 +479,15 @@ get_all_infection_incidence <- function(data,
     smooth <- (count_type_i != "Excess deaths")
     
     for (source_i in unique(data$source)) {
-      
+
       cat("  Data source:", source_i, "\n")
+
       # nCores <- max(1, parallel::detectCores() - 1)
       # cat("   calculating on", nCores, "cores...\n")
       # cl <- parallel::makeCluster(nCores, type = "FORK", outfile = "")
       thisData <- data %>%
         filter(source == source_i, variable == "incidence")
+      
       results_list <- lapply(# parallel::parLapply(cl,
         unique(thisData$region),
         function(x) {
@@ -487,7 +496,7 @@ get_all_infection_incidence <- function(data,
             filter(region == x,
                    source == source_i,
                    data_type == count_type_i,
-                   variable == "incidence") %>% 
+                   variable == "incidence") %>%
             arrange(date)
           
           if (nrow(subset_data) == 0) {
@@ -503,6 +512,19 @@ get_all_infection_incidence <- function(data,
               pull()
             
             if ("Hospitalized patients - onset" %in% data_types_included) {
+              return(tibble())
+            }
+          }
+          
+          if (count_type_i == "Confirmed cases") {
+            data_types_included <- data %>%
+              filter(region == x,
+                     source == source_i,
+                     variable == "incidence") %>%
+              distinct(data_type) %>%
+              pull()
+            
+            if ("Confirmed cases - onset" %in% data_types_included) {
               return(tibble())
             }
           }

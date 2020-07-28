@@ -212,10 +212,6 @@ if (condition) {
         countryData <- countryData %>%
           filter(data_type != "Deaths")
         cat("ignoring data_type Deaths\n")
-      } else if (args["country"] == "FRA") {
-        countryData <- countryData %>%
-          filter(data_type != "Hospitalized patients")
-        cat("ignoring data_type Hospitalized patients\n")
       } else if (args["country"] == "CHE") {
         # no estimation for deaths per canton (too few cases)
         countryData <- countryData %>%
@@ -243,24 +239,36 @@ if (condition) {
         onset_to_count_empirical_delays = delays_onset_to_count,
         data_types = c("Confirmed cases",
                       "Hospitalized patients",
-                      "Deaths"),
+                      "Deaths",
+                      "Confirmed cases - onset"),
         n_bootstrap = 50,
         verbose = F)
 
-
       if ("Hospitalized patients - admission" %in% countryData$data_type |
           "Hospitalized patients - onset" %in% countryData$data_type) {
-        deconvolvedData[[2]] <- get_all_infection_incidence(
+          
+          admission <- get_all_infection_incidence(
           countryData,
           constant_delay_distributions = constant_delay_distributions,
           onset_to_count_empirical_delays = delays_onset_to_count,
-          data_types = c("Hospitalized patients - admission",
-                        "Hospitalized patients - onset"),
+          data_types = c("Hospitalized patients - admission"),
           n_bootstrap = 50,
-          verbose = FALSE)
-        deconvolvedData[[2]] <- deconvolvedData[[2]] %>%
+          verbose = T)
+        
+        onset <- get_all_infection_incidence(
+          countryData,
+          constant_delay_distributions = constant_delay_distributions,
+          onset_to_count_empirical_delays = delays_onset_to_count,
+          data_types = c("Hospitalized patients - onset"),
+          n_bootstrap = 50,
+          verbose = T)
+        
+        last_date <- min(max(onset$date), max(admission$date))
+        
+        deconvolvedData[[2]] <- bind_rows(admission, onset) %>%
+          filter(date <= last_date) %>% 
           group_by(date, country, region, data_type, source, replicate, variable) %>%
-          summarise(value = sum(value), .groups = "keep") %>%
+          dplyr::summarise(value = sum(value), .groups = "keep") %>%
           arrange(country, region, source, data_type, variable, replicate, date) %>%
           ungroup()
       }
@@ -313,6 +321,7 @@ if (condition) {
       ### Window
       window <- 3
 
+      ##TODO this all_delays could be removed because we always deconvolve
       ### Delays applied
       all_delays <- list(
         "infection_Confirmed cases" = c(Cori = 0, WallingaTeunis = -5),

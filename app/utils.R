@@ -82,11 +82,13 @@ dataUpdatesTable <- function(
   return(out)
 }
 
+#TODO remove this entire right-side boundary on dates on the Re estimates, it's not needed
 delaysDf <- tibble(
     data_type = factor(
       c("Confirmed cases", "Confirmed cases / tests", "Hospitalized patients", "Deaths", "Excess deaths"),
       levels = c("Confirmed cases", "Confirmed cases / tests", "Hospitalized patients", "Deaths", "Excess deaths")),
-    delay = c(8, 8, 10, 18, 30))
+    # delay = c(8, 8, 10, 18, 30))
+    delay = c(0, 0, 0, 0, 0))
 
 estimateRanges <- function(
   caseData,

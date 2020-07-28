@@ -8,8 +8,9 @@ source,sourceLong,url
 "HMD","Data from the Human Mortality Database - Short-term Mortality Fluctuations Data Series","https://www.mortality.org/"
 "Istat","Data from the Italian National Institute of Statistics","https://www.istat.it/it/archivio/240401"
 "SpF-DMI","Data from the French National Public Health Agency","https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/"
+"ECDC - SpF-DMI","Mix between ECDC data (before May 13th) and French National Public Health Agency (after May 13th)","https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/"
 "Economist","Data from the Economist Excess Death Tracker","https://github.com/TheEconomist/covid-19-excess-deaths-tracker"
 "Sciensano","Data from the Belgian Institute for Health","https://epistat.wiv-isp.be/covid/"
 "DSFSI", "Data from Data Science for Social Impact Research Group @ University of Pretoria", "https://github.com/dsfsi/covid19za"
 "PCM-DPC","Data from Presidenza del Consiglio dei Ministri - Dipartimento della Protezione Civile","https://github.com/pcm-dpc/COVID-19"
-
+"RENAVE", "Data from Spanish Red Nacional de Vigilancia Epidemiológica ", "https://cnecovid.isciii.es/covid19/#documentaci%C3%B3n-y-datos"
