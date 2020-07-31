@@ -25,17 +25,15 @@ mean_onset_to_count <- c(
   "Confirmed cases" = mean_onset_to_test,
   "Confirmed cases / tests" = mean_onset_to_test,
   "Deaths" = mean_onset_to_death,
-  "Hospitalized patients - admission" = mean_onset_to_hosp,
   "Hospitalized patients" = mean_onset_to_hosp,
   "Excess deaths" = mean_onset_to_death)
 sd_onset_to_count <- c(
   "Confirmed cases" = sd_onset_to_test,
   "Confirmed cases / tests" = sd_onset_to_test,
   "Deaths" = sd_onset_to_death,
-  "Hospitalized patients - admission" = sd_onset_to_hosp,
   "Hospitalized patients" = sd_onset_to_hosp,
   "Excess deaths" = sd_onset_to_death)
 
 ### parameters for gamma distribution between symptom onset and report
-shape_onset_to_count <- c(mean_onset_to_count^2 / (sd_onset_to_count^2), "Hospitalized patients - onset" = 0, "Symptoms" = 0, "Confirmed cases - onset" = 0)
-scale_onset_to_count <- c((sd_onset_to_count^2) / mean_onset_to_count, "Hospitalized patients - onset" = 0, "Symptoms" = 0, "Confirmed cases - onset" = 0)
+shape_onset_to_count <- c(mean_onset_to_count^2 / (sd_onset_to_count^2), "Symptoms" = 0)
+scale_onset_to_count <- c((sd_onset_to_count^2) / mean_onset_to_count, "Symptoms" = 0)

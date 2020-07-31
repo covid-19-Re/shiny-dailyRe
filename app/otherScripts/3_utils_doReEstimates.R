@@ -27,7 +27,7 @@ estimateRe <- function(
   cumulativeIncidence <- 0
   while (cumulativeIncidence < minimumCumul) {
     if (offset > length(incidenceData)) {
-      return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
+      return(data.frame(date = c(), value = c(), estimate_type = c()))
     }
     cumulativeIncidence <- cumulativeIncidence + incidenceData[offset]
     offset <- offset + 1
@@ -38,7 +38,7 @@ estimateRe <- function(
   rightBound <- length(incidenceData) - (windowLength - 1)
 
   if (rightBound < offset) { ## no valid data point, return empty estimate
-    return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
+    return(data.frame(date = c(), value = c(), estimate_type = c()))
   }
 
   ## generate start and end bounds for Re estimates
@@ -58,7 +58,7 @@ estimateRe <- function(
     t_end <- c(na.omit(interval_end_indices), length(incidenceData))
 
     if (offset >= length(incidenceData)) {
-      return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
+      return(data.frame(date = c(), value = c(), estimate_type = c()))
     }
 
     # remove intervals if the offset is greater than the
@@ -85,7 +85,7 @@ estimateRe <- function(
     outputDates <- dates[t_end]
   } else {
     print("Unknown time variation.")
-    return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
+    return(data.frame(date = c(), value = c(), estimate_type = c()))
   }
 
   ## offset dates to account for delay between infection and recorded event (testing, hospitalization, death...)
@@ -116,7 +116,7 @@ estimateRe <- function(
     )
   } else {
     print("Unknown estimation method")
-    return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
+    return(data.frame(date = c(), value = c(), estimate_type = c()))
   }
 
   if (variationType == "step") {
@@ -143,7 +143,7 @@ estimateRe <- function(
 
   if (rightTruncation > 0) {
     if (rightTruncation >= length(outputDates)) {
-      return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
+      return(data.frame(date = c(), value = c(), estimate_type = c()))
     }
     originalLength <- length(outputDates)
     outputDates <- outputDates[-seq(originalLength, by = -1, length.out = rightTruncation)]
@@ -154,7 +154,7 @@ estimateRe <- function(
 
   if (leftTruncation > 0) {
     if (leftTruncation >= length(outputDates)) {
-      return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
+      return(data.frame(date = c(), value = c(), estimate_type = c()))
     }
     originalLength <- length(outputDates)
     outputDates <- outputDates[-seq(1, leftTruncation)]
@@ -170,7 +170,7 @@ estimateRe <- function(
     R_lowHPD = R_lowHPD)
 
   result <- reshape2::melt(result, id.vars = "date")
-  colnames(result) <- c("date", "variable", "value")
+  colnames(result) <- c("date", "value")
   result$estimate_type <- paste0(method, "_", variationType)
 
   return(result)
@@ -189,17 +189,14 @@ doReEstimation <- function(
 
   for (method_i in methods) {
     for (variation_i in variationTypes) {
-      incidence_data <- data_subset$value[data_subset$variable == "incidence"]
-      dates <- data_subset$date[data_subset$variable == "incidence"]
-
       offsetting <- delays[method_i]
 
       leftTrunc <- truncations$left[method_i]
       rightTrunc <- truncations$right[method_i]
 
       result <- estimateRe(
-        dates = dates,
-        incidenceData = incidence_data,
+        dates = data_subset$date,
+        incidenceData = data_subset$value,
         windowLength =  slidingWindow,
         estimateOffsetting = offsetting,
         rightTruncation = rightTrunc,
@@ -216,7 +213,7 @@ doReEstimation <- function(
         ## need to reorder columns in 'results' dataframe to do the same as in data
         result <- result[, c(
           "date", "region", "country", "source", "data_type", "estimate_type",
-          "replicate", "value", "variable")]
+          "replicate", "value")]
         end_result <- bind_rows(end_result, result)
       }
     }

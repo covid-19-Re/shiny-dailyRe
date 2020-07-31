@@ -228,11 +228,11 @@ get_bootstrap_replicate <- function(original_time_series) {
     dplyr::slice_sample(n = sum(original_time_series$value, na.rm = T),
                         weight_by = replace_na(value, 0),
                         replace = T) %>%
-    dplyr::group_by(country, region, source, data_type, variable, date) %>%
+    dplyr::group_by(country, region, source, data_type, date_type, date) %>%
     dplyr::mutate(value = n()) %>%
     distinct(date, .keep_all = T) %>%
     ungroup() %>%
-    dplyr::group_by(country, region, source, data_type, variable) %>%
+    dplyr::group_by(country, region, source, data_type, date_type) %>%
     complete(date = seq.Date(min(date), max(date), by = "days"),
              fill = list(value = 0)) %>%
     arrange(date)
@@ -425,19 +425,7 @@ get_infection_incidence_by_deconvolution <- function(
                                                   verbose = verbose)
     }
     
-    
     deconvolved_infections <- deconvolved_infections %>% slice((days_further_in_the_past -5 + 1):n())
-    
-    ## prepare metadata for result tibble
-    data_type_subset <- unique(time_series$data_type)[1]
-    if (data_type_subset %in% c("Hospitalized patients - onset", "Hospitalized patients - admission")) {
-      data_type_subset <- "Hospitalized patients"
-    }
-    
-    if (data_type_subset == "Confirmed cases - onset") {
-      data_type_subset <- "Confirmed cases"
-    }
-    
     
     data_type_name <- paste0("infection_", data_type_subset)
     
@@ -449,8 +437,7 @@ get_infection_incidence_by_deconvolution <- function(
       source = unique(time_series$source)[1],
       data_type = data_type_name,
       replicate = bootstrap_replicate_i,
-      value = deconvolved_infections$value,
-      variable = "incidence"
+      value = deconvolved_infections$value
     )
     
     results <- c(results, list(deconvolved_infections))
@@ -485,8 +472,6 @@ get_all_infection_incidence <- function(data,
       # nCores <- max(1, parallel::detectCores() - 1)
       # cat("   calculating on", nCores, "cores...\n")
       # cl <- parallel::makeCluster(nCores, type = "FORK", outfile = "")
-      thisData <- data %>%
-        filter(source == source_i, variable == "incidence")
       
       results_list <- lapply(# parallel::parLapply(cl,
         unique(thisData$region),
@@ -495,38 +480,11 @@ get_all_infection_incidence <- function(data,
           subset_data <- data %>%
             filter(region == x,
                    source == source_i,
-                   data_type == count_type_i,
-                   variable == "incidence") %>%
+                   data_type == count_type_i) %>%
             arrange(date)
           
           if (nrow(subset_data) == 0) {
             return(tibble())
-          }
-          
-          if (count_type_i == "Hospitalized patients") {
-            data_types_included <- data %>%
-              filter(region == x,
-                     source == source_i,
-                     variable == "incidence") %>%
-              distinct(data_type) %>%
-              pull()
-            
-            if ("Hospitalized patients - onset" %in% data_types_included) {
-              return(tibble())
-            }
-          }
-          
-          if (count_type_i == "Confirmed cases") {
-            data_types_included <- data %>%
-              filter(region == x,
-                     source == source_i,
-                     variable == "incidence") %>%
-              distinct(data_type) %>%
-              pull()
-            
-            if ("Confirmed cases - onset" %in% data_types_included) {
-              return(tibble())
-            }
           }
           
           if (is_delays_data_available) {
