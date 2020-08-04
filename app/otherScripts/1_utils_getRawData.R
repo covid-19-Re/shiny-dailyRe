@@ -306,11 +306,8 @@ getDataCHEexcessDeath <- function(startAt = as.Date("2020-02-20")) {
   return(longData)
 }
 
-getDataCHE <- function(pathToHospData) {
-  bagData <- getDataCHEBAG(path = pathToHospData)
-  hospitalData <- getHospitalDataCHE(path = pathToHospData,  dataTypeSuffix = "")
-  hospitalData_onsets <- getHospitalDataCHE(path = pathToHospData, dataTypeSuffix = "_onsets")
-  hospitalData_admissions <- getHospitalDataCHE(path = pathToHospData, dataTypeSuffix = "_admissions")
+getDataCHE <- function(data_path) {
+  bagData <- getDataCHEBAG(path = data_path)
   swissExcessDeath <- NULL #getDataCHEexcessDeath(startAt = as.Date("2020-02-20"))
   swissData <- bind_rows(
     bagData,
@@ -1038,7 +1035,7 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
     } else if (countries[i] == "ESP") {
       allDataList[[i]] <- getDataESP()
     } else if (countries[i] == "CHE") {
-      allDataList[[i]] <- getDataCHE(pathToHospData = here::here("app/data/CH"))
+      allDataList[[i]] <- getDataCHE(data_path = here::here("app/data/CH"))
     } else if (countries[i] == "GBR") {
       allDataList[[i]] <- getDataGBR(ECDCtemp = ECDCtemp, HMDtemp = HMDtemp, tReload = tReload)
     } else if (countries[i] == "ZAF") {

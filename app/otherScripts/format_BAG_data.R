@@ -97,63 +97,14 @@ normalized_test_delays <- final_delay_data_FOPH %>% filter(data_type == "Confirm
   mutate(data_type = "Confirmed cases / tests")
 
 final_delay_data_FOPH <- bind_rows(final_delay_data_FOPH, normalized_test_delays)
-  
-## deconvolve symptom onset time series to get infection dates
-
-source(here::here("app/otherScripts/2_utils_getInfectionIncidence.R"))
-# load parameter
-source(here::here("app/otherScripts/2_params_InfectionIncidencePars.R"))
-# constant delay distribution
-incubation_delay_distribution <- get_vector_constant_waiting_time_distr(
-  shape_incubation,
-  scale_incubation,
-  0,
-  0)
-
-convolved_delays <- final_delay_data_FOPH %>%
-  rename(date = onset_date) %>% 
-  dplyr::select(date) %>% 
-  group_by(date) %>%  
-  tally(name = "value") %>% 
-  complete(date = seq.Date(min(date), max(date), by = "days"),
-           fill = list(value = 0)) %>% 
-  mutate(source = NA, country = NA, region = NA, data_type = NA)
 
 ### Save file
 write_csv(final_delay_data_FOPH, path = file.path(outDir, "FOPH_data_delays.csv"))
-
-
-### Investigate delay between symptom onset and hospitalization
-rawDataSymptomsToHospital <- subset(data_hospitalization, hospitalisation == 1)
-rawDataSymptomsToHospital <- rawDataSymptomsToHospital[, c("manifestation_dt", "hospdatin")]
-rawDataSymptomsToHospital <- rawDataSymptomsToHospital[complete.cases(rawDataSymptomsToHospital), ]
-
-onsetDate <- ymd(rawDataSymptomsToHospital[, 1])
-onsetDate[onsetDate > max_date] <- NA
-onsetDate[onsetDate < min_date] <- NA
-
-hospDate <- ymd(rawDataSymptomsToHospital[, 2])
-hospDate[onsetDate > max_date] <- NA
-hospDate[onsetDate < min_date] <- NA
-
-datesSymptoms <- data.frame(startSymptoms = onsetDate, hospDate = hospDate)
-datesSymptoms$timeFromOnsetToHosp <- datesSymptoms$hospDate - datesSymptoms$startSymptoms
-
-## basic curation
-datesSymptoms$timeFromOnsetToHosp[datesSymptoms$timeFromOnsetToHosp < 0 | datesSymptoms$timeFromOnsetToHosp > 30] <- NA
-datesSymptoms <- datesSymptoms[complete.cases(datesSymptoms), ]
 
 cat("Mean Time from onset to Hospitalization:",
     mean(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 6.1 (15/05/20)
 cat("s.d. Time from onset to Hospitalization:",
     sd(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 4.7
-
-max_date <- date(max(bagFileDates)) - right_truncation_consolidation
-min_date <- as.Date("2020-02-01")
-
-max_delay_hosp <- 30
-max_delay_confirm <- 30
-max_delay_death <- 100
 
 
 confirmed_case_data <- data_hospitalization %>%
@@ -237,15 +188,11 @@ allCH <- allKtn %>%
 
 allBAGdata <- bind_rows(allKtn, allCH) %>%
   ungroup() %>%
-  complete(date, countryIso3, region, source, data_type) %>%
-  mutate(incidence = replace_na(incidence, 0)) %>%
-  arrange(countryIso3, region, data_type, date) %>%
+  complete(date, countryIso3, region, source, data_type, date_type) %>%
+  mutate(value = replace_na(incidence, 0), .keep = "unused") %>%
+  arrange(countryIso3, region, data_type, date_type, date) %>%
   dplyr::group_by(countryIso3, region, source, data_type) %>%
-  mutate(cumul = cumsum(incidence)) %>%
-  pivot_longer(c(incidence,cumul), names_to = "variable", values_to = "value") %>%
-  dplyr::select(date, region, countryIso3, source, data_type, value, variable) %>%
   filter(date <= max_date) %>% 
-  arrange(data_type, variable, region, countryIso3, source, date) %>%
   mutate(countryIso3 = if_else(region == "FL", "LIE", countryIso3))
 
 write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CH.csv"))
