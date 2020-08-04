@@ -336,6 +336,7 @@ get_infection_incidence_by_deconvolution <- function(
   data_subset,
   constant_delay_distribution,
   constant_delay_distribution_incubation = c(),
+  is_onset_data = F,
   smooth_incidence = T,
   empirical_delays  = tibble(),
   n_bootstrap = 5,
@@ -345,6 +346,8 @@ get_infection_incidence_by_deconvolution <- function(
   verbose = FALSE) {
   
   #TODO make the days_further_in_the_past type specific
+  
+  data_type_subset <- unique(data_subset$data_type)[1]
   
   # exclude leading zeroes
   data_subset <- data_subset %>%
@@ -403,27 +406,36 @@ get_infection_incidence_by_deconvolution <- function(
         complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(value = 0))
     }
     
-    if(is_empirical) {
-      
-      # perform the deconvolution in two steps
-      deconvolved_symptom_onsets <- do_deconvolution(smoothed_incidence_data,
-                       delay_distribution_matrix = delay_distribution_matrix_onset_to_report,
-                       days_further_in_the_past = days_further_in_the_past - days_further_in_the_past_incubation,
-                       max_iterations = max_iterations,
-                       verbose = verbose)
-
-      deconvolved_infections <- do_deconvolution(deconvolved_symptom_onsets,
-                                                 delay_distribution_matrix = delay_distribution_matrix_incubation,
-                                                 days_further_in_the_past = days_further_in_the_past_incubation,
-                                                 max_iterations = max_iterations,
-                                                 verbose = verbose)
-    } else {
+    
+    if (is_onset_data) {
       deconvolved_infections <-  do_deconvolution(smoothed_incidence_data,
-                                                  delay_distribution_matrix = delay_distribution_matrix,
+                                                  delay_distribution_matrix = delay_distribution_matrix_incubation,
                                                   days_further_in_the_past = days_further_in_the_past,
                                                   max_iterations = max_iterations,
                                                   verbose = verbose)
+    } else {
+      if(is_empirical) {
+        # perform the deconvolution in two steps
+        deconvolved_symptom_onsets <- do_deconvolution(smoothed_incidence_data,
+                                                       delay_distribution_matrix = delay_distribution_matrix_onset_to_report,
+                                                       days_further_in_the_past = days_further_in_the_past - days_further_in_the_past_incubation,
+                                                       max_iterations = max_iterations,
+                                                       verbose = verbose)
+        
+        deconvolved_infections <- do_deconvolution(deconvolved_symptom_onsets,
+                                                   delay_distribution_matrix = delay_distribution_matrix_incubation,
+                                                   days_further_in_the_past = days_further_in_the_past_incubation,
+                                                   max_iterations = max_iterations,
+                                                   verbose = verbose)
+      } else {
+        deconvolved_infections <-  do_deconvolution(smoothed_incidence_data,
+                                                    delay_distribution_matrix = delay_distribution_matrix,
+                                                    days_further_in_the_past = days_further_in_the_past,
+                                                    max_iterations = max_iterations,
+                                                    verbose = verbose)
+      }
     }
+
     
     deconvolved_infections <- deconvolved_infections %>% slice((days_further_in_the_past -5 + 1):n())
     
@@ -498,10 +510,11 @@ get_all_infection_incidence <- function(data,
           
           subset_data_report <- subset_data %>% filter(date_type == "report")
           
-          deconveolved_reports <- get_infection_incidence_by_deconvolution(
+          deconvolved_reports <- get_infection_incidence_by_deconvolution(
             subset_data_report,
             constant_delay_distribution = constant_delay_distributions[[count_type_i]],
             constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]],
+            is_onset_data = F,
             smooth_incidence = smooth,
             empirical_delays = empirical_delays,
             n_bootstrap = n_bootstrap,
@@ -511,14 +524,15 @@ get_all_infection_incidence <- function(data,
           
           deconvolved_onset <- get_infection_incidence_by_deconvolution(
             subset_data_onset,
-            constant_delay_distribution = constant_delay_distributions[["Symptoms"]],
+            constant_delay_distribution = c(),
             constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]],
+            is_onset_data = T,
             smooth_incidence = smooth,
             empirical_delays = empirical_delays,
             n_bootstrap = n_bootstrap,
             verbose = verbose)
           
-          combined_deconvolved <- bind_rows(subset_data_report, subset_data_onset) %>% 
+          combined_deconvolved <- bind_rows(deconvolved_reports, deconvolved_onset) %>% 
             dplyr::group_by(date, region, country, replicate, source, data_type) %>% 
             dplyr::summarise(value = sum(value), .groups = "keep") %>%
             arrange(country, region, source, data_type, replicate, date) %>%

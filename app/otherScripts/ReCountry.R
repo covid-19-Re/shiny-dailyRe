@@ -144,11 +144,6 @@ if (!dir.exists(basePath)) {
     for (i in unique(countryData$countryIso3)) {
       updateData[[i]] <- countryData %>%
         filter(countryIso3 == i) %>%
-        mutate(
-          data_type = replace(
-            data_type,
-            data_type %in% c("Hospitalized patients - onset", "Hospitalized patients - admission"),
-            "Hospitalized patients")) %>%
         group_by(countryIso3, country, region, source, data_type) %>%
         dplyr::summarize(lastData = max(date), .groups = "keep") %>%
         mutate(
@@ -242,6 +237,22 @@ if (condition) {
       constant_delay_distributions = constant_delay_distributions
       onset_to_count_empirical_delays = delays_onset_to_count
       verbose = F
+      n_bootstrap = 0
+      
+      subset_data <- data %>%
+        filter(region == x,
+               source == source_i,
+               data_type == count_type_i) %>%
+        arrange(date)
+      data_subset <- subset_data
+      
+      empirical_delays <- onset_to_count_empirical_delays %>%
+        filter(
+          region == x,
+          data_type == count_type_i)
+      constant_delay_distribution = constant_delay_distributions[[count_type_i]]
+      constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]]
+      smooth_incidence = T
 
       deconvolvedData[[1]] <- get_all_infection_incidence(
         countryData,
@@ -253,35 +264,6 @@ if (condition) {
                       "Confirmed cases - onset"),
         n_bootstrap = 50,
         verbose = F)
-
-      if ("Hospitalized patients - admission" %in% countryData$data_type |
-          "Hospitalized patients - onset" %in% countryData$data_type) {
-          
-          admission <- get_all_infection_incidence(
-          countryData,
-          constant_delay_distributions = constant_delay_distributions,
-          onset_to_count_empirical_delays = delays_onset_to_count,
-          data_types = c("Hospitalized patients - admission"),
-          n_bootstrap = 50,
-          verbose = T)
-        
-        onset <- get_all_infection_incidence(
-          countryData,
-          constant_delay_distributions = constant_delay_distributions,
-          onset_to_count_empirical_delays = delays_onset_to_count,
-          data_types = c("Hospitalized patients - onset"),
-          n_bootstrap = 50,
-          verbose = T)
-        
-        last_date <- min(max(onset$date), max(admission$date))
-        
-        deconvolvedData[[2]] <- bind_rows(admission, onset) %>%
-          filter(date <= last_date) %>% 
-          group_by(date, country, region, data_type, source, replicate, variable) %>%
-          dplyr::summarise(value = sum(value), .groups = "keep") %>%
-          arrange(country, region, source, data_type, variable, replicate, date) %>%
-          ungroup()
-      }
 
       if (args["country"] %in% c("CHE")) {
         countryDataTests <- countryData %>%
