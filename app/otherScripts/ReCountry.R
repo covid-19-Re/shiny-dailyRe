@@ -232,6 +232,16 @@ if (condition) {
         ungroup()
     # Deconvolution 
       deconvolvedData <- list()
+      
+      ##TODO remove (testing)
+      
+      data <- countryData
+      x <- "CHE"
+      source_i <- "FOPH"
+      count_type_i <- "Hospitalized patients"
+      constant_delay_distributions = constant_delay_distributions
+      onset_to_count_empirical_delays = delays_onset_to_count
+      verbose = F
 
       deconvolvedData[[1]] <- get_all_infection_incidence(
         countryData,

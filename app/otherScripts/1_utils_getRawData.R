@@ -1007,8 +1007,6 @@ getDataZAF <- function() {
                # cases <- read_csv(url)
 #https://data.cdc.gov/api/views/vbim-akqf/rows.csv?accessType=DOWNLOAD
 
-cases 
-
 ##### generic functions #####
 
 # currently implemented

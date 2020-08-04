@@ -496,14 +496,35 @@ get_all_infection_incidence <- function(data,
             empirical_delays <- tibble()
           }
           
-          get_infection_incidence_by_deconvolution(
-            subset_data,
+          subset_data_report <- subset_data %>% filter(date_type == "report")
+          
+          deconveolved_reports <- get_infection_incidence_by_deconvolution(
+            subset_data_report,
             constant_delay_distribution = constant_delay_distributions[[count_type_i]],
             constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]],
             smooth_incidence = smooth,
             empirical_delays = empirical_delays,
             n_bootstrap = n_bootstrap,
             verbose = verbose)
+          
+          subset_data_onset <- subset_data %>% filter(date_type == "onset")
+          
+          deconvolved_onset <- get_infection_incidence_by_deconvolution(
+            subset_data_onset,
+            constant_delay_distribution = constant_delay_distributions[["Symptoms"]],
+            constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]],
+            smooth_incidence = smooth,
+            empirical_delays = empirical_delays,
+            n_bootstrap = n_bootstrap,
+            verbose = verbose)
+          
+          combined_deconvolved <- bind_rows(subset_data_report, subset_data_onset) %>% 
+            dplyr::group_by(date, region, country, replicate, source, data_type) %>% 
+            dplyr::summarise(value = sum(value), .groups = "keep") %>%
+            arrange(country, region, source, data_type, replicate, date) %>%
+            ungroup()
+          
+          return(combined_deconvolved)
         })
       #parallel::stopCluster(cl)
       results <- c(results, results_list)

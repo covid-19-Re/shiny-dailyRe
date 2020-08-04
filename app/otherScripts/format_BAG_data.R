@@ -72,13 +72,13 @@ restructured_data_FOPH <- first_curation_data_FOPH %>%
   dplyr::rename(onset_date = manifestation_dt) %>%
   mutate(data_type = recode(data_type,
                             "pttoddat" = "Deaths",
-                            "hospdatin" = "Hospitalized patients - admission",
+                            "hospdatin" = "Hospitalized patients",
                             "fall_dt" = "Confirmed cases"))
 
 final_delay_data_FOPH <- restructured_data_FOPH %>%
   mutate(delay = as.integer(count_date - onset_date)) %>%
   mutate(delay = if_else(
-    data_type == "Hospitalized patients - admission" & !between(delay, 0, max_delay_hosp),
+    data_type == "Hospitalized patients" & !between(delay, 0, max_delay_hosp),
     as.integer(NA),
     delay)) %>%
   mutate(delay = if_else(
@@ -148,105 +148,86 @@ cat("Mean Time from onset to Hospitalization:",
 cat("s.d. Time from onset to Hospitalization:",
     sd(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 4.7
 
-#### Build incidence time series of symptom onsets
+max_date <- date(max(bagFileDates)) - right_truncation_consolidation
+min_date <- as.Date("2020-02-01")
 
-dates_onset <- unique(na.omit(data_hospitalization$manifestation_dt))
-allDates_onset <-  seq(max(min(as.Date(dates_onset)), min_date), min(max(as.Date(dates_onset)), max_date), by = "days")
-
-incidence_onset <- sapply(allDates_onset, function(x) {
-  sum(with(data_hospitalization, manifestation_dt == x & hospitalisation == 1), na.rm = TRUE)})
-cumul_onset <- cumsum(incidence_onset)
-
-df <- data.frame(Date = allDates_onset, Incidence = incidence_onset, CH = cumul_onset)
-df <- filter(df, Date <= max_date)
-
-write_excel_csv(df, path = file.path(outDir, "Hospital_cases_onsets_CH.csv"), quote = F)
+max_delay_hosp <- 30
+max_delay_confirm <- 30
+max_delay_death <- 100
 
 
-#### Build incidence time series of hospitalization date
-
-allDates_admission <-  seq(min_date, max_date, by = "days")
-
-## if neither admission nor onset date is available, use "eingang_dt" as a proxy for the hospitalization date
-
-partialInfoAdmissions <- subset(data_hospitalization,
-                                ymd(eingang_dt) %in% allDates_admission &
-                                  !(ymd(hospdatin) %in% allDates_admission) &
-                                  !(ymd(manifestation_dt) %in% allDates_onset) &
-                                  hospitalisation == 1)
-fullInfoAdmissions <- subset(data_hospitalization,
-                             ymd(hospdatin) %in% allDates_admission &
-                               !(ymd(manifestation_dt) %in% allDates_onset) &
-                               hospitalisation == 1)
-
-incidence_admission <- sapply(allDates_admission, function(x) {
-  sum(with(fullInfoAdmissions,  hospdatin == x), na.rm = T) +
-    sum(with(partialInfoAdmissions,  eingang_dt == x), na.rm = T)
-})
-
-cumul_admission <- cumsum(incidence_admission)
-
-df <- data.frame(Date = allDates_admission, Incidence = incidence_admission, CH = cumul_admission)
-df <- filter(df, Date <= max_date)
-
-write_excel_csv(df, path = file.path(outDir, "Hospital_cases_admissions_CH.csv"), quote = FALSE)
-
-#### transforming data to use in epiestim analysis
-
-allDates <-  seq(min_date, max_date, by = "days")
-
-## if no admission data is available, use "eingang_dt" as a proxy for the hospitalization date
-
-partialInfoAdmissions <- subset(data_hospitalization,
-                                ymd(eingang_dt) %in% allDates & !(ymd(hospdatin) %in% allDates) & hospitalisation == 1)
-fullInfoAdmissions <- subset(data_hospitalization,
-                             ymd(hospdatin) %in% allDates & hospitalisation == 1)
-
-incidence <- sapply(allDates, function(x) {
-  sum(with(fullInfoAdmissions,  hospdatin == x), na.rm = TRUE) +
-    sum(with(partialInfoAdmissions,  eingang_dt == x), na.rm = TRUE) })
-
-cumul <- cumsum(incidence)
-df <- data.frame(Date = allDates, Incidence = incidence, CH = cumul)
-
-write_excel_csv(df, path = file.path(outDir, "Hospital_cases_CH.csv"), quote = FALSE)
-
-confirmedKtn <- data_hospitalization %>%
-  dplyr::group_by(ktn, fall_dt) %>%
+confirmed_case_data <- data_hospitalization %>%
+  filter(!is.na(fall_dt)) %>% 
+  dplyr::select(manifestation_dt, fall_dt, ktn) %>%
+  mutate(across(c(manifestation_dt, fall_dt), ymd)) %>% 
+  mutate(across(c(manifestation_dt, fall_dt), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>%
+  mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
+         date = if_else(is.na(manifestation_dt), fall_dt, manifestation_dt),
+         region = ktn,
+         .keep = "none") %>% 
+  dplyr::group_by(region, date, date_type) %>%
   dplyr::count() %>%
   ungroup() %>%
-  transmute(
-    date = fall_dt,
-    region = ktn,
-    countryIso3 = "CHE",
-    source = "FOPH",
-    data_type = "confirmed",
-    incidence = n
-  ) %>%
-  dplyr::group_by(region) %>%
-  arrange(region, date)
+  dplyr::mutate(
+      countryIso3 = "CHE",
+      source = "FOPH",
+      data_type = "confirmed",
+      incidence = n,
+      .keep  = "unused"
+    ) %>% 
+  arrange(region, date, date_type)
 
-deathsKtn <- data_hospitalization %>%
+death_data <- data_hospitalization %>%
+  filter(!is.na(pttoddat)) %>% 
+  dplyr::select(manifestation_dt, pttoddat, ktn) %>%
+  mutate(across(c(manifestation_dt, pttoddat), ymd)) %>% 
+  mutate(across(c(manifestation_dt, pttoddat), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>%
   filter(!is.na(pttoddat)) %>%
-  dplyr::group_by(ktn, pttoddat) %>%
+  mutate(manifestation_dt = if_else(between(pttoddat - manifestation_dt, 0, max_delay_death), manifestation_dt, as.Date(NA))) %>%
+  mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
+         date = if_else(is.na(manifestation_dt), pttoddat, manifestation_dt),
+         region = ktn,
+         .keep = "none") %>% 
+  dplyr::group_by(region, date, date_type) %>%
   dplyr::count() %>%
   ungroup() %>%
-  transmute(
-    date = pttoddat,
-    region = ktn,
+  dplyr::mutate(
     countryIso3 = "CHE",
     source = "FOPH",
     data_type = "deaths",
-    incidence = n
-  ) %>%
-  dplyr::group_by(region) %>%
-  arrange(region, date)
+    incidence = n,
+    .keep  = "unused"
+  ) %>% 
+  arrange(region, date, date_type)
 
-allKtn <- bind_rows(confirmedKtn, deathsKtn)
+hospital_data <- data_hospitalization %>%
+  filter(hospitalisation == 1) %>% 
+  dplyr::select(eingang_dt, manifestation_dt, hospdatin, ktn) %>% 
+  mutate(across(c(eingang_dt, manifestation_dt, hospdatin), ymd)) %>% 
+  mutate(across(c(eingang_dt, manifestation_dt, hospdatin), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>% 
+  mutate(manifestation_dt = if_else(between(hospdatin - manifestation_dt, 0, max_delay_hosp), manifestation_dt, as.Date(NA))) %>% 
+  mutate(hospdatin = if_else(is.na(hospdatin), eingang_dt, hospdatin)) %>% 
+  mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
+         date = if_else(is.na(manifestation_dt), hospdatin, manifestation_dt),
+         region = ktn,
+         .keep = "none") %>% 
+  dplyr::group_by(region, date, date_type) %>%
+  dplyr::count() %>%
+  ungroup() %>%
+  dplyr::mutate(
+    countryIso3 = "CHE",
+    source = "FOPH",
+    data_type = "hospitalized",
+    incidence = n,
+    .keep  = "unused"
+  ) %>% 
+  arrange(region, date, date_type)
+
+allKtn <- bind_rows(confirmed_case_data, hospital_data, death_data)
 
 allCH <- allKtn %>%
   ungroup() %>%
-  dplyr::group_by(date, data_type) %>%
+  dplyr::group_by(date, data_type, date_type) %>%
   summarize(
     region = "CHE",
     countryIso3 = "CHE",
