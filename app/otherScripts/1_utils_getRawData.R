@@ -235,33 +235,6 @@ getDataCHEBAG <- function(path, filename = "incidence_data_CH.csv") {
   return(bagDataAll)
 }
 
-getHospitalDataCHE <- function(path, dataTypeSuffix="") {
-  filePath <- file.path(path, str_c("Hospital_cases", dataTypeSuffix, "_CH.csv"))
-  
-  if (file.exists(filePath)) {
-    hospData <- read_csv(filePath,
-                        col_types = cols(
-                          Date = col_date(format = ""),
-                          Incidence = col_double(),
-                          CH = col_double()))
-    
-    date_type <- if_else(dataTypeSuffix == "_onsets", "onset", "report")
-    
-    out <- hospData %>% 
-      select(Date, Incidence) %>% 
-      rename(date= Date, value = Incidence) %>% 
-      mutate(region = "CHE",
-             countryIso3 = "CHE",
-             source = "FOPH",
-             data_type = str_c("hospitalized", dataTypeSuffix),
-             date_type = date_type)
-  } else {
-    warning("Swiss Hospital Data file not found. Ignoring...")
-    out <- NULL
-  }
-  return(out)
-}
-
 getDataCHEexcessDeath <- function(startAt = as.Date("2020-02-20")) {
   # urlPastData = "https://www.bfs.admin.ch/bfsstatic/dam/assets/12607335/master"
   # pastData <- read_delim(urlPastData, delim = ";", comment = "#")
@@ -311,9 +284,6 @@ getDataCHE <- function(data_path) {
   swissExcessDeath <- NULL #getDataCHEexcessDeath(startAt = as.Date("2020-02-20"))
   swissData <- bind_rows(
     bagData,
-    hospitalData,
-    hospitalData_onsets,
-    hospitalData_admissions,
     swissExcessDeath) %>%
     mutate(
       region = recode(region, "CH" = "CHE", "FL" = "LIE")) %>%
@@ -1052,17 +1022,11 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
     mutate(
       data_type = factor(data_type,
                          levels = c("confirmed",
-                                    "confirmed_onsets",
                                     "hospitalized",
-                                    "hospitalized_onsets",
-                                    "hospitalized_admissions",
                                     "deaths",
                                     "excess_deaths"),
                          labels = c("Confirmed cases",
-                                    "Confirmed cases - onset",
                                     "Hospitalized patients",
-                                    "Hospitalized patients - onset",
-                                    "Hospitalized patients - admission",
                                     "Deaths",
                                     "Excess deaths")
       )
