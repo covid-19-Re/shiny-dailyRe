@@ -200,30 +200,35 @@ if (condition) {
       deconvolvedData <- list()
       
       ##TODO remove (testing)
-      
-      data <- countryData
-      x <- "CHE"
-      source_i <- "FOPH"
-      count_type_i <- "Hospitalized patients"
-      constant_delay_distributions = constant_delay_distributions
-      onset_to_count_empirical_delays = delays_onset_to_count
-      verbose = F
-      n_bootstrap = 0
-
-      subset_data <- data %>%
-        filter(region == x,
-               source == source_i,
-               data_type == count_type_i) %>%
-        arrange(date)
-      data_subset <- subset_data
-
-      empirical_delays <- onset_to_count_empirical_delays %>%
-        filter(
-          region == x,
-          data_type == count_type_i)
-      constant_delay_distribution = constant_delay_distributions[[count_type_i]]
-      constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]]
-      smooth_incidence = T
+      # countryDataTests <- countryData %>%
+      #   filter(region == args["country"], data_type == "Confirmed cases / tests") %>%
+      #   # normalize to same range as original data
+      #   mutate(value = value * mean(totalTests))
+      # 
+      # data <- countryDataTests
+      # x <- "CHE"
+      # source_i <- "FOPH"
+      # count_type_i <- "Confirmed cases / tests"
+      # constant_delay_distributions = constant_delay_distributions
+      # onset_to_count_empirical_delays = delays_onset_to_count
+      # verbose = F
+      # n_bootstrap = 0
+      # 
+      # subset_data <- data %>%
+      #   filter(region == x,
+      #          source == source_i,
+      #          data_type == count_type_i) %>%
+      #   arrange(date)
+      # data_subset <- subset_data
+      # 
+      # empirical_delays <- onset_to_count_empirical_delays %>%
+      #   filter(
+      #     region == x,
+      #     data_type == count_type_i)
+      # constant_delay_distribution = constant_delay_distributions[[count_type_i]]
+      # constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]]
+      # smooth_incidence = T
+      # smooth = T
 
       deconvolvedData[[1]] <- get_all_infection_incidence(
         countryData,
@@ -232,7 +237,7 @@ if (condition) {
         data_types = c("Confirmed cases",
                       "Hospitalized patients",
                       "Deaths"),
-        n_bootstrap = 10,
+        n_bootstrap = 0,
         verbose = F)
 
       if (args["country"] %in% c("CHE")) {
@@ -241,12 +246,12 @@ if (condition) {
           filter(region == args["country"], data_type == "Confirmed cases / tests") %>%
           # normalize to same range as original data
           mutate(value = value * mean(totalTests))
-        deconvolvedData[[3]] <- get_all_infection_incidence(
+        deconvolvedData[[2]] <- get_all_infection_incidence(
           countryDataTests,
           constant_delay_distributions = constant_delay_distributions,
           onset_to_count_empirical_delays = delays_onset_to_count,
           data_types = c("Confirmed cases / tests"),
-          n_bootstrap = 10,
+          n_bootstrap = 0,
           verbose = FALSE)
       }
 
@@ -328,7 +333,7 @@ if (condition) {
               "Confirmed cases / tests",
               "Hospitalized patients",
               "Deaths",
-              "Excess deaths"))) %>%
+              "Excess deaths")))
         pivot_wider(names_from = "variable", values_from = "value") %>%
         dplyr::group_by(date, country, region, data_type, source, estimate_type) %>%
         dplyr::summarize(

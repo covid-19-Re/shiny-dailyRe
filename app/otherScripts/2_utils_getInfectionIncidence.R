@@ -520,28 +520,35 @@ get_all_infection_incidence <- function(data,
           
           subset_data_report <- subset_data %>% filter(date_type == "report")
           
-          deconvolved_reports <- get_infection_incidence_by_deconvolution(
-            subset_data_report,
-            constant_delay_distribution = constant_delay_distributions[[count_type_i]],
-            constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]],
-            is_onset_data = F,
-            smooth_incidence = smooth,
-            empirical_delays = empirical_delays,
-            n_bootstrap = n_bootstrap,
-            verbose = verbose)
-          
+          if(nrow(subset_data_report) > 0){
+            deconvolved_reports <- get_infection_incidence_by_deconvolution(
+              subset_data_report,
+              constant_delay_distribution = constant_delay_distributions[[count_type_i]],
+              constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]],
+              is_onset_data = F,
+              smooth_incidence = smooth,
+              empirical_delays = empirical_delays,
+              n_bootstrap = n_bootstrap,
+              verbose = verbose)
+          } else {
+            deconvolved_reports <- tibble()
+          }
+        
           subset_data_onset <- subset_data %>% filter(date_type == "onset")
           
-          deconvolved_onset <- get_infection_incidence_by_deconvolution(
-            subset_data_onset,
-            constant_delay_distribution = c(),
-            constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]],
-            is_onset_data = T,
-            smooth_incidence = smooth,
-            empirical_delays = empirical_delays,
-            n_bootstrap = n_bootstrap,
-            verbose = verbose)
-          
+          if(nrow(subset_data_onset) > 0) {
+            deconvolved_onset <- get_infection_incidence_by_deconvolution(
+              subset_data_onset,
+              constant_delay_distribution = c(),
+              constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]],
+              is_onset_data = T,
+              smooth_incidence = smooth,
+              empirical_delays = empirical_delays,
+              n_bootstrap = n_bootstrap,
+              verbose = verbose)
+          } else {
+            deconvolved_onset <- tibble()
+          }
           combined_deconvolved <- bind_rows(deconvolved_reports, deconvolved_onset) %>% 
             dplyr::group_by(date, region, country, replicate, source, data_type) %>% 
             dplyr::summarise(value = sum(value), .groups = "keep") %>%
