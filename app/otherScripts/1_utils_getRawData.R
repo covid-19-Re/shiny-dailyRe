@@ -226,6 +226,10 @@ getDataCHEBAG <- function(path, filename = "incidence_data_CH.csv") {
                         source = col_character(),
                         data_type = col_character(),
                         value = col_double(),
+                        positiveTests = col_double(),
+                        negativeTests = col_double(),
+                        totalTests = col_double(),
+                        testPositivity = col_double(),
                         date_type = col_character()))
   
   bagDataGreaterRegions <- sumGreaterRegions(filter(bagData, region != "CHE"))
@@ -1024,11 +1028,13 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
                          levels = c("confirmed",
                                     "hospitalized",
                                     "deaths",
-                                    "excess_deaths"),
+                                    "excess_deaths",
+                                    "Confirmed cases / tests"),
                          labels = c("Confirmed cases",
                                     "Hospitalized patients",
                                     "Deaths",
-                                    "Excess deaths")
+                                    "Excess deaths",
+                                    "Confirmed cases / tests")
       )
     )
 }

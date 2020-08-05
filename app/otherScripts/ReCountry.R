@@ -50,7 +50,7 @@ names(args) <- "country"
     popData <- readRDS(popDataPath)
   }
 
-basePath <- here("app", "data", "countryData", popData$continent[popData$countryIso3 == args["country"]][1])
+basePath <- here::here("app", "data", "countryData", popData$continent[popData$countryIso3 == args["country"]][1])
 if (!dir.exists(basePath)) {
   dir.create(basePath)
 }
@@ -67,51 +67,22 @@ if (!dir.exists(basePath)) {
     )
   
   # get number of tests data
-  if (args["country"] %in% c("CHE")) {
-    testsDataPath <- file.path(basePath, str_c(args["country"], "-Tests.rds"))
-
-    bagFiles <- list.files(here("app", "data", "BAG"),
-      pattern = "*Time_series_tests.csv",
-      full.names = TRUE,
-      recursive = TRUE)
-
-    bagFileDates <- strptime(
-      stringr::str_match(bagFiles, ".*\\/(\\d*-\\d*-\\d*_\\d*-\\d*-\\d*)")[, 2],
-      format = "%Y-%m-%d_%H-%M-%S")
-
-    newestFile <- bagFiles[which(bagFileDates == max(bagFileDates))[1]]
-    nTests <- read_delim(file = newestFile, delim = ";",
-      col_types = cols_only(
-        Datum = col_date(format = ""),
-        `Positive Tests` = col_double(),
-        `Negative Tests` = col_double()
-      )) %>%
-      transmute(
-        date = Datum,
-        countryIso3 = "CHE",
-        region = countryIso3,
-        positiveTests = `Positive Tests`,
-        negativeTests = `Negative Tests`,
-        totalTests = positiveTests + negativeTests,
-        testPositivity = positiveTests / totalTests
-        )
-
-    saveRDS(nTests, testsDataPath)
-
-    countryData <- countryData %>%
-      left_join(
-        mutate(nTests, data_type = "Confirmed cases"),
-        by = c("date", "region", "countryIso3", "data_type"))
-
-    countryDataTests <- countryData %>%
-      filter(data_type == "Confirmed cases", region == "CHE") %>%
-      mutate(
-        data_type = "Confirmed cases / tests",
-        value = value / totalTests
-      )
-
-    countryData <- bind_rows(countryData, countryDataTests)
-  }
+  # if (args["country"] %in% c("CHE")) {
+  # 
+  #   countryData <- countryData %>%
+  #     left_join(
+  #       mutate(nTests, data_type = "Confirmed cases"),
+  #       by = c("date", "region", "countryIso3", "data_type"))
+  # 
+  #   countryDataTests <- countryData %>%
+  #     filter(data_type == "Confirmed cases", region == "CHE") %>%
+  #     mutate(
+  #       data_type = "Confirmed cases / tests",
+  #       value = value / totalTests
+  #     )
+  # 
+  #   countryData <- bind_rows(countryData, countryDataTests)
+  # }
 
   # check for changes in country data
   countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.rds"))
@@ -261,10 +232,11 @@ if (condition) {
         data_types = c("Confirmed cases",
                       "Hospitalized patients",
                       "Deaths"),
-        n_bootstrap = 1,
+        n_bootstrap = 10,
         verbose = F)
 
       if (args["country"] %in% c("CHE")) {
+        #TODO can we include this step in the data preparation scripts (in this case formatBAGData)?
         countryDataTests <- countryData %>%
           filter(region == args["country"], data_type == "Confirmed cases / tests") %>%
           # normalize to same range as original data
@@ -274,7 +246,7 @@ if (condition) {
           constant_delay_distributions = constant_delay_distributions,
           onset_to_count_empirical_delays = delays_onset_to_count,
           data_types = c("Confirmed cases / tests"),
-          n_bootstrap = 1,
+          n_bootstrap = 10,
           verbose = FALSE)
       }
 
