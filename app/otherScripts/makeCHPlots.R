@@ -28,8 +28,7 @@ pathToEstimates <- file.path(dataDir, str_c("countryData/Europe/", iso3, "-Estim
 pathToUpdateData <- file.path(dataDir, "updateData.rds")
 pathToInterventionData <- here::here("../covid19-additionalData/interventions/interventions.csv")
 
-caseData <- readRDS(pathToCaseData) %>%
-  pivot_wider(names_from = "variable", values_from = "value")
+caseData <- readRDS(pathToCaseData)
 estimates <- readRDS(pathToEstimates)
 updateData <- readRDS(pathToUpdateData)[[iso3]]
 

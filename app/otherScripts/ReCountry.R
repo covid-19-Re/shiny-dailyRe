@@ -238,14 +238,14 @@ if (condition) {
       onset_to_count_empirical_delays = delays_onset_to_count
       verbose = F
       n_bootstrap = 0
-      
+
       subset_data <- data %>%
         filter(region == x,
                source == source_i,
                data_type == count_type_i) %>%
         arrange(date)
       data_subset <- subset_data
-      
+
       empirical_delays <- onset_to_count_empirical_delays %>%
         filter(
           region == x,
@@ -260,9 +260,8 @@ if (condition) {
         onset_to_count_empirical_delays = delays_onset_to_count,
         data_types = c("Confirmed cases",
                       "Hospitalized patients",
-                      "Deaths",
-                      "Confirmed cases - onset"),
-        n_bootstrap = 50,
+                      "Deaths"),
+        n_bootstrap = 1,
         verbose = F)
 
       if (args["country"] %in% c("CHE")) {
@@ -275,7 +274,7 @@ if (condition) {
           constant_delay_distributions = constant_delay_distributions,
           onset_to_count_empirical_delays = delays_onset_to_count,
           data_types = c("Confirmed cases / tests"),
-          n_bootstrap = 50,
+          n_bootstrap = 1,
           verbose = FALSE)
       }
 

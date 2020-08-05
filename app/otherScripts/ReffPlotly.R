@@ -105,7 +105,7 @@ rEffPlotly <- function(
     group_by(data_type) %>%
     mutate(
       tooltipText = str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        round(incidence, 3), " ", toLowerFirst(data_type),
+        round(value, 3), " ", toLowerFirst(data_type),
         if_else(caseNormalize, " / 100'000", ""),
         if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
         if_else(data_type == "Confirmed cases" & !is.na(testPositivity),
@@ -113,7 +113,7 @@ rEffPlotly <- function(
           ""
         ),
         if_else(data_type == "Confirmed cases / tests",
-          str_c("<br>", incidence * totalTests, " cases",
+          str_c("<br>", value * totalTests, " cases",
             "<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"
           ),
           ""
@@ -124,7 +124,7 @@ rEffPlotly <- function(
 
   if (caseNormalize) {
     caseData <- caseData %>%
-      mutate(incidence = incidence / populationSize * 100000)
+      mutate(value = value / populationSize * 100000)
     pCasesTitle <- str_c(pCasesTitle, " / 100'000")
   }
 
@@ -132,16 +132,16 @@ rEffPlotly <- function(
     caseData <- caseData %>%
       group_by(data_type) %>%
       mutate(
-        incidence = slide_index_dbl(incidence, date, mean, .before = lubridate::days(caseAverage))
+        value = slide_index_dbl(value, date, mean, .before = lubridate::days(caseAverage))
       ) %>%
       ungroup()
     pCasesTitle <- str_c(pCasesTitle, "\n(", translator$t("7 day avarage"), ")")
   }
 
   if (logCaseYaxis) {
-    zoomRange <- makeZoomRange(log10(max(caseData$incidence, na.rm = TRUE)), extra = log10(5), stepSize = log10(10))
+    zoomRange <- makeZoomRange(log10(max(caseData$value, na.rm = TRUE)), extra = log10(5), stepSize = log10(10))
   } else {
-    zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
+    zoomRange <- makeZoomRange(max(caseData$value, na.rm = TRUE))
   }
 
   estimatesPlot <- estimates %>%
@@ -160,7 +160,7 @@ rEffPlotly <- function(
   }
 
   pCases <- plot_ly(data = caseDataTrunc) %>%
-    add_bars(x = ~date, y = ~incidence, color = ~data_type,
+    add_bars(x = ~date, y = ~value, color = ~data_type,
       colors = plotColors,
       text = ~str_c(tooltipText, "<extra></extra>"),
       hovertemplate = "%{text}",
@@ -181,7 +181,7 @@ rEffPlotly <- function(
     pCases <- pCases %>%
       add_bars(
         data = caseDataRest,
-        x = ~date, y = ~incidence, color = ~data_type_plot,
+        x = ~date, y = ~value, color = ~data_type_plot,
         colors = plotColors,
         text = ~str_c(tooltipText, "<br>(not used for R<sub>e</sub> estimates)<extra></extra>"),
         hovertemplate = "%{text}", inherit = FALSE,
@@ -192,7 +192,7 @@ rEffPlotly <- function(
     caseDataTruncLoess <- caseDataTrunc %>%
       filter(data_type != "Excess deaths") %>%
       group_by(country, region, source, data_type) %>%
-      mutate(incidenceLoess = getLOESSCases(date, incidence))
+      mutate(incidenceLoess = getLOESSCases(date, value))
     pCases <- pCases %>%
       add_trace(
         data = caseDataTruncLoess,
@@ -430,7 +430,7 @@ rEffPlotlyRegion <- function(
 
   if (caseNormalize) {
     caseData <- caseData %>%
-      mutate(incidence = incidence / populationSize * 100000)
+      mutate(value = value / populationSize * 100000)
     pCasesTitle <- str_c(pCasesTitle, " / 100'000")
   }
 
@@ -450,7 +450,7 @@ rEffPlotlyRegion <- function(
     caseData <- caseData %>%
       group_by(data_type, country, region) %>%
       mutate(
-        incidence = slide_index_dbl(incidence, date, mean, .before = lubridate::days(caseAverage))
+        value = slide_index_dbl(value, date, mean, .before = lubridate::days(caseAverage))
       ) %>%
       ungroup()
     pCasesTitle <- str_c(pCasesTitle, "\n(", translator$t("7 day avarage"), ")")
@@ -469,9 +469,9 @@ rEffPlotlyRegion <- function(
   }
 
   if (logCaseYaxis) {
-    zoomRange <- makeZoomRange(log10(max(caseData$incidence, na.rm = TRUE)), extra = log10(5), stepSize = log10(10))
+    zoomRange <- makeZoomRange(log10(max(caseData$value, na.rm = TRUE)), extra = log10(5), stepSize = log10(10))
   } else {
-    zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
+    zoomRange <- makeZoomRange(max(caseData$value, na.rm = TRUE))
   }
 
   if (caseDataRightTruncation > 0) {
@@ -487,10 +487,10 @@ rEffPlotlyRegion <- function(
   }
 
   pCases <- plot_ly(data = caseDataTrunc) %>%
-    add_bars(x = ~date, y = ~incidence, color = ~region, colors = regionColors,
+    add_bars(x = ~date, y = ~value, color = ~region, colors = regionColors,
       legendgroup = ~region,
       text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        round(incidence, 3), " ", toLowerFirst(data_type),
+        round(value, 3), " ", toLowerFirst(data_type),
         if_else(caseNormalize, " / 100'000", ""),
         if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
         "<extra></extra>"),
@@ -511,10 +511,10 @@ rEffPlotlyRegion <- function(
     pCases <- pCases %>%
       add_bars(
         data = caseDataRest,
-        x = ~date, y = ~incidence, color = ~region_plot,
+        x = ~date, y = ~value, color = ~region_plot,
         colors = regionColors,
         text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-          round(incidence, 3), " ", toLowerFirst(data_type),
+          round(value, 3), " ", toLowerFirst(data_type),
           if_else(caseNormalize, " / 100'000", ""),
           if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
           "<br>(not used for R<sub>e</sub> estimates)<extra></extra>"),
@@ -526,7 +526,7 @@ rEffPlotlyRegion <- function(
     caseDataTruncLoess <- caseDataTrunc %>%
       filter(data_type != "Excess deaths") %>%
       group_by(country, region, source, data_type) %>%
-      mutate(incidenceLoess = getLOESSCases(date, incidence))
+      mutate(incidenceLoess = getLOESSCases(date, value))
     pCases <- pCases %>%
       add_trace(data = caseDataTruncLoess,
         x = ~date, y = ~incidenceLoess, color = ~region, color = regionColors,
@@ -723,7 +723,7 @@ rEffPlotlyComparison <- function(
 
   if (caseNormalize) {
     caseData <- caseData %>%
-      mutate(incidence = incidence / populationSize * 100000)
+      mutate(value = value / populationSize * 100000)
     pCasesTitle <- str_c(pCasesTitle, " / 100'000")
   }
 
@@ -731,7 +731,7 @@ rEffPlotlyComparison <- function(
     caseData <- caseData %>%
       group_by(country, region, data_type) %>%
       mutate(
-        incidence = slide_index_dbl(incidence, date, mean, .before = lubridate::days(caseAverage))
+        value = slide_index_dbl(value, date, mean, .before = lubridate::days(caseAverage))
       ) %>%
       ungroup()
     pCasesTitle <- str_c(pCasesTitle, "\n(", translator$t("7 day avarage"), ")")
@@ -740,9 +740,9 @@ rEffPlotlyComparison <- function(
   estimatesPlot <- estimates
 
   if (logCaseYaxis) {
-    zoomRange <- makeZoomRange(log10(max(caseData$incidence, na.rm = TRUE)), extra = log10(5), stepSize = log10(10))
+    zoomRange <- makeZoomRange(log10(max(caseData$value, na.rm = TRUE)), extra = log10(5), stepSize = log10(10))
   } else {
-    zoomRange <- makeZoomRange(max(caseData$incidence, na.rm = TRUE))
+    zoomRange <- makeZoomRange(max(caseData$value, na.rm = TRUE))
   }
 
   if (caseDataRightTruncation > 0) {
@@ -758,10 +758,10 @@ rEffPlotlyComparison <- function(
   }
 
   pCases <- plot_ly(data = caseDataTrunc) %>%
-    add_bars(x = ~date, y = ~incidence, color = ~country, colors = countryColors,
+    add_bars(x = ~date, y = ~value, color = ~country, colors = countryColors,
       legendgroup = ~country,
       text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        round(incidence, 3), " ", toLowerFirst(data_type),
+        round(value, 3), " ", toLowerFirst(data_type),
         if_else(caseNormalize, " / 100'000", ""),
         if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
         "<extra></extra>"),
@@ -782,10 +782,10 @@ rEffPlotlyComparison <- function(
     pCases <- pCases %>%
       add_bars(
         data = caseDataRest,
-        x = ~date, y = ~incidence, color = ~country_plot,
+        x = ~date, y = ~value, color = ~country_plot,
         colors = countryColors,
         text = ~str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-          round(incidence, 3), " ", toLowerFirst(data_type),
+          round(value, 3), " ", toLowerFirst(data_type),
           if_else(caseNormalize, " / 100'000", ""),
           if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
           "<br>(not used for R<sub>e</sub> estimates)<extra></extra>"),
@@ -797,7 +797,7 @@ rEffPlotlyComparison <- function(
     caseDataTruncLoess <- caseDataTrunc %>%
       filter(data_type != "Excess deaths") %>%
       group_by(country, region, source, data_type) %>%
-      mutate(incidenceLoess = getLOESSCases(date, incidence))
+      mutate(incidenceLoess = getLOESSCases(date, value))
     pCases <- pCases %>%
       add_trace(data = caseDataTruncLoess,
         x = ~date, y = ~incidenceLoess, color = ~country, color = countryColors,

@@ -360,19 +360,27 @@ get_infection_incidence_by_deconvolution <- function(
   
   is_empirical = (nrow(empirical_delays) > 0)
   
-  if(is_empirical) {
-    delay_distribution_matrix_onset_to_report <- get_matrix_empirical_waiting_time_distr(
-      empirical_delays,
-      all_dates[(days_further_in_the_past_incubation + 1):length(all_dates)])
-    
+  if( is_onset_data ) {
     delay_distribution_matrix_incubation <- get_matrix_constant_waiting_time_distr(
       constant_delay_distribution_incubation,
       all_dates)
   } else {
-    delay_distribution_matrix <- get_matrix_constant_waiting_time_distr(
-      constant_delay_distribution,
-      all_dates)
+    if(is_empirical) {
+      delay_distribution_matrix_onset_to_report <- get_matrix_empirical_waiting_time_distr(
+        empirical_delays,
+        all_dates[(days_further_in_the_past_incubation + 1):length(all_dates)])
+      
+      delay_distribution_matrix_incubation <- get_matrix_constant_waiting_time_distr(
+        constant_delay_distribution_incubation,
+        all_dates)
+    } else {
+      delay_distribution_matrix <- get_matrix_constant_waiting_time_distr(
+        constant_delay_distribution,
+        all_dates)
+    }
   }
+  
+
   
   results <- list(tibble())
   
@@ -485,8 +493,10 @@ get_all_infection_incidence <- function(data,
       # cat("   calculating on", nCores, "cores...\n")
       # cl <- parallel::makeCluster(nCores, type = "FORK", outfile = "")
       
+
+      
       results_list <- lapply(# parallel::parLapply(cl,
-        unique(thisData$region),
+        unique(data$region),
         function(x) {
           cat("    Region:", x, "\n")
           subset_data <- data %>%

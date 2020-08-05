@@ -6,7 +6,6 @@ loadCountryData <- function(iso3, continent) {
   estimates <- readRDS(file.path("data/countryData", continent, str_c(iso3, "-Estimates.rds")))
 
   deconvolutedData <- deconvolutedData %>%
-    dplyr::select(-variable) %>%
     mutate(data_type = str_sub(data_type, 11)) %>%
     group_by(date, region, country, source, data_type) %>%
     summarise(
@@ -17,7 +16,8 @@ loadCountryData <- function(iso3, continent) {
     )
 
   caseData <- caseData %>%
-    pivot_wider(names_from = "variable", values_from = "value") %>%
+    dplyr::group_by(date,region,country, source, data_type) %>% 
+    dplyr::summarise(value = sum(value), .groups = "drop") %>% 
     left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
     arrange(countryIso3, region, source, data_type, date)
 
@@ -100,7 +100,7 @@ estimateRanges <- function(
     arrange(countryIso3, region, source, data_type, date) %>%
     filter(
       data_type == "Confirmed cases",
-      cumsum(incidence) > 100) %>%
+      cumsum(value) > 100) %>%
     filter(date == min(date)) %>%
     ungroup() %>%
     dplyr::select(countryIso3, region, estimateStart = date)
@@ -108,7 +108,7 @@ estimateRanges <- function(
   # figuring out when estimation ends i.e. applying the delays
   estimateDatesDf <- caseData %>%
     filter(
-      !(is.na(incidence))
+      !(is.na(value))
     ) %>%
     group_by(region, countryIso3, source, data_type) %>%
     top_n(n = 1, date) %>%
