@@ -16,7 +16,7 @@ loadCountryData <- function(iso3, continent) {
     )
 
   caseData <- caseData %>%
-    dplyr::group_by(date,region,country, source, data_type) %>% 
+    dplyr::group_by(date, region, countryIso3, source, data_type) %>% 
     dplyr::summarise(value = sum(value), .groups = "drop") %>% 
     left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
     arrange(countryIso3, region, source, data_type, date)

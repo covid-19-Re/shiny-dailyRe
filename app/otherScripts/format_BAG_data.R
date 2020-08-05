@@ -101,10 +101,10 @@ final_delay_data_FOPH <- bind_rows(final_delay_data_FOPH, normalized_test_delays
 ### Save file
 write_csv(final_delay_data_FOPH, path = file.path(outDir, "FOPH_data_delays.csv"))
 
-cat("Mean Time from onset to Hospitalization:",
-    mean(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 6.1 (15/05/20)
-cat("s.d. Time from onset to Hospitalization:",
-    sd(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 4.7
+# cat("Mean Time from onset to Hospitalization:",
+#     mean(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 6.1 (15/05/20)
+# cat("s.d. Time from onset to Hospitalization:",
+#     sd(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 4.7
 
 
 confirmed_case_data <- data_hospitalization %>%

@@ -780,9 +780,7 @@ getCaseDataESP <- function(){
            date_type = "onset",
            data_type = "confirmed")
   
-  confirmed <- confirmed_onsets %>% mutate( data_type = "confirmed")
-  
-  return(bind_rows(confirmed_onsets,confirmed))
+  return(confirmed_onsets)
 }
 
 getDataESP <- function( ECDCtemp = NULL, tReload = 15) {

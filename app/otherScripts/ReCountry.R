@@ -24,6 +24,7 @@ args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
   args <- c("CHE")
+  args <- c("ESP")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -205,10 +206,13 @@ if (condition) {
       #   # normalize to same range as original data
       #   mutate(value = value * mean(totalTests))
       # 
-      # data <- countryDataTests
-      # x <- "CHE"
-      # source_i <- "FOPH"
-      # count_type_i <- "Confirmed cases / tests"
+      # data <- countryData
+      # # x <- "CHE"
+      # x <- "ESP"
+      # # source_i <- "FOPH"
+      # source_i <- "RENAVE"
+      # # count_type_i <- "Confirmed cases / tests"
+      # count_type_i <- "Confirmed cases"
       # constant_delay_distributions = constant_delay_distributions
       # onset_to_count_empirical_delays = delays_onset_to_count
       # verbose = F
@@ -333,7 +337,7 @@ if (condition) {
               "Confirmed cases / tests",
               "Hospitalized patients",
               "Deaths",
-              "Excess deaths")))
+              "Excess deaths"))) %>% 
         pivot_wider(names_from = "variable", values_from = "value") %>%
         dplyr::group_by(date, country, region, data_type, source, estimate_type) %>%
         dplyr::summarize(
