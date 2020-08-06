@@ -24,7 +24,6 @@ args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
   args <- c("CHE")
-  # args <- c("ESP")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -66,24 +65,6 @@ if (!dir.exists(basePath)) {
       popData,
       by = c("countryIso3", "region")
     )
-  
-  # get number of tests data
-  # if (args["country"] %in% c("CHE")) {
-  # 
-  #   countryData <- countryData %>%
-  #     left_join(
-  #       mutate(nTests, data_type = "Confirmed cases"),
-  #       by = c("date", "region", "countryIso3", "data_type"))
-  # 
-  #   countryDataTests <- countryData %>%
-  #     filter(data_type == "Confirmed cases", region == "CHE") %>%
-  #     mutate(
-  #       data_type = "Confirmed cases / tests",
-  #       value = value / totalTests
-  #     )
-  # 
-  #   countryData <- bind_rows(countryData, countryDataTests)
-  # }
 
   # check for changes in country data
   countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.rds"))
@@ -200,41 +181,6 @@ if (condition) {
     # Deconvolution 
       deconvolvedData <- list()
 
-      # # ##TODO remove (testing)
-      # # # countryDataTests <- countryData %>%
-      # # #   filter(region == args["country"], data_type == "Confirmed cases / tests") %>%
-      # # #   # normalize to same range as original data
-      # # #   mutate(value = value * mean(totalTests))
-      # # # 
-      # data <- countryData
-      # x <- "CHE"
-      # # x <- "ESP"
-      # source_i <- "FOPH"
-      # # source_i <- "RENAVE"
-      # # count_type_i <- "Confirmed cases / tests"
-      # # count_type_i <- "Confirmed cases"
-      # count_type_i <- "Deaths"
-      # constant_delay_distributions = constant_delay_distributions
-      # onset_to_count_empirical_delays = delays_onset_to_count
-      # verbose = F
-      # n_bootstrap = 0
-      # 
-      # subset_data <- data %>%
-      #   filter(region == x,
-      #          source == source_i,
-      #          data_type == count_type_i) %>%
-      #   arrange(date)
-      # data_subset <- subset_data
-      # 
-      # empirical_delays <- onset_to_count_empirical_delays %>%
-      #   filter(
-      #     region == x,
-      #     data_type == count_type_i)
-      # constant_delay_distribution = constant_delay_distributions[[count_type_i]]
-      # constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]]
-      # smooth_incidence = T
-      # smooth = T
-
       deconvolvedData[[1]] <- get_all_infection_incidence(
         countryData,
         constant_delay_distributions = constant_delay_distributions,
@@ -242,7 +188,7 @@ if (condition) {
         data_types = c("Confirmed cases",
                       "Hospitalized patients",
                       "Deaths"),
-        n_bootstrap = 10,
+        n_bootstrap = 50,
         verbose = F)
 
       if (args["country"] %in% c("CHE")) {
@@ -256,7 +202,7 @@ if (condition) {
           constant_delay_distributions = constant_delay_distributions,
           onset_to_count_empirical_delays = delays_onset_to_count,
           data_types = c("Confirmed cases / tests"),
-          n_bootstrap = 10,
+          n_bootstrap = 50,
           verbose = FALSE)
       }
 
