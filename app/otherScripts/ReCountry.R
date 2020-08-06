@@ -24,7 +24,7 @@ args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
   args <- c("CHE")
-  args <- c("ESP")
+  # args <- c("ESP")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -199,20 +199,21 @@ if (condition) {
         ungroup()
     # Deconvolution 
       deconvolvedData <- list()
-      
-      ##TODO remove (testing)
-      # countryDataTests <- countryData %>%
-      #   filter(region == args["country"], data_type == "Confirmed cases / tests") %>%
-      #   # normalize to same range as original data
-      #   mutate(value = value * mean(totalTests))
-      # 
+
+      # # ##TODO remove (testing)
+      # # # countryDataTests <- countryData %>%
+      # # #   filter(region == args["country"], data_type == "Confirmed cases / tests") %>%
+      # # #   # normalize to same range as original data
+      # # #   mutate(value = value * mean(totalTests))
+      # # # 
       # data <- countryData
-      # # x <- "CHE"
-      # x <- "ESP"
-      # # source_i <- "FOPH"
-      # source_i <- "RENAVE"
+      # x <- "CHE"
+      # # x <- "ESP"
+      # source_i <- "FOPH"
+      # # source_i <- "RENAVE"
       # # count_type_i <- "Confirmed cases / tests"
-      # count_type_i <- "Confirmed cases"
+      # # count_type_i <- "Confirmed cases"
+      # count_type_i <- "Deaths"
       # constant_delay_distributions = constant_delay_distributions
       # onset_to_count_empirical_delays = delays_onset_to_count
       # verbose = F
@@ -241,7 +242,7 @@ if (condition) {
         data_types = c("Confirmed cases",
                       "Hospitalized patients",
                       "Deaths"),
-        n_bootstrap = 0,
+        n_bootstrap = 10,
         verbose = F)
 
       if (args["country"] %in% c("CHE")) {
@@ -255,7 +256,7 @@ if (condition) {
           constant_delay_distributions = constant_delay_distributions,
           onset_to_count_empirical_delays = delays_onset_to_count,
           data_types = c("Confirmed cases / tests"),
-          n_bootstrap = 0,
+          n_bootstrap = 10,
           verbose = FALSE)
       }
 

@@ -14,10 +14,12 @@ loadCountryData <- function(iso3, continent) {
       deconvolutedHigh = deconvoluted + sd(value),
       .groups = "keep"
     )
+  
+  # browser()
 
   caseData <- caseData %>%
-    dplyr::group_by(date, region, countryIso3, source, data_type) %>% 
-    dplyr::summarise(value = sum(value), .groups = "drop") %>% 
+    dplyr::group_by(date, region, country, countryIso3, source, data_type, populationSize, continent) %>% 
+    dplyr::summarise(value = sum(value), .groups = "drop") %>%
     left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
     arrange(countryIso3, region, source, data_type, date)
 
