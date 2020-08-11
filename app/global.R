@@ -6,7 +6,7 @@ library(slider)
 library(shades)
 library(tidyverse)
 
-source("otherScripts/ReffPlotly.R")
+source("otherScripts/plotlyFunctions.R")
 source("utils.R")
 
 # set up translation

@@ -349,6 +349,12 @@
       "it-ch": "Casi confermati"
     },
     {
+      "en-gb": "Confirmed cases / tests",
+      "de-ch": "Bestätigte Fälle / Tests",
+      "fr-ch": "Cas confirmés / test",
+      "it-ch": "Casi confermati / test"
+    },
+    {
       "en-gb": "Hospitalized patients",
       "de-ch": "Hospitalisierte Patienten",
       "fr-ch": "Patients hospitalisés",

@@ -14,7 +14,7 @@ if (interactive()) {
   })
 }
 
-source(here::here("app", "otherScripts", "ReffPlotly.R"))
+source(here::here("app", "otherScripts", "plotlyFunctions.R"))
 source(here::here("app", "utils.R"))
 
 iso3 <- "CHE"
