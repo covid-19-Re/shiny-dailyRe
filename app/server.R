@@ -37,7 +37,7 @@ server <- function(input, output, session) {
     split(f = .$continent)
 
   # reactive Data
-  interventions <- reactivePoll(1000, session,
+  interventions <- reactivePoll(5 * 60 * 1000, session,
     checkFunc = function() {
       file.mtime(str_c(pathToInterventionData, "interventions.csv"))
     },
@@ -54,7 +54,7 @@ server <- function(input, output, session) {
     }
   )
 
-  reDataEurope <- reactivePoll(1000, session,
+  reDataEurope <- reactivePoll(5 * 60 * 1000, session,
     checkFunc = function() {
       # check estimates (only load data & deconvoluted once script is complete)
       file.mtime(
@@ -108,7 +108,7 @@ server <- function(input, output, session) {
     }
   )
 
-  reDataAfrica <- reactivePoll(1000, session,
+  reDataAfrica <- reactivePoll(5 * 60 * 1000, session,
     checkFunc = function() {
       # check estimates (only load data & deconvoluted once script is complete)
       file.mtime(
@@ -189,7 +189,7 @@ server <- function(input, output, session) {
     return(dataSources)
   })
 
-  updateData <- reactivePoll(1000, session,
+  updateData <- reactivePoll(5 * 60 * 1000, session,
     checkFunc = function() {
       file.mtime(pathToUpdataData)
     },
