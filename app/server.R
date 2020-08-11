@@ -79,7 +79,6 @@ server <- function(input, output, session) {
         }
 
         deconvolutedData <- deconvolutedData %>%
-          dplyr::select(-variable) %>%
           mutate(data_type = str_sub(data_type, 11)) %>%
           group_by(date, region, country, source, data_type) %>%
           summarise(
@@ -90,7 +89,6 @@ server <- function(input, output, session) {
           )
 
         caseData <- caseData %>%
-          pivot_wider(names_from = "variable", values_from = "value") %>%
           left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
           arrange(countryIso3, region, source, data_type, date)
 
@@ -135,7 +133,6 @@ server <- function(input, output, session) {
         }
 
         deconvolutedData <- deconvolutedData %>%
-          dplyr::select(-variable) %>%
           mutate(data_type = str_sub(data_type, 11)) %>%
           group_by(date, region, country, source, data_type) %>%
           summarise(
@@ -146,7 +143,6 @@ server <- function(input, output, session) {
           )
 
         caseData <- caseData %>%
-          pivot_wider(names_from = "variable", values_from = "value") %>%
           left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
           arrange(countryIso3, region, source, data_type, date)
 
@@ -177,7 +173,7 @@ server <- function(input, output, session) {
   dataSources <- reactive({
     sourceInfo <- read_csv("data/dataSources.csv", col_types = cols(.default = col_character()))
 
-    dataSources <- bind_rows(reDataWorld()) %>%
+    dataSources <- bind_rows(reDataWorld()$caseData) %>%
       dplyr::select(countryIso3, country, source, data_type) %>%
       filter(data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
       left_join(sourceInfo, by = "source") %>%
