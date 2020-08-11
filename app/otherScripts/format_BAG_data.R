@@ -106,7 +106,6 @@ write_csv(final_delay_data_FOPH, path = file.path(outDir, "FOPH_data_delays.csv"
 # cat("s.d. Time from onset to Hospitalization:",
 #     sd(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 4.7
 
-
 confirmed_case_data <- data_hospitalization %>%
   filter(!is.na(fall_dt)) %>% 
   dplyr::select(manifestation_dt, fall_dt, ktn) %>%
@@ -126,6 +125,25 @@ confirmed_case_data <- data_hospitalization %>%
       incidence = n,
       .keep  = "unused"
     ) %>% 
+  arrange(region, date, date_type)
+
+plotting_confirmed_case_data <-  data_hospitalization %>%
+  filter(!is.na(fall_dt)) %>% 
+  dplyr::select(fall_dt, ktn) %>%
+  mutate(date_type = "report_plotting",
+         date = ymd(fall_dt),
+         region = ktn,
+         .keep = "none") %>% 
+  dplyr::group_by(region, date, date_type) %>%
+  dplyr::count() %>%
+  ungroup() %>%
+  dplyr::mutate(
+    countryIso3 = "CHE",
+    source = "FOPH",
+    data_type = "confirmed",
+    incidence = n,
+    .keep  = "unused"
+  ) %>% 
   arrange(region, date, date_type)
 
 # death_data <- data_hospitalization %>%
@@ -174,6 +192,28 @@ death_data <- data_hospitalization %>%
   ) %>% 
   arrange(region, date, date_type)
 
+plotting_death_data <- data_hospitalization %>%
+  filter(!is.na(pttoddat)) %>% 
+  dplyr::select(pttoddat, ktn) %>%
+  mutate(pttoddat = ymd(pttoddat)) %>% 
+  mutate(pttoddat = if_else(between(pttoddat, min_date, max_date), pttoddat, as.Date(NA))) %>%
+  filter(!is.na(pttoddat)) %>%
+  mutate(date_type = "report_plotting",
+         date = pttoddat,
+         region = ktn,
+         .keep = "none") %>% 
+  dplyr::group_by(region, date, date_type) %>%
+  dplyr::count() %>%
+  ungroup() %>%
+  dplyr::mutate(
+    countryIso3 = "CHE",
+    source = "FOPH",
+    data_type = "deaths",
+    incidence = n,
+    .keep  = "unused"
+  ) %>% 
+  arrange(region, date, date_type)
+
 hospital_data <- data_hospitalization %>%
   filter(hospitalisation == 1) %>% 
   dplyr::select(eingang_dt, manifestation_dt, hospdatin, ktn) %>% 
@@ -197,7 +237,31 @@ hospital_data <- data_hospitalization %>%
   ) %>% 
   arrange(region, date, date_type)
 
-allKtn <- bind_rows(confirmed_case_data, hospital_data, death_data)
+plotting_hospital_data <- data_hospitalization %>%
+  filter(hospitalisation == 1) %>% 
+  dplyr::select(eingang_dt, hospdatin, ktn) %>% 
+  mutate(across(c(eingang_dt, hospdatin), ymd)) %>% 
+  mutate(across(c(eingang_dt, hospdatin), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>% 
+  mutate(hospdatin = if_else(is.na(hospdatin), eingang_dt, hospdatin)) %>% 
+  mutate(date_type = "report_plotting",
+         date = hospdatin,
+         region = ktn,
+         .keep = "none") %>% 
+  dplyr::group_by(region, date, date_type) %>%
+  dplyr::count() %>%
+  ungroup() %>%
+  dplyr::mutate(
+    countryIso3 = "CHE",
+    source = "FOPH",
+    data_type = "hospitalized",
+    incidence = n,
+    .keep  = "unused"
+  ) %>% 
+  arrange(region, date, date_type)
+
+allKtn <- bind_rows(confirmed_case_data, hospital_data, death_data )
+
+plotting_allKtn <- bind_rows( plotting_confirmed_case_data, plotting_hospital_data, plotting_death_data)
 
 allCH <- allKtn %>%
   ungroup() %>%
@@ -209,7 +273,17 @@ allCH <- allKtn %>%
     incidence = sum(incidence),
     .groups = "keep")
 
-allBAGdata <- bind_rows(allKtn, allCH) %>%
+plotting_allCH <- plotting_allKtn %>%
+  ungroup() %>%
+  dplyr::group_by(date, data_type, date_type) %>%
+  summarize(
+    region = "CHE",
+    countryIso3 = "CHE",
+    source = "FOPH",
+    incidence = sum(incidence),
+    .groups = "keep")
+
+allBAGdata <- bind_rows(allKtn, allCH, plotting_allKtn, plotting_allCH) %>%
   ungroup() %>%
   complete(date, countryIso3, region, source, data_type, date_type) %>%
   mutate(value = replace_na(incidence, 0), .keep = "unused") %>%
@@ -279,6 +353,8 @@ confirmedCHEDataTests <- data_hospitalization %>%
     value = value / totalTests
   )
 
-allBAGdata <- bind_rows(confirmedCHEDataTests, allBAGdata)
+plotting_confirmedCHEDataTests <- confirmedCHEDataTests %>%  mutate(date_type = "report_plotting")
+
+allBAGdata <- bind_rows(confirmedCHEDataTests, plotting_confirmedCHEDataTests, allBAGdata)
 
 write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CH.csv"))
