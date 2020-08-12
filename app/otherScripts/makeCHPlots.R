@@ -37,6 +37,7 @@ caseDataPlot <- caseData %>%
   filter(
     countryIso3 == iso3,
     region == iso3,
+    date_type == "report_plotting",
     data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
   mutate(data_type = fct_drop(data_type))
 
