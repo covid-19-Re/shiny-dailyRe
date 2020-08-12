@@ -101,24 +101,7 @@ rEffPlotly <- function(
   names(newLevels) <- sapply(newLevels, translator$t,  USE.NAMES = FALSE)
 
   caseData <- caseData %>%
-    mutate(data_type = fct_recode(data_type, !!!newLevels)) %>%
-    group_by(data_type) %>%
-    mutate(
-      tooltipText = str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        round(value, 3), " ", toLowerFirst(data_type),
-        if_else(caseNormalize, " / 100'000", ""),
-        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
-        if_else(data_type == "Confirmed cases" & !is.na(testPositivity),
-          str_c("<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"),
-          ""
-        ),
-        if_else(data_type == "Confirmed cases / tests",
-          str_c("<br>", value * totalTests, " cases",
-            "<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"
-          ),
-          ""
-        ))
-    )
+    mutate(data_type = fct_recode(data_type, !!!newLevels))
 
   pCasesTitle <- translator$t("New observations")
 
@@ -143,6 +126,26 @@ rEffPlotly <- function(
   } else {
     zoomRange <- makeZoomRange(max(caseData$value, na.rm = TRUE))
   }
+
+  # make tooltip
+  caseData <- caseData %>%
+    group_by(data_type) %>%
+    mutate(
+      tooltipText = str_c("<i>", format(date, dateFormatLong), "</i> <br>",
+        round(value, 3), " ", toLowerFirst(data_type),
+        if_else(caseNormalize, " / 100'000", ""),
+        if_else(caseAverage > 1, str_c(" (", caseAverage, " day average)"), ""),
+        if_else(data_type == "Confirmed cases" & !is.na(testPositivity),
+          str_c("<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"),
+          ""
+        ),
+        if_else(data_type == "Confirmed cases / tests",
+          str_c("<br>", value * totalTests, " cases",
+            "<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"
+          ),
+          ""
+        ))
+    )
 
   estimatesPlot <- estimates %>%
     mutate(data_type = fct_recode(data_type, !!!newLevels))
