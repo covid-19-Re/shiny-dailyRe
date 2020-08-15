@@ -11,6 +11,7 @@ app/data/*.xlsx
 app/otherScripts/*.Rout
 app/otherScripts/*.Rdata
 app/www/*
+!app/www/styles.css
 app/restart.txt
 !app/www/info.md
 .vscode

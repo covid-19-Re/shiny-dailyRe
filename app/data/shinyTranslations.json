@@ -31,6 +31,12 @@
       "de-ch": "R<sub>e</sub> in den Grossregionen"
     },
     {
+      "en-gb": "Greater regions",
+      "it-ch": "Grandi regioni",
+      "fr-ch": "Grandes régions",
+      "de-ch": "Grossregionen"
+    },
+    {
       "en-gb": "R<sub>e</sub> in Europe",
       "it-ch": "R<sub>e</sub> nei Europa",
       "fr-ch": "R<sub>e</sub> en Europe",
@@ -77,6 +83,12 @@
       "it-ch": "%d. %b",
       "fr-ch": "%d. %b",
       "de-ch": "%d. %b"
+    },
+    {
+      "en-gb": "Estimation of the effective reproductive number (R<sub>e</sub>)",
+      "it-ch": "Stima del numero di riproduzione effettivo (R <sub> e </sub>)",
+      "fr-ch": "Estimation du nombre de reproduction effectif (R<sub>e</sub>)",
+      "de-ch": "Schätzung der effektiven Reproduktionszahl (R<sub>e</sub>) in der Schweiz"
     },
     {
       "en-gb": "Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland",
@@ -331,6 +343,12 @@
       "it-ch": "Tipo di dati"
     },
     {
+      "en-gb": "Select data type for Comparison",
+      "de-ch": "Datentyp zum Vergleich auswählen",
+      "fr-ch": "Choisir le type de donné",
+      "it-ch": "Tipo di dati"
+    },
+    {
       "en-gb": "Canton",
       "de-ch": "Kanton",
       "fr-ch": "Canton",
@@ -385,10 +403,10 @@
       "it-ch": "Decremento del numero di nuovi casi"
     },
     {
-      "en-gb": "<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>delays between infection and<br>the last data observation.",
-      "de-ch": "<b>*</b>&nbsp;Letzte mögliche Schätzung von <br>R<sub>e</sub> aufgrund von Verzögerungen<br>zwischen Infektion und Beobachtung.",
-      "fr-ch": "<b>*</b>&nbsp;Ceci est la dernière estimation<br>disponible de R<sub>e</sub> en raison du<br>délai entre l'infection et le<br>moment de sa détection.",
-      "it-ch": "<b>*</b>&nbsp;Questo e' la piu' recente<br>possibile stima di R<sub>e</sub> dovuta al<br>ritardo tra l'infezione e l'ultima<br>osservazione dei dati."
+      "en-gb": "<b>*</b>&nbsp;This is the most recent possible R<sub>e</sub> estimate due to delays between infection and the last data observation.",
+      "de-ch": "<b>*</b>&nbsp;Letzte mögliche Schätzung von R<sub>e</sub> aufgrund von Verzögerungen zwischen Infektion und Beobachtung.",
+      "fr-ch": "<b>*</b>&nbsp;Ceci est la dernière estimation disponible de R<sub>e</sub> en raison du délai entre l'infection et le moment de sa détection.",
+      "it-ch": "<b>*</b>&nbsp;Questo e' la piu' recente possibile stima di R<sub>e</sub> dovuta al ritardo tra l'infezione e l'ultima osservazione dei dati."
     },
     {
       "en-gb": "&nbsp;<b>Interactive plot</b><br>&nbsp;&nbsp;• Click on legend toggles<br>&nbsp;&nbsp;&nbsp;&nbsp;datatypes; doubleclick<br>&nbsp;&nbsp;&nbsp;&nbsp;isolates datatypes.<br>&nbsp;&nbsp;• Hovering the mouse over<br>&nbsp;&nbsp;&nbsp;&nbsp;data points shows details.",
@@ -413,6 +431,12 @@
       "de-ch": "Datenquelle",
       "fr-ch": "Source",
       "it-ch": "Fonte dei dati"
+    },
+    {
+      "en-gb": "Switzerland",
+      "de-ch": "Schweiz",
+      "fr-ch": "Suisse",
+      "it-ch": "Svizzera"
     },
     {
       "en-gb": "Switzerland (Total)",

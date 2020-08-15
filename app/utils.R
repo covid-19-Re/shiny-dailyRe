@@ -1,9 +1,15 @@
 # helpers
 
-loadCountryData <- function(iso3, continent) {
-  deconvolutedData <- readRDS(file.path("data/countryData", continent, str_c(iso3, "-DeconvolutedData.rds")))
-  caseData <- readRDS(file.path("data/countryData", continent, str_c(iso3, "-Data.rds")))
-  estimates <- readRDS(file.path("data/countryData", continent, str_c(iso3, "-Estimates.rds")))
+loadCountryData <- function(iso3) {
+
+  allPaths <- list.files(path = pathToCountryData, recursive = TRUE)
+  deconvolutedDataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-DeconvolutedData.rds"))
+  dataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Data.rds"))
+  estimatesPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Estimates.rds"))
+
+  deconvolutedData <- readRDS(file.path("data/countryData", deconvolutedDataPath))
+  caseData <- readRDS(file.path("data/countryData", dataPath))
+  estimates <- readRDS(file.path("data/countryData", estimatesPath))
 
   deconvolutedData <- deconvolutedData %>%
     mutate(data_type = str_sub(data_type, 11)) %>%
@@ -30,12 +36,6 @@ loadCountryData <- function(iso3, continent) {
       dplyr::summarise(value = sum(value), .groups = "drop") %>% # there should only be one "date_type" but the summing is left in there in case.
       left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
       arrange(countryIso3, region, source, data_type, date)
-  }
-
-
-  testsPath <- file.path("data/countryData", continent, str_c(iso3, "-Tests.rds"))
-  if (file.exists(testsPath)) {
-    tests <- readRDS(testsPath)
   }
 
   countryData <- list(

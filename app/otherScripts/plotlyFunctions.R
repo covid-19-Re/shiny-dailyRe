@@ -44,25 +44,6 @@ casesSubPlot <- function(
     caseData$negativeTests <- NA
   }
 
-  caseData <- caseData %>%
-    group_by(series) %>%
-    mutate(
-      tooltipText = str_c("<i>", format(date, dateFormatLong), "</i> <br>",
-        round(value, 3), " ", toLowerFirst(data_type),
-        if_else(caseNormalize, " / 100'000", ""),
-        if_else(caseAverage > 1, str_c(" (", caseAverage, " ", "day average", ")"), ""),
-        if_else(data_type == "Confirmed cases" & !is.na(testPositivity),
-          str_c("<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"),
-          ""
-        ),
-        if_else(data_type == "Confirmed cases / tests",
-          str_c("<br>", value * totalTests, " cases",
-            "<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"
-          ),
-          ""
-        ))
-    )
-
   pCasesTitle <- translator$t("New observations")
 
   if (caseNormalize) {
@@ -87,6 +68,25 @@ casesSubPlot <- function(
     zoomRange <- makeZoomRange(max(caseData$value, na.rm = TRUE))
   }
 
+  caseData <- caseData %>%
+    group_by(series) %>%
+    mutate(
+      tooltipText = str_c("<i>", format(date, dateFormatLong), "</i> <br>",
+        round(value, 3), " ", toLowerFirst(data_type),
+        if_else(caseNormalize, " / 100'000", ""),
+        if_else(caseAverage > 1, str_c(" (", caseAverage, " ", "day average", ")"), ""),
+        if_else(data_type == "Confirmed cases" & !is.na(testPositivity),
+          str_c("<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"),
+          ""
+        ),
+        if_else(data_type == "Confirmed cases / tests",
+          str_c("<br>", value * totalTests, " cases",
+            "<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"
+          ),
+          ""
+        ))
+    )
+
   if (caseDataRightTruncation > 0) {
     caseDataTrunc <- caseData %>%
       group_by(series) %>%
@@ -106,7 +106,7 @@ casesSubPlot <- function(
       hovertemplate = "%{text}",
       legendgroup = ~series) %>%
     layout(
-      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX, rSlider = FALSE, rSelector = TRUE),
+      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX, rSlider = FALSE, rSelector = FALSE),
       yaxis = plotlyYaxis(
         title = pCasesTitle,
         fixedRange = fixedRangeY,
@@ -208,7 +208,8 @@ estimatesSubPlot <- function(
     add_annotations(
       text = c(
         translator$t("Exponential increase<br>in number of new cases"),
-        translator$t("Decrease in number of new cases")),
+        translator$t("Decrease in number of new cases")
+        ),
       font = list(color = "red"),
       x = startDate,
       y = c(1.30, 0.85),
@@ -216,6 +217,20 @@ estimatesSubPlot <- function(
       align = "left",
       xanchor = "left",
       yanchor = "middle",
+      showarrow = FALSE,
+      inherit = FALSE) %>%
+    add_annotations(
+      text =  translator$t(str_c(
+        "<b>*</b>&nbsp;This is the most recent possible R<sub>e</sub> estimate due to ",
+        "delays between infection and ",
+        "the last data observation.")),
+      font = list(size = 10, color = "#505050"),
+      x = endDate,
+      y = 0,
+      textangle = 0,
+      align = "left",
+      xanchor = "right",
+      yanchor = "bottom",
       showarrow = FALSE,
       inherit = FALSE) %>%
     layout(
@@ -307,13 +322,6 @@ rEffPlotly <- function(
   names(seriesColors) <- str_trim(str_c(newSeriesNames[, 1], newSeriesNames[, 2], sep = " "))
 
   # layout pars
-    xrNote <- 1
-    yrNote <- 0.35
-    rNote <- translator$t(str_c(
-      "<b>*</b>&nbsp;This is the most recent<br>possible R<sub>e</sub> estimate due to <br>",
-      "delays between infection and<br>",
-      "the last data observation."))
-    rNoteAnchors <- c("left", "bottom")
     xHelpBox <- 1
     yHelpBox <- 0.72
     helpBoxAnchors <- c("left", "top")
@@ -338,8 +346,8 @@ rEffPlotly <- function(
     dataSourceAnchors <- c("right", "auto")
     bottomMargin <- 80
 
-
   renameDataType <- sapply(unique(as.character(caseData$data_type)), translator$t,  USE.NAMES = TRUE)
+
   caseData <- caseData %>%
     mutate(
       data_type = recode(as.character(data_type), !!!renameDataType))
@@ -353,7 +361,7 @@ rEffPlotly <- function(
   } else {
     stop("Series not in Data!")
   }
-
+  
   # cases plot
   pCases <- casesSubPlot(
     caseData,
@@ -406,14 +414,7 @@ rEffPlotly <- function(
       text = dataUpdatesString(lastDataDate, name = translator$t("Data Source"), dateFormatLong),
       showarrow = FALSE,
       xanchor = dataSourceAnchors[1], yanchor = dataSourceAnchors[2], xshift = 0, yshift = 0,
-      font = list(size = 10, color = "black")),
-    list(
-      x = xrNote, y = yrNote, xref = "paper", yref = "paper",
-      text = rNote,
-      showarrow = FALSE,
-      xanchor = rNoteAnchors[1], yanchor = rNoteAnchors[2], align = "left",
-      xshift = 10, yshift = 0,
-      font = list(size = 11, color = "black"))
+      font = list(size = 10, color = "black"))
   )
 
   if (showHelpBox) {
@@ -431,9 +432,9 @@ rEffPlotly <- function(
     )
   }
 
-  plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE, margin = c(0, 0, 0.02, 0)) %>%
+  plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE) %>%
     layout(
-      margin = list(b = bottomMargin),
+      margin = list(r = 200, b = bottomMargin),
       annotations = plotAnnotations
     ) %>%
     config(doubleClick = "reset", displaylogo = FALSE, modeBarButtons = list(list("toImage")),
@@ -585,4 +586,150 @@ dataUpdatesString <- function(latestData, name = "Data Source", dateFormat = "%Y
 
 toLowerFirst <- function(string) {
   str_replace(string, ".{1}", tolower(str_extract(string, ".{1}")))
+}
+
+renameRegionTotal <- function(data, countries, countryNames) {
+  renamedData <- data %>%
+      mutate(region = fct_relevel(
+        as_factor(
+          str_replace(region, pattern = countries, replacement = str_c(countryNames, " (Total)"))
+        ),
+        str_c(countryNames, " (Total)"),
+        after = Inf)
+      )
+  return(renamedData)
+}
+
+rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect, input, translator) {
+  countries <- unique(countryData$estimates$countryIso3)
+  countryNames <- unique(countryData$estimates$country)
+  nCountries <- length(countries)
+
+  if (nCountries == 1) {
+    seriesName <- seriesSelect
+    interventions <- interventions[[countries]] %>%
+      mutate(
+        text = sapply(text, translator$t,  USE.NAMES = FALSE),
+        tooltip =  sapply(tooltip, translator$t,  USE.NAMES = FALSE)
+      )
+    if (seriesName == "data_type") {
+      seriesTitle <- "Data types"
+      seriesColors <- plotColors
+      dataTypeSelect <- unique(countryData$estimates$data_type)
+      regionSelect <- countries
+    } else if (seriesName == "region"){
+      seriesTitle <- case_when(
+        countries == "CHE" ~ translator$t("Canton"),
+        countries == "ZAF" ~ translator$t("Province"),
+        TRUE ~ "Region")
+
+      validate(need(!is.null(input$dataTypeSelect), message = "loading..."))
+      dataTypeSelect <- input$dataTypeSelect
+
+      regionSelect <- str_subset(unique(countryData$estimates$region), pattern = "grR", negate = TRUE)
+      seriesColors1 <- viridis(length(regionSelect))
+      names(seriesColors1) <- regionSelect
+      seriesColorsTrunc <- saturation(seriesColors1, value = 0.1)
+      names(seriesColorsTrunc) <- str_c(names(seriesColors1), " truncated")
+      seriesColors <- c(seriesColors1, seriesColorsTrunc)
+
+    } else if (seriesName == "greaterRegion") {
+      seriesName <- "region"
+      seriesTitle <- "Greater Region"
+
+      validate(need(!is.null(input$dataTypeSelect), message = "loading..."))
+      dataTypeSelect <- input$dataTypeSelect
+
+      regionSelect <- c(str_subset(unique(countryData$estimates$region), pattern = "grR", negate = FALSE), countries)
+      seriesColors1 <- viridis(length(regionSelect))
+      names(seriesColors1) <- regionSelect
+      seriesColorsTrunc <- saturation(seriesColors1, value = 0.1)
+      names(seriesColorsTrunc) <- str_c(names(seriesColors1), " truncated")
+      seriesColors <- c(seriesColors1, seriesColorsTrunc)
+    }
+  } else {
+    seriesName <- "country"
+    seriesTitle <- "Country"
+
+    interventions <- NULL
+
+    validate(need(!is.null(input$dataTypeSelect), message = "loading..."))
+    dataTypeSelect <- input$dataTypeSelect
+    regionSelect <- countries
+
+    seriesColors1 <- viridis(nCountries)
+    names(seriesColors1) <- unique(countryData$estimates$country)
+    seriesColorsTrunc <- saturation(seriesColors1, value = 0.1)
+    names(seriesColorsTrunc) <- str_c(names(seriesColors1), " truncated")
+    seriesColors <- c(seriesColors1, seriesColorsTrunc)
+  }
+
+  caseData <- bind_rows(countryData$caseData) %>%
+    filter(
+      data_type %in% dataTypeSelect,
+      region %in% regionSelect)
+
+  estimates <- bind_rows(countryData$estimates) %>%
+    filter(
+      data_type %in% dataTypeSelect,
+      estimate_type == input$estimationTypeSelect,
+      region %in% regionSelect)
+
+  if (seriesSelect == "region") {
+    caseData <- renameRegionTotal(caseData, countries, countryNames)
+    estimates <- renameRegionTotal(estimates, countries, countryNames)
+    names(seriesColors) <- str_replace(names(seriesColors),
+      pattern = countries, replacement = str_c(countryNames, " (Total)"))
+    seriesColors[str_c(countryNames, " (Total)")] <- "#666666"
+  } else if (seriesSelect == "greaterRegion") {
+    caseData <- caseData %>%
+      mutate(region = str_replace(region, pattern = "grR ", replacement = ""))
+    estimates <- estimates %>%
+      mutate(region = str_replace(region, pattern = "grR ", replacement = ""))
+    names(seriesColors) <- str_replace(names(seriesColors), pattern = "grR ", replacement = "")
+
+    caseData <- renameRegionTotal(caseData, countries, countryNames)
+    estimates <- renameRegionTotal(estimates, countries, countryNames)
+
+    names(seriesColors) <- str_replace(names(seriesColors),
+      pattern = countries, replacement = str_c(countryNames, " (Total)"))
+    seriesColors[str_c(countryNames, " (Total)")] <- "#666666"
+  }
+
+  updateDataPlot <- updateData %>%
+    filter(
+      data_type %in% dataTypeSelect,
+      region %in% regionSelect) %>%
+    ungroup() %>%
+    dplyr::select(-region) %>%
+    group_by(countryIso3, country, source, data_type) %>%
+    dplyr::summarize(
+      lastChanged = max(lastChanged),
+      .groups = "keep") %>%
+    ungroup()
+
+  plot <- rEffPlotly(
+    caseData = caseData,
+    estimates = estimates,
+    interventions = interventions,
+    seriesName = seriesName,
+    seriesColors = seriesColors,
+    seriesTitle = seriesTitle,
+    lastDataDate = updateDataPlot,
+    startDate = min(estimates$date) - 14,
+    fixedRangeX = fixedRangeX,
+    fixedRangeY = fixedRangeY,
+    logCaseYaxis = "logCases" %in% input$plotOptions,
+    caseAverage = "caseAverage" %in% input$plotOptions,
+    caseNormalize = "caseNormalize" %in% input$plotOptions,
+    caseLoess = "caseLoess" %in% input$plotOptions,
+    caseDeconvoluted = "caseDeconvoluted" %in% input$plotOptions,
+    showTraces = "Confirmed cases / tests",
+    showTracesMode = "not",
+    showHelpBox = FALSE,
+    translator = translator,
+    language = "en-gb",#input$lang,
+    widgetID = NULL)
+
+  return(plot)
 }
