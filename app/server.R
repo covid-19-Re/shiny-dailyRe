@@ -122,7 +122,6 @@ server <- function(input, output, session) {
   # ui
   dataTypeChoices <- reactive({
     validate(need(!is.null(input$plotTabs), ""))
-    countryData <- countryData()
 
     if (input$plotTabs != "data_type") {
       splitBy <- "region"
@@ -130,16 +129,21 @@ server <- function(input, output, session) {
       splitBy <- "countryIso3"
     }
 
-    dataTypes <- countryData$estimates %>%
+    dataTypes <- countryData()$estimates %>%
       group_by(.data[[splitBy]]) %>%
       group_split() %>%
       lapply(function(x) {unique(x$data_type)})
     dataTypeChoices <- dataTypes[[which.min(lengths(dataTypes))]]
     names(dataTypeChoices) <- sapply(dataTypeChoices, i18n()$t,  USE.NAMES = FALSE)
+
     return(dataTypeChoices)
   })
 
-  observeEvent(input$countrySelect,{
+  observeEvent(input$countrySelect, {
+    updateRadioButtons(session, "dataTypeSelect", choices = dataTypeChoices())
+  })
+
+  observeEvent(input$plotTabs, {
     updateRadioButtons(session, "dataTypeSelect", choices = dataTypeChoices())
   })
 
@@ -250,12 +254,35 @@ server <- function(input, output, session) {
 
   output$aboutUI <- renderUI({
     fluidRow(
-      box(title = i18n()$t("About"), width = 12,
+      box(title = NULL, width = 12,
         includeMarkdown("md/about.md")
       ),
       box(title = i18n()$t("Data Sources"), width = 12,
         dataTableOutput("sourcesTable")
       )
     )
+  })
+
+  output$dataSourceUI <- renderUI({
+    infoBox(width = 12,
+        i18n()$t("Last Data Updates"),
+        HTML(
+          dataUpdatesTable(
+            updateData(),
+            dateFormat = i18n()$t("%Y-%m-%d"))),
+        icon = icon("exclamation-circle"),
+        color = "purple"
+      )
+  })
+
+  output$methodsUI <- renderUI({
+    if (length(input$countrySelect) == 1 & input$countrySelect == "CHE") {
+      methodsFileName <- "md/methodsCH_"
+    } else {
+      methodsFileName <- "md/methodsOnly_"
+    }
+    
+    ui <- box(width = 12, includeMarkdown(str_c(methodsFileName, input$lang, ".md")))
+    return(ui)
   })
 }

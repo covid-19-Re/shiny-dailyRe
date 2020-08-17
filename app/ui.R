@@ -15,7 +15,15 @@ dashboardPage(title = "COVID-19 Re",
     ),
     tabItems(
       tabItem("plots",
-          uiOutput("plotUI")
+        uiOutput("plotUI"),
+        fluidRow(
+          column(width = 8,
+            uiOutput("methodsUI")
+          ),
+          column(width = 4,
+            uiOutput("dataSourceUI")
+          )
+        )
       ),
       tabItem("about",
         uiOutput("aboutUI")
