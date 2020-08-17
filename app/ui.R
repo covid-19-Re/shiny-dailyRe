@@ -8,6 +8,7 @@ dashboardPage(title = "COVID-19 Re",
   dashboardSidebar(
     width = 250,
     sidebarMenuOutput("menu")
+    
   ),
   dashboardBody(
     tags$head(
@@ -24,6 +25,9 @@ dashboardPage(title = "COVID-19 Re",
             uiOutput("dataSourceUI")
           )
         )
+      ),
+      tabItem("mapPlot",
+        uiOutput("mapPlotUI")
       ),
       tabItem("about",
         uiOutput("aboutUI")

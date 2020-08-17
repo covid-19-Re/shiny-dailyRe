@@ -46,6 +46,32 @@ server <- function(input, output, session) {
     return(countryData)
   })
 
+  allData <- reactive({
+    allData <- list(caseData = list(), estimates = list())
+    estimatePlotRanges <- list()
+    allCountries <- str_match(
+      string = list.files(path = pathToCountryData, pattern = ".*-Estimates", recursive = TRUE),
+      pattern = ".*/(.*)-.*")[, 2]
+    for (iCountry in allCountries) {
+      iCountryData <- loadCountryData(iCountry)
+      allData$caseData[[iCountry]] <- iCountryData$caseData
+      allData$estimates[[iCountry]] <- iCountryData$estimates
+      estimatePlotRanges[[iCountry]] <- iCountryData$estimateRanges[[iCountry]]
+    }
+
+    allData$caseData <- bind_rows(allData$caseData)
+    allData$estimates <- bind_rows(allData$estimates) %>%
+      group_by(countryIso3, data_type) %>%
+      filter(
+          between(date,
+            left = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["start"]][[as.character(data_type[1])]],
+            right = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["end"]][[as.character(data_type[1])]])
+        ) %>%
+      mutate(data_type = as.character(data_type))
+
+    return(allData)
+  })
+
   updateData <- reactive({
     updateDataRaw <- readRDS(pathToUpdataData)
 
@@ -118,7 +144,83 @@ server <- function(input, output, session) {
 
     rEffPlotlyShiny(countryData, updateData, interventions, "greaterRegion", input, i18n())
   })
-  
+
+  output$mapPlot <- renderLeaflet({
+    allData <- allData()
+
+    estimates <- allData$estimates %>%
+      group_by(countryIso3) %>%
+      filter(
+        estimate_type == "Cori_slidingWindow",
+        region == countryIso3,
+        date == max(date),
+        data_type == "Confirmed cases") %>%
+      select(-region) %>%
+      select(
+          iso_a3 = countryIso3,
+          estimate_type,
+          data_typeEstimate = data_type,
+          dateEstimates = date,
+          median_R_mean,
+          median_R_highHPD,
+          median_R_lowHPD) 
+
+    caseData <- allData$caseData %>%
+      filter(
+        !is.na(value),
+        countryIso3 == region,
+        data_type == "Confirmed cases") %>%
+      group_by(countryIso3) %>%
+      filter(date == max(date)) %>%
+      mutate(cases100000 = value / populationSize * 100000) %>%
+      select(
+        iso_a3 = countryIso3,
+        sourceCases = source,
+        data_typeCases = data_type,
+        dateCases = date,
+        nCases = value,
+        cases100000,
+        populationSize) 
+
+    worldmapRaw <- geojsonio::geojson_read("data/worldgeo.json", what = "sp")
+    
+    worldmap <- sp::merge(worldmapRaw, caseData, all.x = TRUE)
+    worldmap <- sp::merge(worldmap, estimates, all.x = TRUE)
+    names(worldmap)
+
+    pal <- colorNumeric("viridis", domain = worldmap$cases100000)
+
+    labels <- sprintf(
+      "<strong>%s</strong><br/>%g cases / 100'000",
+      worldmap$name, round(worldmap$cases100000, 3)
+    ) %>% lapply(htmltools::HTML)
+
+    mapPlot <- leaflet(data = worldmap) %>%
+      addTiles() %>%
+      addPolygons(
+        fillColor = ~pal(cases100000),
+        weight = 2,
+        opacity = 1,
+        color = "white",
+        dashArray = "3",
+        fillOpacity = 0.7,
+        highlight = highlightOptions(
+          weight = 2,
+          color = "#666",
+          dashArray = "",
+          fillOpacity = 0.7,
+          bringToFront = TRUE),
+        label = labels,
+        labelOptions = labelOptions(
+          style = list("font-weight" = "normal", padding = "3px 8px"),
+          textsize = "15px",
+          direction = "auto")) %>%
+        addLegend(pal = pal, values = ~cases100000, opacity = 0.7, title = NULL,
+          position = "bottomright")
+    mapPlot
+    return(mapPlot)
+  })
+
   # ui
   dataTypeChoices <- reactive({
     validate(need(!is.null(input$plotTabs), ""))
@@ -160,20 +262,48 @@ server <- function(input, output, session) {
   })
 
   output$menu <- renderMenu({
+    
+
     sidebarMenu(id = "tabs",
-      menuItem(HTML("Plots"), tabName = "plots"),
-      selectizeInput("countrySelect", i18n()$t("Countries"),
-        countryList,
-        selected = "CHE", multiple = TRUE, width = "100%", size = NULL,
-        options = list(plugins = list("remove_button"))
+      menuItem(HTML("Plots"), tabName = "plots", icon = icon("chart-area")),
+      uiOutput("linePlotOptionsUI"),
+      menuItem("Map Plot", tabName = "mapPlot", icon = icon("map")),
+      menuItem("Options", startExpanded = TRUE,
+        uiOutput("plotOptionsUI")
       ),
-      conditionalPanel(
-      condition = "input.plotTabs != 'data_type' | input.countrySelect.length > 1",
-        radioButtons("dataTypeSelect", i18n()$t("Select data type for comparison"),
-          choices = i18n()$t("Confirmed cases"),
-          selected = "Confirmed cases", inline = FALSE)
-      ),
-      menuItem("Options",
+      menuItem("About", tabName = "about", icon = icon("question-circle")),
+      selectInput("lang", i18n()$t("Language"),
+        languageSelect, selected = input$lang, multiple = FALSE,
+        selectize = TRUE, width = NULL, size = NULL)
+    )
+  })
+
+  output$linePlotOptionsUI <- renderUI({
+    validate(need(input$tabs, ""))
+    if(input$tabs == "plots") {
+      ui <- tagList(
+        selectizeInput("countrySelect", i18n()$t("Countries"),
+          countryList,
+          selected = "CHE", multiple = TRUE, width = "100%", size = NULL,
+          options = list(plugins = list("remove_button"))
+        ),
+        conditionalPanel(
+        condition = "input.plotTabs != 'data_type' | input.countrySelect.length > 1",
+          radioButtons("dataTypeSelect", i18n()$t("Select data type for comparison"),
+            choices = i18n()$t("Confirmed cases"),
+            selected = "Confirmed cases", inline = FALSE)
+        )
+      )
+    } else {
+      ui <- NULL
+    }
+    return(ui)
+  })
+
+  output$plotOptionsUI <- renderUI({
+    validate(need(input$tabs, ""))
+    if (input$tabs == "plots") {
+      ui <- tagList(
         radioButtons("estimationTypeSelect", i18n()$t("Select estimation type to show"),
             choices = estimationTypeChoices(),
             selected = "Cori_slidingWindow", inline = FALSE),
@@ -187,12 +317,11 @@ server <- function(input, output, session) {
             "Show smoothed data (Loess Fit)" = "caseLoess",
             "Show estimated infection times (deconvolution)" = "caseDeconvoluted")
         )
-      ),
-      menuItem("About", tabName = "about", icon = icon("question-circle")),
-      selectInput("lang", i18n()$t("Language"),
-        languageSelect, selected = input$lang, multiple = FALSE,
-        selectize = TRUE, width = NULL, size = NULL)
-    )
+      )
+    } else {
+      ui <- tagList(tags$p("No options available", class = "shiny-input-container", style = "padding-bottom:12px"))
+    }
+    return(ui)
   })
 
   output$plotUI <- renderUI({
@@ -264,6 +393,7 @@ server <- function(input, output, session) {
   })
 
   output$dataSourceUI <- renderUI({
+    validate(need(input$countrySelect, ""))
     infoBox(width = 12,
         i18n()$t("Last Data Updates"),
         HTML(
@@ -276,13 +406,26 @@ server <- function(input, output, session) {
   })
 
   output$methodsUI <- renderUI({
+    validate(need(input$countrySelect, ""))
     if (length(input$countrySelect) == 1 & input$countrySelect == "CHE") {
       methodsFileName <- "md/methodsCH_"
     } else {
       methodsFileName <- "md/methodsOnly_"
     }
-    
+
     ui <- box(width = 12, includeMarkdown(str_c(methodsFileName, input$lang, ".md")))
     return(ui)
+  })
+
+  output$mapPlotUI <- renderUI({
+    tabBox(width = 12,
+      title = tagList(shiny::icon("map"),
+      HTML(i18n()$t(str_c("SARS-CoV2 cases / 100'000 people")))),
+      tabPanel(
+        title = "World Map",
+        value = "worldMap",
+        leafletOutput("mapPlot", width = "100%", height = 800)
+      )
+    )
   })
 }

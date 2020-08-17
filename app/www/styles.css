@@ -1,3 +1,7 @@
 .sidebar-menu > li > a{ 
   font-size:17px;
 }
+
+.shiny-input-checkboxgroup {
+  padding-bottom: 12px !important;
+}

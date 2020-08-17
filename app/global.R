@@ -5,6 +5,7 @@ library(shiny.i18n)
 library(slider)
 library(shades)
 library(tidyverse)
+library(leaflet)
 
 source("otherScripts/plotlyFunctions.R")
 source("utils.R")

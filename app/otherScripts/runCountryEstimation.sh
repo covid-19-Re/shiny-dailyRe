@@ -34,7 +34,7 @@ echo "running R script to extract BAG data & calculate delays ..."
 runRScript format_BAG_data.R
 
 for i in "CHE" "AUT" "BEL" "FRA" "DEU" "ITA" "ESP" "SWE" "GBR" "NLD" \
-  "ZAF" "DZA" "BEN" "GHA" "KEN" "MAR" "NGA" "SEN" "TUN" "UGA" "COD"
+         "ZAF" "DZA" "BEN" "GHA" "KEN" "MAR" "NGA" "SEN" "TUN" "UGA" "COD"
 do
 	runRScript ReCountry.R "$i"
   if [ "$i" = "CHE" ]
