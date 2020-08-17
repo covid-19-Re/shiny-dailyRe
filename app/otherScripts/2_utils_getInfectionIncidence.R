@@ -347,12 +347,20 @@ get_infection_incidence_by_deconvolution <- function(
   
   #TODO make the days_further_in_the_past type specific
   
+  if(nrow(data_subset) == 0) {
+    return(tibble())
+  }
+  
   data_type_subset <- unique(data_subset$data_type)[1]
   
   # exclude leading zeroes
   data_subset <- data_subset %>%
     arrange(date) %>%
     filter(cumsum(value) > 0)
+  
+  if(nrow(data_subset) == 0) {
+    return(tibble())
+  }
   
   minimal_date <- min(data_subset$date) - days_further_in_the_past
   maximal_date <- max(data_subset$date)
@@ -518,11 +526,37 @@ get_all_infection_incidence <- function(data,
             empirical_delays <- tibble()
           }
           
+          last_date <- max(subset_data$date)
+          
+          for (date_type_i in c("report", "onset")) {
+            for(local_transmission_i in c(TRUE, FALSE) {
+              subset <- subset_data %>% 
+                filter(date_type == date_type_i,
+                       local_transmission == local_transmission_i)
+              
+              deconvolved_subset <- get_infection_incidence_by_deconvolution(
+                subset,
+                constant_delay_distribution = constant_delay_distributions[[count_type_i]],
+                constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]],
+                is_onset_data = F,
+                smooth_incidence = smooth,
+                empirical_delays = empirical_delays,
+                n_bootstrap = n_bootstrap,
+                verbose = verbose)
+
+              
+                
+              #TODO finish
+              
+            }
+          }
+          
           
           subset_data_report <- subset_data %>% filter(date_type == "report")
           last_date_report <- max(subset_data$date)
           
-          if(nrow(subset_data_report) > 0 & sum(subset_data_report$value) > 0){
+          # if(nrow(subset_data_report) > 0 & sum(subset_data_report$value) > 0){
+            
             deconvolved_reports <- get_infection_incidence_by_deconvolution(
               subset_data_report,
               constant_delay_distribution = constant_delay_distributions[[count_type_i]],
@@ -534,13 +568,13 @@ get_all_infection_incidence <- function(data,
               verbose = verbose)
             
             last_date_report <- max(deconvolved_reports$date)
-          } else {
-            deconvolved_reports <- tibble()
-          }
+          # } else {
+          #   deconvolved_reports <- tibble()
+          # }
         
           subset_data_onset <- subset_data %>% filter(date_type == "onset")
           
-          if(nrow(subset_data_onset) > 0 & sum(subset_data_onset$value) > 0) {
+          # if(nrow(subset_data_onset) > 0 & sum(subset_data_onset$value) > 0) {
             deconvolved_onset <- get_infection_incidence_by_deconvolution(
               subset_data_onset,
               constant_delay_distribution = c(),
@@ -552,9 +586,9 @@ get_all_infection_incidence <- function(data,
               verbose = verbose)
             
             deconvolved_onset <- deconvolved_onset %>% filter(date <= last_date_report) # if two types of data (onset and report) are there, filter out last onset deconvolved data (bc incomplete)
-          } else {
-            deconvolved_onset <- tibble()
-          }
+          # } else {
+          #   deconvolved_onset <- tibble()
+          # }
           combined_deconvolved <- bind_rows(deconvolved_reports, deconvolved_onset) %>% 
             dplyr::group_by(date, region, country, replicate, source, data_type) %>% 
             dplyr::summarise(value = sum(value), .groups = "keep") %>%

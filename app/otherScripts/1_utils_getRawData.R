@@ -92,6 +92,7 @@ getDataECDC <- function(countries = NULL, tempFileName = NULL, tReload = 15) {
     pivot_longer(cols = c(confirmed, deaths), names_to = "data_type") %>%
     mutate(
       date_type = "report",
+      local_infection = TRUE,
       source = "ECDC") %>%
     filter(!is.na(value))
   
@@ -175,6 +176,7 @@ getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"),
     dplyr::select(date, countryIso3, region, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
     mutate(
+      local_infection = TRUE,
       date_type = "report",
       source = "HMD") %>%
     mutate(value = if_else(value < 0, 0, value))
@@ -208,7 +210,7 @@ sumGreaterRegions <- function(chData) {
     ungroup() %>%
     mutate(region = greaterRegion) %>%
     dplyr::select(-greaterRegion) %>%
-    group_by(date, region, source, data_type, date_type) %>%
+    group_by(date, region, source, data_type, date_type, local_infection) %>%
     dplyr::summarize(
       value = sum(value),
       countryIso3 = "CHE",
@@ -230,7 +232,8 @@ getDataCHEBAG <- function(path, filename = "incidence_data_CH.csv") {
                         negativeTests = col_double(),
                         totalTests = col_double(),
                         testPositivity = col_double(),
-                        date_type = col_character()))
+                        date_type = col_character(),
+                        local_infection = col_logical()))
   
   bagDataGreaterRegions <- sumGreaterRegions(filter(bagData, region != "CHE"))
   
@@ -276,6 +279,7 @@ getDataCHEexcessDeath <- function(startAt = as.Date("2020-02-20")) {
     mutate(
       countryIso3 = "CHE",
       date_type = "report",
+      local_infection = TRUE,
       region = "CHE",
       source = "BFS") %>%
     mutate(value = ifelse(value < 0, 0, value))
@@ -361,6 +365,7 @@ getExcessDeathITA <- function(filePath = here::here("../covid19-additionalData/e
     dplyr::select(date, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
     mutate(
+      local_infection = TRUE,
       date_type = "report",
       countryIso3 = "ITA",
       region = "ITA",
@@ -407,6 +412,7 @@ getITADataPCM <- function(){
       region = "ITA",
       source = "PCM-DPC",
       date_type = "report",
+      local_infection = TRUE,
       confirmed = nuovi_positivi,
       deaths = diff(c(0, deceduti))
     ) %>%
@@ -457,6 +463,7 @@ getHospitalDataFRA <- function() {
     mutate(data_type = "hospitalized",
            countryIso3 = "FRA",
            date_type = "report",
+           local_infection = TRUE,
            region = "FRA",
            source = "SpF-DMI")
   
@@ -492,6 +499,7 @@ getCaseDataFRA <- function() {
     mutate(data_type = "confirmed",
            countryIso3 = "FRA",
            date_type = "report",
+           local_infection = TRUE,
            region = "FRA",
            source = "ECDC - SpF-DMI")
   
@@ -537,6 +545,7 @@ getHospitalAndDeathDataFRA <- function() {
     arrange(date) %>% 
     mutate(countryIso3 = "FRA",
            date_type = "report",
+           local_infection = TRUE,
            region = "FRA",
            source = "SpF-DMI")
   
@@ -581,6 +590,7 @@ getExcessDeathFRA <- function(startAt = as.Date("2020-02-20")) {
     mutate(
       countryIso3 = "FRA",
       date_type = "report",
+      local_infection = TRUE,
       region = countryIso3,
       source = "Economist") %>%
     mutate(value = ifelse(value < 0, 0, value)) %>%
@@ -632,6 +642,7 @@ getHospitalDataBEL <- function() {
       data_type = "hospitalized",
       countryIso3 = "BEL",
       date_type = "report",
+      local_infection = TRUE,
       region = countryIso3,
       source = "Sciensano")
   
@@ -668,6 +679,7 @@ getCaseDataNLD <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20
                          "Overleden" = "deaths"),
       countryIso3 = "NLD",
       date_type = "report",
+      local_infection = TRUE,
       region = countryIso3,
       source = "RIVM")
   
@@ -746,6 +758,7 @@ getExcessDeathNLD <- function(startAt = as.Date("2020-02-20")) {
     mutate(
       countryIso3 = "NLD",
       date_type = "report",
+      local_infection = TRUE,
       region = countryIso3,
       source = "CBS") %>%
     mutate(value = ifelse(value < 0, 0, value))
@@ -778,6 +791,7 @@ getCaseDataESP <- function(){
            countryIso3 = "ESP",
            source = "RENAVE",
            date_type = "onset",
+           local_infection = TRUE,
            data_type = "confirmed")
   
   return(confirmed_onsets)
@@ -840,7 +854,9 @@ getExcessDeathGBR <- function(startAt = as.Date("2020-02-20"), path_to_data = ".
     dplyr::select(date, deaths = covid_deaths, excess_deaths) %>%
     pivot_longer(cols = c(deaths, excess_deaths), names_to = "data_type") %>%
     mutate(
-      countryIso3 = "GBR", date_type = "report",
+      countryIso3 = "GBR", 
+      date_type = "report",
+      local_infection = TRUE,
       region = countryIso3,
       source = "ONS",
       value = ifelse(value < 0, 0, value))
@@ -866,6 +882,7 @@ getHospitalDataGBR <- function() {
     mutate(countryIso3 = "GBR",
            data_type = "hospitalized",
            date_type = "report",
+           local_infection = TRUE,
            region = "GBR",
            source = "Gov.UK")
   return(longData)
@@ -912,6 +929,7 @@ getConfirmedCasesZAF <- function(
       data_type = "confirmed",
       value = diff(c(0, value)),
       date_type = "report",
+      local_infection = TRUE,
       source = "DSFSI"
     )
   # replace negative numbers by 0
@@ -951,6 +969,7 @@ getDeathsZAF <- function(
       data_type = "deaths",
       value = diff(c(0, value)),
       date_type = "report",
+      local_infection = TRUE,
       source = "DSFSI"
     )
   # replace negative numbers by 0
