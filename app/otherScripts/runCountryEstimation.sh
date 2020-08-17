@@ -43,7 +43,7 @@ do
   fi
 done
 
-echo "updating covid19-additionalData ..."
+echo "updating dailyRe-Data ..."
 cd "../../../dailyRe-Data"
 git add .
 git commit -m "update data"
