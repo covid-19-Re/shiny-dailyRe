@@ -29,9 +29,7 @@ dashboardPage(title = "COVID-19 Re",
         )
       ),
       tabItem("about",
-        fluidRow(
           uiOutput("aboutUI")
-        )
       )
     )
   )
