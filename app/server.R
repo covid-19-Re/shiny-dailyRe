@@ -46,31 +46,31 @@ server <- function(input, output, session) {
     return(countryData)
   })
 
-  allData <- reactive({
-    allData <- list(caseData = list(), estimates = list())
-    estimatePlotRanges <- list()
-    allCountries <- str_match(
-      string = list.files(path = pathToCountryData, pattern = ".*-Estimates", recursive = TRUE),
-      pattern = ".*/(.*)-.*")[, 2]
-    for (iCountry in allCountries) {
-      iCountryData <- loadCountryData(iCountry)
-      allData$caseData[[iCountry]] <- iCountryData$caseData
-      allData$estimates[[iCountry]] <- iCountryData$estimates
-      estimatePlotRanges[[iCountry]] <- iCountryData$estimateRanges[[iCountry]]
-    }
+  # allData <- reactive({
+  #   allData <- list(caseData = list(), estimates = list())
+  #   estimatePlotRanges <- list()
+  #   allCountries <- str_match(
+  #     string = list.files(path = pathToCountryData, pattern = ".*-Estimates", recursive = TRUE),
+  #     pattern = ".*/(.*)-.*")[, 2]
+  #   for (iCountry in allCountries) {
+  #     iCountryData <- loadCountryData(iCountry)
+  #     allData$caseData[[iCountry]] <- iCountryData$caseData
+  #     allData$estimates[[iCountry]] <- iCountryData$estimates
+  #     estimatePlotRanges[[iCountry]] <- iCountryData$estimateRanges[[iCountry]]
+  #   }
 
-    allData$caseData <- bind_rows(allData$caseData)
-    allData$estimates <- bind_rows(allData$estimates) %>%
-      group_by(countryIso3, data_type) %>%
-      filter(
-          between(date,
-            left = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["start"]][[as.character(data_type[1])]],
-            right = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["end"]][[as.character(data_type[1])]])
-        ) %>%
-      mutate(data_type = as.character(data_type))
+  #   allData$caseData <- bind_rows(allData$caseData)
+  #   allData$estimates <- bind_rows(allData$estimates) %>%
+  #     group_by(countryIso3, data_type) %>%
+  #     filter(
+  #         between(date,
+  #           left = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["start"]][[as.character(data_type[1])]],
+  #           right = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["end"]][[as.character(data_type[1])]])
+  #       ) %>%
+  #     mutate(data_type = as.character(data_type))
 
-    return(allData)
-  })
+  #   return(allData)
+  # })
 
   updateData <- reactive({
     updateDataRaw <- readRDS(pathToUpdataData)
@@ -146,16 +146,14 @@ server <- function(input, output, session) {
   })
 
   output$mapPlot <- renderLeaflet({
-    allData <- allData()
 
-    estimates <- allData$estimates %>%
-      group_by(countryIso3) %>%
+    estimates <- read_rds("data/countryData/recentEstimates.rds") %>%
+      bind_rows() %>%
+      ungroup() %>%
       filter(
-        estimate_type == "Cori_slidingWindow",
         region == countryIso3,
-        date == max(date),
-        data_type == "Confirmed cases") %>%
-      select(-region) %>%
+        data_type == input$dataTypeSelect,
+        estimate_type == input$estimationTypeSelect) %>%
       select(
           iso_a3 = countryIso3,
           estimate_type,
@@ -165,13 +163,12 @@ server <- function(input, output, session) {
           median_R_highHPD,
           median_R_lowHPD) 
 
-    caseData <- allData$caseData %>%
+    caseData <- read_rds("data/countryData/recentCases.rds") %>%
+      bind_rows() %>%
+      ungroup() %>%
       filter(
-        !is.na(value),
-        countryIso3 == region,
-        data_type == "Confirmed cases") %>%
-      group_by(countryIso3) %>%
-      filter(date == max(date)) %>%
+        region == countryIso3,
+        data_type == input$dataTypeSelect,) %>%
       mutate(cases100000 = value / populationSize * 100000) %>%
       select(
         iso_a3 = countryIso3,
@@ -180,20 +177,29 @@ server <- function(input, output, session) {
         dateCases = date,
         nCases = value,
         cases100000,
-        populationSize) 
+        populationSize)
 
     worldmapRaw <- geojsonio::geojson_read("data/worldgeo.json", what = "sp")
     
     worldmap <- sp::merge(worldmapRaw, caseData, all.x = TRUE)
     worldmap <- sp::merge(worldmap, estimates, all.x = TRUE)
-    names(worldmap)
 
     pal <- colorNumeric("viridis", domain = worldmap$cases100000)
 
-    labels <- sprintf(
-      "<strong>%s</strong><br/>%g cases / 100'000",
-      worldmap$name, round(worldmap$cases100000, 3)
-    ) %>% lapply(htmltools::HTML)
+    labels <- as_tibble(worldmap) %>%
+      str_glue_data(
+        "<strong>{name}</strong><br>",
+        "{round(cases100000,3)} cases / 100'000<br>",
+         "R<sub>e</sub> ({dateEstimates}): {round(median_R_mean, 3)} ",
+         "({round(median_R_lowHPD, 3)} - {round(median_R_highHPD, 3)})"
+      )
+
+    labels[str_detect(labels, "NA")] <- str_replace(
+      str_extract_all(labels[str_detect(labels, "NA")], pattern = "(<strong>.*</strong><br>)NA"), "NA",
+      "No data available")
+
+    labels <- labels %>%
+      lapply(htmltools::HTML)
 
     mapPlot <- leaflet(data = worldmap) %>%
       addTiles() %>%
@@ -262,8 +268,6 @@ server <- function(input, output, session) {
   })
 
   output$menu <- renderMenu({
-    
-
     sidebarMenu(id = "tabs",
       menuItem(HTML("Plots"), tabName = "plots", icon = icon("chart-area")),
       uiOutput("linePlotOptionsUI"),
@@ -287,6 +291,7 @@ server <- function(input, output, session) {
           selected = "CHE", multiple = TRUE, width = "100%", size = NULL,
           options = list(plugins = list("remove_button"))
         ),
+        uiOutput("quickselectUI"),
         conditionalPanel(
         condition = "input.plotTabs != 'data_type' | input.countrySelect.length > 1",
           radioButtons("dataTypeSelect", i18n()$t("Select data type for comparison"),
@@ -298,6 +303,25 @@ server <- function(input, output, session) {
       ui <- NULL
     }
     return(ui)
+  })
+
+  output$quickselectUI <- renderUI({
+    ui <- tagList(
+      HTML("<div class='form-group shiny-input-container' style='width: 100%;'>
+      <label class='control-label' for='quickselectButtons'>Choose all countries in continent:</label>"),
+      div(
+        div(style = "display:inline-block;", actionLink("africaSelect", "Africa")),
+        div(style = "display:inline-block;", actionLink("europeSelect", "Europe"))
+      )
+    )
+    return(ui)
+  })
+
+  observeEvent(input$africaSelect, {
+    updateSelectizeInput(session, "countrySelect", selected = countryList$Africa)
+  })
+  observeEvent(input$europeSelect, {
+    updateSelectizeInput(session, "countrySelect", selected = countryList$Europe)
   })
 
   output$plotOptionsUI <- renderUI({
@@ -319,7 +343,14 @@ server <- function(input, output, session) {
         )
       )
     } else {
-      ui <- tagList(tags$p("No options available", class = "shiny-input-container", style = "padding-bottom:12px"))
+      ui <- tagList(
+        radioButtons("estimationTypeSelect", i18n()$t("Select estimation type to show"),
+            choices = estimationTypeChoices(),
+            selected = "Cori_slidingWindow", inline = FALSE),
+        radioButtons("dataTypeSelect", i18n()$t("Select data type for comparison"),
+            choices = i18n()$t("Confirmed cases"),
+            selected = "Confirmed cases", inline = FALSE)
+      )
     }
     return(ui)
   })

@@ -24,7 +24,7 @@ loadCountryData <- function(iso3) {
   # browser()
 
   if(nrow(caseData %>% filter(date_type == "report_plotting")) > 0) {
-    
+
     caseData <- caseData %>%
       filter(date_type == "report_plotting") %>% 
       left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
@@ -32,7 +32,7 @@ loadCountryData <- function(iso3) {
     
   } else {
     caseData <- caseData %>%
-      dplyr::group_by(date, region, country, countryIso3, source, data_type, populationSize, continent) %>% 
+      dplyr::group_by(date, region, country, countryIso3, source, data_type, populationSize) %>% 
       dplyr::summarise(value = sum(value), .groups = "drop") %>% # there should only be one "date_type" but the summing is left in there in case.
       left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
       arrange(countryIso3, region, source, data_type, date)

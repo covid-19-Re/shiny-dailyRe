@@ -294,7 +294,7 @@ allBAGdata <- bind_rows(allKtn, allCH, plotting_allKtn, plotting_allCH) %>%
 
 ## confirmed case data normalized by tests
 
-basePath <- here::here("app", "data", "countryData", "Europe")
+basePath <- here::here("app", "data", "countryData")
 if (!dir.exists(basePath)) {
   dir.create(basePath)
 }

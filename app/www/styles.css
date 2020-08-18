@@ -5,3 +5,7 @@
 .shiny-input-checkboxgroup {
   padding-bottom: 12px !important;
 }
+
+.action-button:hover{
+    color: #367fa9 !important;
+}

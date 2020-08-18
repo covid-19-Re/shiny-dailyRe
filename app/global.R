@@ -19,17 +19,21 @@ pathToInterventionData <- file.path("../../covid19-additionalData/interventions/
 pathToPopData <- file.path("data/popData.rds")
 pathToUpdataData <- file.path("data/updateData.rds")
 pathToCountryData <- "data/countryData"
+pathToContinentsData <- file.path("data/continents.csv")
+
 
 popData <- readRDS(pathToPopData)
+continents <- read_csv(pathToContinentsData, col_types = cols(.default = col_character()))
 
 countryList <- tibble(
   countryIso3 = unique(
     str_match(
       string = list.files(path = pathToCountryData, pattern = ".*-Estimates", recursive = TRUE),
-      pattern = "/(.*)-.*"
+      pattern = "(.*)-.*"
     )[, 2])) %>%
+  left_join(select(popData, countryIso3), by = "countryIso3") %>%
   left_join(
-    distinct(dplyr::select(popData, countryIso3, country, continent)),
+    continents,
     by = "countryIso3") %>%
   arrange(continent, country) %>%
   split(f = .$continent) %>%

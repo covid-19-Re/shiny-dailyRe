@@ -607,11 +607,15 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
 
   if (nCountries == 1) {
     seriesName <- seriesSelect
-    interventions <- interventions[[countries]] %>%
-      mutate(
-        text = sapply(text, translator$t,  USE.NAMES = FALSE),
-        tooltip =  sapply(tooltip, translator$t,  USE.NAMES = FALSE)
-      )
+    interventions <- interventions[[countries]]
+    if(!is.null(interventions)){
+      interventions <- interventions %>%
+        mutate(
+          text = sapply(text, translator$t,  USE.NAMES = FALSE),
+          tooltip =  sapply(tooltip, translator$t,  USE.NAMES = FALSE)
+        )
+    }
+     
     if (seriesName == "data_type") {
       seriesTitle <- "Data types"
       seriesColors <- plotColors
