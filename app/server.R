@@ -21,12 +21,15 @@ server <- function(input, output, session) {
   })
 
   # reactive Data
+  countrySelectValue <- reactive({
+    input$countrySelect
+  }) %>% debounce(500)
 
   countryData <- reactive({
-    validate(need(input$countrySelect != "", "Please select a country"))
+    validate(need(countrySelectValue() != "", "Please select a country"))
     countryData <- list(caseData = list(), estimates = list())
     estimatePlotRanges <- list()
-    for (iCountry in input$countrySelect) {
+    for (iCountry in countrySelectValue()) {
       iCountryData <- loadCountryData(iCountry)
       countryData$caseData[[iCountry]] <- iCountryData$caseData
       countryData$estimates[[iCountry]] <- iCountryData$estimates
@@ -75,7 +78,7 @@ server <- function(input, output, session) {
   updateData <- reactive({
     updateDataRaw <- readRDS(pathToUpdataData)
 
-    updateData <- bind_rows(updateDataRaw[input$countrySelect])
+    updateData <- bind_rows(updateDataRaw[countrySelectValue()])
     return(updateData)
   })
 
@@ -120,7 +123,6 @@ server <- function(input, output, session) {
   # outputs
 
   output$rePlot_data_type <- renderPlotly({
-
     countryData <- countryData()
     updateData <- updateData()
     interventions <- interventions()
@@ -129,7 +131,6 @@ server <- function(input, output, session) {
   })
 
   output$rePlot_region <- output$rePlot2 <- output$rePlot3 <- renderPlotly({
-
     countryData <- countryData()
     updateData <- updateData()
     interventions <- interventions()
@@ -180,25 +181,29 @@ server <- function(input, output, session) {
         populationSize)
 
     worldmapRaw <- geojsonio::geojson_read("data/worldgeo.json", what = "sp")
-    
+
     worldmap <- sp::merge(worldmapRaw, caseData, all.x = TRUE)
     worldmap <- sp::merge(worldmap, estimates, all.x = TRUE)
 
     pal <- colorNumeric("viridis", domain = worldmap$cases100000)
 
+    as_tibble(worldmap)  %>% filter(iso_a3 == "MNG") %>% data.frame()
+
+    
     labels <- as_tibble(worldmap) %>%
-      str_glue_data(
-        "<strong>{name}</strong><br>",
-        "{round(cases100000,3)} cases / 100'000<br>",
-         "R<sub>e</sub> ({dateEstimates}): {round(median_R_mean, 3)} ",
-         "({round(median_R_lowHPD, 3)} - {round(median_R_highHPD, 3)})"
-      )
-
-    labels[str_detect(labels, "NA")] <- str_replace(
-      str_extract_all(labels[str_detect(labels, "NA")], pattern = "(<strong>.*</strong><br>)NA"), "NA",
-      "No data available")
-
-    labels <- labels %>%
+      mutate(
+        label1 = str_c("<strong>", name, "</strong>"),
+        label2 = if_else(is.na(cases100000),
+          "<br>No data available",
+          str_c("<br>", round(cases100000, 3), " cases / 100'000 (", dateCases, ")")),
+        label3 = if_else(is.na(median_R_mean),
+          "<br>No R<sub>e</sub> estimate available",
+          str_c("<br>R<sub>e</sub> (", dateEstimates, "): ", round(median_R_mean, 3), " ",
+         "(", round(median_R_lowHPD, 3), " - ", round(median_R_highHPD, 3), ")"))
+        ) %>%
+      transmute(
+        label = str_c(label1, label2, label3)) %>%
+      .$label %>%
       lapply(htmltools::HTML)
 
     mapPlot <- leaflet(data = worldmap) %>%
@@ -247,7 +252,7 @@ server <- function(input, output, session) {
     return(dataTypeChoices)
   })
 
-  observeEvent(input$countrySelect, {
+  observeEvent(countrySelectValue(), {
     updateRadioButtons(session, "dataTypeSelect", choices = dataTypeChoices())
   })
 
@@ -311,7 +316,12 @@ server <- function(input, output, session) {
       <label class='control-label' for='quickselectButtons'>Choose all countries in continent:</label>"),
       div(
         div(style = "display:inline-block;", actionLink("africaSelect", "Africa")),
-        div(style = "display:inline-block;", actionLink("europeSelect", "Europe"))
+        div(style = "display:inline-block;", actionLink("asiaSelect", "Asia")),
+        div(style = "display:inline-block;", actionLink("europeSelect", "Europe")),
+        div(style = "display:inline-block;", actionLink("northAmericaSelect", "North America")),
+        div(style = "display:inline-block;", actionLink("oceaniaSelect", "Oceania")),
+        div(style = "display:inline-block;", actionLink("southAmericaSelect", "South America")),
+        div(style = "display:inline-block;", actionLink("clearSelect", "Clear all")),
       )
     )
     return(ui)
@@ -320,8 +330,23 @@ server <- function(input, output, session) {
   observeEvent(input$africaSelect, {
     updateSelectizeInput(session, "countrySelect", selected = countryList$Africa)
   })
+  observeEvent(input$asiaSelect, {
+    updateSelectizeInput(session, "countrySelect", selected = countryList$Asia)
+  })
   observeEvent(input$europeSelect, {
     updateSelectizeInput(session, "countrySelect", selected = countryList$Europe)
+  })
+  observeEvent(input$northAmericaSelect, {
+    updateSelectizeInput(session, "countrySelect", selected = countryList[["North America"]])
+  })
+  observeEvent(input$oceaniaSelect, {
+    updateSelectizeInput(session, "countrySelect", selected = countryList$Oceania)
+  })
+  observeEvent(input$southAmericaSelect, {
+    updateSelectizeInput(session, "countrySelect", selected = countryList[["South America"]])
+  })
+  observeEvent(input$clearSelect, {
+    updateSelectizeInput(session, "countrySelect", selected = "")
   })
 
   output$plotOptionsUI <- renderUI({
@@ -360,21 +385,21 @@ server <- function(input, output, session) {
   })
  
   output$plotTabsUI <- renderUI({
-    if (length(input$countrySelect) == 1) {
-      if (input$countrySelect == "CHE") {
+    if (length(countrySelectValue()) == 1) {
+      if (countrySelectValue() == "CHE") {
         tabList <- list(
           c(name = "data_type", title = i18n()$t("Switzerland")),
           c(name = "region", title = i18n()$t("Canton")),
           c(name = "greaterRegion", title = i18n()$t("Greater regions")))
-      } else if (input$countrySelect == "ZAF") {
+      } else if (countrySelectValue() == "ZAF") {
         tabList <- list(
           c(name = "data_type", title = i18n()$t("South Africa")),
           c(name = "region", title = i18n()$t("Province")))
       } else {
         tabList <- list(
-          c(name = "data_type", title = i18n()$t(popData$country[popData$countryIso3 == input$countrySelect])))
+          c(name = "data_type", title = i18n()$t(popData$country[popData$countryIso3 == countrySelectValue()])))
       }
-    } else if (length(input$countrySelect) == 0) {
+    } else if (length(countrySelectValue()) == 0) {
         tabList <- list(
           c(name = "data_type", title = i18n()$t("Country?")))
     } else {
@@ -424,7 +449,7 @@ server <- function(input, output, session) {
   })
 
   output$dataSourceUI <- renderUI({
-    validate(need(input$countrySelect, ""))
+    validate(need(countrySelectValue(), ""))
     infoBox(width = 12,
         i18n()$t("Last Data Updates"),
         HTML(
@@ -437,8 +462,8 @@ server <- function(input, output, session) {
   })
 
   output$methodsUI <- renderUI({
-    validate(need(input$countrySelect, ""))
-    if (length(input$countrySelect) == 1 & input$countrySelect == "CHE") {
+    validate(need(countrySelectValue(), ""))
+    if (length(countrySelectValue()) == 1 & countrySelectValue() == "CHE") {
       methodsFileName <- "md/methodsCH_"
     } else {
       methodsFileName <- "md/methodsOnly_"
