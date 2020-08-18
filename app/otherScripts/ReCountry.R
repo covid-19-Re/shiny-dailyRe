@@ -174,13 +174,22 @@ if (condition) {
     # truncation
       right_truncation <- 2
       countryData <- countryData %>%
-        group_by(country, region, source, data_type) %>%
+        group_by(country, region, source, data_type, date_type, local_infection) %>%
         filter(date <= (max(date) - right_truncation)) %>%
         dplyr::select(-countryIso3, -populationSize) %>%
         ungroup()
     # Deconvolution 
       deconvolvedData <- list()
-
+      
+      # TODO remove and put back bootstrap
+      # countryData <- countryData %>% filter(region == "JU")
+      # onset_to_count_empirical_delays = delays_onset_to_count
+      # data_types = c("Confirmed cases")
+      # n_bootstrap = 10
+      # verbose = F
+      # 
+      
+      
       deconvolvedData[[1]] <- get_all_infection_incidence(
         countryData,
         constant_delay_distributions = constant_delay_distributions,
@@ -188,7 +197,7 @@ if (condition) {
         data_types = c("Confirmed cases",
                       "Hospitalized patients",
                       "Deaths"),
-        n_bootstrap = 50,
+        n_bootstrap = 5,
         verbose = F)
 
       if (args["country"] %in% c("CHE")) {
@@ -202,7 +211,7 @@ if (condition) {
           constant_delay_distributions = constant_delay_distributions,
           onset_to_count_empirical_delays = delays_onset_to_count,
           data_types = c("Confirmed cases / tests"),
-          n_bootstrap = 50,
+          n_bootstrap = 5,
           verbose = FALSE)
       }
 
@@ -257,7 +266,31 @@ if (condition) {
       truncations <- list(
         left = c(Cori = 5, WallingaTeunis = 0),
         right = c(Cori = 0, WallingaTeunis = 8))
-
+      
+      # TODO remove
+      
+      # deconvolvedCountryData_JU <- deconvolvedCountryData %>% filter(region == "JU", data_type == "infection_Confirmed cases", replicate == 1)
+      # deconvolvedCountryData_ZH <- deconvolvedCountryData %>% filter(region == "ZH", data_type == "infection_Confirmed cases", replicate == 1)
+      # # deconvolvedCountryData_ZH <- deconvolvedCountryData %>% filter(region == "ZH", data_type == "infection_Confirmed cases", replicate == 1)
+      # 
+      # 
+      # deconvolvedCountryData_ZH  %>% 
+      #   group_by()
+      #   complete(date = seq(min(date), max(date), by = "days"), 
+      #                                              local_infection,
+      #                                         region, 
+      #                                         country, replicate, source, data_type, fill = list(value = 0))
+      ### Run EpiEstim
+      # countryEstimatesRaw <- doAllReEstimations(
+      #   deconvolvedCountryData_ZH,
+      #   slidingWindow = window,
+      #   methods = "Cori",
+      #   all_delays = all_delays,
+      #   truncations = truncations,
+      #   interval_ends = interval_ends,
+      #   additional_interval_ends = additionalIntervalEnds,
+      #   swissRegions = swissRegions)
+        
       ### Run EpiEstim
       countryEstimatesRaw <- doAllReEstimations(
         deconvolvedCountryData,

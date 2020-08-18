@@ -26,16 +26,17 @@ estimateRe <- function(
   offset <- 1
   cumulativeIncidence <- 0
   while (cumulativeIncidence < minimumCumul) {
-    if (offset > length(incidenceData)) {
+    if (offset > nrow(incidenceData)) {
       return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
     }
-    cumulativeIncidence <- cumulativeIncidence + incidenceData[offset]
+    cumulativeIncidence <- cumulativeIncidence + incidenceData[offset, 1]
     offset <- offset + 1
   }
+  
   ## offset needs to be at least two for EpiEstim
   offset <- max(2, offset)
 
-  rightBound <- length(incidenceData) - (windowLength - 1)
+  rightBound <- nrow(incidenceData) - (windowLength - 1)
 
   if (rightBound < offset) { ## no valid data point, return empty estimate
     return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
@@ -55,9 +56,9 @@ estimateRe <- function(
     #starts and end indices of the intervals (numeric vector)
     # t_start = interval_end + 1
     t_start <- c(offset, na.omit(interval_end_indices) + 1)
-    t_end <- c(na.omit(interval_end_indices), length(incidenceData))
+    t_end <- c(na.omit(interval_end_indices), nrow(incidenceData))
 
-    if (offset >= length(incidenceData)) {
+    if (offset >= nrow(incidenceData)) {
       return(data.frame(date = c(), variable = c(), value = c(), estimate_type = c()))
     }
 
@@ -70,7 +71,7 @@ estimateRe <- function(
     }
 
     # make sure there are no intervals beyond the length of the data
-    while (t_start[length(t_start)] >= length(incidenceData)) {
+    while (t_start[length(t_start)] >= nrow(incidenceData)) {
       t_end <- t_end[-length(t_end)]
       t_start <- t_start[-length(t_start)]
     }
@@ -189,8 +190,18 @@ doReEstimation <- function(
 
   for (method_i in methods) {
     for (variation_i in variationTypes) {
-      incidence_data <- data_subset$value
-      dates <- data_subset$date
+      
+      if(nrow(data_subset %>% filter(local_infection == F)) > 0) {
+        incidence_data_local <- data_subset %>% filter(local_infection == T) %>% pull(value)
+        incidence_data_import <- data_subset %>% filter(local_infection == F) %>% pull(value)
+        
+        incidence_data <- data.frame(local = incidence_data_local,
+                            imported = incidence_data_import)
+      } else {
+        incidence_data <- data.frame(I = data_subset %>% filter(local_infection == T) %>% pull(value))
+      }
+      
+      dates <- data_subset %>% filter(local_infection == T) %>% pull(date)
 
       offsetting <- delays[method_i]
 

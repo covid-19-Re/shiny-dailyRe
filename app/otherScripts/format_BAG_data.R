@@ -339,9 +339,9 @@ confirmedCHEDataTests <- data_hospitalization %>%
   dplyr::select(fall_dt, ktn, exp_ort) %>%
   mutate(date = ymd(fall_dt),
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE")) %>% 
-  dplyr::group_by(date) %>%
+  dplyr::group_by(date, local_infection) %>%
   dplyr::count() %>%
-  ungroup() %>%
+  ungroup() %>% 
   dplyr::mutate(
     countryIso3 = "CHE",
     region = "CHE",
