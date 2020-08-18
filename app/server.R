@@ -156,7 +156,7 @@ server <- function(input, output, session) {
         data_type == input$dataTypeSelect,
         estimate_type == input$estimationTypeSelect) %>%
       select(
-          iso_a3 = countryIso3,
+          ISO_A3 = countryIso3,
           estimate_type,
           data_typeEstimate = data_type,
           dateEstimates = date,
@@ -172,27 +172,26 @@ server <- function(input, output, session) {
         data_type == input$dataTypeSelect,) %>%
       mutate(cases100000 = value / populationSize * 100000) %>%
       select(
-        iso_a3 = countryIso3,
+        ISO_A3 = countryIso3,
         sourceCases = source,
         data_typeCases = data_type,
         dateCases = date,
         nCases = value,
         cases100000,
-        populationSize)
+        populationSize) %>%
+      left_join(estimates, by = "ISO_A3")
 
-    worldmapRaw <- geojsonio::geojson_read("data/worldgeo.json", what = "sp")
+    countriesShape <- rgdal::readOGR(
+      dsn = "data/geoData/",
+      layer = "ne_50m_admin_0_countries",
+      stringsAsFactors = FALSE)
+    countriesShape@data <- left_join(countriesShape@data, caseData, by = "ISO_A3")
 
-    worldmap <- sp::merge(worldmapRaw, caseData, all.x = TRUE)
-    worldmap <- sp::merge(worldmap, estimates, all.x = TRUE)
-
-    pal <- colorNumeric("viridis", domain = worldmap$cases100000)
-
-    as_tibble(worldmap)  %>% filter(iso_a3 == "MNG") %>% data.frame()
-
+    pal <- colorNumeric("viridis", domain = countriesShape@data$cases100000)
     
-    labels <- as_tibble(worldmap) %>%
+    labels <- as_tibble(countriesShape@data) %>%
       mutate(
-        label1 = str_c("<strong>", name, "</strong>"),
+        label1 = str_c("<strong>", NAME, "</strong>"),
         label2 = if_else(is.na(cases100000),
           "<br>No data available",
           str_c("<br>", round(cases100000, 3), " cases / 100'000 (", dateCases, ")")),
@@ -206,7 +205,7 @@ server <- function(input, output, session) {
       .$label %>%
       lapply(htmltools::HTML)
 
-    mapPlot <- leaflet(data = worldmap) %>%
+    mapPlot <- leaflet(data = countriesShape) %>%
       addTiles() %>%
       addPolygons(
         fillColor = ~pal(cases100000),

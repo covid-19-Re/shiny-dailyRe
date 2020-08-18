@@ -38,6 +38,7 @@ countryList <- tibble(
   arrange(continent, country) %>%
   split(f = .$continent) %>%
   lapply(function(df) {
+    df <- df %>% distinct()
     selectList <- df$countryIso3
     names(selectList) <- df$country
     return(selectList)

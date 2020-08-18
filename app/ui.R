@@ -8,7 +8,6 @@ dashboardPage(title = "COVID-19 Re",
   dashboardSidebar(
     width = 250,
     sidebarMenuOutput("menu")
-    
   ),
   dashboardBody(
     tags$head(
@@ -16,22 +15,25 @@ dashboardPage(title = "COVID-19 Re",
     ),
     tabItems(
       tabItem("plots",
-        uiOutput("plotUI"),
+        fluidRow(column(12,
+          uiOutput("plotUI"),
+        )),
         fluidRow(
-          column(width = 8,
-            uiOutput("methodsUI")
-          ),
-          column(width = 4,
+            uiOutput("methodsUI"),
             uiOutput("dataSourceUI")
-          )
         )
       ),
       tabItem("mapPlot",
-        uiOutput("mapPlotUI")
+        fluidRow(
+          uiOutput("mapPlotUI")
+        )
       ),
       tabItem("about",
-        uiOutput("aboutUI")
+        fluidRow(
+          uiOutput("aboutUI")
+        )
       )
     )
   )
 )
+
