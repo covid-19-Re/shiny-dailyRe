@@ -13,3 +13,25 @@
 section.sidebar .shiny-input-container {
   padding-top: 0px
 }
+
+.selectize-control.multi .selectize-input:after {
+  content: '\e259'; /*This will draw the icon*/
+  color: gray;
+  font-family: "Glyphicons Halflings";
+  line-height: 3;
+  display: block;
+  position: absolute;
+  top: -5px;
+  right: 0;
+  background-color: white;
+  padding-right: 10px;
+}
+
+.selectize-control.multi .selectize-input.dropdown-active:after {
+  content: '\e260';
+  color: gray;
+  font-family: "Glyphicons Halflings";
+  background-color: white;
+  padding-right: 10px;
+
+}
