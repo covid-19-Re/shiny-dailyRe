@@ -27,53 +27,21 @@ server <- function(input, output, session) {
 
   countryData <- reactive({
     validate(need(countrySelectValue() != "", "Please select a country"))
-    countryData <- list(caseData = list(), estimates = list())
-    estimatePlotRanges <- list()
-    for (iCountry in countrySelectValue()) {
-      iCountryData <- loadCountryData(iCountry)
-      countryData$caseData[[iCountry]] <- iCountryData$caseData
-      countryData$estimates[[iCountry]] <- iCountryData$estimates
-      estimatePlotRanges[[iCountry]] <- iCountryData$estimateRanges[[iCountry]]
-    }
-
-    countryData$caseData <- bind_rows(countryData$caseData)
-    countryData$estimates <- bind_rows(countryData$estimates) %>%
-      group_by(countryIso3, data_type) %>%
-      filter(
-          between(date,
-            left = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["start"]][[as.character(data_type[1])]],
-            right = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["end"]][[as.character(data_type[1])]])
-        ) %>%
-      mutate(data_type = as.character(data_type))
-
+    allData <- allData()
+    countrySelectValue <- countrySelectValue()
+    
+    countryData <- list(
+      caseData = filter(allData$caseData, countryIso3 %in% countrySelectValue),
+      estimates = filter(allData$estimates, countryIso3 %in% countrySelectValue)
+    )
+   
     return(countryData)
   })
 
-  # allData <- reactive({
-  #   allData <- list(caseData = list(), estimates = list())
-  #   estimatePlotRanges <- list()
-  #   allCountries <- str_match(
-  #     string = list.files(path = pathToCountryData, pattern = ".*-Estimates", recursive = TRUE),
-  #     pattern = ".*/(.*)-.*")[, 2]
-  #   for (iCountry in allCountries) {
-  #     iCountryData <- loadCountryData(iCountry)
-  #     allData$caseData[[iCountry]] <- iCountryData$caseData
-  #     allData$estimates[[iCountry]] <- iCountryData$estimates
-  #     estimatePlotRanges[[iCountry]] <- iCountryData$estimateRanges[[iCountry]]
-  #   }
-
-  #   allData$caseData <- bind_rows(allData$caseData)
-  #   allData$estimates <- bind_rows(allData$estimates) %>%
-  #     group_by(countryIso3, data_type) %>%
-  #     filter(
-  #         between(date,
-  #           left = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["start"]][[as.character(data_type[1])]],
-  #           right = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["end"]][[as.character(data_type[1])]])
-  #       ) %>%
-  #     mutate(data_type = as.character(data_type))
-
-  #   return(allData)
-  # })
+  allData <- reactive({
+    allData <- readRDS(pathToAllCountryData)
+    return(allData)
+  })
 
   updateData <- reactive({
     updateDataRaw <- readRDS(pathToUpdataData)
@@ -188,7 +156,7 @@ server <- function(input, output, session) {
     countriesShape@data <- left_join(countriesShape@data, caseData, by = "ISO_A3")
 
     pal <- colorNumeric("viridis", domain = countriesShape@data$cases100000)
-    
+
     labels <- as_tibble(countriesShape@data) %>%
       mutate(
         label1 = str_c("<strong>", NAME, "</strong>"),
@@ -241,12 +209,17 @@ server <- function(input, output, session) {
       splitBy <- "countryIso3"
     }
 
-    dataTypes <- countryData()$estimates %>%
-      group_by(.data[[splitBy]]) %>%
-      group_split() %>%
-      lapply(function(x) {unique(x$data_type)})
-    dataTypeChoices <- dataTypes[[which.min(lengths(dataTypes))]]
-    names(dataTypeChoices) <- sapply(dataTypeChoices, i18n()$t,  USE.NAMES = FALSE)
+    if (dim(countryData()$estimates)[1] > 0) {
+      dataTypes <- countryData()$estimates %>%
+        group_by(.data[[splitBy]]) %>%
+        group_split() %>%
+        lapply(function(x) {unique(x$data_type)})
+      dataTypeChoices <- dataTypes[[which.min(lengths(dataTypes))]]
+      names(dataTypeChoices) <- sapply(dataTypeChoices, i18n()$t,  USE.NAMES = FALSE)
+    } else {
+      dataTypeChoices <- "None"
+      names(dataTypeChoices) <- sapply(dataTypeChoices, i18n()$t,  USE.NAMES = FALSE)
+    }
 
     return(dataTypeChoices)
   })
@@ -449,7 +422,7 @@ server <- function(input, output, session) {
 
   output$dataSourceUI <- renderUI({
     validate(need(countrySelectValue(), ""))
-    infoBox(width = 12,
+    infoBox(width = 3,
         i18n()$t("Last Data Updates"),
         HTML(
           dataUpdatesTable(
@@ -468,7 +441,7 @@ server <- function(input, output, session) {
       methodsFileName <- "md/methodsOnly_"
     }
 
-    ui <- box(width = 12, includeMarkdown(str_c(methodsFileName, input$lang, ".md")))
+    ui <- box(width = 8, includeMarkdown(str_c(methodsFileName, input$lang, ".md")))
     return(ui)
   })
 

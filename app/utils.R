@@ -1,15 +1,15 @@
 # helpers
 
-loadCountryData <- function(iso3) {
+loadCountryData <- function(iso3, dataDir = "data/countryData") {
 
   allPaths <- list.files(path = pathToCountryData, recursive = TRUE)
   deconvolutedDataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-DeconvolutedData.rds"))
   dataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Data.rds"))
   estimatesPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Estimates.rds"))
 
-  deconvolutedData <- readRDS(file.path("data/countryData", deconvolutedDataPath))
-  caseData <- readRDS(file.path("data/countryData", dataPath))
-  estimates <- readRDS(file.path("data/countryData", estimatesPath))
+  deconvolutedData <- readRDS(file.path(dataDir, deconvolutedDataPath))
+  caseData <- readRDS(file.path(dataDir, dataPath))
+  estimates <- readRDS(file.path(dataDir, estimatesPath))
 
   deconvolutedData <- deconvolutedData %>%
     mutate(data_type = str_sub(data_type, 11)) %>%

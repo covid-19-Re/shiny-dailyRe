@@ -20,6 +20,7 @@ pathToPopData <- file.path("data/popData.rds")
 pathToUpdataData <- file.path("data/updateData.rds")
 pathToCountryData <- "data/countryData"
 pathToContinentsData <- file.path("data/continents.csv")
+pathToAllCountryData <- file.path("data/allCountryData.rds")
 
 
 popData <- readRDS(pathToPopData)

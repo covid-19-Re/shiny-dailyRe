@@ -351,9 +351,13 @@ rEffPlotly <- function(
   caseData <- caseData %>%
     mutate(
       data_type = recode(as.character(data_type), !!!renameDataType))
-  estimates <- estimates %>%
-    mutate(
-      data_type = recode(as.character(data_type), !!!renameDataType))
+
+  if(dim(estimates)[1] != 0) {
+      estimates <- estimates %>%
+        mutate(
+          data_type = recode(as.character(data_type), !!!renameDataType))
+  }
+
 
   if (seriesName %in% colnames(caseData)) {
     caseData$series <- caseData[[seriesName]]
@@ -601,14 +605,14 @@ renameRegionTotal <- function(data, countries, countryNames) {
 }
 
 rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect, input, translator) {
-  countries <- unique(countryData$estimates$countryIso3)
-  countryNames <- unique(countryData$estimates$country)
+  countries <- unique(countryData$caseData$countryIso3)
+  countryNames <- unique(countryData$caseData$country)
   nCountries <- length(countries)
 
   if (nCountries == 1) {
     seriesName <- seriesSelect
     interventions <- interventions[[countries]]
-    if(!is.null(interventions)){
+    if (!is.null(interventions)){
       interventions <- interventions %>%
         mutate(
           text = sapply(text, translator$t,  USE.NAMES = FALSE),
@@ -619,7 +623,7 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     if (seriesName == "data_type") {
       seriesTitle <- "Data types"
       seriesColors <- plotColors
-      dataTypeSelect <- unique(countryData$estimates$data_type)
+      dataTypeSelect <- unique(countryData$caseData$data_type)
       regionSelect <- countries
     } else if (seriesName == "region"){
       seriesTitle <- case_when(
@@ -712,6 +716,11 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
       .groups = "keep") %>%
     ungroup()
 
+  startDate <- if_else(dim(estimates)[1] != 0,
+    min(estimates$date) - 14,
+    min(caseData$date) - 7
+  )
+
   plot <- rEffPlotly(
     caseData = caseData,
     estimates = estimates,
@@ -720,7 +729,7 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     seriesColors = seriesColors,
     seriesTitle = seriesTitle,
     lastDataDate = updateDataPlot,
-    startDate = min(estimates$date) - 14,
+    startDate = startDate,
     fixedRangeX = fixedRangeX,
     fixedRangeY = fixedRangeY,
     logCaseYaxis = "logCases" %in% input$plotOptions,
@@ -728,11 +737,11 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     caseNormalize = "caseNormalize" %in% input$plotOptions,
     caseLoess = "caseLoess" %in% input$plotOptions,
     caseDeconvoluted = "caseDeconvoluted" %in% input$plotOptions,
-    showTraces = "Confirmed cases / tests",
-    showTracesMode = "not",
+    # showTraces = "Confirmed cases / tests",
+    # showTracesMode = "not",
     showHelpBox = FALSE,
     translator = translator,
-    language = "en-gb",#input$lang,
+    language = input$lang,
     widgetID = NULL)
 
   return(plot)
