@@ -7,7 +7,7 @@ pathToCountryData <- here::here("app", "data", "countryData")
 allData <- list(caseData = list(), estimates = list())
 estimatePlotRanges <- list()
 allCountries <- str_match(
-  string = list.files(path = pathToCountryData, pattern = ".*-Estimates", recursive = TRUE),
+  string = list.files(path = pathToCountryData, pattern = ".*-Data", recursive = TRUE),
   pattern = "(.*)-.*")[, 2]
 for (iCountry in allCountries) {
   iCountryData <- loadCountryData(iCountry, dataDir = here::here("app", "data", "countryData"))
