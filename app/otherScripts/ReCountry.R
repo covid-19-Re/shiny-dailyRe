@@ -23,7 +23,7 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("TCA")
+  args <- c("GGY")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -31,7 +31,7 @@ names(args) <- "country"
 # Fetch Population Data (do once)
   popDataPath <- here::here("app", "data", "popData.rds")
   if (!file.exists(popDataPath)) {
-    popDataWorldBank <- getCountryPopData() %>%
+    popDataWorldBank <- getCountryPopData(here::here("app/data/temp/ECDCdata.csv"), 15) %>%
       filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
       mutate(region = countryIso3)
     popDataCH <- read_csv(
@@ -91,24 +91,6 @@ if (!dir.exists(basePath)) {
       # save updated data
       if (!isTRUE(dataUnchanged)) {
         saveRDS(countryData, file = countryDataPath)
-        recentCasesPath <- here::here("app", "data", "countryData","recentCases.rds")
-        if (file.exists(recentCasesPath)) {
-          recentCases <- readRDS(recentCasesPath)
-        } else {
-          recentCases <- list()
-        }
-        for (i in unique(countryData$countryIso3)) {
-          recentCases[[i]] <- countryData %>%
-            filter(countryIso3 == i) %>%
-            group_by(countryIso3, country, region, source, data_type) %>%
-            filter(date == max(date))
-          if (i %in% c("CHE", "LIE")) {
-            recentCases[[i]] <- recentCases[[i]] %>% filter(
-              date_type == "report_plotting"
-            )
-          }
-        }
-        saveRDS(recentCases, recentCasesPath)
       }
 
       # fix because swiss data contains data for two countries (CHE & LIE)
@@ -328,20 +310,6 @@ if (!dir.exists(basePath)) {
           )
         countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
         saveRDS(countryEstimates, file = countryDataPath)
-
-        recentEstimatesPath <- here::here("app", "data", "countryData", "recentEstimates.rds")
-        if (file.exists(recentEstimatesPath)) {
-          recentEstimates <- readRDS(recentEstimatesPath)
-        } else {
-          recentEstimates <- list()
-        }
-        for (i in unique(countryEstimates$countryIso3)) {
-          recentEstimates[[i]] <- countryEstimates %>%
-            filter(countryIso3 == i) %>%
-            group_by(countryIso3, country, region, source, data_type, estimate_type) %>%
-            filter(date == max(date))
-        }
-        saveRDS(recentEstimates, recentEstimatesPath)
       }
   } else {
     cat(str_c(args["country"], ": No new data available. Skipping Re calculation.\n"))
