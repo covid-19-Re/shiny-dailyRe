@@ -100,7 +100,7 @@ for (i in translator$languages) {
     caseDataPlot,
     estimatesPlot,
     interventionsLocalized,
-    plotColors,
+    seriesColors = plotColors,
     lastDataDate = updateDataPlotLocalized,
     fixedRangeX = c(TRUE, TRUE, TRUE),
     fixedRangeY = c(TRUE, TRUE, TRUE),
