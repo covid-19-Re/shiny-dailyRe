@@ -25,6 +25,11 @@ server <- function(input, output, session) {
     input$countrySelect
   }) %>% debounce(500)
 
+  allData <- reactive({
+    allData <- readRDS(pathToAllCountryData)
+    return(allData)
+  })
+
   countryData <- reactive({
     validate(need(countrySelectValue() != "", "Please select a country"))
     allData <- allData()
@@ -36,11 +41,6 @@ server <- function(input, output, session) {
     )
    
     return(countryData)
-  })
-
-  allData <- reactive({
-    allData <- readRDS(pathToAllCountryData)
-    return(allData)
   })
 
   updateData <- reactive({
@@ -115,54 +115,66 @@ server <- function(input, output, session) {
   })
 
   output$mapPlot <- renderLeaflet({
+    allData <- allData()
 
-    estimates <- read_rds("data/countryData/recentEstimates.rds") %>%
-      bind_rows() %>%
-      ungroup() %>%
+    estimates <- allData$estimates %>%
       filter(
         region == countryIso3,
         data_type == input$dataTypeSelect,
         estimate_type == input$estimationTypeSelect) %>%
+      group_by(countryIso3) %>%
+      filter(date == max(date)) %>%
       select(
-          ISO_A3 = countryIso3,
+          ADM0_A3_IS = countryIso3,
           estimate_type,
           data_typeEstimate = data_type,
           dateEstimates = date,
           median_R_mean,
           median_R_highHPD,
-          median_R_lowHPD) 
+          median_R_lowHPD)
 
-    caseData <- read_rds("data/countryData/recentCases.rds") %>%
+    caseData <-  allData$caseData %>%
       bind_rows() %>%
       ungroup() %>%
       filter(
         region == countryIso3,
-        data_type == input$dataTypeSelect,) %>%
-      mutate(cases100000 = value / populationSize * 100000) %>%
+        data_type == input$dataTypeSelect) %>%
+      arrange(countryIso3, region, data_type, date) %>%
+      group_by(countryIso3) %>%
+      mutate(
+        sum14days = slide_index_dbl(value, date, sum, .before = lubridate::days(14))
+      ) %>%
+      ungroup() %>%
+      mutate(cases14d100000 = sum14days / populationSize * 100000) %>%
       select(
-        ISO_A3 = countryIso3,
+        ADM0_A3_IS = countryIso3,
         sourceCases = source,
         data_typeCases = data_type,
         dateCases = date,
         nCases = value,
-        cases100000,
+        cases14d100000,
         populationSize) %>%
-      left_join(estimates, by = "ISO_A3")
-
+      group_by(ADM0_A3_IS) %>%
+      filter(dateCases == max(dateCases)) %>%
+      left_join(estimates, by = "ADM0_A3_IS")
+    
     countriesShape <- rgdal::readOGR(
       dsn = "data/geoData/",
       layer = "ne_50m_admin_0_countries",
       stringsAsFactors = FALSE)
-    countriesShape@data <- left_join(countriesShape@data, caseData, by = "ISO_A3")
+    countriesShape@data <- left_join(countriesShape@data, caseData, by = "ADM0_A3_IS")
 
-    pal <- colorNumeric("viridis", domain = countriesShape@data$cases100000)
+    pal <- colorBin("RdYlGn",
+      bins = c(seq(0, 500, 50), Inf),
+      domain = countriesShape@data$cases14d100000,
+      reverse = TRUE)
 
     labels <- as_tibble(countriesShape@data) %>%
       mutate(
         label1 = str_c("<strong>", NAME, "</strong>"),
-        label2 = if_else(is.na(cases100000),
+        label2 = if_else(is.na(cases14d100000),
           "<br>No data available",
-          str_c("<br>", round(cases100000, 3), " cases / 100'000 (", dateCases, ")")),
+          str_c("<br>", round(cases14d100000, 3), " cases / 100'000 (", dateCases, ")")),
         label3 = if_else(is.na(median_R_mean),
           "<br>No R<sub>e</sub> estimate available",
           str_c("<br>R<sub>e</sub> (", dateEstimates, "): ", round(median_R_mean, 3), " ",
@@ -176,7 +188,7 @@ server <- function(input, output, session) {
     mapPlot <- leaflet(data = countriesShape) %>%
       addTiles() %>%
       addPolygons(
-        fillColor = ~pal(cases100000),
+        fillColor = ~pal(cases14d100000),
         weight = 2,
         opacity = 1,
         color = "white",
@@ -193,7 +205,7 @@ server <- function(input, output, session) {
           style = list("font-weight" = "normal", padding = "3px 8px"),
           textsize = "15px",
           direction = "auto")) %>%
-        addLegend(pal = pal, values = ~cases100000, opacity = 0.7, title = NULL,
+        addLegend(pal = pal, values = seq(0, 500, 100), opacity = 0.7, title = NULL,
           position = "bottomright")
     mapPlot
     return(mapPlot)
