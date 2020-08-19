@@ -66,3 +66,5 @@ do
     runRScript makeCHPlots.R
   fi
 done
+
+runRScript sumData.R
