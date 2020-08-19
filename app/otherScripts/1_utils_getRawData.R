@@ -1037,22 +1037,37 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
     )
 }
 
-getCountryPopData <- function() {
-  wbdataJSON <- jsonlite::fromJSON(
-    str_c("http://api.worldbank.org/v2/country/all/indicator/",
-          "SP.POP.TOTL?MRV=1&format=json&per_page=300"
-    ),
-    flatten = TRUE)
+getCountryPopData <- function(tempFileName, tReload = 15) {
+  urlfile <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
+  if (is.null(tempFileName)) {
+    csvPath <- urlfile
+  } else {
+    fileMod <- file.mtime(tempFileName)
+    fileReload <- if_else(file.exists(tempFileName), now() > fileMod + minutes(tReload), TRUE)
+    if (fileReload) {
+      downloadOK <- try(download.file(urlfile, destfile = tempFileName))
+      if ("try-error" %in% class(downloadOK)) {
+        if (file.exists(tempFileName)) {
+          warning("Couldn't fetch new ECDC data. Using data from ", fileMod)
+        } else {
+          warning("Couldn't fetch new ECDC data.")
+          return(NULL)
+        }
+      }
+    }
+    csvPath <- tempFileName
+  }
   
-  wbdata <- wbdataJSON[[2]] %>%
-    as_tibble() %>%
-    dplyr::select(
-      countryIso2 = country.id,
-      countryIso3 = countryiso3code,
-      country = country.value,
-      year = date,
-      populationSize = value
+  popData <- read_csv(csvPath,
+    col_types = cols_only(
+      countriesAndTerritories = col_character(),
+      countryterritoryCode = col_character(),
+      popData2019 = col_integer())) %>%
+    rename(
+      countryIso3 = countryterritoryCode,
+      country = countriesAndTerritories,
+      populationSize = popData2019
     )
   
-  return(wbdata)
+  return(popData)
 }
