@@ -89,7 +89,7 @@ final_delay_data_FOPH <- restructured_data_FOPH %>%
   filter(!is.na(delay)) %>%
   arrange(data_type, onset_date) %>%
   dplyr::group_by(data_type, onset_date) %>%
-  slice_sample(count_date, prop = 1) %>% # shuffle rows with the same date
+  slice_sample(prop = 1) %>% # shuffle rows with the same date
   ungroup() %>%
   mutate(country = "Switzerland", region = "CHE", source = "FOPH")
 
