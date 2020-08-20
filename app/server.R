@@ -526,7 +526,7 @@ server <- function(input, output, session) {
       tabList,
       function(i) {
         uiContent <- tagList(
-          plotlyOutput(str_c("rePlot_", i[[1]]), width = "100%", height = "800px"),
+          plotlyOutput(str_c("rePlot_", i[[1]]), width = "100%", height = "800px") %>% withSpinner(),
           HTML(
             str_c(
               "<p><small>",
@@ -596,7 +596,7 @@ server <- function(input, output, session) {
       tabPanel(
         title = "World Map",
         value = "worldMap",
-        leafletOutput("mapPlot", width = "100%", height = 800)
+        leafletOutput("mapPlot", width = "100%", height = 800) %>% withSpinner()
       )
     )
   })

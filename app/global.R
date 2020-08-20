@@ -8,6 +8,7 @@ library(tidyverse)
 library(leaflet)
 library(htmltools)
 library(htmlwidgets)
+library(shinycssloaders)
 
 source("otherScripts/plotlyFunctions.R")
 source("utils.R")
