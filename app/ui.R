@@ -34,4 +34,3 @@ dashboardPage(title = "COVID-19 Re",
     )
   )
 )
-

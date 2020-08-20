@@ -179,7 +179,7 @@ if (!dir.exists(basePath)) {
           filter(date <= (max(date) - right_truncation)) %>%
           dplyr::select(-countryIso3, -populationSize) %>%
           ungroup()
-      # Deconvolution 
+      # Deconvolution
         deconvolvedData <- list()
 
         deconvolvedData[[1]] <- get_all_infection_incidence(
@@ -291,7 +291,7 @@ if (!dir.exists(basePath)) {
                 "Confirmed cases / tests",
                 "Hospitalized patients",
                 "Deaths",
-                "Excess deaths"))) %>% 
+                "Excess deaths"))) %>%
           pivot_wider(names_from = "variable", values_from = "value") %>%
           dplyr::group_by(date, country, region, data_type, source, estimate_type) %>%
           dplyr::summarize(

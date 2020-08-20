@@ -34,12 +34,12 @@ server <- function(input, output, session) {
     validate(need(countrySelectValue() != "", "Please select a country"))
     allData <- allData()
     countrySelectValue <- countrySelectValue()
-    
+
     countryData <- list(
       caseData = filter(allData$caseData, countryIso3 %in% countrySelectValue),
       estimates = filter(allData$estimates, countryIso3 %in% countrySelectValue)
     )
-   
+
     return(countryData)
   })
 
@@ -157,7 +157,7 @@ server <- function(input, output, session) {
       group_by(ADM0_A3_IS) %>%
       filter(dateCases == max(dateCases)) %>%
       left_join(estimates, by = "ADM0_A3_IS")
-    
+
     countriesShape <- rgdal::readOGR(
       dsn = "data/geoData/",
       layer = "ne_50m_admin_0_countries",
@@ -273,7 +273,7 @@ server <- function(input, output, session) {
 
   output$linePlotOptionsUI <- renderUI({
     validate(need(input$tabs, ""))
-    if(input$tabs == "plots") {
+    if (input$tabs == "plots") {
       ui <- tagList(
         selectizeInput("countrySelect", i18n()$t("Countries"),
           countryList,
@@ -367,7 +367,7 @@ server <- function(input, output, session) {
   output$plotUI <- renderUI({
     fluidRow(uiOutput("plotTabsUI"))
   })
- 
+
   output$plotTabsUI <- renderUI({
     if (length(countrySelectValue()) == 1) {
       if (countrySelectValue() == "CHE") {
@@ -447,10 +447,11 @@ server <- function(input, output, session) {
 
   output$methodsUI <- renderUI({
     validate(need(countrySelectValue(), ""))
-    if (length(countrySelectValue()) == 1 & countrySelectValue() == "CHE") {
-      methodsFileName <- "md/methodsCH_"
-    } else {
-      methodsFileName <- "md/methodsOnly_"
+    methodsFileName <- "md/methodsOnly_"
+    if (length(countrySelectValue()) == 1) {
+      if (countrySelectValue() == "CHE") {
+        methodsFileName <- "md/methodsCH_"
+      }
     }
 
     ui <- box(width = 8, includeMarkdown(str_c(methodsFileName, input$lang, ".md")))
@@ -460,7 +461,7 @@ server <- function(input, output, session) {
   output$mapPlotUI <- renderUI({
     tabBox(width = 12,
       title = tagList(shiny::icon("map"),
-      HTML(i18n()$t(str_c("SARS-CoV2 cases / 100'000 people")))),
+      HTML(i18n()$t(str_c("Map")))),
       tabPanel(
         title = "World Map",
         value = "worldMap",
