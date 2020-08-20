@@ -10,8 +10,16 @@
     color: #367fa9 !important;
 }
 
-section.sidebar .shiny-input-container {
-  padding-top: 0px
+.quickSelect{
+  display: inline-block;
+}
+
+.quickSelect > a{
+  margin-top:3px !important;
+  margin-left:3px !important;
+  margin-bottom:3px !important;
+  margin-right:3px !important;
+
 }
 
 .selectize-control.multi .selectize-input:after {
@@ -33,5 +41,4 @@ section.sidebar .shiny-input-container {
   font-family: "Glyphicons Halflings";
   background-color: white;
   padding-right: 10px;
-
 }

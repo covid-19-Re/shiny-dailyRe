@@ -1,6 +1,7 @@
 server <- function(input, output, session) {
 
-  stateVals <- reactiveValues(lang = "en-gb", tabs = "ch", sidebarExpanded = "chMenu")
+  stateVals <- reactiveValues(
+    lang = "en-gb", tabs = "ch", sidebarExpanded = "chMenu", lastMapGroup = "median Re")
 
   # record state on language change
   observeEvent(input$lang, {
@@ -114,18 +115,18 @@ server <- function(input, output, session) {
     rEffPlotlyShiny(countryData, updateData, interventions, "greaterRegion", input, i18n())
   })
 
-  output$mapPlot <- renderLeaflet({
+  worldMapData <- reactive({
     allData <- allData()
 
     estimates <- allData$estimates %>%
       filter(
-        region == countryIso3,
         data_type == input$dataTypeSelect,
         estimate_type == input$estimationTypeSelect) %>%
-      group_by(countryIso3) %>%
+      group_by(region) %>%
       filter(date == max(date)) %>%
       select(
           ADM0_A3_IS = countryIso3,
+          region = region,
           estimate_type,
           data_typeEstimate = data_type,
           dateEstimates = date,
@@ -133,82 +134,158 @@ server <- function(input, output, session) {
           median_R_highHPD,
           median_R_lowHPD)
 
-    caseData <-  allData$caseData %>%
+    worldMapData <-  allData$caseData %>%
       bind_rows() %>%
       ungroup() %>%
       filter(
-        region == countryIso3,
         data_type == input$dataTypeSelect) %>%
       arrange(countryIso3, region, data_type, date) %>%
-      group_by(countryIso3) %>%
+      group_by(region) %>%
       mutate(
         sum14days = slide_index_dbl(value, date, sum, .before = lubridate::days(14))
       ) %>%
       ungroup() %>%
-      mutate(cases14d100000 = sum14days / populationSize * 100000) %>%
+      mutate(cases14d = sum14days / populationSize * 100000) %>%
       select(
         ADM0_A3_IS = countryIso3,
+        region = region,
         sourceCases = source,
         data_typeCases = data_type,
         dateCases = date,
         nCases = value,
-        cases14d100000,
+        cases14d,
         populationSize) %>%
       group_by(ADM0_A3_IS) %>%
       filter(dateCases == max(dateCases)) %>%
-      left_join(estimates, by = "ADM0_A3_IS")
+      left_join(estimates, by = c("ADM0_A3_IS", "region")) %>%
+      ungroup()
 
-    countriesShape <- rgdal::readOGR(
-      dsn = "data/geoData/",
-      layer = "ne_50m_admin_0_countries",
-      stringsAsFactors = FALSE)
-    countriesShape@data <- left_join(countriesShape@data, caseData, by = "ADM0_A3_IS")
+      return(worldMapData)
+  })
 
-    pal <- colorBin("RdYlGn",
+  output$mapPlot <- renderLeaflet({
+    worldMapData <- worldMapData()
+
+    countriesShape@data <- left_join(
+      countriesShape@data,
+      filter(worldMapData, region == ADM0_A3_IS),
+      by = "ADM0_A3_IS")
+    countryCasesLabels <- mapLabels(shapeFileData = countriesShape@data, mainLabel = "cases14d")
+    countryReLabels <- mapLabels(shapeFileData = countriesShape@data, mainLabel = "re")
+
+    cases14pal <- colorBin("RdYlGn",
       bins = c(seq(0, 500, 50), Inf),
-      domain = countriesShape@data$cases14d100000,
+      domain = countriesShape@data$cases14d,
+      reverse = TRUE)
+    repal <- colorNumeric("RdYlGn",
+      domain = countriesShape@data$median_R_mean,
       reverse = TRUE)
 
-    labels <- as_tibble(countriesShape@data) %>%
-      mutate(
-        label1 = str_c("<strong>", NAME, "</strong>"),
-        label2 = if_else(is.na(cases14d100000),
-          "<br>No data available",
-          str_c("<br>", round(cases14d100000, 3), " cases / 100'000 (", dateCases, ")")),
-        label3 = if_else(is.na(median_R_mean),
-          "<br>No R<sub>e</sub> estimate available",
-          str_c("<br>R<sub>e</sub> (", dateEstimates, "): ", round(median_R_mean, 3), " ",
-         "(", round(median_R_lowHPD, 3), " - ", round(median_R_highHPD, 3), ")"))
-        ) %>%
-      transmute(
-        label = str_c(label1, label2, label3)) %>%
-      .$label %>%
-      lapply(htmltools::HTML)
-
-    mapPlot <- leaflet(data = countriesShape) %>%
+    map <- leaflet(options = leafletOptions(minZoom = 2)) %>%
       addTiles() %>%
-      addPolygons(
-        fillColor = ~pal(cases14d100000),
-        weight = 2,
-        opacity = 1,
-        color = "white",
-        dashArray = "3",
-        fillOpacity = 0.7,
-        highlight = highlightOptions(
-          weight = 2,
-          color = "#666",
-          dashArray = "",
-          fillOpacity = 0.7,
-          bringToFront = TRUE),
-        label = labels,
-        labelOptions = labelOptions(
-          style = list("font-weight" = "normal", padding = "3px 8px"),
-          textsize = "15px",
-          direction = "auto")) %>%
-        addLegend(pal = pal, values = seq(0, 500, 100), opacity = 0.7, title = NULL,
-          position = "bottomright")
-    mapPlot
-    return(mapPlot)
+      addMapPane("countries", zIndex = 410) %>%
+      addMapPane("region", zIndex = 420) 
+
+    if ("CHE" %in% input$regionCountrySelect) {
+      CHEregionsShape@data <- left_join(
+        CHEregionsShape@data,
+        worldMapData,
+        by = c("ADM0_A3_IS", "region")
+      )
+      cheCasesLabels <- mapLabels(shapeFileData = CHEregionsShape@data, mainLabel = "cases14d")
+      cheReLabels <- mapLabels(shapeFileData = CHEregionsShape@data, mainLabel = "re")
+
+      map <- map %>%
+        addPolygonLayer(
+          shapeFile = CHEregionsShape,
+          fillColor = ~cases14pal(cases14d), group = "Cases / 100'000 / 14 d",
+          labels = cheCasesLabels,
+          options = pathOptions(pane = "region")) %>%
+        addPolygonLayer(
+          shapeFile = CHEregionsShape,
+          fillColor = ~repal(median_R_mean), group = "median Re",
+          labels = cheReLabels,
+          options = pathOptions(pane = "region"))
+    }
+
+    if ("ZAF" %in% input$regionCountrySelect) {
+      ZAFregionsShape@data <- left_join(
+        ZAFregionsShape@data,
+        worldMapData,
+      by = c("ADM0_A3_IS", "region"))
+
+      zafCasesLabels <- mapLabels(shapeFileData = ZAFregionsShape@data, mainLabel = "cases14d")
+      zafReLabels <- mapLabels(shapeFileData = ZAFregionsShape@data, mainLabel = "re")
+
+      map <- map %>%
+        addPolygonLayer(
+          shapeFile = ZAFregionsShape,
+          fillColor = ~cases14pal(cases14d), group = "Cases / 100'000 / 14 d",
+          labels = zafCasesLabels,
+          options = pathOptions(pane = "region")) %>%
+        addPolygonLayer(
+          shapeFile = ZAFregionsShape,
+          fillColor = ~repal(median_R_mean),
+          group = "median Re",
+          labels = zafReLabels,
+          options = pathOptions(pane = "region"))
+    }
+    
+    map <- map %>%
+      addPolygonLayer(
+        shapeFile = countriesShape,
+        fillColor = ~cases14pal(cases14d), group = "Cases / 100'000 / 14 d",
+        labels = countryCasesLabels) %>%
+      addLegend(pal = cases14pal, values = c(seq(0, 500, 50), Inf), opacity = 0.7, title = "Cases / 100'000 / 14 d",
+        position = "bottomright", group = "Cases / 100'000 / 14 d") %>%
+      addPolygonLayer(
+        shapeFile = countriesShape,
+        fillColor = ~repal(median_R_mean), group = "median Re",
+        labels = countryReLabels) %>%
+      addLegend(pal = repal, opacity = 0.7, title = "Most recent R<sub>e</sub> estimate",
+        values = ~median_R_mean, data = countriesShape, ,
+        position = "bottomright", group = "median Re") %>%
+      addEasyButton(easyButton(
+        icon = "fa-globe", title = "Reset Zoom",
+        onClick = JS("function(btn, map) { map.setZoom(2); }"))) %>%
+      addEasyButton(easyButton(
+        icon = "fa-crosshairs", title = "Locate Me",
+        onClick = JS("function(btn, map) { map.locate({setView: true}); }"))) %>%
+      fitBounds(lng1 = 272.1094, lat1 = 84.73839, lng2 = -222.5391, lat2 = -71.74643) %>%
+      setMaxBounds(lng1 = 272.1094, lat1 = 84.73839, lng2 = -222.5391, lat2 = -71.74643) %>%
+      addScaleBar(position = "bottomleft") %>%
+      addLayersControl(
+        overlayGroups = c("median Re", "Cases / 100'000 / 14 d"),
+        options = layersControlOptions(collapsed = FALSE, hideSingleBase = TRUE)
+      )
+
+    return(map)
+  })
+
+  observeEvent(input$mapPlot_groups, {
+    mymap <- leafletProxy("mapPlot")
+    isolate({
+      if (length(input$mapPlot_groups) > 1) {
+        mymap %>%
+          hideGroup(stateVals$lastMapGroup)
+        stateVals$lastMapGroup <- if_else(
+          stateVals$lastMapGroup == "median Re",
+            "Cases / 100'000 / 14 d",
+            "median Re"
+          )
+      } else {
+        if (input$mapPlot_groups == "median Re") {
+          stateVals$lastMapGroup <- "median Re"
+          mymap %>%
+            hideGroup("Cases / 100'000 / 14 d")
+        }
+        else if (input$mapPlot_groups == "Cases / 100'000 / 14 d") {
+          stateVals$lastMapGroup <- "Cases / 100'000 / 14 d"
+          mymap %>%
+            hideGroup("median Re")
+        }
+      }
+    })
   })
 
   # ui
@@ -258,13 +335,13 @@ server <- function(input, output, session) {
 
   output$menu <- renderMenu({
     sidebarMenu(id = "tabs",
-      menuItem(HTML("Plots"), tabName = "plots", icon = icon("chart-area")),
+      menuItem(HTML(i18n()$t("Timeseries")), tabName = "plots", icon = icon("chart-area")),
       uiOutput("linePlotOptionsUI"),
-      menuItem("Map Plot", tabName = "mapPlot", icon = icon("map")),
-      menuItem("Options", startExpanded = TRUE,
+      menuItem(i18n()$t("Maps"), tabName = "mapPlot", icon = icon("map")),
+      menuItem(i18n()$t("Options"), startExpanded = TRUE,
         uiOutput("plotOptionsUI")
       ),
-      menuItem("About", tabName = "about", icon = icon("question-circle")),
+      menuItem(i18n()$t("About"), tabName = "about", icon = icon("question-circle")),
       selectInput("lang", i18n()$t("Language"),
         languageSelect, selected = input$lang, multiple = FALSE,
         selectize = TRUE, width = NULL, size = NULL)
@@ -299,13 +376,13 @@ server <- function(input, output, session) {
       HTML("<div class='form-group shiny-input-container' style='width: 100%;'>
       <label class='control-label' for='quickselectButtons'>Choose all countries in continent:</label>"),
       div(
-        div(style = "display:inline-block;", actionLink("africaSelect", "Africa")),
-        div(style = "display:inline-block;", actionLink("asiaSelect", "Asia")),
-        div(style = "display:inline-block;", actionLink("europeSelect", "Europe")),
-        div(style = "display:inline-block;", actionLink("northAmericaSelect", "North America")),
-        div(style = "display:inline-block;", actionLink("oceaniaSelect", "Oceania")),
-        div(style = "display:inline-block;", actionLink("southAmericaSelect", "South America")),
-        div(style = "display:inline-block;", actionLink("clearSelect", "Clear all")),
+        div(class = "quickSelect", actionLink("africaSelect", i18n()$t("Africa"))),
+        div(class = "quickSelect", actionLink("asiaSelect", i18n()$t("Asia"))),
+        div(class = "quickSelect", actionLink("europeSelect", i18n()$t("Europe"))),
+        div(class = "quickSelect", actionLink("northAmericaSelect", i18n()$t("North America"))),
+        div(class = "quickSelect", actionLink("oceaniaSelect", i18n()$t("Oceania"))),
+        div(class = "quickSelect", actionLink("southAmericaSelect", i18n()$t("South America"))),
+        div(class = "quickSelect", actionLink("clearSelect", i18n()$t("Clear all"))),
       )
     )
     return(ui)
@@ -333,6 +410,21 @@ server <- function(input, output, session) {
     updateSelectizeInput(session, "countrySelect", selected = "")
   })
 
+  regionCountries <- reactive({
+    allData <- allData()
+
+    regionCountriesDf <- allData$caseData %>%
+      group_by(countryIso3) %>%
+      filter(length(unique(region)) > 1) %>%
+      select(countryIso3, country) %>%
+      distinct()
+    
+    regionCountries <- regionCountriesDf$countryIso3
+    names(regionCountries) <- regionCountriesDf$country
+
+    return(regionCountries)
+  })
+
   output$plotOptionsUI <- renderUI({
     validate(need(input$tabs, ""))
     if (input$tabs == "plots") {
@@ -343,7 +435,7 @@ server <- function(input, output, session) {
         radioButtons("caseAverage", i18n()$t("Display case data as ..."),
           choices = caseAverageChoices(),
           selected = 1, inline = FALSE),
-        checkboxGroupInput("plotOptions", label = "more Options",
+        checkboxGroupInput("plotOptions", label = i18n()$t("More Options"),
           choices = c(
             "Logarithmic axis for cases" = "logCases",
             "Normalize cases to per 100'000 inhabitants" = "caseNormalize",
@@ -353,12 +445,11 @@ server <- function(input, output, session) {
       )
     } else {
       ui <- tagList(
-        radioButtons("estimationTypeSelect", i18n()$t("Select estimation type to show"),
-            choices = estimationTypeChoices(),
-            selected = "Cori_slidingWindow", inline = FALSE),
-        radioButtons("dataTypeSelect", i18n()$t("Select data type for comparison"),
-            choices = i18n()$t("Confirmed cases"),
-            selected = "Confirmed cases", inline = FALSE)
+        selectizeInput("regionCountrySelect", i18n()$t("Display regional data for countries"),
+          regionCountries(),
+          selected = NULL, multiple = TRUE, width = "100%", size = NULL,
+          options = list(plugins = list("remove_button"))
+        )
       )
     }
     return(ui)
@@ -416,7 +507,7 @@ server <- function(input, output, session) {
 
     tabs$width <- 12
     tabs$title <- tagList(shiny::icon("chart-area"),
-      HTML(i18n()$t(str_c("Estimation of the effective reproductive number (R<sub>e</sub>)"))))
+      HTML(i18n()$t("Estimation of the effective reproductive number (R<sub>e</sub>)")))
     tabs$id <- "plotTabs"
     return(do.call(tabBox, tabs))
   })
@@ -468,5 +559,10 @@ server <- function(input, output, session) {
         leafletOutput("mapPlot", width = "100%", height = 800)
       )
     )
+  })
+
+  output$test <- renderPrint({
+     list(
+       input$mapPlot_groups)
   })
 }

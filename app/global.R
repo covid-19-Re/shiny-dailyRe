@@ -6,6 +6,8 @@ library(slider)
 library(shades)
 library(tidyverse)
 library(leaflet)
+library(htmltools)
+library(htmlwidgets)
 
 source("otherScripts/plotlyFunctions.R")
 source("utils.R")
@@ -44,3 +46,43 @@ countryList <- tibble(
     names(selectList) <- df$country
     return(selectList)
   })
+
+# geodata
+
+  countriesShape <- rgdal::readOGR(
+    dsn = "data/geoData/",
+    layer = "ne_50m_admin_0_countries",
+    stringsAsFactors = FALSE)
+
+  CHEregionsShape <- rgdal::readOGR(
+    dsn = "data/geoData/",
+    layer = "swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET",
+    stringsAsFactors = FALSE) %>%
+    sp::spTransform(countriesShape@proj4string)
+
+  cantonNames <- tibble(
+    region = c(
+      "ZH", "BE", "LU", "UR", "SZ",
+      "OW", "NW", "GL", "ZG", "FR",
+      "SO", "BS", "BL", "SH", "AR",
+      "AI", "SG", "GR", "AG", "TG",
+      "TI", "VD", "VS", "NE", "GE", "JU"),
+    KANTONSNUM = c(
+      as.character(1:26)
+    )
+  )
+
+  CHEregionsShape@data <- left_join(
+    CHEregionsShape@data,
+    cantonNames,
+    by = "KANTONSNUM"
+  )
+  CHEregionsShape@data$ADM0_A3_IS <- "CHE"
+
+  ZAFregionsShape <- rgdal::readOGR(
+    dsn = "data/geoData/",
+    layer = "zaf_admbnda_adm1_2016SADB_OCHA",
+    stringsAsFactors = FALSE)
+  ZAFregionsShape@data$ADM0_A3_IS <- "ZAF"
+  ZAFregionsShape@data$region <- ZAFregionsShape@data$ADM1_EN %>% recode("Nothern Cape" = "Northern Cape")
+  ZAFregionsShape@data$NAME <- ZAFregionsShape@data$region

@@ -25,7 +25,8 @@ dashboardPage(title = "COVID-19 Re",
       ),
       tabItem("mapPlot",
         fluidRow(
-          uiOutput("mapPlotUI")
+          uiOutput("mapPlotUI"),
+
         )
       ),
       tabItem("about",

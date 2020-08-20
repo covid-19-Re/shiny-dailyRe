@@ -187,3 +187,55 @@ getLOESSCases <- function(dates, count_data, days_incl = 21, degree = 1, truncat
   }
   return(normalized_smoothed_counts)
 }
+
+mapLabels <- function(shapeFileData, mainLabel = "cases14d") {
+  if (mainLabel == "cases14d") {
+    labelOrder <- c("cases14d", "re")
+  } else (
+    labelOrder <- c("re", "cases14d")
+  )
+
+  mapLabels <- as_tibble(shapeFileData) %>%
+    transmute(
+      name = str_c("<strong>", NAME, "</strong>"),
+      cases14d = if_else(is.na(cases14d),
+        "<br>No data available",
+        str_c("<br>", round(cases14d, 3), " cases / 100'000 / 14d (", dateCases, ")")),
+      re = if_else(is.na(median_R_mean),
+        "<br>No R<sub>e</sub> estimate available",
+        str_c("<br>R<sub>e</sub>: ", round(median_R_mean, 3), " ",
+        "(", round(median_R_lowHPD, 3), " - ", round(median_R_highHPD, 3), ") (", dateEstimates, ")" ))
+    ) %>%
+    transmute(
+      label = str_c(name, .data[[labelOrder[1]]], .data[[labelOrder[2]]])) %>%
+    .$label %>%
+    lapply(htmltools::HTML)
+  return(mapLabels)
+}
+
+addPolygonLayer <- function(map, shapeFile, fillColor, group, labels, options = pathOptions()) {
+  map <- map %>%
+    addPolygons(
+      data = shapeFile,
+      fillColor = fillColor,
+      weight = 2,
+      opacity = 1,
+      color = "white",
+      dashArray = "3",
+      fillOpacity = 0.7,
+      highlight = highlightOptions(
+        weight = 2,
+        color = "#666",
+        dashArray = "",
+        fillOpacity = 0.7,
+        bringToFront = TRUE),
+      label = labels,
+      labelOptions = labelOptions(
+        style = list("font-weight" = "normal", padding = "3px 8px"),
+        textsize = "15px",
+        direction = "auto"),
+      group = group,
+      options = options)
+
+  return(map)
+}
