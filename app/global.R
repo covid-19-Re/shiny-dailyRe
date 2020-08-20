@@ -68,9 +68,11 @@ countryList <- tibble(
       "AI", "SG", "GR", "AG", "TG",
       "TI", "VD", "VS", "NE", "GE", "JU"),
     KANTONSNUM = c(
-      as.character(1:26)
+      1:26
     )
   )
+
+  CHEregionsShape@data$KANTONSNUM <- as.integer(CHEregionsShape@data$KANTONSNUM)
 
   CHEregionsShape@data <- left_join(
     CHEregionsShape@data,
