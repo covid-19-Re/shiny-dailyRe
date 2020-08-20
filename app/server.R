@@ -283,7 +283,7 @@ server <- function(input, output, session) {
         fillColor = ~repal(median_R_mean), group = "median Re",
         labels = countryReLabels) %>%
       addLegend(pal = repal, opacity = 0.7, title = "Most recent R<sub>e</sub> estimate",
-        values = ~median_R_mean, data = countriesShape, ,
+        values = ~median_R_mean, data = countriesShape,
         position = "bottomright", group = "median Re") %>%
       addEasyButton(easyButton(
         icon = "fa-globe", title = "Reset Zoom",
@@ -305,7 +305,7 @@ server <- function(input, output, session) {
   observeEvent(input$mapPlot_groups, {
     mymap <- leafletProxy("mapPlot")
     isolate({
-      if (length(input$mapPlot_groups) > 1) {
+      if (length(input$mapPlot_groups) > 1){
         mymap %>%
           hideGroup(stateVals$lastMapGroup)
         stateVals$lastMapGroup <- if_else(
