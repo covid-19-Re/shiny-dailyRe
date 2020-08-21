@@ -395,7 +395,8 @@ server <- function(input, output, session) {
         selectizeInput("countrySelect", i18n()$t("Countries"),
           countryList,
           selected = "CHE", multiple = TRUE, width = "100%", size = NULL,
-          options = list(plugins = list("remove_button"))
+          options = list(plugins = list("remove_button"),
+            closeAfterSelect = TRUE, hideSelected = TRUE, sortField = "label")
         ),
         uiOutput("quickselectUI"),
         conditionalPanel(
