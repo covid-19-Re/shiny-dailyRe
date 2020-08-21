@@ -632,4 +632,12 @@ server <- function(input, output, session) {
         )
       )
     })
+
+  # output$test <- renderPrint({
+  #   list(
+  #     input$mapPlot_bounds,
+  #     input$mapPlot_zoom,
+  #     input$mapPlot_center
+  #   )
+  # })
 }
