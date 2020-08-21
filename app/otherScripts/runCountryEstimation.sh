@@ -33,7 +33,7 @@ owncloudcmd -n -s ../data/BAG \
 echo "running R script to extract BAG data & calculate delays ..."
 runRScript format_BAG_data.R
 
-for i in "AFG" "ALB" "ATA" "DZA" "ASM" "AND" "AGO" "ATG" "AZE" "AZE" \
+for i in "AFG" "ALB" "ATA" "DZA" "ASM" "AND" "AGO" "ATG" "AZE" \
          "ARG" "AUS" "AUT" "BHS" "BHR" "BGD" "ARM" "ARM" "BRB" "BEL" \
          "BMU" "BTN" "BOL" "BIH" "BWA" "BVT" "BRA" "BLZ" "IOT" "SLB" \
          "VGB" "BRN" "BGR" "MMR" "BDI" "BLR" "KHM" "CMR" "CAN" "CPV" \

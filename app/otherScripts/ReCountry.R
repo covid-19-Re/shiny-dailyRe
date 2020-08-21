@@ -23,7 +23,7 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("GGY")
+  args <- c("NLD")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -210,11 +210,7 @@ if (!dir.exists(basePath)) {
         deconvolvedCountryData <- bind_rows(deconvolvedData)
         countryDataPath <- file.path(basePath, str_c(args["country"], "-DeconvolutedData.rds"))
       if (dim(deconvolvedCountryData)[1] == 0) {
-        deconvolvedCountryData <- readRDS(here::here("app", "data", "DeconvolutedDataBLANKS.rds"))
-        saveRDS(deconvolvedCountryData, file = countryDataPath)
-        countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
-        countryEstimates <- readRDS(here::here("app", "data", "EstimatesBLANKS.rds"))
-        saveRDS(countryEstimates, file = countryDataPath)
+        print("no data remaining")
       } else {
         saveRDS(deconvolvedCountryData, file = countryDataPath)
       # Re Estimation
