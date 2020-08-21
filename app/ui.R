@@ -16,7 +16,7 @@ dashboardPage(title = "COVID-19 Re",
     tabItems(
       tabItem("plots",
         fluidRow(column(12,
-          uiOutput("plotUI"),
+          uiOutput("timeseriesPlotUI"),
         )),
         fluidRow(
             uiOutput("methodsUI"),
