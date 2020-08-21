@@ -47,10 +47,3 @@ countryList <- tibble(
     names(selectList) <- df$country
     return(selectList)
   })
-
-# geodata
-
-  countriesShape <- rgdal::readOGR(
-    dsn = "data/geoData/",
-    layer = "ne_50m_admin_0_countries",
-    stringsAsFactors = FALSE)

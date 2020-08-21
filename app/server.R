@@ -163,9 +163,8 @@ server <- function(input, output, session) {
       return(worldMapData)
   })
 
-  output$mapPlot <- renderLeaflet({
+  countriesShape <- reactive({
     worldMapData <- worldMapData()
-    
     countriesShape <- rgdal::readOGR(
       dsn = "data/geoData/",
       layer = "ne_50m_admin_0_countries",
@@ -175,16 +174,35 @@ server <- function(input, output, session) {
       countriesShape@data,
       filter(worldMapData, region == ADM0_A3_IS),
       by = "ADM0_A3_IS")
-    countryCasesLabels <- mapLabels(shapeFileData = countriesShape@data, mainLabel = "cases14d")
-    countryReLabels <- mapLabels(shapeFileData = countriesShape@data, mainLabel = "re")
 
+    return(countriesShape)
+  })
+
+  cases14pal <- reactive({
     cases14pal <- colorBin("RdYlGn",
       bins = c(seq(0, 500, 50), Inf),
-      domain = countriesShape@data$cases14d,
+      domain = countriesShape()@data$cases14d,
       reverse = TRUE)
+    
+    return(cases14pal)
+  })
+
+  repal <- reactive({
     repal <- colorNumeric("RdYlGn",
-      domain = countriesShape@data$median_R_mean,
+      domain = countriesShape()@data$median_R_mean,
       reverse = TRUE)
+    return(repal)
+  })
+
+
+  output$mapPlot <- renderLeaflet({
+    worldMapData <- worldMapData()
+    countriesShape <- countriesShape()
+    cases14pal <- cases14pal()
+    repal <- repal()
+
+    countryCasesLabels <- mapLabels(shapeFileData = countriesShape@data, mainLabel = "cases14d")
+    countryReLabels <- mapLabels(shapeFileData = countriesShape@data, mainLabel = "re")
 
     map <- leaflet(options = leafletOptions(minZoom = 2)) %>%
       addTiles() %>%
@@ -218,7 +236,7 @@ server <- function(input, output, session) {
         by = "KANTONSNUM"
       )
       CHEregionsShape@data$ADM0_A3_IS <- "CHE"
-      
+
       CHEregionsShape@data <- left_join(
         CHEregionsShape@data,
         worldMapData,
@@ -248,7 +266,7 @@ server <- function(input, output, session) {
         ZAFregionsShape@data$ADM0_A3_IS <- "ZAF"
         ZAFregionsShape@data$region <- ZAFregionsShape@data$ADM1_EN %>% recode("Nothern Cape" = "Northern Cape")
         ZAFregionsShape@data$NAME <- ZAFregionsShape@data$region
-      
+
       ZAFregionsShape@data <- left_join(
         ZAFregionsShape@data,
         worldMapData,
@@ -270,21 +288,16 @@ server <- function(input, output, session) {
           labels = zafReLabels,
           options = pathOptions(pane = "region"))
     }
-    
+
     map <- map %>%
       addPolygonLayer(
         shapeFile = countriesShape,
         fillColor = ~cases14pal(cases14d), group = "Cases / 100'000 / 14 d",
         labels = countryCasesLabels) %>%
-      addLegend(pal = cases14pal, values = c(seq(0, 500, 50), Inf), opacity = 0.7, title = "Cases / 100'000 / 14 d",
-        position = "bottomright", group = "Cases / 100'000 / 14 d") %>%
       addPolygonLayer(
         shapeFile = countriesShape,
         fillColor = ~repal(median_R_mean), group = "median Re",
         labels = countryReLabels) %>%
-      addLegend(pal = repal, opacity = 0.7, title = "Most recent R<sub>e</sub> estimate",
-        values = ~median_R_mean, data = countriesShape,
-        position = "bottomright", group = "median Re") %>%
       addEasyButton(easyButton(
         icon = "fa-globe", title = "Reset Zoom",
         onClick = JS("function(btn, map) { map.setZoom(2); }"))) %>%
@@ -295,37 +308,29 @@ server <- function(input, output, session) {
       setMaxBounds(lng1 = 272.1094, lat1 = 84.73839, lng2 = -222.5391, lat2 = -71.74643) %>%
       addScaleBar(position = "bottomleft") %>%
       addLayersControl(
-        overlayGroups = c("median Re", "Cases / 100'000 / 14 d"),
+        baseGroups = c("median Re", "Cases / 100'000 / 14 d"),
         options = layersControlOptions(collapsed = FALSE, hideSingleBase = TRUE)
       )
 
     return(map)
   })
 
-  observeEvent(input$mapPlot_groups, {
-    mymap <- leafletProxy("mapPlot")
-    isolate({
-      if (length(input$mapPlot_groups) > 1){
-        mymap %>%
-          hideGroup(stateVals$lastMapGroup)
-        stateVals$lastMapGroup <- if_else(
-          stateVals$lastMapGroup == "median Re",
-            "Cases / 100'000 / 14 d",
-            "median Re"
-          )
-      } else {
-        if (input$mapPlot_groups == "median Re") {
-          stateVals$lastMapGroup <- "median Re"
-          mymap %>%
-            hideGroup("Cases / 100'000 / 14 d")
-        }
-        else if (input$mapPlot_groups == "Cases / 100'000 / 14 d") {
-          stateVals$lastMapGroup <- "Cases / 100'000 / 14 d"
-          mymap %>%
-            hideGroup("median Re")
-        }
-      }
-    })
+  observeEvent(input$mapPlot_groups,{
+    mapPlot <- leafletProxy("mapPlot")
+    if (input$mapPlot_groups == "Cases / 100'000 / 14 d") {
+      removeControl(mapPlot, "reLegend")
+      mapPlot %>% addLegend(
+        pal = cases14pal(), values = c(seq(0, 500, 50), Inf), opacity = 0.7,
+        title = "Cases / 100'000 / 14 d",
+        position = "bottomright", group = "Cases / 100'000 / 14 d", layerId = "casesLegend")
+    }
+    else if (input$mapPlot_groups == "median Re") {
+      removeControl(mapPlot, "casesLegend")
+      mapPlot %>%
+        addLegend(pal = repal(), opacity = 0.7, title = "Most recent R<sub>e</sub> estimate",
+          values = ~median_R_mean, data = countriesShape(),
+          position = "bottomright", group = "median Re", layerId = "reLegend")
+    }
   })
 
   # ui
