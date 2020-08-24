@@ -240,3 +240,30 @@ addPolygonLayer <- function(map, shapeFile, fillColor, group, labels, options = 
 
   return(map)
 }
+
+regionCheckboxInput <- function(checkboxGroupId, label, choices, zoomLabel) {
+  out <- list()
+
+  header <- glue::glue(
+    "<div id='{checkboxGroupId}' class='form-group shiny-input-checkboxgroup shiny-input-container shiny-bound-input'>
+      <label class='control-label' for='{checkboxGroupId}'>{label}</label>
+      <div class='shiny-options-group'>")
+
+
+  checkboxes <- list()
+  for (i in seq_along(choices)) {
+    checkboxes[[i]] <- glue::glue(
+      "<div class='checkbox'>",
+        "<label>",
+            "<input type='checkbox' name='{checkboxGroupId}' value='{choiceValue}'>",
+              "<span>{choiceName}",
+              "<a id='zoom{choiceValue}' href='#' class='action-button shiny-bound-input' style='display: inline'>{zoomLabel}</a>",
+              "</span>",
+        "</label>",
+      "</div>",
+      choiceValue = choices[i],
+      choiceName = names(choices)[i])
+  }
+
+  return(HTML(str_c(header, str_c(checkboxes, collapse = ""), "</div></div>")))   
+}

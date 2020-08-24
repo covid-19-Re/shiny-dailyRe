@@ -336,9 +336,8 @@ server <- function(input, output, session) {
       )
     } else {
       ui <- tagList(
-        checkboxGroupInput("regionCountrySelect", i18n()$t("Display regional data "),
-          choices = regionCountries()
-        )
+        regionCheckboxInput("regionCountrySelect", label = i18n()$t("Display regional data"),
+          choices = regionCountries(), zoomLabel = "Zoom")
       )
     }
     return(ui)
@@ -471,7 +470,6 @@ server <- function(input, output, session) {
         bins = c(seq(0, 500, 50), Inf),
         domain = countriesShape()@data$cases14d,
         reverse = TRUE)
-      
       return(cases14pal)
     })
 
@@ -591,6 +589,17 @@ server <- function(input, output, session) {
             values = ~median_R_mean, data = countriesShape(),
             position = "bottomright", group = "median Re", layerId = "reLegend")
       }
+    })
+
+    # region zoom buttons
+    observeEvent(input$zoomCHE, {
+       mapPlot <- leafletProxy("mapPlot")
+       mapPlot %>% setView(lng = 8.360596, lat = 46.84141, zoom = 8)
+    })
+
+    observeEvent(input$zoomZAF, {
+       mapPlot <- leafletProxy("mapPlot")
+       mapPlot %>% setView(lng = 25.53223, lat = -28.38174, zoom = 6)
     })
 
 # about page
