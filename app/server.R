@@ -396,13 +396,11 @@ server <- function(input, output, session) {
   # shapeFiles
     countriesShape <- reactive({
       worldMapData <- worldMapData()
-      countriesShape <- rgdal::readOGR(
-        dsn = "data/geoData/",
-        layer = "ne_50m_admin_0_countries",
-        stringsAsFactors = FALSE)
 
-      countriesShape@data <- left_join(
-        countriesShape@data,
+      countriesShape <- st_read("data/geoData/ne_10m_admin_0_countries.shp", quiet = TRUE)
+
+      countriesShape <- left_join(
+        countriesShape,
         filter(worldMapData, region == ADM0_A3_IS),
         by = "ADM0_A3_IS")
 
@@ -411,11 +409,8 @@ server <- function(input, output, session) {
 
     CHEregionsShape <- reactive({
       worldMapData <- worldMapData()
-      CHEregionsShape <- rgdal::readOGR(
-        dsn = "data/geoData/",
-        layer = "swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET",
-        stringsAsFactors = FALSE) %>%
-        sp::spTransform(countriesShape()@proj4string)
+      CHEregionsShape <- st_read("data/geoData/swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET.shp", quiet = TRUE) %>%
+        st_transform(st_crs(countriesShape())) %>% st_zm()
 
       cantonNames <- tibble(
         region = c(
@@ -429,17 +424,15 @@ server <- function(input, output, session) {
         )
       )
 
-      CHEregionsShape@data$KANTONSNUM <- as.integer(CHEregionsShape@data$KANTONSNUM)
-
-      CHEregionsShape@data <- left_join(
-        CHEregionsShape@data,
+      CHEregionsShape <- left_join(
+        CHEregionsShape,
         cantonNames,
         by = "KANTONSNUM"
       )
-      CHEregionsShape@data$ADM0_A3_IS <- "CHE"
+      CHEregionsShape$ADM0_A3_IS <- "CHE"
 
-      CHEregionsShape@data <- left_join(
-        CHEregionsShape@data,
+      CHEregionsShape <- left_join(
+        CHEregionsShape,
         worldMapData,
         by = c("ADM0_A3_IS", "region")
       )
@@ -448,16 +441,13 @@ server <- function(input, output, session) {
 
     ZAFregionsShape <- reactive({
       worldMapData <- worldMapData()
-      ZAFregionsShape <- rgdal::readOGR(
-        dsn = "data/geoData/",
-        layer = "zaf_admbnda_adm1_2016SADB_OCHA",
-        stringsAsFactors = FALSE)
-      ZAFregionsShape@data$ADM0_A3_IS <- "ZAF"
-      ZAFregionsShape@data$region <- ZAFregionsShape@data$ADM1_EN %>% recode("Nothern Cape" = "Northern Cape")
-      ZAFregionsShape@data$NAME <- ZAFregionsShape@data$region
+      ZAFregionsShape <- st_read("data/geoData/zaf_admbnda_adm1_2016SADB_OCHA.shp", quiet = TRUE)
+      ZAFregionsShape$ADM0_A3_IS <- "ZAF"
+      ZAFregionsShape$region <- ZAFregionsShape$ADM1_EN %>% recode("Nothern Cape" = "Northern Cape")
+      ZAFregionsShape$NAME <- ZAFregionsShape$region
 
-      ZAFregionsShape@data <- left_join(
-        ZAFregionsShape@data,
+      ZAFregionsShape <- left_join(
+        ZAFregionsShape,
         worldMapData,
       by = c("ADM0_A3_IS", "region"))
 
@@ -468,14 +458,14 @@ server <- function(input, output, session) {
     cases14pal <- reactive({
       cases14pal <- colorBin("RdYlGn",
         bins = c(seq(0, 500, 50), Inf),
-        domain = countriesShape()@data$cases14d,
+        domain = countriesShape()$cases14d,
         reverse = TRUE)
       return(cases14pal)
     })
 
     repal <- reactive({
       repal <- colorNumeric("RdYlGn",
-        domain = countriesShape()@data$median_R_mean,
+        domain = countriesShape()$median_R_mean,
         reverse = TRUE)
       return(repal)
     })
@@ -487,18 +477,21 @@ server <- function(input, output, session) {
       cases14pal <- cases14pal()
       repal <- repal()
 
-      countryCasesLabels <- mapLabels(shapeFileData = countriesShape@data, mainLabel = "cases14d")
-      countryReLabels <- mapLabels(shapeFileData = countriesShape@data, mainLabel = "re")
+      countryCasesLabels <- mapLabels(shapeFileData = countriesShape, mainLabel = "cases14d")
+      countryReLabels <- mapLabels(shapeFileData = countriesShape, mainLabel = "re")
 
       map <- leaflet(options = leafletOptions(minZoom = 2)) %>%
         addTiles() %>%
         addMapPane("countries", zIndex = 410) %>%
-        addMapPane("region", zIndex = 420) 
+        addMapPane("region", zIndex = 420)
 
       if ("CHE" %in% input$regionCountrySelect) {
         CHEregionsShape <- CHEregionsShape()
-        cheCasesLabels <- mapLabels(shapeFileData = CHEregionsShape@data, mainLabel = "cases14d")
-        cheReLabels <- mapLabels(shapeFileData = CHEregionsShape@data, mainLabel = "re")
+        cheCasesLabels <- mapLabels(shapeFileData = CHEregionsShape, mainLabel = "cases14d")
+        cheReLabels <- mapLabels(shapeFileData = CHEregionsShape, mainLabel = "re")
+
+        # remove CHE from countries
+        countriesShape <- filter(countriesShape, ADM0_A3_IS != "CHE")
 
         map <- map %>%
           addPolygonLayer(
@@ -516,8 +509,11 @@ server <- function(input, output, session) {
       if ("ZAF" %in% input$regionCountrySelect) {
         ZAFregionsShape <- ZAFregionsShape()
 
-        zafCasesLabels <- mapLabels(shapeFileData = ZAFregionsShape@data, mainLabel = "cases14d")
-        zafReLabels <- mapLabels(shapeFileData = ZAFregionsShape@data, mainLabel = "re")
+        zafCasesLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "cases14d")
+        zafReLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "re")
+
+          # remove ZAF from countries
+        countriesShape <- filter(countriesShape, ADM0_A3_IS != "ZAF")
 
         map <- map %>%
           addPolygonLayer(
