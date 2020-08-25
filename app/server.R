@@ -397,7 +397,7 @@ server <- function(input, output, session) {
     countriesShape <- reactive({
       worldMapData <- worldMapData()
 
-      countriesShape <- st_read("data/geoData/ne_10m_admin_0_countries.shp", quiet = TRUE)
+      countriesShape <- st_read("data/geoData/ne_50m_admin_0_countries.shp", quiet = TRUE)
 
       countriesShape <- left_join(
         countriesShape,
