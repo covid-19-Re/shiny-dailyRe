@@ -50,11 +50,11 @@ dashboardPage(title = "COVID-19 Re",
               div(
                 div(style = "display: inline-block;vertical-align:top;width:40%",
                   numericInput("reMidpoint", "Breakpoint", value = 1,
-                    min = 0, max = 4, step = 1)
+                    min = 0, max = 20, step = 0.1)
                 ),
                 div(style = "display: inline-block;vertical-align:top;width:40%",
                   numericInput("reCutoff", "Cutoff",
-                    value = 4,
+                    value = 2,
                     min = 0, max = 20, step = 0.1)
                 )
               )

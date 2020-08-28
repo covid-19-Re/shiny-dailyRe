@@ -474,7 +474,7 @@ server <- function(input, output, session) {
   # palettes
     cases14pal <- reactive({
       cases14pal <- divergentColorPal(
-        palette = c("Spectral"),
+        palette = c("RdYlGn"),
         domain = c(0, input$casesCutoff),
         midpoint = input$casesMidpoint,
         reverse = TRUE)
@@ -492,7 +492,7 @@ server <- function(input, output, session) {
     })
 
   # outputs
-  
+
     output$mapPlot <- renderLeaflet({
       worldMapData <- worldMapData()
       countriesShape <- countriesShape()
@@ -557,12 +557,6 @@ server <- function(input, output, session) {
           shapeFile = countriesShape,
           fillColor = ~cases14pal(cases14d), group = "Cases / 100'000 / 14 d",
           labels = countryCasesLabels) %>%
-        addLegend(
-            pal = cases14pal, opacity = 0.7, title = "Cases / 100'000 / 14 d",
-            values = seq(0, input$casesCutoff, 100),
-            labFormat = casesLegendLabels,
-            data = countriesShape(),
-            position = "bottomright", group = "Cases / 100'000 / 14 d", layerId = "casesLegend") %>%
         addPolygonLayer(
           shapeFile = countriesShape,
           fillColor = ~repal(median_R_mean), group = "median Re",
@@ -581,7 +575,25 @@ server <- function(input, output, session) {
         ) %>%
         setView(
           lng = stateVals$mapViewCenter$lng, lat = stateVals$mapViewCenter$lat,
-          zoom = stateVals$mapViewZoom)
+          zoom = stateVals$mapViewZoom) %>%
+        hideGroup(isolate(selectedMapGroup$groups)) %>%
+        showGroup(isolate(selectedMapGroup$group))
+
+      if (isolate(selectedMapGroup$group) == "Cases / 100'000 / 14 d") {
+        map <- map %>%
+          addLegend(
+            pal = cases14pal, opacity = 0.9, title = "Cases / 100'000 / 14 d",
+            values = seq(0, input$casesCutoff, 100),
+            labFormat = casesLegendLabels,
+            data = countriesShape(),
+            position = "bottomright", group = "Cases / 100'000 / 14 d", layerId = "casesLegend")
+      } else {
+        map <- map %>%
+          addLegend(pal = repal, opacity = 0.9, title = "Most recent R<sub>e</sub> estimate",
+            values = c(seq(0, input$reCutoff, 0.2)),
+            data = countriesShape(),
+            position = "bottomright", group = "median Re", layerId = "reLegend")
+      }
 
       return(map)
     })
@@ -597,68 +609,83 @@ server <- function(input, output, session) {
         )
       )
     })
-  
+
     output$mapHist <- renderPlotly({
       validate(need(input$mapPlot_groups, ""))
       countriesShape <- countriesShape()
 
       if (input$mapPlot_groups == "Cases / 100'000 / 14 d") {
+        midpoint <- input$casesMidpoint
+        cutoff <- input$casesCutoff
         histPal <- cases14pal()
         binwidth <- 10
-
-        histData <- countriesShape %>%
+        histDataRaw <- countriesShape %>%
           as_tibble() %>%
-          mutate(bins = cut(cases14d,
-            breaks = seq(0, max(cases14d, na.rm = TRUE) + binwidth, binwidth))) %>%
-          group_by(bins) %>%
-          summarize(
-            n = n(),
-            countries = str_c(ADM0_A3_IS, collapse = ", "),
-            .groups = "keep"
-          ) %>%
-          ungroup() %>%
-          complete(bins, fill = list(n = 0, countries = "", color = "gray")) %>%
-          mutate(
-            midpoint = seq(binwidth / 2, by = binwidth, length.out = length(bins)),
-            color = histPal(midpoint)) %>%
-          filter(!is.na(bins))
+          rename(variable = cases14d)
         title <- "Cases / 100'000 / 14 d"
       } else {
+        midpoint <- input$reMidpoint
+        cutoff <- input$reCutoff
         histPal <- repal()
         binwidth <- 0.1
-
-        histData <- countriesShape %>%
+        histDataRaw <- countriesShape %>%
           as_tibble() %>%
-          mutate(bins = cut(median_R_mean,
-            breaks = seq(0, max(median_R_mean, na.rm = TRUE) + binwidth, binwidth))) %>%
-          group_by(bins) %>%
-          summarize(
-            n = n(),
-            countries = str_c(ADM0_A3_IS, collapse = ", "),
-            .groups = "keep"
-          ) %>%
-          ungroup() %>%
-          complete(bins, fill = list(n = 0, countries = "", color = "gray")) %>%
-          mutate(
-            midpoint = seq(binwidth / 2, by = binwidth, length.out = length(bins)),
-            color = histPal(midpoint)) %>%
-          filter(!is.na(bins))
-        title <- "median Re"
+          rename(variable = median_R_mean)
+        title <- "median R<sub>e</sub>"
       }
-
+      
+      histData <- histDataRaw %>%
+        mutate(bins = cut(variable,
+          breaks = seq(0, max(variable, na.rm = TRUE) + binwidth, binwidth))) %>%
+        group_by(bins) %>%
+        summarize(
+          n = n(),
+          countries = str_c(ADM0_A3_IS, collapse = ", "),
+          .groups = "keep"
+        ) %>%
+        ungroup() %>%
+        complete(bins, fill = list(n = 0, countries = "", color = "gray")) %>%
+        mutate(
+          midpoint = seq(binwidth / 2, by = binwidth, length.out = length(bins)),
+          color = histPal(midpoint)) %>%
+        filter(!is.na(bins))
+      
+      quantiles <- quantile(histDataRaw$variable, na.rm = TRUE)
+      quantilesText <- glue::glue(
+        "<b>Quantiles</b><br>",
+        " min: {round(quantiles[1], 2)}<br>",
+        "0.25: {round(quantiles[2], 2)}<br>",
+        "0.50: {round(quantiles[3], 2)}<br>",
+        "0.75: {round(quantiles[4], 2)}<br>",
+        " max: {round(quantiles[5], 2)}<br>"
+      )
+  
       plot <- plot_ly(data = histData) %>%
         add_bars(x = ~midpoint, y = ~n, color = ~bins, colors = ~color,
           text = ~str_trunc(countries, 50),
           hoverinfo = "text",
           showlegend = FALSE) %>%
-        # add_segments(x = 60, xend = 60, y = 0, yend = max(histData$n),
-        #   showlegend = FALSE) %>%
-        # add_segments(x = 300, xend = 300, y = 0, yend = max(histData$n),
-        #   showlegend = FALSE) %>%
-        layout(xaxis = list(fixedrange = TRUE, title = title), yaxis = list(fixedrange = TRUE)) %>%
+          add_segments(x = midpoint, xend = midpoint, y = 0, yend = max(histData$n),
+            showlegend = FALSE) %>%
+          add_segments(x = cutoff, xend = cutoff, y = 0, yend = max(histData$n),
+            showlegend = FALSE) %>%
+        layout(
+          xaxis = list(range = c(0, 2 * cutoff), fixedrange = TRUE, title = title),
+          yaxis = list(fixedrange = TRUE),
+          annotations = list(list(
+            x = 1, y = 1, xref = "paper", yref = "paper",
+            width = 100,
+            height = 100,
+            text = quantilesText,
+            valign = "top",
+            showarrow = FALSE,
+            xanchor = "right", yanchor = "top", align = "left",
+            # xshift = helpBoxShift[1], yshift = helpBoxShift[2],
+            font = list(size = 12, color = "black")
+          ))) %>%
         config(displaylogo = FALSE, modeBarButtons = list(list("toImage")),
           toImageButtonOptions = list(format = "png", width = 1200, height = 800, scale = 1, filename = "histogram"))
-    
+      
       return(plot)
     })
 
@@ -669,26 +696,36 @@ server <- function(input, output, session) {
     })
 
   # map observers
-    # color scale values
-
     # switch legend (workaround for baseGroup limitation)
+      selectedMapGroup <- reactiveValues(
+        group = "Cases / 100'000 / 14 d",
+        groups = c("Cases / 100'000 / 14 d", "median Re")
+      )
+
       observeEvent(input$mapPlot_groups, {
         mapPlot <- leafletProxy("mapPlot")
-        if (input$mapPlot_groups == "Cases / 100'000 / 14 d") {
-          removeControl(mapPlot, "reLegend")
-          mapPlot %>% addLegend(
-            pal = cases14pal(), opacity = 0.7, title = "Cases / 100'000 / 14 d",
-            values = seq(0, input$casesCutoff, 100),
-            labFormat = casesLegendLabels,
-            data = countriesShape(),
-            position = "bottomright", group = "Cases / 100'000 / 14 d", layerId = "casesLegend")
-        }
-        else if (input$mapPlot_groups == "median Re") {
-          removeControl(mapPlot, "casesLegend")
+        selectedMapGroup$group <- input$mapPlot_groups[1]
+        if (selectedMapGroup$group == "Cases / 100'000 / 14 d") {
           mapPlot %>%
-            addLegend(pal = repal(), opacity = 0.7, title = "Most recent R<sub>e</sub> estimate",
-              values = ~median_R_mean, data = countriesShape(),
-              position = "bottomright", group = "median Re", layerId = "reLegend")
+            removeControl("reLegend") %>%
+            addLegend(
+              pal = cases14pal(), opacity = 0.9, title = "Cases / 100'000 / 14 d",
+              values = c(seq(0, input$casesCutoff, 100)),
+              labFormat = casesLegendLabels,
+              data = countriesShape(),
+              position = "bottomright", group = "Cases / 100'000 / 14 d", layerId = "casesLegend") %>%
+            hideGroup(selectedMapGroup$groups) %>%
+            showGroup(selectedMapGroup$group)
+        }
+        else if (selectedMapGroup$group == "median Re") {
+          mapPlot %>%
+            removeControl("casesLegend") %>%
+            addLegend(pal = repal(), opacity = 0.9, title = "Most recent R<sub>e</sub> estimate",
+              values = c(seq(0, input$reCutoff, 0.2)),
+              data = countriesShape(),
+              position = "bottomright", group = "median Re", layerId = "reLegend") %>%
+            hideGroup(selectedMapGroup$groups) %>%
+            showGroup(selectedMapGroup$group)
         }
       })
 
