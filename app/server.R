@@ -192,7 +192,7 @@ server <- function(input, output, session) {
           div(class = "quickSelect", actionLink("northAmericaSelect", i18n()$t("North America"))),
           div(class = "quickSelect", actionLink("oceaniaSelect", i18n()$t("Oceania"))),
           div(class = "quickSelect", actionLink("southAmericaSelect", i18n()$t("South America"))),
-          div(class = "quickSelect", actionLink("clearSelect", i18n()$t("Clear all"))),
+          div(class = "quickSelect", actionLink("clearSelect", i18n()$t("Clear all"), class = "fa fa-minus-circle"))
         )
       )
       return(ui)
