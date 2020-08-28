@@ -21,6 +21,14 @@
   margin-right:3px !important;
 }
 
+.colorScaleContainer {
+  margin-top:0px !important;
+  margin-left:12px !important;
+  margin-bottom:15px !important;
+  margin-right:12px !important;
+}
+
+
 .selectize-control.multi .selectize-input:after {
   content: '\e259'; /*This will draw the icon*/
   color: gray;

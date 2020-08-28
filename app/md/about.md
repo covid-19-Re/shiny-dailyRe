@@ -4,6 +4,8 @@
 
 Details on the method are available [here](https://ibz-shiny.ethz.ch/covid-19-re/methods.pdf).
 
+**Disclaimer**: The quality of the R<sub>e</sub> estimate for a particular country or region relies on the quality of the data set. We only check the quality of data for some countries, in particular Switzerland and some surrounding countries.  Before drawing conclusions for a particular country, check the data quality. In particular, spikes in reporting on particular days or missing data on many days can bias Re estimates.
+
 #### Contributors:
 
   - Jérémie Scire, ETH Zürich, D-BSSE

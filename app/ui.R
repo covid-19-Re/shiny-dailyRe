@@ -26,7 +26,40 @@ dashboardPage(title = "COVID-19 Re",
       tabItem("mapPlot",
         fluidRow(
           uiOutput("mapPlotUI")
-          # verbatimTextOutput("test")
+        ),
+        fluidRow(
+          uiOutput("mapMethodsUI"),
+          box(width = 4, title = "Histogram",
+            plotlyOutput("mapHist", height = "250px"),
+            conditionalPanel(
+              condition = "input.mapPlot_groups == \"Cases / 100'000 / 14 d\"",
+              div(
+                div(style = "display: inline-block;vertical-align:top;width:40%",
+                  numericInput("casesMidpoint", "Breakpoint", value = 60,
+                    min = 0, max = 1500, step = 1)
+                ),
+                div(style = "display: inline-block;vertical-align:top;width:40%",
+                  numericInput("casesCutoff", "Cutoff",
+                    value = 300,
+                    min = 0, max = 1500, step = 50)
+                )
+              )
+            ),
+            conditionalPanel(
+              condition = "input.mapPlot_groups == 'median Re'",
+              div(
+                div(style = "display: inline-block;vertical-align:top;width:40%",
+                  numericInput("reMidpoint", "Breakpoint", value = 1,
+                    min = 0, max = 4, step = 1)
+                ),
+                div(style = "display: inline-block;vertical-align:top;width:40%",
+                  numericInput("reCutoff", "Cutoff",
+                    value = 4,
+                    min = 0, max = 20, step = 0.1)
+                )
+              )
+            )
+          )
         )
       ),
       tabItem("about",

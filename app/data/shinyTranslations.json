@@ -343,7 +343,7 @@
       "it-ch": "Tipo di dati"
     },
     {
-      "en-gb": "Select data type for Comparison",
+      "en-gb": "Select data type for comparison",
       "de-ch": "Datentyp zum Vergleich auswählen",
       "fr-ch": "Choisir le type de donné",
       "it-ch": "Tipo di dati"
@@ -359,6 +359,12 @@
       "de-ch": "Land",
       "fr-ch": "Pays",
       "it-ch": "Paese"
+    },
+    {
+      "en-gb": "Countries",
+      "de-ch": "Länder",
+      "fr-ch": "Pays",
+      "it-ch": "Paesi"
     },
     {
       "en-gb": "Confirmed cases",
@@ -455,7 +461,98 @@
       "de-ch": "",
       "fr-ch": "",
       "it-ch": ""
+    },
+    {
+      "en-gb": "Maps",
+      "de-ch": "Karten",
+      "fr-ch": "Plans",
+      "it-ch": "Mappe"
+    },
+    {
+      "en-gb": "Options",
+      "de-ch": "Optionen",
+      "fr-ch": "Options",
+      "it-ch": "Opzioni"
+    },
+    {
+      "en-gb": "More Options",
+      "de-ch": "Mehr Optionen",
+      "fr-ch": "Plus d'options",
+      "it-ch": "Più opzioni"
+    },
+    {
+      "en-gb": "Select estimation type to show",
+      "de-ch": "Schätzungsmethode wählen",
+      "fr-ch": "Sélectionnez le type d'estimation",
+      "it-ch": "Seleziona il tipo di stima"
+    },
+    {
+      "en-gb": "daily case numbers",
+      "de-ch": "Tägliche Fälle",
+      "fr-ch": "Numéros de cas quotidiens",
+      "it-ch": "Numeri di casi giornalieri"
+    },
+    {
+      "en-gb": "7-day average",
+      "de-ch": "7-Tage Mittel",
+      "fr-ch": "Moyenne sur 7 jours",
+      "it-ch": "Media di 7 giorni"
+    },
+    {
+      "en-gb": "Display case data as ...",
+      "de-ch": "Anzeige der Falldaten als",
+      "fr-ch": "Afficher les données de cas comme ...",
+      "it-ch": "Visualizza i dati del caso come ..."
+    },
+    {
+      "en-gb": "Africa",
+      "de-ch": "Afrika",
+      "fr-ch": "Afrique",
+      "it-ch": "Africa"
+    },
+    {
+      "en-gb": "Asia",
+      "de-ch": "Asien",
+      "fr-ch": "Asie",
+      "it-ch": "Asia"
+    },
+    {
+      "en-gb": "Europe",
+      "de-ch": "Europa",
+      "fr-ch": "Europe",
+      "it-ch": "Europa"
+    },
+    {
+      "en-gb": "North America",
+      "de-ch": "Nordamerika",
+      "fr-ch": "Amérique du Nord",
+      "it-ch": "Nord America"
+    },
+    {
+      "en-gb": "South America",
+      "de-ch": "Südamerika",
+      "fr-ch": "Amérique du Sud",
+      "it-ch": "Sud America"
+    },
+    {
+      "en-gb": "Clear all",
+      "de-ch": "Alle entfernen",
+      "fr-ch": "Enlever tout",
+      "it-ch": "Rimuovi tutto"
+    },
+    {
+      "en-gb": "Timeseries",
+      "de-ch": "Zeitreihen",
+      "fr-ch": "Séries chronologiques",
+      "it-ch": "Serie storica"
+    },
+    {
+      "en-gb": "Quick select",
+      "de-ch": "Alle Länder in Kontinent auswählen",
+      "fr-ch": "Séries chronologiques",
+      "it-ch": "Serie storica"
     }
+    
   ]
 }
 

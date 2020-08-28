@@ -2,13 +2,22 @@ server <- function(input, output, session) {
 
 # language switching
   stateVals <- reactiveValues(
-    lang = "en-gb", tabs = "ch")
+    lang = "en-gb",
+    tabs = "plots",
+    mapViewCenter = list(lng = 24.78515, lat =  33.72436),
+    mapViewZoom = 2,
+    regionCountrySelect = NULL)
 
   # record state on language change
   observeEvent(input$lang, {
       stateVals$lang <- input$lang
       stateVals$tabs <- input$tabs
-      stateVals$sidebarExpanded <- input$sidebarItemExpanded
+      if (!is.null(input$mapPlot_center)) {
+        stateVals$mapViewCenter <- input$mapPlot_center
+        stateVals$mapViewZoom <- input$mapPlot_zoom
+        stateVals$mapViewGroups <- input$mapPlot_groups
+        stateVals$regionCountrySelect <- input$regionCountrySelect
+      }
   })
 
   # translation
@@ -19,6 +28,13 @@ server <- function(input, output, session) {
     }
     # restore selected tabs
     updateTabItems(session, "tabs", selected = stateVals$tabs)
+    if (stateVals$tabs == "mapPlot") {
+      mapPlot <- leafletProxy("mapPlot")
+      mapPlot %>%
+        setView(
+          lng = stateVals$mapViewCenter$lng, lat = stateVals$mapViewCenter$lat,
+          zoom = stateVals$mapViewZoom)
+    }
     return(translator)
   })
 
@@ -166,8 +182,9 @@ server <- function(input, output, session) {
 
     output$quickselectUI <- renderUI({
       ui <- tagList(
-        HTML("<div class='form-group shiny-input-container' style='width: 100%;'>
-        <label class='control-label' for='quickselectButtons'>Choose all countries in continent:</label>"),
+        HTML(str_c("<div class='form-group shiny-input-container' style='width: 100%;'>
+        <label class='control-label' for='quickselectButtons'>",
+          i18n()$t("Quick select"), ":</label>")),  
         div(
           div(class = "quickSelect", actionLink("africaSelect", i18n()$t("Africa"))),
           div(class = "quickSelect", actionLink("asiaSelect", i18n()$t("Asia"))),
@@ -337,7 +354,7 @@ server <- function(input, output, session) {
     } else {
       ui <- tagList(
         regionCheckboxInput("regionCountrySelect", label = i18n()$t("Display regional data"),
-          choices = regionCountries(), zoomLabel = "Zoom")
+          choices = regionCountries(), selected = "", zoomLabel = "Zoom")
       )
     }
     return(ui)
@@ -456,29 +473,31 @@ server <- function(input, output, session) {
 
   # palettes
     cases14pal <- reactive({
-      cases14pal <- colorBin("RdYlGn",
-        bins = c(seq(0, 500, 50), Inf),
-        domain = countriesShape()$cases14d,
+      cases14pal <- divergentColorPal(
+        palette = c("Spectral"),
+        domain = c(0, input$casesCutoff),
+        midpoint = input$casesMidpoint,
         reverse = TRUE)
       return(cases14pal)
     })
 
     repal <- reactive({
-      repal <- colorNumeric("RdYlGn",
-        domain = countriesShape()$median_R_mean,
+
+      repal <- divergentColorPal(
+        palette = c("RdYlGn"),
+        domain = c(0, input$reCutoff),
+        midpoint = input$reMidpoint,
         reverse = TRUE)
       return(repal)
     })
 
   # outputs
+  
     output$mapPlot <- renderLeaflet({
       worldMapData <- worldMapData()
       countriesShape <- countriesShape()
       cases14pal <- cases14pal()
       repal <- repal()
-
-      countryCasesLabels <- mapLabels(shapeFileData = countriesShape, mainLabel = "cases14d")
-      countryReLabels <- mapLabels(shapeFileData = countriesShape, mainLabel = "re")
 
       map <- leaflet(options = leafletOptions(minZoom = 2)) %>%
         addTiles() %>%
@@ -491,6 +510,7 @@ server <- function(input, output, session) {
         cheReLabels <- mapLabels(shapeFileData = CHEregionsShape, mainLabel = "re")
 
         # remove CHE from countries
+
         countriesShape <- filter(countriesShape, ADM0_A3_IS != "CHE")
 
         map <- map %>%
@@ -529,11 +549,20 @@ server <- function(input, output, session) {
             options = pathOptions(pane = "region"))
       }
 
+      countryCasesLabels <- mapLabels(shapeFileData = countriesShape, mainLabel = "cases14d")
+      countryReLabels <- mapLabels(shapeFileData = countriesShape, mainLabel = "re")
+
       map <- map %>%
         addPolygonLayer(
           shapeFile = countriesShape,
           fillColor = ~cases14pal(cases14d), group = "Cases / 100'000 / 14 d",
           labels = countryCasesLabels) %>%
+        addLegend(
+            pal = cases14pal, opacity = 0.7, title = "Cases / 100'000 / 14 d",
+            values = seq(0, input$casesCutoff, 100),
+            labFormat = casesLegendLabels,
+            data = countriesShape(),
+            position = "bottomright", group = "Cases / 100'000 / 14 d", layerId = "casesLegend") %>%
         addPolygonLayer(
           shapeFile = countriesShape,
           fillColor = ~repal(median_R_mean), group = "median Re",
@@ -544,13 +573,15 @@ server <- function(input, output, session) {
         addEasyButton(easyButton(
           icon = "fa-crosshairs", title = "Locate Me",
           onClick = JS("function(btn, map) { map.locate({setView: true}); }"))) %>%
-        fitBounds(lng1 = 272.1094, lat1 = 84.73839, lng2 = -222.5391, lat2 = -71.74643) %>%
         setMaxBounds(lng1 = 272.1094, lat1 = 84.73839, lng2 = -222.5391, lat2 = -71.74643) %>%
         addScaleBar(position = "bottomleft") %>%
         addLayersControl(
-          baseGroups = c("median Re", "Cases / 100'000 / 14 d"),
+          baseGroups = c("Cases / 100'000 / 14 d", "median Re"),
           options = layersControlOptions(collapsed = FALSE, hideSingleBase = TRUE)
-        )
+        ) %>%
+        setView(
+          lng = stateVals$mapViewCenter$lng, lat = stateVals$mapViewCenter$lat,
+          zoom = stateVals$mapViewZoom)
 
       return(map)
     })
@@ -566,37 +597,111 @@ server <- function(input, output, session) {
         )
       )
     })
+  
+    output$mapHist <- renderPlotly({
+      validate(need(input$mapPlot_groups, ""))
+      countriesShape <- countriesShape()
+
+      if (input$mapPlot_groups == "Cases / 100'000 / 14 d") {
+        histPal <- cases14pal()
+        binwidth <- 10
+
+        histData <- countriesShape %>%
+          as_tibble() %>%
+          mutate(bins = cut(cases14d,
+            breaks = seq(0, max(cases14d, na.rm = TRUE) + binwidth, binwidth))) %>%
+          group_by(bins) %>%
+          summarize(
+            n = n(),
+            countries = str_c(ADM0_A3_IS, collapse = ", "),
+            .groups = "keep"
+          ) %>%
+          ungroup() %>%
+          complete(bins, fill = list(n = 0, countries = "", color = "gray")) %>%
+          mutate(
+            midpoint = seq(binwidth / 2, by = binwidth, length.out = length(bins)),
+            color = histPal(midpoint)) %>%
+          filter(!is.na(bins))
+        title <- "Cases / 100'000 / 14 d"
+      } else {
+        histPal <- repal()
+        binwidth <- 0.1
+
+        histData <- countriesShape %>%
+          as_tibble() %>%
+          mutate(bins = cut(median_R_mean,
+            breaks = seq(0, max(median_R_mean, na.rm = TRUE) + binwidth, binwidth))) %>%
+          group_by(bins) %>%
+          summarize(
+            n = n(),
+            countries = str_c(ADM0_A3_IS, collapse = ", "),
+            .groups = "keep"
+          ) %>%
+          ungroup() %>%
+          complete(bins, fill = list(n = 0, countries = "", color = "gray")) %>%
+          mutate(
+            midpoint = seq(binwidth / 2, by = binwidth, length.out = length(bins)),
+            color = histPal(midpoint)) %>%
+          filter(!is.na(bins))
+        title <- "median Re"
+      }
+
+      plot <- plot_ly(data = histData) %>%
+        add_bars(x = ~midpoint, y = ~n, color = ~bins, colors = ~color,
+          text = ~str_trunc(countries, 50),
+          hoverinfo = "text",
+          showlegend = FALSE) %>%
+        # add_segments(x = 60, xend = 60, y = 0, yend = max(histData$n),
+        #   showlegend = FALSE) %>%
+        # add_segments(x = 300, xend = 300, y = 0, yend = max(histData$n),
+        #   showlegend = FALSE) %>%
+        layout(xaxis = list(fixedrange = TRUE, title = title), yaxis = list(fixedrange = TRUE)) %>%
+        config(displaylogo = FALSE, modeBarButtons = list(list("toImage")),
+          toImageButtonOptions = list(format = "png", width = 1200, height = 800, scale = 1, filename = "histogram"))
+    
+      return(plot)
+    })
+
+    output$mapMethodsUI <- renderUI({
+      methodsFileName <- "md/methodsOnly_"
+      ui <- box(width = 8, includeMarkdown(str_c(methodsFileName, input$lang, ".md")))
+      return(ui)
+    })
 
   # map observers
+    # color scale values
+
     # switch legend (workaround for baseGroup limitation)
-    observeEvent(input$mapPlot_groups,{
-      mapPlot <- leafletProxy("mapPlot")
-      if (input$mapPlot_groups == "Cases / 100'000 / 14 d") {
-        removeControl(mapPlot, "reLegend")
-        mapPlot %>% addLegend(
-          pal = cases14pal(), values = c(seq(0, 500, 50), Inf), opacity = 0.7,
-          title = "Cases / 100'000 / 14 d",
-          position = "bottomright", group = "Cases / 100'000 / 14 d", layerId = "casesLegend")
-      }
-      else if (input$mapPlot_groups == "median Re") {
-        removeControl(mapPlot, "casesLegend")
-        mapPlot %>%
-          addLegend(pal = repal(), opacity = 0.7, title = "Most recent R<sub>e</sub> estimate",
-            values = ~median_R_mean, data = countriesShape(),
-            position = "bottomright", group = "median Re", layerId = "reLegend")
-      }
-    })
+      observeEvent(input$mapPlot_groups, {
+        mapPlot <- leafletProxy("mapPlot")
+        if (input$mapPlot_groups == "Cases / 100'000 / 14 d") {
+          removeControl(mapPlot, "reLegend")
+          mapPlot %>% addLegend(
+            pal = cases14pal(), opacity = 0.7, title = "Cases / 100'000 / 14 d",
+            values = seq(0, input$casesCutoff, 100),
+            labFormat = casesLegendLabels,
+            data = countriesShape(),
+            position = "bottomright", group = "Cases / 100'000 / 14 d", layerId = "casesLegend")
+        }
+        else if (input$mapPlot_groups == "median Re") {
+          removeControl(mapPlot, "casesLegend")
+          mapPlot %>%
+            addLegend(pal = repal(), opacity = 0.7, title = "Most recent R<sub>e</sub> estimate",
+              values = ~median_R_mean, data = countriesShape(),
+              position = "bottomright", group = "median Re", layerId = "reLegend")
+        }
+      })
 
     # region zoom buttons
-    observeEvent(input$zoomCHE, {
-       mapPlot <- leafletProxy("mapPlot")
-       mapPlot %>% setView(lng = 8.360596, lat = 46.84141, zoom = 8)
-    })
+      observeEvent(input$zoomCHE, {
+        mapPlot <- leafletProxy("mapPlot")
+        mapPlot %>% setView(lng = 8.360596, lat = 46.84141, zoom = 8)
+      })
 
-    observeEvent(input$zoomZAF, {
-       mapPlot <- leafletProxy("mapPlot")
-       mapPlot %>% setView(lng = 25.53223, lat = -28.38174, zoom = 6)
-    })
+      observeEvent(input$zoomZAF, {
+        mapPlot <- leafletProxy("mapPlot")
+        mapPlot %>% setView(lng = 25.53223, lat = -28.38174, zoom = 6)
+      })
 
 # about page
   # data
@@ -638,11 +743,11 @@ server <- function(input, output, session) {
       )
     })
 
-  # output$test <- renderPrint({
-  #   list(
-  #     input$mapPlot_bounds,
-  #     input$mapPlot_zoom,
-  #     input$mapPlot_center
-  #   )
-  # })
+  output$test <- renderPrint({
+    list(
+      input$mapPlot_bounds,
+      input$mapPlot_zoom,
+      input$mapPlot_center
+    )
+  })
 }

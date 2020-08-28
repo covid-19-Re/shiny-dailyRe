@@ -213,9 +213,10 @@ mapLabels <- function(shapeFileData, mainLabel = "cases14d") {
   return(mapLabels)
 }
 
-addPolygonLayer <- function(map, shapeFile, fillColor, group, labels, options = pathOptions()) {
+addPolygonLayer <- function(map, shapeFile, fillColor, group, labels, options = pathOptions(), layerId = NULL) {
   map <- map %>%
     addPolygons(
+      layerId = layerId,
       data = shapeFile,
       fillColor = fillColor,
       weight = 0,
@@ -241,11 +242,11 @@ addPolygonLayer <- function(map, shapeFile, fillColor, group, labels, options = 
   return(map)
 }
 
-regionCheckboxInput <- function(checkboxGroupId, label, choices, zoomLabel) {
+regionCheckboxInput <- function(checkboxGroupId, label, choices, selected, zoomLabel) {
   out <- list()
 
   header <- glue::glue(
-    "<div id='{checkboxGroupId}' class='form-group shiny-input-checkboxgroup shiny-input-container shiny-bound-input'>
+    "<div id='{checkboxGroupId}' class='shiny-input-checkboxgroup shiny-input-container shiny-bound-input'>
       <label class='control-label' for='{checkboxGroupId}'>{label}</label>
       <div class='shiny-options-group'>")
 
@@ -255,15 +256,53 @@ regionCheckboxInput <- function(checkboxGroupId, label, choices, zoomLabel) {
     checkboxes[[i]] <- glue::glue(
       "<div class='checkbox'>",
         "<label>",
-            "<input type='checkbox' name='{checkboxGroupId}' value='{choiceValue}'>",
+            "<input type='checkbox' name='{checkboxGroupId}' value='{choiceValue}' {checked}>",
               "<span>{choiceName}",
               "<a id='zoom{choiceValue}' href='#' class='action-button shiny-bound-input' style='display: inline'>{zoomLabel}</a>",
               "</span>",
         "</label>",
       "</div>",
+      checked = if_else(choices[i] %in% selected, "checked='checked'", ""),
       choiceValue = choices[i],
       choiceName = names(choices)[i])
   }
 
   return(HTML(str_c(header, str_c(checkboxes, collapse = ""), "</div></div>")))   
+}
+
+divergentColorPal <- function(palette, domain, midpoint, na.color = "#808080", alpha = FALSE, reverse = FALSE) {
+  rng <- NULL
+  if (length(domain) > 0) {
+    rng <- range(domain, na.rm = TRUE)
+    if (!all(is.finite(rng))) {
+      stop("Wasn't able to determine range of domain")
+    }
+  }
+
+  pf <- leaflet:::safePaletteFunc(palette, na.color, alpha)
+
+  leaflet:::withColorAttr("numeric", list(na.color = na.color), function(x) {
+    if (length(x) == 0 || all(is.na(x))) {
+      return(pf(x))
+    }
+
+    if (is.null(rng)) rng <- range(x, na.rm = TRUE)
+
+    rescaled <- scales::rescale_mid(x, from = rng, mid = midpoint)
+    rescaled[rescaled > 1] <- 1
+    if (any(rescaled < 0 | rescaled > 1, na.rm = TRUE))
+      warning("Some values were outside the color scale and will be treated as NA")
+
+    if (reverse) {
+      rescaled <- 1 - rescaled
+    }
+    pf(rescaled)
+  })
+}
+
+casesLegendLabels <- function(type, cuts) {
+
+  out <- format(cuts, scientific = FALSE, big.mark = ",")
+  out[length(out)] <- str_c("≥", out[length(out)])
+  return(out)
 }
