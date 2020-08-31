@@ -184,7 +184,7 @@ server <- function(input, output, session) {
       ui <- tagList(
         HTML(str_c("<div class='form-group shiny-input-container' style='width: 100%;'>
         <label class='control-label' for='quickselectButtons'>",
-          i18n()$t("Quick select"), ":</label>")),  
+          i18n()$t("Quick select"), ":</label>")),
         div(
           div(class = "quickSelect", actionLink("africaSelect", i18n()$t("Africa"))),
           div(class = "quickSelect", actionLink("asiaSelect", i18n()$t("Asia"))),
@@ -739,6 +739,19 @@ server <- function(input, output, session) {
         mapPlot <- leafletProxy("mapPlot")
         mapPlot %>% setView(lng = 25.53223, lat = -28.38174, zoom = 6)
       })
+
+      observeEvent(input$regionCountrySelect, {
+        
+        if (length(input$regionCountrySelect) == 1) {
+          mapPlot <- leafletProxy("mapPlot")
+          if (input$regionCountrySelect == "CHE") {
+            mapPlot %>% setView(lng = 8.360596, lat = 46.84141, zoom = 8)
+          } else if (input$regionCountrySelect == "ZAF") {
+            mapPlot %>% setView(lng = 25.53223, lat = -28.38174, zoom = 6)
+          }
+        }
+      })
+
 
 # about page
   # data
