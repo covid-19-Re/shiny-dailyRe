@@ -29,7 +29,7 @@ dashboardPage(title = "COVID-19 Re",
         ),
         fluidRow(
           uiOutput("mapMethodsUI"),
-          box(width = 4, title = "Histogram",
+          box(width = 4, title = "Color scale options",
             plotlyOutput("mapHist", height = "250px"),
             conditionalPanel(
               condition = "input.mapPlot_groups == \"Cases / 100'000 / 14 d\"",
