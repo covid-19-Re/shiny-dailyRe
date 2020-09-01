@@ -122,7 +122,7 @@ server <- function(input, output, session) {
 
       rEffPlotlyShiny(countryData, updateData, interventions, "greaterRegion", input, i18n())
     })
-  
+
   # ui
     output$timeSeriesPlotOptionsUI <- renderUI({
       validate(need(input$tabs, ""))
@@ -161,7 +161,9 @@ server <- function(input, output, session) {
         dataTypes <- countryData()$estimates %>%
           group_by(.data[[splitBy]]) %>%
           group_split() %>%
-          lapply(function(x) {unique(x$data_type)})
+          lapply(function(x) {
+            unique(x$data_type)
+          })
         dataTypeChoices <- dataTypes[[which.min(lengths(dataTypes))]]
         names(dataTypeChoices) <- sapply(dataTypeChoices, i18n()$t,  USE.NAMES = FALSE)
       } else {
@@ -314,7 +316,7 @@ server <- function(input, output, session) {
       filter(length(unique(region)) > 1) %>%
       select(countryIso3, country) %>%
       distinct()
-    
+
     regionCountries <- regionCountriesDf$countryIso3
     names(regionCountries) <- regionCountriesDf$country
 
@@ -427,7 +429,8 @@ server <- function(input, output, session) {
     CHEregionsShape <- reactive({
       worldMapData <- worldMapData()
       CHEregionsShape <- st_read("data/geoData/swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET.shp", quiet = TRUE) %>%
-        st_transform(st_crs(countriesShape())) %>% st_zm()
+        st_transform(st_crs(countriesShape())) %>%
+        st_zm()
 
       cantonNames <- tibble(
         region = c(
@@ -633,7 +636,7 @@ server <- function(input, output, session) {
           rename(variable = median_R_mean)
         title <- "median R<sub>e</sub>"
       }
-      
+
       histData <- histDataRaw %>%
         mutate(bins = cut(variable,
           breaks = seq(0, max(variable, na.rm = TRUE) + binwidth, binwidth))) %>%
@@ -649,7 +652,7 @@ server <- function(input, output, session) {
           midpoint = seq(binwidth / 2, by = binwidth, length.out = length(bins)),
           color = histPal(midpoint)) %>%
         filter(!is.na(bins))
-      
+
       quantiles <- quantile(histDataRaw$variable, na.rm = TRUE)
       quantilesText <- glue::glue(
         "<b>Quantiles</b><br>",
@@ -659,7 +662,7 @@ server <- function(input, output, session) {
         "0.75: {round(quantiles[4], 2)}<br>",
         " max: {round(quantiles[5], 2)}<br>"
       )
-  
+
       plot <- plot_ly(data = histData) %>%
         add_bars(x = ~midpoint, y = ~n, color = ~bins, colors = ~color,
           text = ~str_trunc(countries, 50),
@@ -685,7 +688,7 @@ server <- function(input, output, session) {
           ))) %>%
         config(displaylogo = FALSE, modeBarButtons = list(list("toImage")),
           toImageButtonOptions = list(format = "png", width = 1200, height = 800, scale = 1, filename = "histogram"))
-      
+
       return(plot)
     })
 
@@ -741,7 +744,6 @@ server <- function(input, output, session) {
       })
 
       observeEvent(input$regionCountrySelect, {
-        
         if (length(input$regionCountrySelect) == 1) {
           mapPlot <- leafletProxy("mapPlot")
           if (input$regionCountrySelect == "CHE") {
