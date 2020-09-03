@@ -54,7 +54,7 @@ casesSubPlot <- function(
 
   if (caseAverage > 1) {
     caseData <- caseData %>%
-      group_by(data_type) %>%
+      group_by(region, data_type) %>%
       mutate(
         value = slide_index_dbl(value, date, mean, .before = lubridate::days(caseAverage))
       ) %>%
