@@ -733,7 +733,7 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     fixedRangeX = fixedRangeX,
     fixedRangeY = fixedRangeY,
     logCaseYaxis = "logCases" %in% input$plotOptions,
-    caseAverage = "caseAverage" %in% input$plotOptions,
+    caseAverage = input$caseAverage,
     caseNormalize = "caseNormalize" %in% input$plotOptions,
     caseLoess = "caseLoess" %in% input$plotOptions,
     caseDeconvoluted = "caseDeconvoluted" %in% input$plotOptions,
