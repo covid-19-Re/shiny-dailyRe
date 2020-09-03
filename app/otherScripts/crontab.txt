@@ -1,3 +1,3 @@
-0 0,10,14,16,18 * * * /home/covid-19-re/dailyRe/app/otherScripts/runCountryEstimationCHE.sh
-0 1,11,15,17 * * * /home/covid-19-re/dailyRe/app/otherScripts/runCountryEstimationZAF.sh
+0 0,10,12,14,16,18 * * * /home/covid-19-re/dailyRe/app/otherScripts/runCountryEstimationCHE.sh
+0 1,11,13,15,17,19 * * * /home/covid-19-re/dailyRe/app/otherScripts/runCountryEstimationZAF.sh
 0 2 * * * /home/covid-19-re/dailyRe/app/otherScripts/runCountryEstimationRest.sh
