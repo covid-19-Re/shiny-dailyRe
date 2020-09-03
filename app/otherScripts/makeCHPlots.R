@@ -14,7 +14,7 @@ if (interactive()) {
   })
 }
 
-source(here::here("app", "otherScripts", "ReffPlotly.R"))
+source(here::here("app", "otherScripts", "plotlyFunctions.R"))
 source(here::here("app", "utils.R"))
 
 iso3 <- "CHE"
@@ -23,8 +23,8 @@ cat(str_c("making ", iso3, " plots for ncs-tf website ...\n"))
 # load data
 dataDir <- here::here("app/data")
 plotOutDir <- here::here("app/www")
-pathToCaseData <- file.path(dataDir, str_c("countryData/Europe/", iso3, "-Data.rds"))
-pathToEstimates <- file.path(dataDir, str_c("countryData/Europe/", iso3, "-Estimates.rds"))
+pathToCaseData <- file.path(dataDir, str_c("countryData/", iso3, "-Data.rds"))
+pathToEstimates <- file.path(dataDir, str_c("countryData/", iso3, "-Estimates.rds"))
 pathToUpdateData <- file.path(dataDir, "updateData.rds")
 pathToInterventionData <- here::here("../covid19-additionalData/interventions/interventions.csv")
 
@@ -101,7 +101,7 @@ for (i in translator$languages) {
     caseDataPlot,
     estimatesPlot,
     interventionsLocalized,
-    plotColors,
+    seriesColors = plotColors,
     lastDataDate = updateDataPlotLocalized,
     fixedRangeX = c(TRUE, TRUE, TRUE),
     fixedRangeY = c(TRUE, TRUE, TRUE),

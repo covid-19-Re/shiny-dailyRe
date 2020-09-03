@@ -1,3 +1,7 @@
 <h4>Méthodes</h4>
 
 La valeur de R<sub>e</sub> donnée pour un jour J est une moyenne des estimations réalisées sur les jours J-2, J-1 et J. Nous donnons la médiane des estimations ainsi que les intervalles d'incertitude à 95%. La méthode d'estimation de R<sub>e</sub> est expliquée en détails [ici](https://ibz-shiny.ethz.ch/covid-19-re/methods.pdf) (en anglais). Nous avons amélioré la méthode avec laquelle nous inférons les dates d’infections des malades, nous utilisons désormais une méthode de [déconvolution](https://www.pnas.org/content/106/51/21825) comme présentée dans deux pre-prints récents [(1)](https://www.medrxiv.org/content/10.1101/2020.06.18.20134858v2)[(2)](https://www.medrxiv.org/content/10.1101/2020.05.12.20099366v1) (en anglais). Ce changement de méthode permet de détecter les changements de R<sub>e</sub> de manière plus précoce.
+
+**Disclaimer**: The quality of the R<sub>e</sub> estimate for a particular country or region relies on the quality of the data set. We only check the quality of data for some countries, in particular Switzerland and some surrounding countries.  Before drawing conclusions for a particular country, check the data quality. In particular, spikes in reporting on particular days or missing data on many days can bias Re estimates.
+
+If you are working on the epidemic in a country for which we use data of bad quality, but have access to better data, file an issue on https://github.com/covid-19-Re/shiny-dailyRe/issues.
