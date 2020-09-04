@@ -24,12 +24,7 @@ git pull
 
 cd "$parent_path"
 rm *.Rout
-echo "updating BAG Data (polybox sync)"
-# for development on local macOS machine (on Linux just install the owncloud cli tools)
-# symlink your polybox folder to ../data/BAG
-# i.e. ln -s 'path/to/polybox/shared/BAG COVID19 Data' 'path/to/app/data/BAG'
-owncloudcmd -n -s ../data/BAG \
-  https://polybox.ethz.ch/remote.php/webdav/BAG%20COVID19%20Data
+
 echo "running R script to extract BAG data & calculate delays ..."
 runRScript format_BAG_data.R
 
