@@ -11,7 +11,7 @@ source,sourceLong,url
 "ECDC - SpF-DMI","Mix between ECDC data (before May 13th) and French National Public Health Agency (after May 13th)","https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/"
 "Economist","Data from the Economist Excess Death Tracker","https://github.com/TheEconomist/covid-19-excess-deaths-tracker"
 "Sciensano","Data from the Belgian Institute for Health","https://epistat.wiv-isp.be/covid/"
-"DSFSI", "Data from Data Science for Social Impact Research Group @ University of Pretoria", "https://github.com/dsfsi/covid19za"
+"DSFSI", "Data provided by the <a href='https://github.com/dsfsi/covid19za'>Data Science and Social Impact Research Group @ U Pretoria</a> and the <a href='https://www.krisp.org.za/ngs-sa/'>Network for Genomics Surveillance in South Africa (NGS-SA)</a>", "https://github.com/dsfsi/covid19za"
 "PCM-DPC","Data from Presidenza del Consiglio dei Ministri - Dipartimento della Protezione Civile","https://github.com/pcm-dpc/COVID-19"
 "RENAVE", "Data from Spanish Red Nacional de Vigilancia Epidemiológica ", "https://cnecovid.isciii.es/covid19/#documentaci%C3%B3n-y-datos"
 "Gov.UK", "Data from UK government coronavirus database ", "https://coronavirus.data.gov.uk/"
