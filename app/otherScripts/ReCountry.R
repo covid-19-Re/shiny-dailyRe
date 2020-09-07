@@ -306,6 +306,10 @@ if (!dir.exists(basePath)) {
           )
         countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
         saveRDS(countryEstimates, file = countryDataPath)
+        # Save as .csv for data upload
+        write_csv(countryEstimates,
+          path = here::here(str_c("../dailyRe-Data/", args["country"], "-estimates.csv"))
+        )
       }
   } else {
     cat(str_c(args["country"], ": No new data available. Skipping Re calculation.\n"))

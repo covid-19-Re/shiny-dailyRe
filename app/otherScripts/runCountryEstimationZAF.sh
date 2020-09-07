@@ -32,7 +32,7 @@ runRScript ReCountry.R "ZAF"
 
 runRScript sumData.R
 
-echo "updating covid19-additionalData ..."
+echo "updating covid19-Data ..."
 cd "../../../dailyRe-Data"
 git add .
 git commit -m "update data"
