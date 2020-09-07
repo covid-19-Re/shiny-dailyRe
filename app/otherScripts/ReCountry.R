@@ -23,7 +23,8 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("NLD")
+  # args <- c("NLD")
+  args <- c("CHE")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -189,7 +190,7 @@ if (!dir.exists(basePath)) {
           data_types = c("Confirmed cases",
                         "Hospitalized patients",
                         "Deaths"),
-          n_bootstrap = 50,
+          n_bootstrap = 10,
           verbose = FALSE)
 
         if (args["country"] %in% c("CHE")) {
@@ -203,7 +204,7 @@ if (!dir.exists(basePath)) {
             constant_delay_distributions = constant_delay_distributions,
             onset_to_count_empirical_delays = delays_onset_to_count,
             data_types = c("Confirmed cases / tests"),
-            n_bootstrap = 50,
+            n_bootstrap = 10,
             verbose = FALSE)
         }
 
@@ -257,22 +258,6 @@ if (!dir.exists(basePath)) {
           "infection_Excess deaths" = c(Cori = 0, WallingaTeunis = -5),
           "Excess deaths" = c(Cori = 20, WallingaTeunis = 15))
 
-<<<<<<< HEAD
-      truncations <- list(
-        left = c(Cori = 5, WallingaTeunis = 0),
-        right = c(Cori = 0, WallingaTeunis = 8))
-      
-      ### Run EpiEstim
-      countryEstimatesRaw <- doAllReEstimations(
-        deconvolvedCountryData,
-        slidingWindow = window,
-        methods = "Cori",
-        all_delays = all_delays,
-        truncations = truncations,
-        interval_ends = interval_ends,
-        additional_interval_ends = additionalIntervalEnds,
-        swissRegions = swissRegions)
-=======
         truncations <- list(
           left = c(Cori = 5, WallingaTeunis = 0),
           right = c(Cori = 0, WallingaTeunis = 8))
@@ -287,7 +272,6 @@ if (!dir.exists(basePath)) {
           interval_ends = interval_ends,
           additional_interval_ends = additionalIntervalEnds,
           swissRegions = swissRegions)
->>>>>>> master
 
         countryEstimates <- as_tibble(countryEstimatesRaw) %>%
           mutate(
