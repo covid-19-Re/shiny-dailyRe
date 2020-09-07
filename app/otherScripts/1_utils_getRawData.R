@@ -483,11 +483,9 @@ getCaseDataFRA <- function() {
   }
   
   longData <- rawData %>%
+    filter(cl_age90 == 0) %>% 
     dplyr::select(date = jour,
-                  P,
-                  cl_age90) %>%
-    group_by(date) %>%
-    dplyr::summarise(value = sum(P), .groups = "drop") %>% 
+                  value = P) %>% 
     arrange(date) %>% 
     mutate(data_type = "confirmed",
            countryIso3 = "FRA",
