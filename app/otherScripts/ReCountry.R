@@ -190,7 +190,7 @@ if (!dir.exists(basePath)) {
           data_types = c("Confirmed cases",
                         "Hospitalized patients",
                         "Deaths"),
-          n_bootstrap = 10,
+          n_bootstrap = 5,
           verbose = FALSE)
 
         if (args["country"] %in% c("CHE")) {
@@ -204,7 +204,7 @@ if (!dir.exists(basePath)) {
             constant_delay_distributions = constant_delay_distributions,
             onset_to_count_empirical_delays = delays_onset_to_count,
             data_types = c("Confirmed cases / tests"),
-            n_bootstrap = 10,
+            n_bootstrap = 5,
             verbose = FALSE)
         }
 

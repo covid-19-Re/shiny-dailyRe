@@ -33,8 +33,9 @@ runRScript makeCHPlots.R
 
 runRScript sumData.R
 
-echo "updating covid19-Data ..."
-cd "../../../dailyRe-Data"
-git add .
-git commit -m "update data"
-git push
+# TODO uncomment
+# echo "updating covid19-Data ..."
+# cd "../../../dailyRe-Data"
+# git add .
+# git commit -m "update data"
+# git push

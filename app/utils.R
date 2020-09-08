@@ -2,7 +2,7 @@
 
 loadCountryData <- function(iso3, dataDir = "data/countryData") {
 
-  allPaths <- list.files(path = pathToCountryData, recursive = TRUE)
+  allPaths <- list.files(path = dataDir, recursive = TRUE)
 
   dataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Data.rds"))
   if (!is_empty(dataPath)){
