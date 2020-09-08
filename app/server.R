@@ -302,7 +302,7 @@ server <- function(input, output, session) {
         }
       }
 
-      ui <- box(width = 8, includeMarkdown(str_c(methodsFileName, input$lang, ".md")))
+      ui <- box(width = 9, includeMarkdown(str_c(methodsFileName, input$lang, ".md")))
       return(ui)
     })
 
