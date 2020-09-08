@@ -409,10 +409,10 @@
       "it-ch": "Decremento del numero di nuovi casi"
     },
     {
-      "en-gb": "<b>*</b>&nbsp;This is the most recent possible R<sub>e</sub> estimate due to delays between infection and the last data observation.",
-      "de-ch": "<b>*</b>&nbsp;Letzte mögliche Schätzung von R<sub>e</sub> aufgrund von Verzögerungen zwischen Infektion und Beobachtung.",
-      "fr-ch": "<b>*</b>&nbsp;Ceci est la dernière estimation disponible de R<sub>e</sub> en raison du délai entre l'infection et le moment de sa détection.",
-      "it-ch": "<b>*</b>&nbsp;Questo e' la piu' recente possibile stima di R<sub>e</sub> dovuta al ritardo tra l'infezione e l'ultima osservazione dei dati."
+      "en-gb": "This is the most recent possible R<sub>e</sub> estimate due to delays between infection and the last data observation.",
+      "de-ch": "Letzte mögliche Schätzung von R<sub>e</sub> aufgrund von Verzögerungen zwischen Infektion und Beobachtung.",
+      "fr-ch": "Ceci est la dernière estimation disponible de R<sub>e</sub> en raison du délai entre l'infection et le moment de sa détection.",
+      "it-ch": "Questo e' la piu' recente possibile stima di R<sub>e</sub> dovuta al ritardo tra l'infezione e l'ultima osservazione dei dati."
     },
     {
       "en-gb": "&nbsp;<b>Interactive plot</b><br>&nbsp;&nbsp;• Click on legend toggles<br>&nbsp;&nbsp;&nbsp;&nbsp;datatypes; doubleclick<br>&nbsp;&nbsp;&nbsp;&nbsp;isolates datatypes.<br>&nbsp;&nbsp;• Hovering the mouse over<br>&nbsp;&nbsp;&nbsp;&nbsp;data points shows details.",

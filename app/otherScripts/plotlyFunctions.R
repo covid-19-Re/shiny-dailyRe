@@ -721,6 +721,18 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     min(caseData$date) - 7
   )
 
+  right_truncation <- switch(
+          lubridate::wday(max(caseData$date)),
+          2,
+          3,
+          4,
+          5,
+          2,
+          2,
+          2
+        )
+
+
   plot <- rEffPlotly(
     caseData = caseData,
     estimates = estimates,
@@ -733,6 +745,7 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     fixedRangeX = fixedRangeX,
     fixedRangeY = fixedRangeY,
     logCaseYaxis = "logCases" %in% input$plotOptions,
+    caseDataRightTruncation = right_truncation,
     caseAverage = input$caseAverage,
     caseNormalize = "caseNormalize" %in% input$plotOptions,
     caseLoess = "caseLoess" %in% input$plotOptions,

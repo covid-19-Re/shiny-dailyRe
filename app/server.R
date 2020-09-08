@@ -280,6 +280,84 @@ server <- function(input, output, session) {
       fluidRow(uiOutput("timeseriesPlotTabsUI"))
     })
 
+    output$currentR <- renderUI({
+      countryData <- countryData()
+      countrySelectValue <- countrySelectValue()
+
+      rEstimate <- countryData$estimates %>%
+        filter(
+          region %in% countrySelectValue,
+          data_type == "Confirmed cases",
+          estimate_type == "Cori_slidingWindow") %>%
+        group_by(region) %>%
+        filter(date == max(date))
+        
+      rEstimateText <- rEstimate %>%
+        glue::glue_data("{round(median_R_mean, 2)} ({round(median_R_lowHPD, 2)} - {round(median_R_highHPD, 2)})")
+
+      valueBox(width = NULL,
+         rEstimateText,
+          div(
+            HTML(
+              str_c(
+                i18n()$t("most recent possible R<sub>e</sub> point estimate"), " (",
+                format(rEstimate$date, i18n()$t("%b-%d")), ")"
+              )
+            ),
+            p(HTML(
+              i18n()$t("This is the most recent possible R<sub>e</sub> estimate due to delays between infection and the last data observation."),
+              ""),
+              style = "font-weight:normal;font-size:12px")
+          ),
+          icon = tags$i(class = "fa", style = "font-family:serif;font-style:italic;",
+            HTML("R<sub>e</sub>")),
+          color = "blue",
+        )
+    })
+
+    output$avgR <- renderUI({
+      countryData <- countryData()
+      countrySelectValue <- countrySelectValue()
+
+      rEstimate <- countryData$estimates %>%
+        filter(
+          region %in% countrySelectValue,
+          data_type == "Confirmed cases",
+          estimate_type == "Cori_slidingWindow") %>%
+        group_by(region) %>%
+        filter(date >= max(date) - 7) %>%
+        summarize(
+          meanR = mean(median_R_mean),
+          minCIR = min(median_R_lowHPD),
+          maxCIR = max(median_R_highHPD),
+          minDate = min(date),
+          maxDate = max(date),
+          .groups = "drop"
+        )
+      
+      rEstimateText <- rEstimate %>%
+        glue::glue_data("{round(meanR, 2)} ({round(minCIR, 2)} - {round(maxCIR, 2)})")
+
+      ui <- valueBox(width = NULL,
+          rEstimateText,
+          div(
+            HTML(
+              str_c(
+                i18n()$t("mean R<sub>e</sub> over the last 7 days"),
+                " (", format(rEstimate$minDate, i18n()$t("%b-%d")), " - ",
+                format(rEstimate$maxDate, i18n()$t("%b-%d")), ")"
+              )
+            ),
+            p("helptext", style = "font-weight:normal;font-size:12px"),
+          ),
+          icon = tags$i(class = "fa", style = "font-family:serif;font-style:italic;",
+             HTML("<span style='text-decoration:overline'>R</span><sub>e</sub>")),
+          color = "light-blue"
+        )
+
+      return(ui)
+    })
+
     output$dataSourceUI <- renderUI({
       validate(need(countrySelectValue(), ""))
       infoBox(width = 3,

@@ -15,12 +15,16 @@ dashboardPage(title = "COVID-19 Re",
     ),
     tabItems(
       tabItem("plots",
+        fluidRow(
+          column(4, uiOutput("avgR")),
+          column(4, uiOutput("currentR"))
+        ),
         fluidRow(column(12,
           uiOutput("timeseriesPlotUI"),
         )),
         fluidRow(
-            uiOutput("methodsUI"),
-            uiOutput("dataSourceUI")
+          uiOutput("methodsUI"),
+          uiOutput("dataSourceUI")
         )
       ),
       tabItem("mapPlot",
