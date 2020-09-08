@@ -173,7 +173,17 @@ if (!dir.exists(basePath)) {
           )
 
       # truncation
-        right_truncation <- 2
+        right_truncation <- switch(
+          wday(max(countryData$date)),
+          2,
+          3,
+          4,
+          5,
+          2,
+          2,
+          2
+        )
+        
         countryData <- countryData %>%
           group_by(country, region, source, data_type) %>%
           filter(date <= (max(date) - right_truncation)) %>%
