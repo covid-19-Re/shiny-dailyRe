@@ -306,7 +306,7 @@ casesLegendLabels <- function(type, cuts) {
   return(out)
 }
 
-rAvgValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverText) {
+rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverText) {
  
   rEstimateText <- rEstimate %>%
       glue::glue_data(

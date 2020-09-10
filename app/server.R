@@ -315,7 +315,7 @@ server <- function(input, output, session) {
       popoverText <- str_c("This is the most recent possible R<sub>e</sub> estimate based on confirmed cases.",
         "This point estimate is not consolidated yet and could change as more data comes in.")
 
-      ui <- rAvgValueBox(currentRestimate, text, icon, popoverId, popoverTitle, popoverText)
+      ui <- rValueBox(currentRestimate, text, icon, popoverId, popoverTitle, popoverText)
       return(ui)
     })
 
@@ -355,7 +355,7 @@ server <- function(input, output, session) {
       popoverTitle <- "mean R<sub>e</sub>"
       popoverText <- str_c("This mean of R<sub>e</sub> estimates based on confirmed cases may more accurately reflect the epidemic than the point estimate.")
 
-      ui <- rAvgValueBox(avgRestimate, text, icon, popoverId, popoverTitle, popoverText)
+      ui <- rValueBox(avgRestimate, text, icon, popoverId, popoverTitle, popoverText)
 
       return(ui)
     })
