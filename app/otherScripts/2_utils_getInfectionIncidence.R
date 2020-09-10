@@ -259,7 +259,7 @@ iterate_RL <- function(
   truncated_delay_distribution_matrix <- delay_distribution_matrix[(1 + max_delay):NROW(delay_distribution_matrix),, drop = F]
   
   Q_vector <- apply(truncated_delay_distribution_matrix, MARGIN = 2, sum)
-
+  
   while(chi_squared > threshold_chi_squared & count <= max_iterations) {
     
     if (verbose) {
@@ -285,11 +285,14 @@ do_deconvolution <- function(
   days_further_in_the_past = 30,
   verbose = FALSE,
   delay_distribution_matrix,
+  initial_delta,
   max_iterations = 100
 ) {
   
   # use mode of 'constant_delay_distribution'. -1 because indices are offset by one as the delay can be 0.
-  first_guess_delay <- which.max(delay_distribution_matrix[,1]) - 1
+  # first_guess_delay <- which.max(delay_distribution_matrix[,1]) - 1 #TODO remove this
+  
+  first_guess_delay <- initial_delta
   
   if (verbose) {
     cat("\tDelay on first guess: ", first_guess_delay, "\n")
@@ -374,6 +377,8 @@ get_infection_incidence_by_deconvolution <- function(
     delay_distribution_matrix_incubation <- get_matrix_constant_waiting_time_distr(
       constant_delay_distribution_incubation,
       all_dates)
+    
+    initial_delta_incubation <- median(constant_delay_distribution_incubation, na.rm = T)
   } else {
     if(is_empirical) {
       delay_distribution_matrix_onset_to_report <- get_matrix_empirical_waiting_time_distr(
@@ -383,10 +388,15 @@ get_infection_incidence_by_deconvolution <- function(
       delay_distribution_matrix_incubation <- get_matrix_constant_waiting_time_distr(
         constant_delay_distribution_incubation,
         all_dates)
+      
+      initial_delta_incubation <- median(constant_delay_distribution_incubation, na.rm = T)
+      initial_delta_report <-  median(empirical_delays$delay, na.rm = T)
     } else {
       delay_distribution_matrix <- get_matrix_constant_waiting_time_distr(
         constant_delay_distribution,
         all_dates)
+      
+      initial_delta <- median(constant_delay_distribution, na.rm = T)
     }
   }
   
@@ -429,6 +439,7 @@ get_infection_incidence_by_deconvolution <- function(
       deconvolved_infections <-  do_deconvolution(smoothed_incidence_data,
                                                   delay_distribution_matrix = delay_distribution_matrix_incubation,
                                                   days_further_in_the_past = days_further_in_the_past,
+                                                  initial_delta = initial_delta_incubation,
                                                   max_iterations = max_iterations,
                                                   verbose = verbose)
     } else {
@@ -437,18 +448,21 @@ get_infection_incidence_by_deconvolution <- function(
         deconvolved_symptom_onsets <- do_deconvolution(smoothed_incidence_data,
                                                        delay_distribution_matrix = delay_distribution_matrix_onset_to_report,
                                                        days_further_in_the_past = days_further_in_the_past - days_further_in_the_past_incubation,
+                                                       initial_delta = initial_delta_report,
                                                        max_iterations = max_iterations,
                                                        verbose = verbose)
         
         deconvolved_infections <- do_deconvolution(deconvolved_symptom_onsets,
                                                    delay_distribution_matrix = delay_distribution_matrix_incubation,
                                                    days_further_in_the_past = days_further_in_the_past_incubation,
+                                                   initial_delta = initial_delta_incubation,
                                                    max_iterations = max_iterations,
                                                    verbose = verbose)
       } else {
         deconvolved_infections <-  do_deconvolution(smoothed_incidence_data,
                                                     delay_distribution_matrix = delay_distribution_matrix,
                                                     days_further_in_the_past = days_further_in_the_past,
+                                                    initial_delta = initial_delta,
                                                     max_iterations = max_iterations,
                                                     verbose = verbose)
       }
@@ -561,7 +575,7 @@ get_all_infection_incidence <- function(data,
               empirical_delays = empirical_delays,
               n_bootstrap = n_bootstrap,
               verbose = verbose)
-             
+            
             if(nrow(deconvolved_onset) > 0) {
               deconvolved_onset <- deconvolved_onset %>% filter(date <= last_date_report) # if two types of data (onset and report) are there, filter out last onset deconvolved data (bc incomplete)
             }
@@ -590,13 +604,13 @@ get_all_infection_incidence <- function(data,
   combined_result <- combined_result %>%  
     group_by(region, country, replicate, source, data_type) %>% 
     complete(date = seq(min(date), max(date), by = "days"), 
-                       local_infection,
-                       region, 
-                       country, 
-                      replicate, 
-                      source, 
-                      data_type, 
-                      fill = list(value = 0)) %>% 
+             local_infection,
+             region, 
+             country, 
+             replicate, 
+             source, 
+             data_type, 
+             fill = list(value = 0)) %>% 
     ungroup() %>% 
     arrange(country, region, source, data_type, replicate, local_infection, date)
   

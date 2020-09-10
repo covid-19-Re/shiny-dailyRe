@@ -126,6 +126,16 @@ confirmed_case_data <- data_hospitalization %>%
       incidence = n,
       .keep  = "unused"
     ) %>% 
+  dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
+  complete(date = seq(min(date), max(date), by = "days"), 
+           local_infection,
+           region, 
+           countryIso3, 
+           source, 
+           data_type, 
+           date_type,
+           fill = list(incidence = 0)) %>% 
+  ungroup() %>% 
   arrange(region, date, date_type)
 
 plotting_confirmed_case_data <-  data_hospitalization %>%
@@ -192,7 +202,17 @@ death_data <- data_hospitalization %>%
     data_type = "deaths",
     incidence = n,
     .keep  = "unused"
-  ) %>% 
+  ) %>%
+  dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
+  complete(date = seq(min(date), max(date), by = "days"), 
+           local_infection,
+           region, 
+           countryIso3, 
+           source, 
+           data_type, 
+           date_type,
+           fill = list(incidence = 0)) %>% 
+  ungroup() %>%
   arrange(region, date, date_type)
 
 plotting_death_data <- data_hospitalization %>%
@@ -216,6 +236,16 @@ plotting_death_data <- data_hospitalization %>%
     incidence = n,
     .keep  = "unused"
   ) %>% 
+  dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
+  complete(date = seq(min(date), max(date), by = "days"), 
+           local_infection,
+           region, 
+           countryIso3, 
+           source, 
+           data_type, 
+           date_type,
+           fill = list(incidence = 0)) %>% 
+  ungroup() %>%
   arrange(region, date, date_type)
 
 hospital_data <- data_hospitalization %>%
@@ -239,7 +269,17 @@ hospital_data <- data_hospitalization %>%
     data_type = "hospitalized",
     incidence = n,
     .keep  = "unused"
-  ) %>% 
+  ) %>%
+  dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
+  complete(date = seq(min(date), max(date), by = "days"), 
+           local_infection,
+           region, 
+           countryIso3, 
+           source, 
+           data_type, 
+           date_type,
+           fill = list(incidence = 0)) %>% 
+  ungroup() %>% 
   arrange(region, date, date_type)
 
 plotting_hospital_data <- data_hospitalization %>%
@@ -263,6 +303,16 @@ plotting_hospital_data <- data_hospitalization %>%
     incidence = n,
     .keep  = "unused"
   ) %>% 
+  dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
+  complete(date = seq(min(date), max(date), by = "days"), 
+           local_infection,
+           region, 
+           countryIso3, 
+           source, 
+           data_type, 
+           date_type,
+           fill = list(incidence = 0)) %>% 
+  ungroup() %>% 
   arrange(region, date, date_type)
 
 allKtn <- bind_rows(confirmed_case_data, hospital_data, death_data )
@@ -291,7 +341,6 @@ plotting_allCH <- plotting_allKtn %>%
 
 allBAGdata <- bind_rows(allKtn, allCH, plotting_allKtn, plotting_allCH) %>%
   ungroup() %>%
-  complete(date, countryIso3, region, source, data_type, date_type, local_infection) %>%
   mutate(value = replace_na(incidence, 0), .keep = "unused") %>%
   arrange(countryIso3, region, data_type, date_type, local_infection, date) %>%
   dplyr::group_by(countryIso3, region, source, data_type) %>%
@@ -351,16 +400,79 @@ confirmedCHEDataTests <- data_hospitalization %>%
     date_type = "report",
     .keep  = "unused"
   ) %>% 
+  arrange(date)
+
+confirmedCHEDataTests <- data_hospitalization %>%
+  filter(!is.na(fall_dt)) %>% 
+  dplyr::select(fall_dt, ktn, exp_ort) %>%
+  mutate(date = ymd(fall_dt),
+         local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE")) %>% 
+  dplyr::group_by(date, local_infection) %>%
+  dplyr::count() %>%
+  ungroup() %>% 
+  dplyr::mutate(
+    countryIso3 = "CHE",
+    region = "CHE",
+    source = "FOPH",
+    data_type = "confirmed",
+    value = n,
+    date_type = "report",
+    .keep  = "unused"
+  ) %>% 
+  dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
+  complete(date = seq(min(date), max(date), by = "days"), 
+           local_infection,
+           region, 
+           countryIso3, 
+           source, 
+           data_type, 
+           date_type,
+           fill = list(value = 0)) %>% 
+  ungroup() %>% 
   arrange(date) %>% 
   left_join(
     mutate(nTests, data_type = "confirmed"),
     by = c("date", "region", "countryIso3", "data_type")) %>% 
   mutate(
     data_type = "Confirmed cases / tests",
-    value = value / totalTests
+    value = value / totalTests * mean(totalTests)
   )
 
-plotting_confirmedCHEDataTests <- confirmedCHEDataTests %>%  mutate(date_type = "report_plotting")
+
+plotting_confirmedCHEDataTests <- data_hospitalization %>%
+  filter(!is.na(fall_dt)) %>% 
+  dplyr::select(fall_dt, ktn) %>%
+  mutate(date = ymd(fall_dt)) %>% 
+  dplyr::group_by(date) %>%
+  dplyr::count() %>%
+  ungroup() %>% 
+  dplyr::mutate(
+    countryIso3 = "CHE",
+    region = "CHE",
+    source = "FOPH",
+    data_type = "confirmed",
+    value = n,
+    date_type = "report_plotting",
+    local_infection = NA,
+    .keep  = "unused"
+  ) %>% 
+  dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
+  complete(date = seq(min(date), max(date), by = "days"), 
+           local_infection,
+           region, 
+           countryIso3, 
+           source, 
+           data_type, 
+           date_type,
+           fill = list(value = 0)) %>% 
+  arrange(date) %>% 
+  left_join(
+    mutate(nTests, data_type = "confirmed"),
+    by = c("date", "region", "countryIso3", "data_type")) %>% 
+  mutate(
+    data_type = "Confirmed cases / tests",
+    value = value / totalTests * mean(totalTests)
+  )
 
 allBAGdata <- bind_rows(confirmedCHEDataTests, plotting_confirmedCHEDataTests, allBAGdata)
 

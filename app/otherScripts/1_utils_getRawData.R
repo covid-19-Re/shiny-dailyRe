@@ -991,7 +991,6 @@ getDataZAF <- function() {
 ## linelist data
 
 # url <-  "https://data.cdc.gov/api/views/vbim-akqf/rows.csv?accessType=DOWNLOAD"
-
                # cases <- read_csv(url)
 #https://data.cdc.gov/api/views/vbim-akqf/rows.csv?accessType=DOWNLOAD
 
