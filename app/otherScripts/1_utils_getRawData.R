@@ -1061,6 +1061,7 @@ getCountryPopData <- function(tempFileName, tReload = 15) {
       countriesAndTerritories = col_character(),
       countryterritoryCode = col_character(),
       popData2019 = col_integer())) %>%
+    distinct() %>%
     rename(
       countryIso3 = countryterritoryCode,
       country = countriesAndTerritories,
