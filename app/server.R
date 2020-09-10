@@ -313,7 +313,7 @@ server <- function(input, output, session) {
       popoverId <- "currentR"
       popoverTitle <- "R<sub>e</sub> point estimate"
       popoverText <- str_c("This is the most recent possible R<sub>e</sub> estimate based on confirmed cases.",
-        "This point estimate is not consolidated yet and will could change as more data comes in.")
+        "This point estimate is not consolidated yet and could change as more data comes in.")
 
       ui <- rAvgValueBox(currentRestimate, text, icon, popoverId, popoverTitle, popoverText)
       return(ui)
