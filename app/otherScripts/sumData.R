@@ -3,6 +3,8 @@ library(tidyverse)
 source(here::here("app/utils.R"))
 
 pathToCountryData <- here::here("app", "data", "countryData")
+countryNames <- read_csv(here::here("app", "data", "continents.csv"), col_types = cols(.default = col_character())) %>%
+  select(-continent)
 
 allData <- list(caseData = list(), estimates = list())
 estimatePlotRanges <- list()
@@ -16,8 +18,14 @@ for (iCountry in allCountries) {
   estimatePlotRanges[[iCountry]] <- iCountryData$estimateRanges[[iCountry]]
 }
 
-allData$caseData <- bind_rows(allData$caseData)
+allData$caseData <- bind_rows(allData$caseData) %>%
+  # fix country names
+  select(-country) %>%
+  left_join(countryNames, by = "countryIso3")
 allData$estimates <- bind_rows(allData$estimates) %>%
+  # fix country names
+  select(-country) %>%
+  left_join(countryNames, by = "countryIso3") %>%
   group_by(countryIso3, data_type) %>%
   filter(
       between(date,
