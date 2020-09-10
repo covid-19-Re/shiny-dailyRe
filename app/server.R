@@ -294,7 +294,7 @@ server <- function(input, output, session) {
         transmute(
           country, region,
           mean = median_R_mean,
-          low = median(median_R_lowHPD),
+          low = median_R_lowHPD,
           high = median_R_highHPD,
           date = format(date, i18n()$t("%b-%d")),
           regionSort = factor(region, levels = countrySelectValue)
