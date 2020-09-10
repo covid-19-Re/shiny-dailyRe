@@ -18,7 +18,7 @@ dashboardPage(title = "COVID-19 Re",
         fluidRow(column(12,
          box(
           title = "Status Update", width = 12, background = "light-blue",
-            p("Due to data corruption, Re estimates are currently not available. Data is being reanalyzed now. We expect the full data set to be available again at 17:00 CEST")
+            p("Due to data corruption, Re estimates are currently not available. Data is being reanalyzed now. We expect the full data set to be available again at 18:00 CEST")
         ))),
         fluidRow(column(12,
           uiOutput("timeseriesPlotUI"),
