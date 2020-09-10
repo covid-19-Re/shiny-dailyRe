@@ -49,3 +49,12 @@
   background-color: white;
   padding-right: 10px;
 }
+
+.small-box .icon-large {
+  top: -8px;
+}
+
+.valueHelp {
+  font-weight:normal;
+  font-size:12px !important
+}

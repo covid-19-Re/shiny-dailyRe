@@ -301,8 +301,45 @@ divergentColorPal <- function(palette, domain, midpoint, na.color = "#808080", a
 }
 
 casesLegendLabels <- function(type, cuts) {
-
   out <- format(cuts, scientific = FALSE, big.mark = ",")
   out[length(out)] <- str_c("≥", out[length(out)])
   return(out)
+}
+
+rAvgValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverText) {
+ 
+  rEstimateText <- rEstimate %>%
+      glue::glue_data(
+        "<p style=margin-bottom:0px>{country} ({date})</p><h3>{round(mean, 2)} ({round(high, 2)} - {round(low, 2)})</h3>"
+      )
+  if (length(rEstimateText) > 3) {
+    rEstimateText <- c(rEstimateText[1:3], "<h3>...</h3>")
+  }
+  rEstimateText <- rEstimateText %>%
+    str_c(collapse = "")
+
+  rValueBox <- tagList(
+    HTML(
+      glue::glue(
+        "<div class='small-box bg-blue'>
+          <div class='inner'>
+            {rEstimateText}
+            <p>
+              {text} <i class='fa fa-exclamation-circle'></i>
+            </p>
+          </div>
+          <div class = 'icon-large'>
+            {icon}
+          </div>
+        </div>"
+      )
+    ),
+    bsPopover(popoverId, popoverTitle,
+      popoverText,
+      placement = "bottom", trigger = "hover",
+      options = NULL)
+    
+  )
+
+  return(rValueBox)
 }

@@ -280,80 +280,83 @@ server <- function(input, output, session) {
       fluidRow(uiOutput("timeseriesPlotTabsUI"))
     })
 
-    output$currentR <- renderUI({
+    currentRestimate <- reactive({
       countryData <- countryData()
       countrySelectValue <- countrySelectValue()
 
-      rEstimate <- countryData$estimates %>%
+      currentRestimate <- countryData$estimates %>%
         filter(
           region %in% countrySelectValue,
           data_type == "Confirmed cases",
           estimate_type == "Cori_slidingWindow") %>%
         group_by(region) %>%
-        filter(date == max(date))
-        
-      rEstimateText <- rEstimate %>%
-        glue::glue_data("{round(median_R_mean, 2)} ({round(median_R_lowHPD, 2)} - {round(median_R_highHPD, 2)})")
+        filter(date == max(date)) %>%
+        transmute(
+          country, region,
+          mean = median_R_mean,
+          low = median(median_R_lowHPD),
+          high = median_R_highHPD,
+          date = format(date, i18n()$t("%b-%d")),
+          regionSort = factor(region, levels = countrySelectValue)
+        ) %>%
+        arrange(regionSort)
 
-      valueBox(width = NULL,
-         rEstimateText,
-          div(
-            HTML(
-              str_c(
-                i18n()$t("most recent possible R<sub>e</sub> point estimate"), " (",
-                format(rEstimate$date, i18n()$t("%b-%d")), ")"
-              )
-            ),
-            p(HTML(
-              i18n()$t("This is the most recent possible R<sub>e</sub> estimate due to delays between infection and the last data observation."),
-              ""),
-              style = "font-weight:normal;font-size:12px")
-          ),
-          icon = tags$i(class = "fa", style = "font-family:serif;font-style:italic;",
-            HTML("R<sub>e</sub>")),
-          color = "blue",
-        )
+      return(currentRestimate)
+    })
+
+    output$currentR <- renderUI({
+      currentRestimate <- currentRestimate()
+      
+      text <- i18n()$t("most recent possible R<sub>e</sub> point estimate")
+      icon <- tags$i(class = "fa", style = "font-family:serif;font-style:italic;",
+          HTML("R<sub>e</sub>"))
+      popoverId <- "currentR"
+      popoverTitle <- "R<sub>e</sub> point estimate"
+      popoverText <- str_c("This is the most recent possible R<sub>e</sub> estimate due to delays ",
+        "between infection and the last data observation. ",
+        "This point estimate can be influenced strongly by single days with low case counts, e.g. weekends.")
+
+      ui <- rAvgValueBox(currentRestimate, text, icon, popoverId, popoverTitle, popoverText)
+      return(ui)
+    })
+
+    avgRestimate <- reactive({
+      countryData <- countryData()
+      countrySelectValue <- countrySelectValue()
+
+      avgRestimate <- countryData$estimates %>%
+        filter(
+          region %in% countrySelectValue,
+          data_type == "Confirmed cases",
+          estimate_type == "Cori_slidingWindow") %>%
+        group_by(country, region) %>%
+        filter(date >= max(date) - 7) %>%
+        summarize(
+          mean = mean(median_R_mean),
+          low = min(median_R_lowHPD),
+          high = max(median_R_highHPD),
+          date = str_c(format(min(date), translator$t("%b-%d")), " - ", format(max(date), translator$t("%b-%d"))),
+          .groups = "drop"
+        ) %>%
+        mutate(
+          regionSort = factor(region, levels = countrySelectValue)
+        ) %>%
+        arrange(regionSort)
+
+      return(avgRestimate)
     })
 
     output$avgR <- renderUI({
-      countryData <- countryData()
-      countrySelectValue <- countrySelectValue()
+      avgRestimate <- avgRestimate()
 
-      rEstimate <- countryData$estimates %>%
-        filter(
-          region %in% countrySelectValue,
-          data_type == "Confirmed cases",
-          estimate_type == "Cori_slidingWindow") %>%
-        group_by(region) %>%
-        filter(date >= max(date) - 7) %>%
-        summarize(
-          meanR = mean(median_R_mean),
-          minCIR = min(median_R_lowHPD),
-          maxCIR = max(median_R_highHPD),
-          minDate = min(date),
-          maxDate = max(date),
-          .groups = "drop"
-        )
-      
-      rEstimateText <- rEstimate %>%
-        glue::glue_data("{round(meanR, 2)} ({round(minCIR, 2)} - {round(maxCIR, 2)})")
+      text <- i18n()$t("mean R<sub>e</sub> over the last 7 days")
+      icon <- tags$i(class = "fa", style = "font-family:serif;font-style:italic;",
+        HTML("<span style='text-decoration:overline'>R</span><sub>e</sub>"))
+      popoverId <- "avgR"
+      popoverTitle <- "mean R<sub>e</sub>"
+      popoverText <- str_c("This mean may more accurately reflect the epidemic than the point estimate.")
 
-      ui <- valueBox(width = NULL,
-          rEstimateText,
-          div(
-            HTML(
-              str_c(
-                i18n()$t("mean R<sub>e</sub> over the last 7 days"),
-                " (", format(rEstimate$minDate, i18n()$t("%b-%d")), " - ",
-                format(rEstimate$maxDate, i18n()$t("%b-%d")), ")"
-              )
-            ),
-            p("helptext", style = "font-weight:normal;font-size:12px"),
-          ),
-          icon = tags$i(class = "fa", style = "font-family:serif;font-style:italic;",
-             HTML("<span style='text-decoration:overline'>R</span><sub>e</sub>")),
-          color = "light-blue"
-        )
+      ui <- rAvgValueBox(avgRestimate, text, icon, popoverId, popoverTitle, popoverText)
 
       return(ui)
     })

@@ -10,6 +10,7 @@ library(leaflet)
 library(htmltools)
 library(htmlwidgets)
 library(shinycssloaders)
+library(shinyBS)
 
 source("otherScripts/plotlyFunctions.R")
 source("utils.R")
