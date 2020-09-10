@@ -490,11 +490,9 @@ getCaseDataFRA <- function() {
   }
   
   longData <- rawData %>%
+    filter(cl_age90 == 0) %>% 
     dplyr::select(date = jour,
-                  P,
-                  cl_age90) %>%
-    group_by(date) %>%
-    dplyr::summarise(value = sum(P), .groups = "drop") %>% 
+                  value = P) %>% 
     arrange(date) %>% 
     mutate(data_type = "confirmed",
            countryIso3 = "FRA",
@@ -1081,6 +1079,7 @@ getCountryPopData <- function(tempFileName, tReload = 15) {
       countriesAndTerritories = col_character(),
       countryterritoryCode = col_character(),
       popData2019 = col_integer())) %>%
+    distinct() %>%
     rename(
       countryIso3 = countryterritoryCode,
       country = countriesAndTerritories,

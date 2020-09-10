@@ -36,7 +36,6 @@ countryList <- tibble(
       string = list.files(path = pathToCountryData, pattern = ".*-Estimates", recursive = TRUE),
       pattern = "(.*)-.*"
     )[, 2])) %>%
-  left_join(select(popData, countryIso3), by = "countryIso3") %>%
   left_join(
     continents,
     by = "countryIso3") %>%

@@ -23,7 +23,7 @@ git reset --hard HEAD
 git pull
 
 cd "$parent_path"
-rm *.Rout
+rm *ZAF.Rout
 
 echo "running R script to extract BAG data & calculate delays ..."
 runRScript format_BAG_data.R
