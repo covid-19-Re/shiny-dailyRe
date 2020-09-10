@@ -312,9 +312,8 @@ server <- function(input, output, session) {
           HTML("R<sub>e</sub>"))
       popoverId <- "currentR"
       popoverTitle <- "R<sub>e</sub> point estimate"
-      popoverText <- str_c("This is the most recent possible R<sub>e</sub> estimate due to delays ",
-        "between infection and the last data observation. ",
-        "This point estimate can be influenced strongly by single days with low case counts, e.g. weekends.")
+      popoverText <- str_c("This is the most recent possible R<sub>e</sub> estimate based on confirmed cases.",
+        "This point estimate is not consolidated yet and will could change as more data comes in.")
 
       ui <- rAvgValueBox(currentRestimate, text, icon, popoverId, popoverTitle, popoverText)
       return(ui)
@@ -354,7 +353,7 @@ server <- function(input, output, session) {
         HTML("<span style='text-decoration:overline'>R</span><sub>e</sub>"))
       popoverId <- "avgR"
       popoverTitle <- "mean R<sub>e</sub>"
-      popoverText <- str_c("This mean may more accurately reflect the epidemic than the point estimate.")
+      popoverText <- str_c("This mean of R<sub>e</sub> estimates based on confirmed cases may more accurately reflect the epidemic than the point estimate.")
 
       ui <- rAvgValueBox(avgRestimate, text, icon, popoverId, popoverTitle, popoverText)
 
