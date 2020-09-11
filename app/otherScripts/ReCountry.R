@@ -62,8 +62,6 @@ countryData <- getCountryData(
     by = c("countryIso3", "region")
   )
 
-countryData %>% filter(data_type == "Confirmed cases") %>% print(n=Inf)
-
 if (dim(countryData)[1] > 0) {
   # check for changes in country data
   countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.rds"))
