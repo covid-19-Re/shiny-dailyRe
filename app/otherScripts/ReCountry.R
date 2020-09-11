@@ -23,31 +23,28 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("NLD")
+  args <- c("TUR")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
 
 # Fetch Population Data (do once)
 popDataPath <- here::here("app", "data", "popData.rds")
-if (!file.exists(popDataPath)) {
-  popDataWorldBank <- getCountryPopData(here::here("app/data/temp/ECDCdata.csv"), 15) %>%
-    filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
-    mutate(region = countryIso3)
-  popDataCH <- read_csv(
-    file = here::here("app/data/additionalPopSizes.csv"),
-    col_types = cols(
-      .default = col_character(),
-      populationSize = col_double()
-    )
+
+popDataWorldBank <- getCountryPopData(here::here("app/data/temp/ECDCdata.csv"), 15) %>%
+  filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
+  mutate(region = countryIso3)
+popDataCH <- read_csv(
+  file = here::here("app/data/additionalPopSizes.csv"),
+  col_types = cols(
+    .default = col_character(),
+    populationSize = col_double()
   )
-  
-  popData <- bind_rows(popDataWorldBank, popDataCH) %>%
-    dplyr::select(countryIso3, country, region, populationSize)
-  saveRDS(popData, file = popDataPath)
-} else {
-  popData <- readRDS(popDataPath)
-}
+)
+popData <- bind_rows(popDataWorldBank, popDataCH) %>%
+  dplyr::select(countryIso3, country, region, populationSize)
+saveRDS(popData, file = popDataPath)
+
 
 basePath <- here::here("app", "data", "countryData")
 if (!dir.exists(basePath)) {
@@ -64,6 +61,8 @@ countryData <- getCountryData(
     popData,
     by = c("countryIso3", "region")
   )
+
+countryData %>% filter(data_type == "Confirmed cases") %>% print(n=Inf)
 
 if (dim(countryData)[1] > 0) {
   # check for changes in country data
@@ -174,12 +173,10 @@ if (dim(countryData)[1] > 0) {
         mutate(
           data_type = fct_drop(data_type)
         )
-      
+
       # truncation
       right_truncation <- 2
       countryData <- countryData %>%
-        filter(continent == unique(continent)[1]) %>% 
-        dplyr::select( -continent) %>% 
         group_by(country, region, source, data_type) %>%
         filter(date <= (max(date) - right_truncation)) %>%
         dplyr::select(-countryIso3, -populationSize) %>%
