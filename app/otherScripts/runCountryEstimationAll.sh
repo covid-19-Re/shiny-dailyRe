@@ -54,7 +54,6 @@ for i in "AFG" "ALB" "ATA" "DZA" "ASM" "AND" "AGO" "ATG" "AZE" "ARG" \
          "TUN" "TUR" "TKM" "TCA" "TUV" "UGA" "UKR" "MKD" "EGY" \
          "GBR" "GGY" "JEY" "IMN" "TZA" "USA" "VIR" "BFA" "URY" "UZB" \
          "VEN" "WLF" "WSM" "YEM" "ZMB" "XKX" "CHI" "ZAF" "CHE"
-# for i in "TUR" "RUS" "CYP" "ARM" "AZE" "KAZ" "GEO"
 do
 	runRScript ReCountry.R "$i"
   if [ "$i" = "CHE" ]
@@ -65,8 +64,8 @@ done
 
 runRScript sumData.R
 
-# echo "updating covid19-Data ..."
-# cd "../../../dailyRe-Data"
-# git add .
-# git commit -m "update data"
-# git push
+echo "updating covid19-Data ..."
+cd "../../../dailyRe-Data"
+git add .
+git commit -m "update data"
+git push

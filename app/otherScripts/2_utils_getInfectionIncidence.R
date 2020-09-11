@@ -290,7 +290,6 @@ do_deconvolution <- function(
 ) {
   
   # use mode of 'constant_delay_distribution'. -1 because indices are offset by one as the delay can be 0.
-  # first_guess_delay <- which.max(delay_distribution_matrix[,1]) - 1 #TODO remove this
   
   first_guess_delay <- initial_delta
   
@@ -378,7 +377,7 @@ get_infection_incidence_by_deconvolution <- function(
       constant_delay_distribution_incubation,
       all_dates)
     
-    initial_delta_incubation <- median(constant_delay_distribution_incubation, na.rm = T)
+    initial_delta_incubation <- which.max(constant_delay_distribution_incubation)[1] - 1
   } else {
     if(is_empirical) {
       delay_distribution_matrix_onset_to_report <- get_matrix_empirical_waiting_time_distr(
@@ -389,14 +388,14 @@ get_infection_incidence_by_deconvolution <- function(
         constant_delay_distribution_incubation,
         all_dates)
       
-      initial_delta_incubation <- median(constant_delay_distribution_incubation, na.rm = T)
+      initial_delta_incubation <- which.max(constant_delay_distribution_incubation)[1] - 1
       initial_delta_report <-  median(empirical_delays$delay, na.rm = T)
     } else {
       delay_distribution_matrix <- get_matrix_constant_waiting_time_distr(
         constant_delay_distribution,
         all_dates)
       
-      initial_delta <- median(constant_delay_distribution, na.rm = T)
+      initial_delta <- which.max(constant_delay_distribution)[1] - 1
     }
   }
   
