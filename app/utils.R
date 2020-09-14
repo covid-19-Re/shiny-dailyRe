@@ -310,7 +310,7 @@ rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverTex
  
   rEstimateText <- rEstimate %>%
       glue::glue_data(
-        "<p style=margin-bottom:0px>{country} ({date})</p><h3>{round(mean, 3)} ({round(low, 3)} - {round(high, 3)})</h3>"
+        "<h3 style=margin-bottom:0px>{round(mean, 3)} ({round(low, 3)} - {round(high, 3)})</h3><p style=margin-top:0px>{country} ({date})</p>"
       )
   if (length(rEstimateText) > 3) {
     rEstimateText <- c(rEstimateText[1:3], "<h3>...</h3>")
@@ -323,10 +323,11 @@ rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverTex
       glue::glue(
         "<div class='small-box bg-blue'>
           <div class='inner'>
-            {rEstimateText}
             <p>
               {text} <i class='fa fa-exclamation-circle'></i>
             </p>
+            {rEstimateText}
+           
           </div>
           <div class = 'icon-large'>
             {icon}
