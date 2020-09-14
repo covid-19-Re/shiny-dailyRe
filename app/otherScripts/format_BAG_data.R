@@ -111,6 +111,7 @@ confirmed_case_data <- data_hospitalization %>%
   dplyr::select(manifestation_dt, fall_dt, ktn, exp_ort) %>%
   mutate(across(c(manifestation_dt, fall_dt), ymd)) %>% 
   mutate(across(c(manifestation_dt, fall_dt), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>%
+  filter(!is.na(fall_dt)) %>%
   mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
          date = if_else(is.na(manifestation_dt), fall_dt, manifestation_dt),
@@ -145,6 +146,7 @@ plotting_confirmed_case_data <-  data_hospitalization %>%
          date = ymd(fall_dt),
          region = ktn,
          .keep = "none") %>% 
+  filter(between(date, min_date, max_date)) %>% 
   dplyr::group_by(region, date, date_type) %>%
   dplyr::count() %>%
   ungroup() %>%
@@ -260,6 +262,7 @@ hospital_data <- data_hospitalization %>%
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
          region = ktn,
          .keep = "none") %>% 
+  filter(!is.na(date)) %>% 
   dplyr::group_by(region, date, date_type, local_infection) %>%
   dplyr::count() %>%
   ungroup() %>%
@@ -292,6 +295,7 @@ plotting_hospital_data <- data_hospitalization %>%
          date = hospdatin,
          region = ktn,
          .keep = "none") %>% 
+  filter(!is.na(date)) %>% 
   dplyr::group_by(region, date, date_type) %>%
   dplyr::count() %>%
   ungroup() %>%
@@ -407,6 +411,7 @@ confirmedCHEDataTests <- data_hospitalization %>%
   dplyr::select(fall_dt, ktn, exp_ort) %>%
   mutate(date = ymd(fall_dt),
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE")) %>% 
+  filter(between(date, min_date, max_date)) %>% 
   dplyr::group_by(date, local_infection) %>%
   dplyr::count() %>%
   ungroup() %>% 
@@ -443,6 +448,7 @@ plotting_confirmedCHEDataTests <- data_hospitalization %>%
   filter(!is.na(fall_dt)) %>% 
   dplyr::select(fall_dt, ktn) %>%
   mutate(date = ymd(fall_dt)) %>% 
+  filter(between(date, min_date, max_date)) %>% 
   dplyr::group_by(date) %>%
   dplyr::count() %>%
   ungroup() %>% 
