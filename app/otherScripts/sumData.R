@@ -4,7 +4,7 @@ source(here::here("app/utils.R"))
 
 pathToCountryData <- here::here("app", "data", "countryData")
 countryNames <- read_csv(here::here("app", "data", "continents.csv"), col_types = cols(.default = col_character())) %>%
-  select(-continent)
+  dplyr::select(-continent)
 
 allData <- list(caseData = list(), estimates = list())
 estimatePlotRanges <- list()

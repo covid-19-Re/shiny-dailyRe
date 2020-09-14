@@ -315,7 +315,7 @@ server <- function(input, output, session) {
     regionCountriesDf <- allData$caseData %>%
       group_by(countryIso3) %>%
       filter(length(unique(region)) > 1) %>%
-      select(countryIso3, country) %>%
+      dplyr::select(countryIso3, country) %>%
       distinct()
 
     regionCountries <- regionCountriesDf$countryIso3
@@ -374,7 +374,7 @@ server <- function(input, output, session) {
           estimate_type == input$estimationTypeSelect) %>%
         group_by(region) %>%
         filter(date == max(date)) %>%
-        select(
+        dplyr::select(
             ADM0_A3_IS = countryIso3,
             region = region,
             estimate_type,
@@ -396,7 +396,7 @@ server <- function(input, output, session) {
         ) %>%
         ungroup() %>%
         mutate(cases14d = sum14days / populationSize * 100000) %>%
-        select(
+        dplyr::select(
           ADM0_A3_IS = countryIso3,
           region = region,
           sourceCases = source,
