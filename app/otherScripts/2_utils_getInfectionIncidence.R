@@ -189,33 +189,37 @@ get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_de
       }
     }
     
-     recent_delay_counts <-  recent_counts_distribution %>%
+    recent_delay_counts <-  recent_counts_distribution %>%
       dplyr::select(delay) %>% 
       group_by(delay) %>% 
       summarise(counts = n(), .groups = "drop") %>% 
        complete(delay  = seq(min(delay), max(delay)),
                 fill = list(counts = 0)) 
      
-     recent_delays <- recent_counts_distribution %>% pull(delay)
+    recent_delays <- recent_counts_distribution %>% pull(delay)
      
-     gamma_fit <- fitdist(recent_delays + 1, distr = "gamma")
+    gamma_fit <- try(fitdist(recent_delays + 1, distr = "gamma"))
+    if ("try-error" %in% class(gamma_fit)) {
+      cat("    mle failed to estimate the parameters. Trying method = \"mme\"\n")
+      gamma_fit <- fitdist(recent_delays + 1, distr = "gamma", method = "mme")
+    }
      
-     shape_fit <- gamma_fit$estimate["shape"]
-     rate_fit <- gamma_fit$estimate["rate"]
-     
-     
-     last_index <- N - i + 1
-     x <- (1:last_index) + 0.5
-     x <- c(0, x)
-     
-     cdf_values <- pgamma(x, shape = shape_fit, rate = rate_fit)
-     freq <- diff(cdf_values)
-     
-     if(length(freq) >= last_index) {
-       delay_distribution_matrix[, i ] <-  c(rep(0, times = i - 1 ), freq[1:last_index])
-     } else {
-       delay_distribution_matrix[, i ] <-  c(rep(0, times = i - 1 ), freq[1:length(freq)], rep(0, times = last_index - length(freq)))
-     }
+    shape_fit <- gamma_fit$estimate["shape"]
+    rate_fit <- gamma_fit$estimate["rate"]
+    
+    
+    last_index <- N - i + 1
+    x <- (1:last_index) + 0.5
+    x <- c(0, x)
+    
+    cdf_values <- pgamma(x, shape = shape_fit, rate = rate_fit)
+    freq <- diff(cdf_values)
+    
+    if(length(freq) >= last_index) {
+      delay_distribution_matrix[, i ] <-  c(rep(0, times = i - 1 ), freq[1:last_index])
+    } else {
+      delay_distribution_matrix[, i ] <-  c(rep(0, times = i - 1 ), freq[1:length(freq)], rep(0, times = last_index - length(freq)))
+    }
   }
   
   return( delay_distribution_matrix )
