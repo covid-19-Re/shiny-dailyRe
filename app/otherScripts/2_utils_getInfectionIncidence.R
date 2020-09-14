@@ -193,13 +193,17 @@ get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_de
       dplyr::select(delay) %>% 
       group_by(delay) %>% 
       summarise(counts = n(), .groups = "drop") %>% 
-      complete(delay  = seq(min(delay), max(delay)),
-               fill = list(counts = 0)) 
-    
+       complete(delay  = seq(min(delay), max(delay)),
+                fill = list(counts = 0)) 
+     
     recent_delays <- recent_counts_distribution %>% pull(delay)
-    
-    gamma_fit <- fitdist(recent_delays + 1, distr = "gamma")
-    
+     
+    gamma_fit <- try(fitdist(recent_delays + 1, distr = "gamma"))
+    if ("try-error" %in% class(gamma_fit)) {
+      cat("    mle failed to estimate the parameters. Trying method = \"mme\"\n")
+      gamma_fit <- fitdist(recent_delays + 1, distr = "gamma", method = "mme")
+    }
+     
     shape_fit <- gamma_fit$estimate["shape"]
     rate_fit <- gamma_fit$estimate["rate"]
     
