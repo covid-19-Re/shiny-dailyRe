@@ -476,4 +476,11 @@ plotting_confirmedCHEDataTests <- data_hospitalization %>%
 
 allBAGdata <- bind_rows(confirmedCHEDataTests, plotting_confirmedCHEDataTests, allBAGdata)
 
+#TODO remove when imports are integrated
+allBAGdata <- allBAGdata %>%  
+  group_by(date, region, countryIso3, source, data_type, date_type, positiveTests, negativeTests, totalTests, testPositivity) %>% 
+  summarise(value = sum(value), .groups = "drop") %>% 
+  mutate(local_infection = "TRUE") %>% 
+  arrange(region, data_type, date_type, date)
+
 write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CH.csv"))

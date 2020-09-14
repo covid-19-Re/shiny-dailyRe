@@ -21,11 +21,11 @@ for (iCountry in allCountries) {
 
 allData$caseData <- bind_rows(allData$caseData) %>%
   # fix country names
-  select(-country) %>%
+  dplyr::select(-country) %>%
   left_join(countryNames, by = "countryIso3")
 allData$estimates <- bind_rows(allData$estimates) %>%
   # fix country names
-  select(-country) %>%
+  dplyr::select(-country) %>%
   left_join(countryNames, by = "countryIso3") %>%
   group_by(countryIso3, data_type) %>%
   filter(
