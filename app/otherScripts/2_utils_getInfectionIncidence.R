@@ -381,7 +381,7 @@ get_infection_incidence_by_deconvolution <- function(
       constant_delay_distribution_incubation,
       all_dates)
     
-    initial_delta_incubation <- which.max(constant_delay_distribution_incubation)[1] - 1
+    initial_delta_incubation <- min(which(cumsum(constant_delay_distribution_incubation) > 0.5)) - 1 # take median value (-1 because index 1 corresponds to zero days)
   } else {
     if(is_empirical) {
       delay_distribution_matrix_onset_to_report <- get_matrix_empirical_waiting_time_distr(
@@ -392,14 +392,14 @@ get_infection_incidence_by_deconvolution <- function(
         constant_delay_distribution_incubation,
         all_dates)
       
-      initial_delta_incubation <- which.max(constant_delay_distribution_incubation)[1] - 1
+      initial_delta_incubation <- min(which(cumsum(constant_delay_distribution_incubation) > 0.5)) - 1 # take median value (-1 because index 1 corresponds to zero days)
       initial_delta_report <-  median(empirical_delays$delay, na.rm = T)
     } else {
       delay_distribution_matrix <- get_matrix_constant_waiting_time_distr(
         constant_delay_distribution,
         all_dates)
       
-      initial_delta <- which.max(constant_delay_distribution)[1] - 1
+      initial_delta <- min(which(cumsum(constant_delay_distribution) > 0.5)) - 1 # take median value (-1 because index 1 corresponds to zero days)
     }
   }
   
