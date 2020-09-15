@@ -344,7 +344,7 @@ get_infection_incidence_by_deconvolution <- function(
   constant_delay_distribution,
   constant_delay_distribution_incubation = c(),
   is_onset_data = F,
-  is_local_cases = F,
+  is_local_cases = T,
   smooth_incidence = T,
   empirical_delays  = tibble(),
   n_bootstrap = 5,
