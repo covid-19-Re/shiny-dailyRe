@@ -6,7 +6,7 @@ parent_path=$(
 
 runRScript () {
   echo "running" $1 $2 "..."
-  Rscript --vanilla --verbose $1 $2 >>messagesRest.Rout 2>>errorsRest.Rout
+  Rscript --vanilla --verbose $1 $2 >>messagesAll.Rout 2>>errorsAll.Rout
   retVal=$?
   if [ $retVal -ne 0 ]; then
     echo "Script didn't run successfully (Error" $retVal ")"
@@ -23,7 +23,7 @@ git reset --hard HEAD
 git pull
 
 cd "$parent_path"
-rm *.Rout
+rm *All.Rout
 
 echo "running R script to extract BAG data & calculate delays ..."
 runRScript format_BAG_data.R
