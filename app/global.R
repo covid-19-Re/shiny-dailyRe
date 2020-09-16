@@ -28,7 +28,7 @@ pathToContinentsData <- file.path("data/continents.csv")
 pathToAllCountryData <- file.path("data/allCountryData.rds")
 
 
-popData <- readRDS(pathToPopData)
+popData <- readRDS(pathToPopData) %>% filter(!is.na(countryIso3))
 continents <- read_csv(pathToContinentsData, col_types = cols(.default = col_character()))
 
 countryList <- tibble(

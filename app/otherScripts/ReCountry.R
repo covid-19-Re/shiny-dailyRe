@@ -42,7 +42,8 @@ popDataCH <- read_csv(
   )
 )
 popData <- bind_rows(popDataWorldBank, popDataCH) %>%
-  dplyr::select(countryIso3, country, region, populationSize)
+  dplyr::select(countryIso3, country, region, populationSize) %>%
+  filter(!is.na(countryIso3))
 saveRDS(popData, file = popDataPath)
 
 
