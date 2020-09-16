@@ -224,6 +224,7 @@ server <- function(input, output, session) {
     })
 
     output$timeseriesPlotTabsUI <- renderUI({
+      
       if (length(countrySelectValue()) == 1) {
         if (countrySelectValue() == "CHE") {
           tabList <- list(
@@ -306,16 +307,15 @@ server <- function(input, output, session) {
 
     output$currentR <- renderUI({
       currentRestimate <- currentRestimate()
-      
-      text <- i18n()$t("most recent possible R<sub>e</sub> point estimate")
-      icon <- tags$i(class = "fa", style = "font-family:serif;font-style:italic;",
-          HTML("R<sub>e</sub>"))
+
+      text <- i18n()$t("Most recent effective reproductive number estimate")
+      icon <- NULL
       popoverId <- "currentR"
-      popoverTitle <- "R<sub>e</sub> point estimate"
-      popoverText <- str_c("This is the most recent possible R<sub>e</sub> estimate based on confirmed cases.",
+      popoverTitle <- "effective reproductive number estimate"
+      popoverText <- str_c("This is the most recent possible estimate based on confirmed cases. ",
         "This point estimate is not consolidated yet and could change as more data comes in.")
 
-      ui <- rValueBox(currentRestimate, text, icon, popoverId, popoverTitle, popoverText)
+      ui <- rValueBox(currentRestimate, text, icon, popoverId, popoverTitle, popoverText, background = "bg-light-blue")
       return(ui)
     })
 
@@ -348,12 +348,12 @@ server <- function(input, output, session) {
     output$avgR <- renderUI({
       avgRestimate <- avgRestimate()
 
-      text <- i18n()$t("mean R<sub>e</sub> over the last 7 days")
-      icon <- tags$i(class = "fa", style = "font-family:serif;font-style:italic;",
-        HTML("<span style='text-decoration:overline'>R</span><sub>e</sub>"))
+      text <- i18n()$t("Average R<sub>e</sub> over the last 7 days")
+      icon <- NULL
       popoverId <- "avgR"
-      popoverTitle <- "mean R<sub>e</sub>"
-      popoverText <- str_c("This mean of R<sub>e</sub> estimates based on confirmed cases may more accurately reflect the epidemic than the point estimate.")
+      popoverTitle <- "average effective reproductive number R<sub>e</sub>"
+      popoverText <- str_c("This estimate is based on confirmed cases and averaged over the last 7 days.",
+        " It is a stabilized picture of the recent epidemic dynamic.")
 
       ui <- rValueBox(avgRestimate, text, icon, popoverId, popoverTitle, popoverText)
 
