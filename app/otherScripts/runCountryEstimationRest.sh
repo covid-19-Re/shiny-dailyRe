@@ -53,7 +53,7 @@ for i in "AFG" "ALB" "ATA" "DZA" "ASM" "AND" "AGO" "ATG" "AZE" "ARG" \
          "SWZ" "SWE" "SYR" "TJK" "THA" "TGO" "TKL" "TON" "TTO" "ARE" \
          "TUN" "TUR" "TUR" "TKM" "TCA" "TUV" "UGA" "UKR" "MKD" "EGY" \
          "GBR" "GGY" "JEY" "IMN" "TZA" "USA" "VIR" "BFA" "URY" "UZB" \
-         "VEN" "WLF" "WSM" "YEM" "ZMB" "XKX" "CHI" 
+         "VEN" "WLF" "WSM" "YEM" "ZMB" "XKX" "CHI"
 do
 	runRScript ReCountry.R "$i"
   if [ "$i" = "CHE" ]

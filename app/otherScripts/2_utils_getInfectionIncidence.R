@@ -156,7 +156,7 @@ get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_de
     dplyr::select(delay) %>% 
     group_by(delay) %>% 
     summarise(counts = n(), .groups = "drop")
-
+  
   threshold_right_truncation <- delay_counts %>%  
     mutate(cumul_freq = cumsum(counts)/sum(counts)) %>% 
     filter(cumul_freq > upper_quantile_threshold) %>%
@@ -232,11 +232,11 @@ get_bootstrap_replicate <- function(original_time_series) {
     dplyr::slice_sample(n = sum(original_time_series$value, na.rm = T),
                         weight_by = replace_na(value, 0),
                         replace = T) %>%
-    dplyr::group_by(country, region, source, data_type, date_type, date) %>%
+    dplyr::group_by(country, region, source, data_type, date_type, local_infection, date) %>%
     dplyr::mutate(value = n()) %>%
     distinct(date, .keep_all = T) %>%
     ungroup() %>%
-    dplyr::group_by(country, region, source, data_type, date_type) %>%
+    dplyr::group_by(country, region, source, data_type, local_infection, date_type) %>%
     complete(date = seq.Date(min(date), max(date), by = "days"),
              fill = list(value = 0)) %>%
     arrange(date)
@@ -260,7 +260,8 @@ iterate_RL <- function(
   count <- 1
   
   delay_distribution_matrix <- delay_distribution_matrix[1:length(current_estimate), 1:length(current_estimate)]
-  truncated_delay_distribution_matrix <- delay_distribution_matrix[(1 + max_delay):NROW(delay_distribution_matrix),]
+  truncated_delay_distribution_matrix <- delay_distribution_matrix[(1 + max_delay):NROW(delay_distribution_matrix),, drop = F]
+  
   Q_vector <- apply(truncated_delay_distribution_matrix, MARGIN = 2, sum)
   
   while(chi_squared > threshold_chi_squared & count <= max_iterations) {
@@ -288,11 +289,13 @@ do_deconvolution <- function(
   days_further_in_the_past = 30,
   verbose = FALSE,
   delay_distribution_matrix,
+  initial_delta,
   max_iterations = 100
 ) {
   
   # use mode of 'constant_delay_distribution'. -1 because indices are offset by one as the delay can be 0.
-  first_guess_delay <- which.max(delay_distribution_matrix[,1]) - 1
+  
+  first_guess_delay <- initial_delta
   
   if (verbose) {
     cat("\tDelay on first guess: ", first_guess_delay, "\n")
@@ -317,7 +320,7 @@ do_deconvolution <- function(
     complete(date = seq.Date(minimal_date, maximal_date, by = "days"),
              fill = list(value = 0)) %>% 
     pull(value)
-
+  
   final_estimate <- iterate_RL(
     first_guess$value,
     original_incidence,
@@ -329,7 +332,7 @@ do_deconvolution <- function(
   deconvolved_dates <- first_guess %>% pull(date)
   
   result <- tibble(date = deconvolved_dates, value = final_estimate)
-
+  
   result <- result %>%
     filter(date <= maximal_date - first_guess_delay)
   
@@ -341,6 +344,7 @@ get_infection_incidence_by_deconvolution <- function(
   constant_delay_distribution,
   constant_delay_distribution_incubation = c(),
   is_onset_data = F,
+  is_local_cases = T,
   smooth_incidence = T,
   empirical_delays  = tibble(),
   n_bootstrap = 5,
@@ -351,12 +355,20 @@ get_infection_incidence_by_deconvolution <- function(
   
   #TODO make the days_further_in_the_past type specific
   
+  if(nrow(data_subset) == 0) {
+    return(tibble())
+  }
+  
   data_type_subset <- unique(data_subset$data_type)[1]
   
   # exclude leading zeroes
   data_subset <- data_subset %>%
     arrange(date) %>%
     filter(cumsum(value) > 0)
+  
+  if(nrow(data_subset) == 0) {
+    return(tibble())
+  }
   
   minimal_date <- min(data_subset$date) - days_further_in_the_past
   maximal_date <- max(data_subset$date)
@@ -368,6 +380,8 @@ get_infection_incidence_by_deconvolution <- function(
     delay_distribution_matrix_incubation <- get_matrix_constant_waiting_time_distr(
       constant_delay_distribution_incubation,
       all_dates)
+    
+    initial_delta_incubation <- min(which(cumsum(constant_delay_distribution_incubation) > 0.5)) - 1 # take median value (-1 because index 1 corresponds to zero days)
   } else {
     if(is_empirical) {
       delay_distribution_matrix_onset_to_report <- get_matrix_empirical_waiting_time_distr(
@@ -377,14 +391,19 @@ get_infection_incidence_by_deconvolution <- function(
       delay_distribution_matrix_incubation <- get_matrix_constant_waiting_time_distr(
         constant_delay_distribution_incubation,
         all_dates)
+      
+      initial_delta_incubation <- min(which(cumsum(constant_delay_distribution_incubation) > 0.5)) - 1 # take median value (-1 because index 1 corresponds to zero days)
+      initial_delta_report <-  median(empirical_delays$delay, na.rm = T)
     } else {
       delay_distribution_matrix <- get_matrix_constant_waiting_time_distr(
         constant_delay_distribution,
         all_dates)
+      
+      initial_delta <- min(which(cumsum(constant_delay_distribution) > 0.5)) - 1 # take median value (-1 because index 1 corresponds to zero days)
     }
   }
   
-
+  
   
   results <- list(tibble())
   
@@ -423,6 +442,7 @@ get_infection_incidence_by_deconvolution <- function(
       deconvolved_infections <-  do_deconvolution(smoothed_incidence_data,
                                                   delay_distribution_matrix = delay_distribution_matrix_incubation,
                                                   days_further_in_the_past = days_further_in_the_past,
+                                                  initial_delta = initial_delta_incubation,
                                                   max_iterations = max_iterations,
                                                   verbose = verbose)
     } else {
@@ -431,23 +451,26 @@ get_infection_incidence_by_deconvolution <- function(
         deconvolved_symptom_onsets <- do_deconvolution(smoothed_incidence_data,
                                                        delay_distribution_matrix = delay_distribution_matrix_onset_to_report,
                                                        days_further_in_the_past = days_further_in_the_past - days_further_in_the_past_incubation,
+                                                       initial_delta = initial_delta_report,
                                                        max_iterations = max_iterations,
                                                        verbose = verbose)
         
         deconvolved_infections <- do_deconvolution(deconvolved_symptom_onsets,
                                                    delay_distribution_matrix = delay_distribution_matrix_incubation,
                                                    days_further_in_the_past = days_further_in_the_past_incubation,
+                                                   initial_delta = initial_delta_incubation,
                                                    max_iterations = max_iterations,
                                                    verbose = verbose)
       } else {
         deconvolved_infections <-  do_deconvolution(smoothed_incidence_data,
                                                     delay_distribution_matrix = delay_distribution_matrix,
                                                     days_further_in_the_past = days_further_in_the_past,
+                                                    initial_delta = initial_delta,
                                                     max_iterations = max_iterations,
                                                     verbose = verbose)
       }
     }
-
+    
     
     deconvolved_infections <- deconvolved_infections %>% slice((days_further_in_the_past -5 + 1):n())
     
@@ -459,6 +482,7 @@ get_infection_incidence_by_deconvolution <- function(
       region = unique(time_series$region)[1],
       country = unique(time_series$country)[1],
       source = unique(time_series$source)[1],
+      local_infection = is_local_cases,
       data_type = data_type_name,
       replicate = bootstrap_replicate_i,
       value = deconvolved_infections$value
@@ -490,86 +514,109 @@ get_all_infection_incidence <- function(data,
     smooth <- (count_type_i != "Excess deaths")
     
     for (source_i in unique(data$source)) {
-
+      
       cat("  Data source:", source_i, "\n")
-
+      
       # nCores <- max(1, parallel::detectCores() - 1)
       # cat("   calculating on", nCores, "cores...\n")
       # cl <- parallel::makeCluster(nCores, type = "FORK", outfile = "")
       
-
       
-      results_list <- lapply(# parallel::parLapply(cl,
-        unique(data$region),
-        function(x) {
-          cat("    Region:", x, "\n")
-          subset_data <- data %>%
-            filter(region == x,
-                   source == source_i,
-                   data_type == count_type_i) %>%
-            arrange(date)
-          
-          if (nrow(subset_data) == 0) {
-            return(tibble())
-          }
-          
-          if (is_delays_data_available) {
-            empirical_delays <- onset_to_count_empirical_delays %>%
-              filter(
-                region == x,
-                data_type == count_type_i)
-          } else {
-            empirical_delays <- tibble()
-          }
-          
-          
-          subset_data_report <- subset_data %>% filter(date_type == "report")
-          last_date_report <- max(subset_data$date)
-          
-          if(nrow(subset_data_report) > 0 & sum(subset_data_report$value) > 0){
+      for(local_infection_i in c(TRUE, FALSE)) {
+        
+        results_list <- lapply(# parallel::parLapply(cl,
+          unique(data$region),
+          function(x) {
+            cat("    Region:", x, "\n")
+            subset_data <- data %>%
+              filter(region == x,
+                     source == source_i,
+                     data_type == count_type_i,
+                     local_infection == local_infection_i) %>%
+              arrange(date)
+            
+            if (nrow(subset_data) == 0) {
+              return(tibble())
+            }
+            
+            if (is_delays_data_available) {
+              empirical_delays <- onset_to_count_empirical_delays %>%
+                filter(
+                  region == x,
+                  data_type == count_type_i)
+            } else {
+              empirical_delays <- tibble()
+            }
+            
+            subset_data_report <- subset_data %>% filter(date_type == "report")
+            last_date_report <- max(subset_data$date)
+            
             deconvolved_reports <- get_infection_incidence_by_deconvolution(
               subset_data_report,
               constant_delay_distribution = constant_delay_distributions[[count_type_i]],
               constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]],
               is_onset_data = F,
+              is_local_cases = local_infection_i,
               smooth_incidence = smooth,
               empirical_delays = empirical_delays,
               n_bootstrap = n_bootstrap,
               verbose = verbose)
             
-            last_date_report <- max(deconvolved_reports$date)
-          } else {
-            deconvolved_reports <- tibble()
-          }
-        
-          subset_data_onset <- subset_data %>% filter(date_type == "onset")
-          
-          if(nrow(subset_data_onset) > 0 & sum(subset_data_onset$value) > 0) {
+            if(nrow(deconvolved_reports) > 0) {
+              last_date_report <- max(deconvolved_reports$date)
+            }
+            
+            subset_data_onset <- subset_data %>% filter(date_type == "onset")
+            
             deconvolved_onset <- get_infection_incidence_by_deconvolution(
               subset_data_onset,
               constant_delay_distribution = c(),
               constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]],
               is_onset_data = T,
+              is_local_cases = local_infection_i,
               smooth_incidence = smooth,
               empirical_delays = empirical_delays,
               n_bootstrap = n_bootstrap,
               verbose = verbose)
             
-            deconvolved_onset <- deconvolved_onset %>% filter(date <= last_date_report) # if two types of data (onset and report) are there, filter out last onset deconvolved data (bc incomplete)
-          } else {
-            deconvolved_onset <- tibble()
-          }
-          combined_deconvolved <- bind_rows(deconvolved_reports, deconvolved_onset) %>% 
-            dplyr::group_by(date, region, country, replicate, source, data_type) %>% 
-            dplyr::summarise(value = sum(value), .groups = "keep") %>%
-            arrange(country, region, source, data_type, replicate, date) %>%
-            ungroup()
-          
-          return(combined_deconvolved)
-        })
-      #parallel::stopCluster(cl)
-      results <- c(results, results_list)
+            if(nrow(deconvolved_onset) > 0) {
+              deconvolved_onset <- deconvolved_onset %>% filter(date <= last_date_report) # if two types of data (onset and report) are there, filter out last onset deconvolved data (bc incomplete)
+            }
+            
+            if((nrow(deconvolved_onset) + nrow(deconvolved_reports)) > 0) {
+              combined_deconvolved <- bind_rows(deconvolved_reports, deconvolved_onset) %>% 
+                dplyr::group_by(date, region, country, replicate, source, data_type, local_infection) %>% 
+                dplyr::summarise(value = sum(value), .groups = "keep") %>%
+                arrange(country, region, source, data_type, replicate, local_infection, date) %>%
+                ungroup()
+              
+              return(combined_deconvolved)
+            } else {
+              return(tibble())
+            }
+          })
+        # }
+        #parallel::stopCluster(cl)
+        results <- c(results, results_list)
+      }
     }
   }
-  return(bind_rows(results))
+  
+  combined_result <- bind_rows(results)
+  
+  combined_result <- combined_result %>%  
+    group_by(region, country, replicate, source, data_type) %>% 
+    complete(date = seq(min(date), max(date), by = "days"), 
+             local_infection,
+             region, 
+             country, 
+             replicate, 
+             source, 
+             data_type, 
+             fill = list(value = 0)) %>% 
+    ungroup() %>% 
+    arrange(country, region, source, data_type, replicate, local_infection, date)
+  
+  
+  return(combined_result)
 }

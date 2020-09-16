@@ -29,25 +29,22 @@ if (length(args) == 0) {
 names(args) <- "country"
 
 # Fetch Population Data (do once)
-  popDataPath <- here::here("app", "data", "popData.rds")
-  if (!file.exists(popDataPath)) {
-    popDataWorldBank <- getCountryPopData(here::here("app/data/temp/ECDCdata.csv"), 15) %>%
-      filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
-      mutate(region = countryIso3)
-    popDataCH <- read_csv(
-      file = here::here("app/data/additionalPopSizes.csv"),
-      col_types = cols(
-        .default = col_character(),
-        populationSize = col_double()
-      )
-    )
+popDataPath <- here::here("app", "data", "popData.rds")
 
-    popData <- bind_rows(popDataWorldBank, popDataCH) %>%
-      dplyr::select(countryIso3, country, region, populationSize)
-    saveRDS(popData, file = popDataPath)
-  } else {
-    popData <- readRDS(popDataPath)
-  }
+popDataWorldBank <- getCountryPopData(here::here("app/data/temp/ECDCdata.csv"), 15) %>%
+  filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
+  mutate(region = countryIso3)
+popDataCH <- read_csv(
+  file = here::here("app/data/additionalPopSizes.csv"),
+  col_types = cols(
+    .default = col_character(),
+    populationSize = col_double()
+  )
+)
+popData <- bind_rows(popDataWorldBank, popDataCH) %>%
+  dplyr::select(countryIso3, country, region, populationSize)
+saveRDS(popData, file = popDataPath)
+
 
 basePath <- here::here("app", "data", "countryData")
 if (!dir.exists(basePath)) {
@@ -55,57 +52,56 @@ if (!dir.exists(basePath)) {
 }
 
 # Fetch Country Data
-  countryData <- getCountryData(
-    args["country"],
-    ECDCtemp = here::here("app/data/temp/ECDCdata.csv"),
-    HMDtemp = here::here("app/data/temp/HMDdata.csv"),
-    tReload = 30) %>%
-    left_join(
-      popData,
-      by = c("countryIso3", "region")
-    )
+countryData <- getCountryData(
+  args["country"],
+  ECDCtemp = here::here("app/data/temp/ECDCdata.csv"),
+  HMDtemp = here::here("app/data/temp/HMDdata.csv"),
+  tReload = 30) %>%
+  left_join(
+    popData,
+    by = c("countryIso3", "region")
+  )
 
-  if (dim(countryData)[1] > 0) {
-    # check for changes in country data
-    countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.rds"))
-    if (file.exists(countryDataPath)) {
-      countryDataOld <- readRDS(countryDataPath)
-      # if new data is null, keep old data (can happen because of error in reading new data)
-      if (is.null(countryData)) {
-        countryData <- countryDataOld
-      }
-      dataUnchanged <- all.equal(countryData, countryDataOld)
+if (dim(countryData)[1] > 0) {
+  # check for changes in country data
+  countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.rds"))
+  if (file.exists(countryDataPath)) {
+    countryDataOld <- readRDS(countryDataPath)
+    # if new data is null, keep old data (can happen because of error in reading new data)
+    if (is.null(countryData)) {
+      countryData <- countryDataOld
+    }
+    dataUnchanged <- all.equal(countryData, countryDataOld)
+  } else {
+    dataUnchanged <- FALSE
+  }
+
+  if (!is.null(countryData)) {
+    updateDataPath <- here::here("app", "data", "updateData.rds")
+    if (file.exists(updateDataPath)) {
+      updateData <- readRDS(updateDataPath)
     } else {
-      dataUnchanged <- FALSE
+      updateData <- list()
     }
 
-
-    if (!is.null(countryData)) {
-      updateDataPath <- here::here("app", "data", "updateData.rds")
-      if (file.exists(updateDataPath)) {
-        updateData <- readRDS(updateDataPath)
-      } else {
-        updateData <- list()
-      }
-
-      # save updated data
-      if (!isTRUE(dataUnchanged)) {
-        saveRDS(countryData, file = countryDataPath)
-      }
-
-      # fix because swiss data contains data for two countries (CHE & LIE)
-      for (i in unique(countryData$countryIso3)) {
-        updateData[[i]] <- countryData %>%
-          filter(countryIso3 == i) %>%
-          group_by(countryIso3, country, region, source, data_type) %>%
-          dplyr::summarize(lastData = max(date), .groups = "keep") %>%
-          mutate(
-            lastChanged = file.mtime(countryDataPath),
-            lastChecked = Sys.time())
-      }
-
-      saveRDS(updateData, updateDataPath)
+    # save updated data
+    if (!isTRUE(dataUnchanged)) {
+      saveRDS(countryData, file = countryDataPath)
     }
+
+    # fix because swiss data contains data for two countries (CHE & LIE)
+    for (i in unique(countryData$countryIso3)) {
+      updateData[[i]] <- countryData %>%
+        filter(countryIso3 == i) %>%
+        group_by(countryIso3, country, region, source, data_type) %>%
+        dplyr::summarize(lastData = max(date), .groups = "keep") %>%
+        mutate(
+          lastChanged = file.mtime(countryDataPath),
+          lastChecked = Sys.time())
+    }
+
+    saveRDS(updateData, updateDataPath)
+  }
 
   cleanEnv(keepObjects = c("basePath", "countryData", "dataUnchanged", "args", "popData"))
 
@@ -117,60 +113,63 @@ if (!dir.exists(basePath)) {
   if (condition) {
     cat(str_c("\n", args["country"], ": New data available. Calculating Re ...\n"))
     # get Infection Incidence
-      # load functions
-        source(here::here("app/otherScripts/2_utils_getInfectionIncidence.R"))
-      # load parameter
-        source(here::here("app/otherScripts/2_params_InfectionIncidencePars.R"))
-      # load empirical delays
-        delays_data_path <- here::here("app/data/CH/FOPH_data_delays.csv")
-        delays_onset_to_count <- read_csv(delays_data_path,
-          col_types = cols(
-            data_type = col_character(),
-            onset_date = col_date(format = ""),
-            count_date = col_date(format = ""),
-            delay = col_number()))
-      # constant delay distribution
-      constant_delay_distributions <- list()
-      for (type_i in unique(names(shape_onset_to_count))) {
-        m <- get_vector_constant_waiting_time_distr(
-          shape_incubation,
-          scale_incubation,
-          shape_onset_to_count[[type_i]],
-          scale_onset_to_count[[type_i]])
+    # load functions
+    source(here::here("app/otherScripts/2_utils_getInfectionIncidence.R"))
+    # load parameter
+    source(here::here("app/otherScripts/2_params_InfectionIncidencePars.R"))
+    # load empirical delays
+    delays_data_path <- here::here("app/data/CH/FOPH_data_delays.csv")
+    delays_onset_to_count <- read_csv(delays_data_path,
+                                      col_types = cols(
+                                        data_type = col_character(),
+                                        onset_date = col_date(format = ""),
+                                        count_date = col_date(format = ""),
+                                        delay = col_number()))
+    # constant delay distribution
+    constant_delay_distributions <- list()
+    for (type_i in unique(names(shape_onset_to_count))) {
+      m <- get_vector_constant_waiting_time_distr(
+        shape_incubation,
+        scale_incubation,
+        shape_onset_to_count[[type_i]],
+        scale_onset_to_count[[type_i]])
 
-        constant_delay_distributions <- c(constant_delay_distributions, list(m))
-      }
-      names(constant_delay_distributions) <- unique(names(shape_onset_to_count))
-      # filter out regions with to few cases for estimation
-        countryData <- countryData %>%
-          filterRegions(thresholdConfirmedCases = 500)
-      # filter out data_types with 0 total cases
-        data_type0 <- countryData %>%
-          group_by(data_type) %>%
-          summarize(total = sum(value), .groups = "drop") %>%
-          filter(total == 0) %>%
-          .$data_type
+      constant_delay_distributions <- c(constant_delay_distributions, list(m))
+    }
+    names(constant_delay_distributions) <- unique(names(shape_onset_to_count))
+    # filter out regions with to few cases for estimation
+    countryData <- countryData %>%
+      filterRegions(thresholdConfirmedCases = 500)
+    # filter out data_types with 0 total cases
+    data_type0 <- countryData %>%
+      group_by(data_type) %>%
+      summarize(total = sum(value), .groups = "drop") %>%
+      filter(total == 0) %>%
+      .$data_type
 
-        countryData <- filter(countryData, !(data_type %in% data_type0))
-      # country specific data filtering
-        if (args["country"] == "ESP") {
-          countryData <- countryData %>%
-            filter(data_type != "Deaths")
-          cat("ignoring data_type Deaths\n")
-        } else if (args["country"] == "AUT") {
-          countryData <- countryData %>%
-            filter(data_type != "Deaths")
-          cat("ignoring data_type Deaths\n")
-        } else if (args["country"] == "CHE") {
-          # no estimation for deaths per canton (too few cases)
-          countryData <- countryData %>%
-            filter(!(region != "CHE" & data_type == "Deaths"))
-          cat("ignoring data_type Deaths on regional level\n")
-        }
-        countryData <- countryData %>%
-          mutate(
-            data_type = fct_drop(data_type)
-          )
+    countryData <- filter(countryData, !(data_type %in% data_type0))
+    # country specific data filtering
+    if (args["country"] == "ESP") {
+      countryData <- countryData %>%
+        filter(data_type != "Deaths")
+      cat("ignoring data_type Deaths\n")
+    } else if (args["country"] == "AUT") {
+      countryData <- countryData %>%
+        filter(data_type != "Deaths")
+      cat("ignoring data_type Deaths\n")
+    } else if (args["country"] == "CHE") {
+      # no estimation for deaths per canton (too few cases)
+      countryData <- countryData %>%
+        filter(!(region != "CHE" & data_type == "Deaths"))
+      cat("ignoring data_type Deaths on regional level\n")
+    }
+
+    if (nrow(countryData) > 0) {
+
+      countryData <- countryData %>%
+        mutate(
+          data_type = fct_drop(data_type)
+        )
 
       # truncation
         right_truncation <- switch(
@@ -183,7 +182,7 @@ if (!dir.exists(basePath)) {
           2,
           2
         )
-        
+
         countryData <- countryData %>%
           group_by(country, region, source, data_type) %>%
           filter(date <= (max(date) - right_truncation)) %>%
@@ -192,38 +191,39 @@ if (!dir.exists(basePath)) {
       # Deconvolution
         deconvolvedData <- list()
 
-        deconvolvedData[[1]] <- get_all_infection_incidence(
-          countryData,
+      # Deconvolution
+      deconvolvedData <- list()
+
+      deconvolvedData[[1]] <- get_all_infection_incidence(
+        countryData,
+        constant_delay_distributions = constant_delay_distributions,
+        onset_to_count_empirical_delays = delays_onset_to_count,
+        data_types = c("Confirmed cases",
+                       "Hospitalized patients",
+                       "Deaths"),
+        n_bootstrap = 50,
+        verbose = FALSE)
+
+      if (args["country"] %in% c("CHE")) {
+        countryDataTests <- countryData %>%
+          filter(region == args["country"], data_type == "Confirmed cases / tests")
+
+        deconvolvedData[[2]] <- get_all_infection_incidence(
+          countryDataTests,
           constant_delay_distributions = constant_delay_distributions,
           onset_to_count_empirical_delays = delays_onset_to_count,
-          data_types = c("Confirmed cases",
-                        "Hospitalized patients",
-                        "Deaths"),
+          data_types = c("Confirmed cases / tests"),
           n_bootstrap = 50,
           verbose = FALSE)
+      }
 
-        if (args["country"] %in% c("CHE")) {
-          #TODO can we include this step in the data preparation scripts (in this case formatBAGData)?
-          countryDataTests <- countryData %>%
-            filter(region == args["country"], data_type == "Confirmed cases / tests") %>%
-            # normalize to same range as original data
-            mutate(value = value * mean(totalTests))
-          deconvolvedData[[2]] <- get_all_infection_incidence(
-            countryDataTests,
-            constant_delay_distributions = constant_delay_distributions,
-            onset_to_count_empirical_delays = delays_onset_to_count,
-            data_types = c("Confirmed cases / tests"),
-            n_bootstrap = 50,
-            verbose = FALSE)
-        }
-
-        deconvolvedCountryData <- bind_rows(deconvolvedData)
-        countryDataPath <- file.path(basePath, str_c(args["country"], "-DeconvolutedData.rds"))
+      deconvolvedCountryData <- bind_rows(deconvolvedData)
+      countryDataPath <- file.path(basePath, str_c(args["country"], "-DeconvolutedData.rds"))
       if (dim(deconvolvedCountryData)[1] == 0) {
         print("no data remaining")
       } else {
         saveRDS(deconvolvedCountryData, file = countryDataPath)
-      # Re Estimation
+        # Re Estimation
         cleanEnv(keepObjects = c("basePath", "deconvolvedCountryData", "args", "popData"))
         source(here::here("app/otherScripts/3_utils_doReEstimates.R"))
         pathToAdditionalData <- here::here("../covid19-additionalData/interventions/")
@@ -307,7 +307,7 @@ if (!dir.exists(basePath)) {
             .groups = "keep"
           ) %>%
           dplyr::select(country, region, source, data_type, estimate_type, date,
-            median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
+                        median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
           arrange(country, region, source, data_type, estimate_type, date) %>%
           ungroup() %>%
           left_join(
@@ -318,9 +318,13 @@ if (!dir.exists(basePath)) {
         saveRDS(countryEstimates, file = countryDataPath)
         # Save as .csv for data upload
         write_csv(countryEstimates,
-          path = here::here(str_c("../dailyRe-Data/", args["country"], "-estimates.csv"))
+                  path = here::here(str_c("../dailyRe-Data/", args["country"], "-estimates.csv"))
         )
       }
+    } else {
+      cat(str_c(args["country"], ": Not enough cases. Skipping Re calculation.\n"))
+    }
+
   } else {
     cat(str_c(args["country"], ": No new data available. Skipping Re calculation.\n"))
   }

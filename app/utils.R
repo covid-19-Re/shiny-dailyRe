@@ -9,12 +9,13 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
     caseData <- readRDS(file.path(dataDir, dataPath))
     if (nrow(caseData %>% filter(date_type == "report_plotting")) > 0) {
       caseData <- caseData %>%
-        filter(date_type == "report_plotting")
+        filter(date_type == "report_plotting", is.na(local_infection)) 
     } else {
       caseData <- caseData %>%
         dplyr::group_by(date, region, country, countryIso3, source, data_type, populationSize) %>%
         # there should only be one "date_type" but the summing is left in there in case.
-        dplyr::summarise(value = sum(value), .groups = "drop")
+        dplyr::summarise(value = sum(value), .groups = "drop") %>% 
+        mutate(local_infection = NA)
     }
   } else {
     caseData <- NULL
@@ -22,9 +23,13 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
 
   deconvolutedDataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-DeconvolutedData.rds"))
   if (!is_empty(deconvolutedDataPath)) {
+    
     deconvolutedData <- readRDS(file.path(dataDir, deconvolutedDataPath)) %>%
       mutate(data_type = str_sub(data_type, 11)) %>%
-      group_by(date, region, country, source, data_type) %>%
+      group_by(date, region, country, source, data_type, replicate) %>%
+      dplyr::summarise(value = sum(value), .groups = "drop") %>%
+      mutate(local_infection = NA) %>% 
+      group_by(date, region, country, source, data_type, local_infection) %>%
       summarise(
         deconvoluted = mean(value),
         deconvolutedLow = deconvoluted - sd(value),
@@ -32,7 +37,7 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
         .groups = "keep"
       )
     caseData <- caseData %>%
-      left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
+      left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "local_infection", "date")) %>%
       arrange(countryIso3, region, source, data_type, date)
   }
 
