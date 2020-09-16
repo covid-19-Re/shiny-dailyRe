@@ -312,11 +312,12 @@ casesLegendLabels <- function(type, cuts) {
 }
 
 rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverText, background = "bg-blue") {
- 
+  
   rEstimateText <- rEstimate %>%
+      mutate(across(where(is.numeric), ~sprintf("%.2f", round(.x, 2)))) %>%
       glue::glue_data(
-        "<h3 style=margin-bottom:0px>{sprintf('%.2f',round(mean, 2))}",
-        "<span style='font-size:22px;padding-left:10px'>({sprintf('%.2f',round(low, 2))} - {sprintf('%.2f',round(high, 2))})</span></h3>",
+        "<h3 style=margin-bottom:0px>{mean}",
+        "<span style='font-size:22px;padding-left:10px'>({low} - {high})</span></h3>",
         "<p style=margin-top:0px>{country} ({date})</p>"
       )
   if (length(rEstimateText) > 3) {
