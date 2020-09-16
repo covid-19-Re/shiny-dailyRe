@@ -311,7 +311,7 @@ server <- function(input, output, session) {
       text <- i18n()$t("Most recent effective reproductive number estimate")
       icon <- NULL
       popoverId <- "currentR"
-      popoverTitle <- "effective reproductive number estimate"
+      popoverTitle <- "Effective reproductive number estimate"
       popoverText <- str_c("This is the most recent possible estimate based on confirmed cases. ",
         "This point estimate is not consolidated yet and could change as more data comes in.")
 
@@ -348,10 +348,10 @@ server <- function(input, output, session) {
     output$avgR <- renderUI({
       avgRestimate <- avgRestimate()
 
-      text <- i18n()$t("Average R<sub>e</sub> over the last 7 days")
+      text <- i18n()$t("Average effective reproductive number over the last 7 days")
       icon <- NULL
       popoverId <- "avgR"
-      popoverTitle <- "average effective reproductive number R<sub>e</sub>"
+      popoverTitle <- "Average effective reproductive number"
       popoverText <- str_c("This estimate is based on confirmed cases and averaged over the last 7 days.",
         " It is a stabilized picture of the recent epidemic dynamic.")
 
