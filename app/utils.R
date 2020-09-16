@@ -311,11 +311,13 @@ casesLegendLabels <- function(type, cuts) {
   return(out)
 }
 
-rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverText) {
+rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverText, background = "bg-blue") {
  
   rEstimateText <- rEstimate %>%
       glue::glue_data(
-        "<h3 style=margin-bottom:0px>{round(mean, 3)} ({round(low, 3)} - {round(high, 3)})</h3><p style=margin-top:0px>{country} ({date})</p>"
+        "<h3 style=margin-bottom:0px>{round(mean, 3)}",
+        "<span style='font-size:22px;padding-left:10px'>({round(low, 3)} - {round(high, 3)})</span></h3>",
+        "<p style=margin-top:0px>{country} ({date})</p>"
       )
   if (length(rEstimateText) > 3) {
     rEstimateText <- c(rEstimateText[1:3], "<h3>...</h3>")
@@ -323,20 +325,26 @@ rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverTex
   rEstimateText <- rEstimateText %>%
     str_c(collapse = "")
 
+  if (!is.null(icon)) {
+    iconHTML <- glue::glue(
+      "<div class = 'icon-large'>
+        {icon}
+      </div>")
+  } else {
+    iconHTML <- ""
+  }
+
   rValueBox <- tagList(
     HTML(
       glue::glue(
-        "<div class='small-box bg-blue'>
+        "<div class='small-box {background}'>
           <div class='inner'>
-            <p>
-              {text} <i class='fa fa-exclamation-circle'></i>
-            </p>
+            <p><b>
+              {text}
+            </b></p>
             {rEstimateText}
-           
           </div>
-          <div class = 'icon-large'>
-            {icon}
-          </div>
+          {iconHTML}
         </div>"
       )
     ),
@@ -344,7 +352,6 @@ rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverTex
       popoverText,
       placement = "bottom", trigger = "hover",
       options = NULL)
-    
   )
 
   return(rValueBox)
