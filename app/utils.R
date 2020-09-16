@@ -315,8 +315,8 @@ rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverTex
  
   rEstimateText <- rEstimate %>%
       glue::glue_data(
-        "<h3 style=margin-bottom:0px>{round(mean, 2)}",
-        "<span style='font-size:22px;padding-left:10px'>({round(low, 2)} - {round(high, 2)})</span></h3>",
+        "<h3 style=margin-bottom:0px>{sprintf('%.2f',round(mean, 2))}",
+        "<span style='font-size:22px;padding-left:10px'>({sprintf('%.2f',round(low, 2))} - {sprintf('%.2f',round(high, 2))})</span></h3>",
         "<p style=margin-top:0px>{country} ({date})</p>"
       )
   if (length(rEstimateText) > 3) {
