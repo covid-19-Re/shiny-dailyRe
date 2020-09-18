@@ -128,12 +128,12 @@ confirmed_case_data <- data_hospitalization %>%
   mutate(across(c(manifestation_dt, fall_dt), ymd)) %>% 
   mutate(across(c(manifestation_dt, fall_dt), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>%
   filter(!is.na(fall_dt)) %>%
-  mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"), 
+  # mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"), #TODO uncomment when turning onsets back on.
+  #        local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
+  #        date = if_else(is.na(manifestation_dt), fall_dt, manifestation_dt),
+         mutate(date_type =  "report", #TODO remove unless onsets are turned off
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
-         date = if_else(is.na(manifestation_dt), fall_dt, manifestation_dt),
-         # mutate(date_type =  "report", #TODO remove unless onsets are turned off
-                # local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
-                # date = fall_dt,
+         date = fall_dt,
          region = ktn,
          .keep = "none") %>% 
   dplyr::group_by(region, date, date_type, local_infection) %>%
@@ -276,8 +276,10 @@ hospital_data <- data_hospitalization %>%
   mutate(across(c(eingang_dt, manifestation_dt, hospdatin), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>% 
   mutate(manifestation_dt = if_else(between(hospdatin - manifestation_dt, 0, max_delay_hosp), manifestation_dt, as.Date(NA))) %>% 
   mutate(hospdatin = if_else(is.na(hospdatin), eingang_dt, hospdatin)) %>% 
-  mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
-         date = if_else(is.na(manifestation_dt), hospdatin, manifestation_dt),
+  # mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"), #TODO uncomment when onset switched back on
+  #        date = if_else(is.na(manifestation_dt), hospdatin, manifestation_dt),
+         mutate(date_type =  "report", #TODO remove unless onsets are turned off
+                date = hospdatin,
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
          region = ktn,
          .keep = "none") %>% 

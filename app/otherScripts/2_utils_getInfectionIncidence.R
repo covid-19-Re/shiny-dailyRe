@@ -388,17 +388,15 @@ get_infection_incidence_by_deconvolution <- function(
     if(is_empirical) {
       delay_distribution_matrix_onset_to_report <- get_matrix_empirical_waiting_time_distr(
         empirical_delays,
-        all_dates[(days_further_in_the_past_incubation + 1):length(all_dates)])
+        seq.Date(min(data_subset$date), max(data_subset$date), by = "days"))
     } else {
       delay_distribution_matrix_onset_to_report <- get_matrix_constant_waiting_time_distr(
         constant_delay_distribution,
-        all_dates)
+        seq.Date(min(data_subset$date), max(data_subset$date), by = "days"))
     }
     
     data_subset <- data_subset %>%
       complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(value = 0))
-    
-    delay_distribution_matrix_onset_to_report <- delay_distribution_matrix_onset_to_report[1:length(data_subset$value), 1:length(data_subset$value)]
     
     Q_vector_onset_to_report <- apply(delay_distribution_matrix_onset_to_report, MARGIN = 2, sum)
     
