@@ -193,17 +193,17 @@ get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_de
       dplyr::select(delay) %>% 
       group_by(delay) %>% 
       summarise(counts = n(), .groups = "drop") %>% 
-       complete(delay  = seq(min(delay), max(delay)),
-                fill = list(counts = 0)) 
-     
+      complete(delay  = seq(min(delay), max(delay)),
+               fill = list(counts = 0)) 
+    
     recent_delays <- recent_counts_distribution %>% pull(delay)
-     
+    
     gamma_fit <- try(fitdist(recent_delays + 1, distr = "gamma"))
     if ("try-error" %in% class(gamma_fit)) {
       cat("    mle failed to estimate the parameters. Trying method = \"mme\"\n")
       gamma_fit <- fitdist(recent_delays + 1, distr = "gamma", method = "mme")
     }
-     
+    
     shape_fit <- gamma_fit$estimate["shape"]
     rate_fit <- gamma_fit$estimate["rate"]
     
@@ -382,6 +382,36 @@ get_infection_incidence_by_deconvolution <- function(
       all_dates)
     
     initial_delta_incubation <- min(which(cumsum(constant_delay_distribution_incubation) > 0.5)) - 1 # take median value (-1 because index 1 corresponds to zero days)
+    
+    
+    # account for additional right-truncation of onset data (needs to be reported first)
+    if(is_empirical) {
+      delay_distribution_matrix_onset_to_report <- get_matrix_empirical_waiting_time_distr(
+        empirical_delays,
+        all_dates[(days_further_in_the_past_incubation + 1):length(all_dates)])
+    } else {
+      delay_distribution_matrix_onset_to_report <- get_matrix_constant_waiting_time_distr(
+        constant_delay_distribution,
+        all_dates)
+    }
+    
+    data_subset <- data_subset %>%
+      complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(value = 0))
+    
+    delay_distribution_matrix_onset_to_report <- delay_distribution_matrix_onset_to_report[1:length(data_subset$value), 1:length(data_subset$value)]
+    
+    Q_vector_onset_to_report <- apply(delay_distribution_matrix_onset_to_report, MARGIN = 2, sum)
+    
+    if(unique(data_subset$region)[1] == "ESP") { # hack to work around spanish data between symptom onset dates only
+      right_truncation <- 3
+      # need to offset the Q vector by how many days were truncated off originally
+      Q_vector_onset_to_report <- c(rep(1, right_truncation), Q_vector_onset_to_report[1:(length(Q_vector_onset_to_report) - right_truncation)] )
+    }
+    
+    data_subset <- data_subset %>%
+      mutate(value = value / Q_vector_onset_to_report) %>% 
+      mutate(value = if_else(value == Inf, 0, value))
+    
   } else {
     if(is_empirical) {
       delay_distribution_matrix_onset_to_report <- get_matrix_empirical_waiting_time_distr(
@@ -570,7 +600,7 @@ get_all_infection_incidence <- function(data,
             
             deconvolved_onset <- get_infection_incidence_by_deconvolution(
               subset_data_onset,
-              constant_delay_distribution = c(),
+              constant_delay_distribution = constant_delay_distributions[[paste0('Onset to ', count_type_i)]],
               constant_delay_distribution_incubation = constant_delay_distributions[["Symptoms"]],
               is_onset_data = T,
               is_local_cases = local_infection_i,

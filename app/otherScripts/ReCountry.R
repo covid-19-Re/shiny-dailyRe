@@ -23,7 +23,7 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("CHE")
+  args <- c("NLD")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -138,6 +138,21 @@ if (dim(countryData)[1] > 0) {
       constant_delay_distributions <- c(constant_delay_distributions, list(m))
     }
     names(constant_delay_distributions) <- unique(names(shape_onset_to_count))
+    
+    constant_delay_symptom_to_report_distributions <- list()
+    for (type_i in unique(names(shape_onset_to_count))) {
+      m <- get_vector_constant_waiting_time_distr(
+        0,
+        0,
+        shape_onset_to_count[[type_i]],
+        scale_onset_to_count[[type_i]])
+      
+      constant_delay_symptom_to_report_distributions <- c(constant_delay_symptom_to_report_distributions, list(m))
+    }
+    names(constant_delay_symptom_to_report_distributions) <- paste0('Onset to ',  unique(names(shape_onset_to_count)))
+    
+    constant_delay_distributions <- c(constant_delay_distributions, constant_delay_symptom_to_report_distributions)
+    
     # filter out regions with to few cases for estimation
     countryData <- countryData %>%
       filterRegions(thresholdConfirmedCases = 500)
@@ -171,8 +186,12 @@ if (dim(countryData)[1] > 0) {
         mutate(
           data_type = fct_drop(data_type)
         )
-
-      # truncation
+      
+      if(args["country"] == "CHE") {
+        right_truncation <- 0
+      } else if(args["country"] == "ESP"){
+        right_truncation <- 3 #TODO add this into plotting part
+      } else {
         right_truncation <- switch(
           wday(max(countryData$date)),
           2,
@@ -183,7 +202,7 @@ if (dim(countryData)[1] > 0) {
           2,
           2
         )
-
+      }
         countryData <- countryData %>%
           group_by(country, region, source, data_type) %>%
           filter(date <= (max(date) - right_truncation)) %>%
