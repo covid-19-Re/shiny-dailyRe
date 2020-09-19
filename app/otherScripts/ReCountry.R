@@ -23,7 +23,7 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("NLD")
+  args <- c("CHE")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -338,7 +338,7 @@ if (dim(countryData)[1] > 0) {
         saveRDS(countryEstimates, file = countryDataPath)
         # Save as .csv for data upload
         write_csv(countryEstimates,
-                  path = here::here(str_c("../dailyRe-Data/", args["country"], "-estimates.csv"))
+          path = here::here(str_c("../dailyRe-Data/", args["country"], "-estimates.csv"))
         )
       }
     } else {

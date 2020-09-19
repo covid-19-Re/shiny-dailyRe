@@ -478,7 +478,7 @@ plotting_confirmedCHEDataTests <- data_hospitalization %>%
     by = c("date", "region", "countryIso3", "data_type")) %>% 
   mutate(
     data_type = "Confirmed cases / tests",
-    value = value / totalTests * mean(totalTests)
+    value = value / totalTests
   )
 
 allBAGdata <- bind_rows(confirmedCHEDataTests, plotting_confirmedCHEDataTests, allBAGdata)
