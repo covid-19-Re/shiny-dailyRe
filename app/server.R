@@ -72,7 +72,9 @@ server <- function(input, output, session) {
       countrySelectValue <- countrySelectValue()
 
       countryData <- list(
-        caseData = filter(allData$caseData, countryIso3 %in% countrySelectValue),
+        caseData = filter(allData$caseData,
+          countryIso3 %in% countrySelectValue,
+          data_type != "Confirmed cases / tests"),
         estimates = filter(allData$estimates, countryIso3 %in% countrySelectValue)
       )
 
