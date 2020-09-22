@@ -36,3 +36,7 @@ allData$estimates <- bind_rows(allData$estimates) %>%
   mutate(data_type = as.character(data_type))
 
 saveRDS(allData, file = here::here("app", "data", "allCountryData.rds"))
+
+# update updateData
+updateData <- readRDS(here::here("app", "data", "temp", "updateDataTemp.rds"))
+saveRDS(updateData, here::here("app", "data", "updateData.rds"))
