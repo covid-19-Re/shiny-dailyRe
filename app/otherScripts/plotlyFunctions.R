@@ -59,7 +59,7 @@ casesSubPlot <- function(
         value = slide_index_dbl(value, date, mean, .before = lubridate::days(caseAverage))
       ) %>%
       ungroup()
-    pCasesTitle <- str_c(pCasesTitle, "\n(", translator$t("7 day avarage"), ")")
+    pCasesTitle <- str_c(pCasesTitle, "\n(", translator$t("7 day average"), ")")
   }
 
   if (logYaxis) {
