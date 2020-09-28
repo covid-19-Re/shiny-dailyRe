@@ -18,6 +18,8 @@ If you are working on the epidemic in a country for which we use data of bad qua
   - Sebastian Bonhoeffer, ETH Zürich, D-USYS
   - Tanja Stadler, ETH Zürich, D-BSSE
 
+and a big thanks to everyone who (filed issues and pull requests)[https://github.com/covid-19-Re/shiny-dailyRe]!
+
 #### Source Code
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
