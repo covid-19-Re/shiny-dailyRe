@@ -78,7 +78,7 @@ if (dim(countryData)[1] > 0) {
   }
 
   if (!is.null(countryData)) {
-    updateDataPath <- here::here("app", "data", "updateDataTemp.rds")
+    updateDataPath <- here::here("app", "data", "temp", "updateDataTemp.rds")
     if (file.exists(updateDataPath)) {
       updateData <- readRDS(updateDataPath)
     } else {
