@@ -1088,3 +1088,72 @@ getCountryPopData <- function(tempFileName, tReload = 15) {
   
   return(popData)
 }
+
+
+#' Get Oxford Stringency Index
+#'
+#' fetches data for the Oxford Stringency Index from https://covidtracker.bsg.ox.ac.uk
+#'
+#' @param countries vector of ISO alpha-3 country codes
+#' @param tempFileName wheter to save and/or use a temporary file with all data from ECDC. Useful when requesting
+#'   multiple countries one after the other.
+#' @param tReload if using a temporary file after how many minutes should the file be releaoded.
+#' @return a tibble of the incidence data from ECDC
+#' @export
+#' @family fetchData
+getDataOxfordStringency <- function(
+  countries = NULL,
+  tempFileName = NULL, tReload = 15) {
+
+  url <- "https://raw.githubusercontent.com/OxCGRT/covid-policy-tracker/master/data/OxCGRT_latest.csv"
+
+  if (is.null(tempFileName)) {
+    csvPath <- url
+  } else {
+    fileMod <- file.mtime(tempFileName)
+    fileReload <- if_else(file.exists(tempFileName), now() > fileMod + minutes(tReload), TRUE)
+    if (fileReload) {
+      downloadOK <- try(download.file(url, destfile = tempFileName))
+      if ("try-error" %in% class(downloadOK)) {
+        if (file.exists(tempFileName)) {
+          warning("Couldn't fetch new Oxford Stringency data. Using data from ", fileMod)
+        } else {
+          warning("Couldn't fetch new Oxford Stringency data.")
+          return(NULL)
+        }
+      }
+    }
+    csvPath <- tempFileName
+  }
+
+  oxfordStringencyData <- try(read_csv(csvPath, col_types = cols_only(
+    CountryCode = col_character(),
+    RegionCode = col_character(),
+    Date = col_date(format = "%Y%m%d"),
+    StringencyIndex = col_double()
+  )))
+
+  if ("try-error" %in% class(oxfordStringencyData)) {
+    warning(str_c("couldn't get Oxford Stringency Data data from ", url, "."))
+    return(NULL)
+  }
+
+  longData <- oxfordStringencyData %>%
+    dplyr::transmute(
+      date = Date,
+      countryIso3 = CountryCode,
+      region = RegionCode,
+      data_type = "Stringency Index",
+      source = "BSG Covidtracker",
+      value = StringencyIndex
+    ) %>%
+    filter(!is.na(value))
+
+  longData$region[is.na(longData$region)] <- longData$countryIso3[is.na(longData$region)]
+
+  if (!is.null(countries)) {
+    longData <- longData %>%
+      filter(countryIso3 %in% countries)
+  }
+  return(longData)
+}

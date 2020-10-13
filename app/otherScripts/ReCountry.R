@@ -31,7 +31,7 @@ names(args) <- "country"
 # Fetch Population Data (do once)
 popDataPath <- here::here("app", "data", "popData.rds")
 
-popDataWorldBank <- getCountryPopData(here::here("app/data/temp/ECDCdata.csv"), 15) %>%
+popDataWorldBank <- getCountryPopData(here::here("app/data/temp/ECDCdata.csv"), 300) %>%
   filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
   mutate(region = countryIso3)
 popDataCH <- read_csv(
@@ -46,11 +46,14 @@ popData <- bind_rows(popDataWorldBank, popDataCH) %>%
   filter(!is.na(countryIso3))
 saveRDS(popData, file = popDataPath)
 
-
 basePath <- here::here("app", "data", "countryData")
 if (!dir.exists(basePath)) {
   dir.create(basePath)
 }
+
+# fetch stringency data
+oxfordStringency <- getDataOxfordStringency(countries = args["country"],
+  tempFileName = here::here("app/data/oxfordStringency.csv"), tReload = 300)
 
 # Fetch Country Data
 countryData <- getCountryData(
@@ -61,6 +64,9 @@ countryData <- getCountryData(
   left_join(
     popData,
     by = c("countryIso3", "region")
+  ) %>%
+  bind_rows(
+    mutate(oxfordStringency, date_type = "report_plotting")
   )
 
 if (dim(countryData)[1] > 0) {

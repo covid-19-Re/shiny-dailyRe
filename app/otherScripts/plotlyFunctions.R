@@ -257,26 +257,57 @@ estimatesSubPlot <- function(
 }
 
 interventionsSubPlot <- function(
+  stringencyData,
   interventions,
   startDate,
   endDate,
   fixedRangeX = TRUE,
   fixedRangeY = TRUE,
   dateFormat) {
-    pIntervention <- plot_ly(data = interventions) %>%
+    
+    pIntervention <- plot_ly(data = stringencyData)
+    maxValue <- 100 # max(stringencyData$value, na.rm = TRUE)
+
+    pIntervention <- pIntervention %>%
       add_trace(
-        x = ~date, y = ~y, color = ~name,
-        type = "scatter", mode = "markers+lines",
-        colors = rep("#505050", length(interventions$date)),
+        data = stringencyData,
+        x = ~date, y = ~value,
+        type = "scatter", mode = "lines", fill = 'tozeroy',
+        fillcolor = "rgba(205, 12, 24, 0.2)",
+        line = list(color = "rgba(205, 12, 24, 1)", width = 1),
         showlegend = FALSE,
-        text = ~str_c("<i>", date, "</i><br>", tooltip),
-        hoveron = "points",
+        text = ~str_c("<i>", date, "</i><br>",
+          "Oxford Stringency Index: ", value),
+        hoveron = "lines",
         hoverinfo = "text") %>%
-      add_text(x = ~date, y = ~y, color = ~name, text = ~text,
-        textposition = ~plotTextPosition, showlegend = FALSE, textfont = list(size = 10)) %>%
+      add_text(
+        data = top_n(stringencyData, 1, date), x = ~date, y = ~value - 2, color = "rgba(205, 12, 24, 0.5)",
+        text = "Oxford Stringency Index",
+        textposition = "bottomleft", showlegend = FALSE
+      ) %>%
       layout(
         xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
-        yaxis = plotlyYaxis(visible = FALSE, fixedRange = fixedRangeY))
+        yaxis = plotlyYaxis(title = "Interventions /\nOxford Stringency Index",
+          visible = TRUE, fixedRange = fixedRangeY))
+    
+    if (!is.null(interventions)) {
+      interventionsPlot <- interventions %>%
+        mutate(y = scales::rescale(y, to = c(0.05 * maxValue, 0.95 * maxValue)))
+
+      pIntervention <- pIntervention %>%
+        add_trace(
+          data = group_by(interventionsPlot, name),
+          x = ~date, y = ~y, color = I("rgba(50, 50, 50, 1)"),
+          type = "scatter", mode = "markers+lines",
+          showlegend = FALSE,
+          text = ~str_c("<i>", date, "</i><br>", tooltip),
+          hoveron = "points",
+          hoverinfo = "text")  %>%
+        add_text(
+          x = ~date, y = ~y, color = I("rgba(50, 50, 50, 0.5)"), text = ~text,
+          textposition = ~plotTextPosition, showlegend = FALSE, textfont = list(size = 10))
+    }
+
     return(pIntervention)
 }
 
@@ -352,10 +383,10 @@ rEffPlotly <- function(
     mutate(
       data_type = recode(as.character(data_type), !!!renameDataType))
 
-  if(dim(estimates)[1] != 0) {
-      estimates <- estimates %>%
-        mutate(
-          data_type = recode(as.character(data_type), !!!renameDataType))
+  if (dim(estimates)[1] != 0) {
+    estimates <- estimates %>%
+      mutate(
+        data_type = recode(as.character(data_type), !!!renameDataType))
   }
 
 
@@ -365,10 +396,10 @@ rEffPlotly <- function(
   } else {
     stop("Series not in Data!")
   }
-  
+
   # cases plot
   pCases <- casesSubPlot(
-    caseData,
+    filter(caseData, data_type != "Stringency Index"),
     seriesColors,
     seriesTitle,
     startDate,
@@ -397,8 +428,14 @@ rEffPlotly <- function(
     dateFormat,
     dateFormatLong)
 
-  if (!is.null(interventions)) {
+  if (!is.null(interventions) | ("Stringency Index" %in% unique(caseData$data_type))) {
+    stringencyData <- caseData %>%
+      filter(
+        data_type == "Stringency Index") %>%
+      select(date, value)
+
     pIntervention <- interventionsSubPlot(
+      stringencyData,
       interventions,
       startDate,
       endDate,
@@ -612,14 +649,14 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
   if (nCountries == 1) {
     seriesName <- seriesSelect
     interventions <- interventions[[countries]]
-    if (!is.null(interventions)){
+    if (!is.null(interventions)) {
       interventions <- interventions %>%
         mutate(
           text = sapply(text, translator$t,  USE.NAMES = FALSE),
           tooltip =  sapply(tooltip, translator$t,  USE.NAMES = FALSE)
         )
     }
-     
+
     if (seriesName == "data_type") {
       seriesTitle <- "Data types"
       seriesColors <- plotColors

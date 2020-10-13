@@ -2,7 +2,7 @@
 
 loadCountryData <- function(iso3, dataDir = "data/countryData") {
 
-  allPaths <- list.files(path = pathToCountryData, recursive = TRUE)
+  allPaths <- list.files(path = dataDir, recursive = TRUE)
 
   dataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Data.rds"))
   if (!is_empty(dataPath)){
@@ -14,7 +14,7 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
       caseData <- caseData %>%
         dplyr::group_by(date, region, country, countryIso3, source, data_type, populationSize) %>%
         # there should only be one "date_type" but the summing is left in there in case.
-        dplyr::summarise(value = sum(value), .groups = "drop") %>% 
+        dplyr::summarise(value = sum(value), .groups = "drop") %>%
         mutate(local_infection = NA)
     }
   } else {
@@ -73,7 +73,7 @@ dataUpdatesTable <- function(
   showDataType = FALSE) {
 
   updateData <- bind_rows(updateData) %>%
-    group_by(country, source) %>%
+    group_by(countryIso3, source) %>%
     slice(1L)
   showCountry <- length(unique(updateData$country)) > 1
 

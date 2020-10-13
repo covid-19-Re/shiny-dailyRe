@@ -82,7 +82,10 @@ server <- function(input, output, session) {
     updateData <- reactive({
       updateDataRaw <- readRDS(pathToUpdataData)
 
-      updateData <- bind_rows(updateDataRaw[countrySelectValue()])
+      updateData <- bind_rows(updateDataRaw[countrySelectValue()]) %>%
+        ungroup() %>%
+        select(-country) %>%
+        left_join(select(continents, countryIso3, country), by = "countryIso3")
       return(updateData)
     })
 
@@ -844,12 +847,15 @@ server <- function(input, output, session) {
 
       dataSources <- updateDataRaw %>%
         ungroup() %>%
-        dplyr::select(country, source, data_type, lastData) %>%
-        filter(data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths")) %>%
+        dplyr::select(countryIso3, source, data_type, lastData) %>%
+        filter(
+          data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths", "Stringency Index")
+        ) %>%
+        left_join(select(continents, countryIso3, country), by = "countryIso3") %>%
         left_join(sourceInfo, by = "source") %>%
         group_by(source, sourceLong, url) %>%
         dplyr::summarize(
-          countries = str_c(unique(country), collapse = ", "),
+          countries = if_else(length(unique(country)) > 5, "other Countries", str_c(unique(country), collapse = ", ")),
           data_type = str_c(sapply(as.character(unique(data_type)), i18n()$t,  USE.NAMES = FALSE), collapse = ", "),
           .groups = "drop_last") %>%
         mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
