@@ -23,7 +23,7 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("CHE")
+  args <- c("GBR")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -66,7 +66,7 @@ countryData <- getCountryData(
     by = c("countryIso3", "region")
   ) %>%
   bind_rows(
-    mutate(oxfordStringency, date_type = "report_plotting")
+    mutate(oxfordStringency, date_type = if_else(args["country"] == "CHE", "report_plotting", "report"))
   )
 
 if (dim(countryData)[1] > 0) {
@@ -162,6 +162,10 @@ if (dim(countryData)[1] > 0) {
     # filter out regions with to few cases for estimation
     countryData <- countryData %>%
       filterRegions(thresholdConfirmedCases = 500)
+    # remove Oxford Stringenxy Index for Re calculation
+    countryData <- countryData %>%
+      filter(data_type != "Stringency Index")
+    
     # filter out data_types with 0 total cases
     data_type0 <- countryData %>%
       group_by(data_type) %>%

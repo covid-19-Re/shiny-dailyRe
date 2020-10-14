@@ -281,15 +281,15 @@ interventionsSubPlot <- function(
         hoveron = "lines",
         hoverinfo = "text") %>%
       add_text(
-        data = top_n(stringencyData, 1, date), x = ~date, y = ~value - 2, color = "rgba(205, 12, 24, 0.5)",
+        data = top_n(stringencyData, 1, date), x = ~date, y = ~value - 2, color = I("rgba(205, 12, 24, 0.5)"),
         text = "Oxford Stringency Index",
         textposition = "bottomleft", showlegend = FALSE
       ) %>%
       layout(
         xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
-        yaxis = plotlyYaxis(title = "Interventions /\nOxford Stringency Index",
+        yaxis = plotlyYaxis(title = "Interventions /\nOxford Stringency Index", range = c(0, 100),
           visible = TRUE, fixedRange = fixedRangeY))
-    
+
     if (!is.null(interventions)) {
       interventionsPlot <- interventions %>%
         mutate(y = scales::rescale(y, to = c(0.05 * maxValue, 0.95 * maxValue)))
@@ -711,7 +711,7 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
 
   caseData <- bind_rows(countryData$caseData) %>%
     filter(
-      data_type %in% dataTypeSelect,
+      data_type %in% c(dataTypeSelect, "Stringency Index"),
       region %in% regionSelect)
 
   estimates <- bind_rows(countryData$estimates) %>%

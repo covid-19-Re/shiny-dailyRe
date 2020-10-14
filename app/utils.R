@@ -5,11 +5,11 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
   allPaths <- list.files(path = dataDir, recursive = TRUE)
 
   dataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Data.rds"))
-  if (!is_empty(dataPath)){
+  if (!is_empty(dataPath)) {
     caseData <- readRDS(file.path(dataDir, dataPath))
-    if (nrow(caseData %>% filter(date_type == "report_plotting")) > 0) {
+    if ("report_plotting" %in% caseData$date_type) {
       caseData <- caseData %>%
-        filter(date_type == "report_plotting", is.na(local_infection)) 
+        filter(date_type == "report_plotting", is.na(local_infection))
     } else {
       caseData <- caseData %>%
         dplyr::group_by(date, region, country, countryIso3, source, data_type, populationSize) %>%
@@ -23,7 +23,7 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
 
   deconvolutedDataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-DeconvolutedData.rds"))
   if (!is_empty(deconvolutedDataPath)) {
-    
+
     deconvolutedData <- readRDS(file.path(dataDir, deconvolutedDataPath)) %>%
       mutate(data_type = str_sub(data_type, 11)) %>%
       group_by(date, region, country, source, data_type, replicate) %>%
@@ -50,7 +50,7 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
 
   if (!is.null(caseData)) {
     estimateRanges <- estimateRanges(
-      caseData,
+      filter(caseData, data_type != "Stringency Index"),
       minConfirmedCases = 100,
       delays = delaysDf)
   } else (

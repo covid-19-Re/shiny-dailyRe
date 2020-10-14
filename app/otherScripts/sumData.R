@@ -6,12 +6,12 @@ pathToCountryData <- here::here("app", "data", "countryData")
 countryNames <- read_csv(here::here("app", "data", "continents.csv"), col_types = cols(.default = col_character())) %>%
   dplyr::select(-continent)
 
-allData <- list(caseData = list(), estimates = list())
-estimatePlotRanges <- list()
 allCountries <- str_match(
   string = list.files(path = pathToCountryData, pattern = ".*-Data", recursive = TRUE),
   pattern = "(.*)-.*")[, 2]
 
+allData <- list(caseData = list(), estimates = list())
+estimatePlotRanges <- list()
 for (iCountry in allCountries) {
   iCountryData <- loadCountryData(iCountry, dataDir = pathToCountryData)
   allData$caseData[[iCountry]] <- iCountryData$caseData
@@ -27,6 +27,8 @@ allData$estimates <- bind_rows(allData$estimates) %>%
   # fix country names
   dplyr::select(-country) %>%
   left_join(countryNames, by = "countryIso3") %>%
+  # remove stringency index if it exists
+  filter(data_type != "Stringency Index") %>%
   group_by(countryIso3, data_type) %>%
   filter(
       between(date,
