@@ -53,7 +53,7 @@ if (!dir.exists(basePath)) {
 
 # fetch stringency data
 oxfordStringency <- getDataOxfordStringency(countries = args["country"],
-  tempFileName = here::here("app/data/oxfordStringency.csv"), tReload = 300)
+  tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300)
 
 # Fetch Country Data
 countryData <- getCountryData(
