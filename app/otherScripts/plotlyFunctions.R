@@ -334,6 +334,7 @@ rEffPlotly <- function(
   showHelpBox = TRUE,
   language,
   translator,
+  dimension,
   widgetID = "rEffplots") {
 
   # plot parameter
@@ -473,14 +474,26 @@ rEffPlotly <- function(
     )
   }
 
-  plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE) %>%
+  if (dimension[1] <= 1024) {
+    plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE) %>%
+    layout(
+      legend = list(orientation = "h"),
+      margin = list(b = bottomMargin),
+      annotations = plotAnnotations
+    ) %>%
+    config(doubleClick = "reset", displaylogo = FALSE, modeBarButtons = list(list("toImage")),
+      toImageButtonOptions = list(format = "png", width = 1200, height = 800, scale = 1, filename = "ReEstimates"),
+      locale = locale, scrollZoom = FALSE, responsive = TRUE)
+  } else {
+    plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE) %>%
     layout(
       margin = list(r = 200, b = bottomMargin),
       annotations = plotAnnotations
     ) %>%
     config(doubleClick = "reset", displaylogo = FALSE, modeBarButtons = list(list("toImage")),
       toImageButtonOptions = list(format = "png", width = 1200, height = 800, scale = 1, filename = "ReEstimates"),
-      locale = locale, scrollZoom = FALSE)
+      locale = locale, scrollZoom = FALSE, responsive = TRUE)
+  }
 
   plot$elementId <- widgetID
 
@@ -792,6 +805,7 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     showHelpBox = FALSE,
     translator = translator,
     language = input$lang,
+    dimension = input$dimension,
     widgetID = NULL)
 
   return(plot)

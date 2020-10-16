@@ -17,7 +17,7 @@ source("utils.R")
 
 # set up translation
 translator <- Translator$new(translation_json_path = file.path("data/shinyTranslations.json"))
-languageSelect <- translator$languages
+languageSelect <- translator$get_languages()
 names(languageSelect) <- c("EN", "IT", "FR", "DE")
 
 pathToInterventionData <- file.path("../../covid19-additionalData/interventions/")

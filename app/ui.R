@@ -11,7 +11,20 @@ dashboardPage(title = "COVID-19 Re",
   ),
   dashboardBody(
     tags$head(
-      tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+      tags$link(rel = "stylesheet", type = "text/css", href = "styles.css"),
+      tags$script('
+        var dimension = [0, 0];
+        $(document).on("shiny:connected", function(e) {
+            dimension[0] = window.innerWidth;
+            dimension[1] = window.innerHeight;
+            Shiny.onInputChange("dimension", dimension);
+        });
+        $(window).resize(function(e) {
+            dimension[0] = window.innerWidth;
+            dimension[1] = window.innerHeight;
+            Shiny.onInputChange("dimension", dimension);
+        });
+      ')
     ),
     tabItems(
       tabItem("plots",
