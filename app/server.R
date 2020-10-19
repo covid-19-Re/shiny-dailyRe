@@ -23,7 +23,7 @@ server <- function(input, output, session) {
   # translation
   i18n <- reactive({
     selected <- input$lang
-    if (length(selected) > 0 && selected %in% translator$languages) {
+    if (length(selected) > 0 && selected %in% translator$get_languages()) {
       translator$set_translation_language(selected)
     }
     # restore selected tabs
