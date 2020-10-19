@@ -57,7 +57,6 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
     estimateRanges <- NULL
   )
 
-
   countryData <- list(
     caseData = caseData,
     estimates = estimates,
@@ -312,16 +311,29 @@ casesLegendLabels <- function(type, cuts) {
 }
 
 rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverText, background = "bg-blue") {
-  
+  collapseID <- str_c(popoverId, "collapse")
   rEstimateText <- rEstimate %>%
       mutate(across(where(is.numeric), ~sprintf("%.2f", round(.x, 2)))) %>%
       glue::glue_data(
         "<h3 style=margin-bottom:0px>{mean}",
         "<span style='font-size:22px;padding-left:10px'>({low} - {high})</span></h3>",
-        "<p style=margin-top:0px>{country} ({date})</p>"
+        "<p style=margin-top:0px>{country} ({date})</p>",
       )
-  if (length(rEstimateText) > 3) {
-    rEstimateText <- c(rEstimateText[1:3], "<h3>...</h3>")
+  lRestimateText <- length(rEstimateText)
+  trunc <- 3
+  expandButton <- ""
+  if (lRestimateText > trunc) {
+    rEstimateText <- c(rEstimateText[1:trunc],
+      str_c("<div id='", collapseID, "' class='collapse ReCollapse'>"),
+        rEstimateText[(trunc + 1):lRestimateText],
+      "</div>"
+      )
+    expandButton <- glue::glue(
+      "<div class='inner expandButton'>
+        <a data-toggle='collapse' data-target='.ReCollapse' href='#' class='expandButtonLink'>
+          <span data-toggle='tooltip' data-placement='bottom' title='Show/Hide all'>...</span>
+        </a>
+      </div>")
   }
   rEstimateText <- rEstimateText %>%
     str_c(collapse = "")
@@ -345,6 +357,7 @@ rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverTex
             </b></p>
             {rEstimateText}
           </div>
+          {expandButton}
           {iconHTML}
         </div>"
       )

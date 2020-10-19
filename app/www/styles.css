@@ -58,3 +58,14 @@
   font-weight:normal;
   font-size:12px !important
 }
+
+.small-box .expandButton {
+  position: absolute;
+  bottom: 0px;
+  right: 8px;
+}
+
+.expandButton > a {
+  color: white !important;
+  font-size: 38px !important;
+}
