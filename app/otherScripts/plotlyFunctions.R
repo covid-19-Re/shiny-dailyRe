@@ -807,15 +807,14 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
 
   right_truncation <- switch(
           lubridate::wday(max(caseData$date)),
-          2,
-          3,
-          4,
-          5,
-          2,
-          2,
-          2
+          2 + 1,
+          3 + 1,
+          4 + 1,
+          5 + 1,
+          2 + 1,
+          2 + 1,
+          2 + 1
         )
-
 
   plot <- rEffPlotly(
     caseData = caseData,

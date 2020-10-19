@@ -49,12 +49,11 @@ data_hospitalization <- read.csv(
 
 ### Boundaries for curating dates
 
-right_truncation_consolidation_plotting <- 1
-
+right_truncation_consolidation_plotting <- 0
 
 # truncation
 right_truncation_consolidation <- switch(
-  wday(date(maximum_file_date) - right_truncation_consolidation_plotting),
+  wday(date(maximum_file_date) - 1),
   3,
   4,
   5,
