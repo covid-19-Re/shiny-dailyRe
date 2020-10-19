@@ -23,7 +23,7 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("GBR")
+  args <- c("CHE")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"

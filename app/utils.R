@@ -73,6 +73,7 @@ dataUpdatesTable <- function(
 
   updateData <- bind_rows(updateData) %>%
     group_by(countryIso3, source) %>%
+    arrange(desc(lastData)) %>%
     slice(1L)
   showCountry <- length(unique(updateData$country)) > 1
 
