@@ -261,6 +261,8 @@ interventionsSubPlot <- function(
   interventions,
   startDate,
   endDate,
+  seriesName,
+  seriesColors,
   fixedRangeX = TRUE,
   fixedRangeY = TRUE,
   dateFormat) {
@@ -268,11 +270,12 @@ interventionsSubPlot <- function(
     pIntervention <- plot_ly(data = stringencyData)
     maxValue <- 100 # max(stringencyData$value, na.rm = TRUE)
 
-    pIntervention <- pIntervention %>%
+    if (seriesName == "data_type") {
+      pIntervention <- pIntervention %>%
       add_trace(
         data = stringencyData,
         x = ~date, y = ~value,
-        type = "scatter", mode = "lines", fill = 'tozeroy',
+        type = "scatter", mode = "lines", fill = "tozeroy",
         fillcolor = "rgba(205, 12, 24, 0.2)",
         line = list(color = "rgba(205, 12, 24, 1)", width = 1),
         showlegend = FALSE,
@@ -280,15 +283,43 @@ interventionsSubPlot <- function(
           "Oxford Stringency Index: ", value),
         hoveron = "lines",
         hoverinfo = "text") %>%
-      add_text(
-        data = top_n(stringencyData, 1, date), x = ~date, y = ~value - 2, color = I("rgba(205, 12, 24, 0.5)"),
-        text = "Oxford Stringency Index",
-        textposition = "bottomleft", showlegend = FALSE
-      ) %>%
+      # add_text(
+      #   data = top_n(stringencyData, 1, date), x = ~date, y = ~value - 2, color = I("rgba(205, 12, 24, 0.5)"),
+      #   text = "Oxford Stringency Index",
+      #   textposition = "bottomleft", showlegend = FALSE
+      # ) %>%
       layout(
         xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
         yaxis = plotlyYaxis(title = "Interventions /\nOxford Stringency Index", range = c(0, 100),
           visible = TRUE, fixedRange = fixedRangeY))
+    } else {
+      pIntervention <- pIntervention %>%
+      add_trace(
+        data = stringencyData,
+        x = ~date, y = ~value, color = ~series, colors = seriesColors,
+        type = "scatter", mode = "lines", fill = "tozeroy", opacity = 0.2,
+        showlegend = FALSE,
+        legendgroup = ~series,
+        text = ~str_c("<i>", date, "</i><br>", country, "<br>",
+          "Oxford Stringency Index: ", value),
+        hoveron = "lines",
+        hoverinfo = "text") %>%
+      # add_text(
+      #   data = top_n(stringencyData, 1, date), x = ~date, y = ~value - 2, color = I("rgba(205, 12, 24, 0.5)"),
+      #   text = "Oxford Stringency Index",
+      #   textposition = "bottomleft", showlegend = FALSE
+      # ) %>%
+      layout(
+        xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
+        yaxis = plotlyYaxis(title = "Interventions /\nOxford Stringency Index", range = c(0, 100),
+          visible = TRUE, fixedRange = fixedRangeY))
+    }
+
+ 
+
+
+
+    
 
     if (!is.null(interventions)) {
       interventionsPlot <- interventions %>%
@@ -430,16 +461,19 @@ rEffPlotly <- function(
     dateFormatLong)
 
   if (!is.null(interventions) | ("Stringency Index" %in% unique(caseData$data_type))) {
+
     stringencyData <- caseData %>%
       filter(
         data_type == "Stringency Index") %>%
-      select(date, value)
+      select(countryIso3, country, series, date, value)
 
     pIntervention <- interventionsSubPlot(
       stringencyData,
       interventions,
       startDate,
       endDate,
+      seriesName,
+      seriesColors,
       fixedRangeX[3],
       fixedRangeY[3],
       dateFormat)

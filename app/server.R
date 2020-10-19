@@ -293,7 +293,7 @@ server <- function(input, output, session) {
           region %in% countrySelectValue,
           data_type == "Confirmed cases",
           estimate_type == "Cori_slidingWindow") %>%
-        group_by(region) %>%
+        group_by(country, region) %>%
         filter(date == max(date)) %>%
         transmute(
           country, region,
@@ -303,7 +303,8 @@ server <- function(input, output, session) {
           date = format(date, i18n()$t("%b-%d")),
           regionSort = factor(region, levels = countrySelectValue)
         ) %>%
-        arrange(regionSort)
+        arrange(regionSort) %>%
+        distinct()
 
       return(currentRestimate)
     })
