@@ -297,7 +297,7 @@ interventionsSubPlot <- function(
       add_trace(
         data = stringencyData,
         x = ~date, y = ~value, color = ~series, colors = seriesColors,
-        type = "scatter", mode = "lines", fill = "tozeroy", opacity = 0.2,
+        type = "scatter", mode = "lines",
         showlegend = FALSE,
         legendgroup = ~series,
         text = ~str_c("<i>", date, "</i><br>", country, "<br>",
