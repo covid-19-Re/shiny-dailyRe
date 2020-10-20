@@ -4,6 +4,7 @@ server <- function(input, output, session) {
   stateVals <- reactiveValues(
     lang = "en-gb",
     tabs = "plots",
+    plotSize = "large",
     mapViewCenter = list(lng = 24.78515, lat =  33.72436),
     mapViewZoom = 2,
     regionCountrySelect = NULL)
@@ -101,29 +102,45 @@ server <- function(input, output, session) {
       return(interventions)
     })
 
+    # change plotSize based on window dimension
+    # done via an observer to prevent redrawing on dimension change (rather than only when we want the
+    # dimension to change)
+    observe({
+      if (!is.null(input$dimension)) {
+        if (input$dimension[1] <= 1024) {
+          stateVals$plotSize <- "small"
+        } else {
+          stateVals$plotSize <- "large"
+        }
+      }
+    })
+
   # outputs
     output$rePlot_data_type <- renderPlotly({
       countryData <- countryData()
       updateData <- updateData()
       interventions <- interventions()
+      plotSize <- stateVals$plotSize
 
-      rEffPlotlyShiny(countryData, updateData, interventions, "data_type", input, i18n())
+      rEffPlotlyShiny(countryData, updateData, interventions, "data_type", input, i18n(), plotSize)
     })
 
     output$rePlot_region <- renderPlotly({
       countryData <- countryData()
       updateData <- updateData()
       interventions <- interventions()
+      plotSize <- stateVals$plotSize
 
-      rEffPlotlyShiny(countryData, updateData, interventions, "region", input, i18n())
+      rEffPlotlyShiny(countryData, updateData, interventions, "region", input, i18n(), plotSize)
     })
 
     output$rePlot_greaterRegion <- renderPlotly({
       countryData <- countryData()
       updateData <- updateData()
       interventions <- interventions()
+      plotSize <- stateVals$plotSize
 
-      rEffPlotlyShiny(countryData, updateData, interventions, "greaterRegion", input, i18n())
+      rEffPlotlyShiny(countryData, updateData, interventions, "greaterRegion", input, i18n(), plotSize)
     })
 
   # ui

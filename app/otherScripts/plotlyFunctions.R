@@ -365,7 +365,7 @@ rEffPlotly <- function(
   showHelpBox = TRUE,
   language,
   translator,
-  dimension,
+  plotSize,
   widgetID = "rEffplots") {
 
   # plot parameter
@@ -508,7 +508,7 @@ rEffPlotly <- function(
     )
   }
 
-  if (dimension[1] <= 1024) {
+  if (plotSize == "small") {
     plot <- subplot(plotlist, nrows = nPlots, shareX = TRUE, titleY = TRUE) %>%
     layout(
       legend = list(orientation = "h"),
@@ -688,7 +688,9 @@ renameRegionTotal <- function(data, countries, countryNames) {
   return(renamedData)
 }
 
-rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect, input, translator, showHelpBox = FALSE) {
+rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect, input, translator,
+  plotSize = "large", showHelpBox = FALSE) {
+
   countries <- unique(countryData$caseData$countryIso3)
   countryNames <- unique(countryData$caseData$country)
   nCountries <- length(countries)
@@ -838,7 +840,7 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     showHelpBox = showHelpBox,
     translator = translator,
     language = input$lang,
-    dimension = input$dimension,
+    plotSize = plotSize,
     widgetID = NULL)
 
   return(plot)

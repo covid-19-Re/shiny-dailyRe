@@ -69,7 +69,7 @@ for (i in availableLanguages) {
       plotOptions = c("none"),
       caseAverage = 1,
       lang = i,
-      dimension = 1025),
+      plotSize = "large"),
     translator,
     showHelpBox = TRUE)
 
