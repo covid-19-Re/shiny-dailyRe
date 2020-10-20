@@ -688,7 +688,7 @@ renameRegionTotal <- function(data, countries, countryNames) {
   return(renamedData)
 }
 
-rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect, input, translator) {
+rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect, input, translator, showHelpBox = FALSE) {
   countries <- unique(countryData$caseData$countryIso3)
   countryNames <- unique(countryData$caseData$country)
   nCountries <- length(countries)
@@ -709,7 +709,7 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
       seriesColors <- plotColors
       dataTypeSelect <- unique(countryData$caseData$data_type)
       regionSelect <- countries
-    } else if (seriesName == "region"){
+    } else if (seriesName == "region") {
       seriesTitle <- case_when(
         countries == "CHE" ~ translator$t("Canton"),
         countries == "ZAF" ~ translator$t("Province"),
@@ -835,7 +835,7 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     caseDeconvoluted = "caseDeconvoluted" %in% input$plotOptions,
     # showTraces = "Confirmed cases / tests",
     # showTracesMode = "not",
-    showHelpBox = FALSE,
+    showHelpBox = showHelpBox,
     translator = translator,
     language = input$lang,
     dimension = input$dimension,
