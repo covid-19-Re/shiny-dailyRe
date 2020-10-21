@@ -531,6 +531,7 @@ get_all_infection_incidence <- function(data,
                                         data_types,
                                         n_bootstrap = 100,
                                         verbose = FALSE) {
+  
   results <- list(tibble())
   
   is_delays_data_available <- (nrow(onset_to_count_empirical_delays) > 0)

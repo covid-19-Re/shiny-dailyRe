@@ -47,24 +47,9 @@ data_hospitalization <- read.csv(
   newestFile,
   sep = ";", stringsAsFactors = F, header = T)
 
-### Boundaries for curating dates
 
-right_truncation_consolidation_plotting <- 0
-
-# truncation
-right_truncation_consolidation <- switch(
-  wday(date(maximum_file_date) - 1),
-  3,
-  4,
-  5,
-  6,
-  3,
-  3,
-  3
-)
-
-max_date <- date(maximum_file_date) - right_truncation_consolidation
-max_date_plotting <- date(maximum_file_date) - right_truncation_consolidation_plotting
+max_date <- date(maximum_file_date)
+max_date_plotting <- date(maximum_file_date)
 min_date <- as.Date("2020-02-01")
 
 max_delay_hosp <- 30
@@ -127,12 +112,9 @@ confirmed_case_data <- data_hospitalization %>%
   mutate(across(c(manifestation_dt, fall_dt), ymd)) %>% 
   mutate(across(c(manifestation_dt, fall_dt), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>%
   filter(!is.na(fall_dt)) %>%
-  # mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"), #TODO uncomment when turning onsets back on.
-  #        local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
-  #        date = if_else(is.na(manifestation_dt), fall_dt, manifestation_dt),
-         mutate(date_type =  "report", #TODO remove unless onsets are turned off
+  mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
-         date = fall_dt,
+         date = if_else(is.na(manifestation_dt), fall_dt, manifestation_dt),
          region = ktn,
          .keep = "none") %>% 
   dplyr::group_by(region, date, date_type, local_infection) %>%
@@ -275,10 +257,8 @@ hospital_data <- data_hospitalization %>%
   mutate(across(c(eingang_dt, manifestation_dt, hospdatin), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>% 
   mutate(manifestation_dt = if_else(between(hospdatin - manifestation_dt, 0, max_delay_hosp), manifestation_dt, as.Date(NA))) %>% 
   mutate(hospdatin = if_else(is.na(hospdatin), eingang_dt, hospdatin)) %>% 
-  # mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"), #TODO uncomment when onset switched back on
-  #        date = if_else(is.na(manifestation_dt), hospdatin, manifestation_dt),
-         mutate(date_type =  "report", #TODO remove unless onsets are turned off
-                date = hospdatin,
+  mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
+         date = if_else(is.na(manifestation_dt), hospdatin, manifestation_dt),
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
          region = ktn,
          .keep = "none") %>% 
@@ -440,7 +420,7 @@ confirmedCHEDataTests <- data_hospitalization %>%
     by = c("date", "region", "countryIso3", "data_type")) %>% 
   mutate(
     data_type = "Confirmed cases / tests",
-    value = value / totalTests * mean(totalTests)
+    value = value / totalTests * mean(totalTests, na.rm = T)
   )
 
 
@@ -477,7 +457,7 @@ plotting_confirmedCHEDataTests <- data_hospitalization %>%
     by = c("date", "region", "countryIso3", "data_type")) %>% 
   mutate(
     data_type = "Confirmed cases / tests",
-    value = value / totalTests
+    value = value / totalTests * mean(totalTests, na.rm = T)
   )
 
 allBAGdata <- bind_rows(confirmedCHEDataTests, plotting_confirmedCHEDataTests, allBAGdata)

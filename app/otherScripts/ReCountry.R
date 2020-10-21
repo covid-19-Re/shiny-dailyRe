@@ -53,7 +53,7 @@ if (!dir.exists(basePath)) {
 
 # fetch stringency data
 oxfordStringency <- getDataOxfordStringency(countries = args["country"],
-  tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300)
+                                            tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300)
 
 # Fetch Country Data
 countryData <- getCountryData(
@@ -82,7 +82,7 @@ if (dim(countryData)[1] > 0) {
   } else {
     dataUnchanged <- FALSE
   }
-
+  
   if (!is.null(countryData)) {
     updateDataPath <- here::here("app", "data", "temp", "updateDataTemp.rds")
     if (file.exists(updateDataPath)) {
@@ -90,12 +90,12 @@ if (dim(countryData)[1] > 0) {
     } else {
       updateData <- list()
     }
-
+    
     # save updated data
     if (!isTRUE(dataUnchanged)) {
       saveRDS(countryData, file = countryDataPath)
     }
-
+    
     # fix because swiss data contains data for two countries (CHE & LIE)
     for (i in unique(countryData$countryIso3)) {
       updateData[[i]] <- countryData %>%
@@ -106,17 +106,17 @@ if (dim(countryData)[1] > 0) {
           lastChanged = file.mtime(countryDataPath),
           lastChecked = Sys.time())
     }
-
+    
     saveRDS(updateData, updateDataPath)
   }
-
+  
   cleanEnv(keepObjects = c("basePath", "countryData", "dataUnchanged", "args", "popData"))
-
+  
   # calculate Re
   # only if (data has changed OR forceUpdate.txt exists) AND countryData is not null
   condition <- (!isTRUE(dataUnchanged) | file.exists(here::here("app", "data", "forceUpdate.txt"))) &
     !is.null(countryData)
-
+  
   if (condition) {
     cat(str_c("\n", args["country"], ": New data available. Calculating Re ...\n"))
     # get Infection Incidence
@@ -140,7 +140,7 @@ if (dim(countryData)[1] > 0) {
         scale_incubation,
         shape_onset_to_count[[type_i]],
         scale_onset_to_count[[type_i]])
-
+      
       constant_delay_distributions <- c(constant_delay_distributions, list(m))
     }
     names(constant_delay_distributions) <- unique(names(shape_onset_to_count))
@@ -172,7 +172,7 @@ if (dim(countryData)[1] > 0) {
       summarize(total = sum(value), .groups = "drop") %>%
       filter(total == 0) %>%
       .$data_type
-
+    
     countryData <- filter(countryData, !(data_type %in% data_type0))
     # country specific data filtering
     if (args["country"] == "ESP") {
@@ -189,41 +189,25 @@ if (dim(countryData)[1] > 0) {
         filter(!(region != "CHE" & data_type == "Deaths"))
       cat("ignoring data_type Deaths on regional level\n")
     }
-
+    
     if (nrow(countryData) > 0) {
-
+      
       countryData <- countryData %>%
         mutate(
           data_type = fct_drop(data_type)
         )
       
-      if(args["country"] == "CHE") {
-        right_truncation <- 0
-      } else if(args["country"] == "ESP"){
-        right_truncation <- 3 #TODO add this into plotting part
-      } else {
-        right_truncation <- switch(
-          wday(max(countryData$date)),
-          2,
-          3,
-          4,
-          5,
-          2,
-          2,
-          2
-        )
-      }
-        countryData <- countryData %>%
-          group_by(country, region, source, data_type) %>%
-          filter(date <= (max(date) - right_truncation)) %>%
-          dplyr::select(-countryIso3, -populationSize) %>%
-          ungroup()
-      # Deconvolution
-        deconvolvedData <- list()
-
+      right_truncation <- 3
+      
+      countryData <- countryData %>%
+        group_by(country, region, source, data_type) %>%
+        filter(date <= (max(date) - right_truncation)) %>%
+        dplyr::select(-countryIso3, -populationSize) %>%
+        ungroup()
+      
       # Deconvolution
       deconvolvedData <- list()
-
+      
       deconvolvedData[[1]] <- get_all_infection_incidence(
         countryData,
         constant_delay_distributions = constant_delay_distributions,
@@ -233,11 +217,11 @@ if (dim(countryData)[1] > 0) {
                        "Deaths"),
         n_bootstrap = 50,
         verbose = FALSE)
-
+      
       if (args["country"] %in% c("CHE")) {
         countryDataTests <- countryData %>%
           filter(region == args["country"], data_type == "Confirmed cases / tests")
-
+        
         deconvolvedData[[2]] <- get_all_infection_incidence(
           countryDataTests,
           constant_delay_distributions = constant_delay_distributions,
@@ -246,7 +230,7 @@ if (dim(countryData)[1] > 0) {
           n_bootstrap = 50,
           verbose = FALSE)
       }
-
+      
       deconvolvedCountryData <- bind_rows(deconvolvedData)
       countryDataPath <- file.path(basePath, str_c(args["country"], "-DeconvolutedData.rds"))
       if (dim(deconvolvedCountryData)[1] == 0) {
@@ -257,32 +241,32 @@ if (dim(countryData)[1] > 0) {
         cleanEnv(keepObjects = c("basePath", "deconvolvedCountryData", "args", "popData"))
         source(here::here("app/otherScripts/3_utils_doReEstimates.R"))
         pathToAdditionalData <- here::here("../covid19-additionalData/interventions/")
-
+        
         interventionData <- read_csv(
           str_c(pathToAdditionalData, "interventions.csv"),
           col_types = cols(
             .default = col_character(),
             date = col_date(format = ""))
         )
-
+        
         additionalIntervalEnds <-  read_csv(
           str_c(pathToAdditionalData, "additional_interval_ends.csv"),
           col_types = cols(
             .default = col_character(),
             date = col_date(format = ""))
         )
-
+        
         interval_ends <- interventionData
-
+        
         swissRegions <- deconvolvedCountryData %>%
           filter(country %in% c("Switzerland", "Liechtenstein")) %>%
           dplyr::select(region) %>%
           distinct() %>%
           .$region
-
+        
         ### Window
         window <- 3
-
+        
         ##TODO this all_delays could be removed because we always deconvolve
         ### Delays applied
         all_delays <- list(
@@ -296,11 +280,11 @@ if (dim(countryData)[1] > 0) {
           "Hospitalized patients" = c(Cori = 8, WallingaTeunis = 3),
           "infection_Excess deaths" = c(Cori = 0, WallingaTeunis = -5),
           "Excess deaths" = c(Cori = 20, WallingaTeunis = 15))
-
+        
         truncations <- list(
           left = c(Cori = 5, WallingaTeunis = 0),
           right = c(Cori = 0, WallingaTeunis = 8))
-
+        
         ### Run EpiEstim
         countryEstimatesRaw <- doAllReEstimations(
           deconvolvedCountryData,
@@ -311,7 +295,7 @@ if (dim(countryData)[1] > 0) {
           interval_ends = interval_ends,
           additional_interval_ends = additionalIntervalEnds,
           swissRegions = swissRegions)
-
+        
         countryEstimates <- as_tibble(countryEstimatesRaw) %>%
           mutate(
             data_type = factor(
@@ -348,13 +332,13 @@ if (dim(countryData)[1] > 0) {
         saveRDS(countryEstimates, file = countryDataPath)
         # Save as .csv for data upload
         write_csv(countryEstimates,
-          path = here::here(str_c("../dailyRe-Data/", args["country"], "-estimates.csv"))
+                  path = here::here(str_c("../dailyRe-Data/", args["country"], "-estimates.csv"))
         )
       }
     } else {
       cat(str_c(args["country"], ": Not enough cases. Skipping Re calculation.\n"))
     }
-
+    
   } else {
     cat(str_c(args["country"], ": No new data available. Skipping Re calculation.\n"))
   }
