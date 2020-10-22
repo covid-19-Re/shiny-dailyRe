@@ -85,8 +85,8 @@ server <- function(input, output, session) {
 
       updateData <- bind_rows(updateDataRaw[countrySelectValue()]) %>%
         ungroup() %>%
-        select(-country) %>%
-        left_join(select(continents, countryIso3, country), by = "countryIso3")
+        dplyr::select(-country) %>%
+        left_join(dplyr::select(continents, countryIso3, country), by = "countryIso3")
       return(updateData)
     })
 
@@ -869,7 +869,7 @@ server <- function(input, output, session) {
         filter(
           data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths", "Stringency Index")
         ) %>%
-        left_join(select(continents, countryIso3, country), by = "countryIso3") %>%
+        left_join(dplyr::select(continents, countryIso3, country), by = "countryIso3") %>%
         left_join(sourceInfo, by = "source") %>%
         group_by(source, sourceLong, url) %>%
         dplyr::summarize(
