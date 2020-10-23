@@ -471,8 +471,8 @@ server <- function(input, output, session) {
 
       estimates <- allData$estimates %>%
         filter(
-          data_type == input$dataTypeSelect,
-          estimate_type == input$estimationTypeSelect) %>%
+          data_type == "Confirmed cases",
+          estimate_type == "Cori_slidingWindow") %>%
         group_by(region) %>%
         filter(date == max(date)) %>%
         dplyr::select(
@@ -489,7 +489,7 @@ server <- function(input, output, session) {
         bind_rows() %>%
         ungroup() %>%
         filter(
-          data_type == input$dataTypeSelect) %>%
+          data_type == "Confirmed cases") %>%
         arrange(countryIso3, region, data_type, date) %>%
         group_by(region) %>%
         mutate(
@@ -506,7 +506,7 @@ server <- function(input, output, session) {
           nCases = value,
           cases14d,
           populationSize) %>%
-        group_by(ADM0_A3_IS) %>%
+        group_by(ADM0_A3_IS, region) %>%
         filter(dateCases == max(dateCases)) %>%
         left_join(estimates, by = c("ADM0_A3_IS", "region")) %>%
         ungroup()
