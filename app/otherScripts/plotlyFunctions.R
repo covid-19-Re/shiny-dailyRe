@@ -465,7 +465,7 @@ rEffPlotly <- function(
     stringencyData <- caseData %>%
       filter(
         data_type == "Stringency Index") %>%
-      select(countryIso3, country, series, date, value)
+      dplyr::select(countryIso3, country, series, date, value)
 
     pIntervention <- interventionsSubPlot(
       stringencyData,
