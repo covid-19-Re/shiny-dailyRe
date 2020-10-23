@@ -216,7 +216,7 @@ sumGreaterRegions <- function(chData) {
   return(greaterRegionsData)
 }
 
-getDataCHEBAG <- function(path, filename = "incidence_data_CH.csv") {
+getDataBAG <- function(path, filename = "incidence_data_CH.csv") {
   filePath <- file.path(path, filename)
   bagData <- read_csv(filePath,
                       col_types = cols(
@@ -796,6 +796,68 @@ getDataESP <- function( ECDCtemp = NULL, tReload = 15) {
   return(allData)
 }
 
+
+##### IRELAND #####
+
+getDataIRL <- function(){
+  hospData <- getHospDataIRL()
+  caseData <- getCaseAndDeathDataIRL()
+  allData <- bind_rows(caseData, hospData)
+  return(allData)
+}
+
+getCaseAndDeathDataIRL <- function(){
+  url <- "https://opendata-geohive.hub.arcgis.com/datasets/d8eb52d56273413b84b0187a4e9117be_0.csv?outSR=%7B%22latestWkid%22%3A3857%2C%22wkid%22%3A102100%7D"
+  raw_data <- try(read_csv(url, na = c("", "NA", "None")))
+  if ("try-error" %in% class(raw_data)) {
+    warning(str_c("Couldn't read IRL data at ", url))
+    return(NULL)
+  }
+  all_data <- raw_data %>% 
+    transmute(date = as.Date(Date),
+              confirmed = ConfirmedCovidCases,
+              deaths = ConfirmedCovidDeaths) %>% 
+    complete(date = seq.Date(min(date), max(date), by = "days"),
+             fill = list(confirmed = 0,
+                         deaths = 0)) %>% 
+    pivot_longer(cols = c(confirmed, deaths), names_to = "data_type") %>% 
+    mutate(region = "IRL",
+           countryIso3 = "IRL",
+           source = "HPSC",
+           date_type = "report")
+  
+  }
+
+getHospDataIRL <- function(){
+  url <- "https://opendata.arcgis.com/datasets/fe9bb23592ec4142a4f4c2c9bd32f749_0.csv"
+  
+  raw_data <- try(read_csv(url))
+  if ("try-error" %in% class(raw_data)) {
+    warning(str_c("Couldn't read IRL data at ", url))
+    return(NULL)
+  }
+  confirmed_data <- raw_data %>% 
+    transmute(date = as.Date(Date),
+              confirmed = SUM_number_of_confirmed_covid_1,
+              hospitalized = SUM_no_new_admissions_covid19_p) %>% 
+    complete(date = seq.Date(min(date), max(date), by = "days"),
+             fill = list(confirmed = 0,
+                         hospitalized = 0)) %>% 
+    pivot_longer(cols = c(confirmed, hospitalized), names_to = "data_type") %>% 
+    mutate(region = "IRL",
+           countryIso3 = "IRL",
+           source = "HPSC - HSE",
+           date_type = "report")
+  
+  return(confirmed_data)
+}
+
+
+
+  
+
+
+
 ##### GBR #####
 
 getRawExcessDeathGBR <- function(startAt = as.Date("2020-02-20"), path_to_data = "../data/UK") {
@@ -1021,6 +1083,32 @@ getHospDataEST <- function() {
   return(hosp_data)
 }
 
+##### Qatar #####
+
+getDataQAT <- function(){
+  url <- "https://www.data.gov.qa/explore/dataset/covid-19-cases-in-qatar/download/?format=csv&timezone=Europe/Berlin&lang=en&use_labels_for_header=true&csv_separator=%3B"
+  raw_data <- try(read_delim(url, delim = ";"))
+  
+  all_data <- raw_data %>% 
+    transmute(date = Date,
+              confirmed = `Number of New Positive Cases in Last 24 Hrs`,
+              deaths = `Number of New Deaths in Last 24 Hrs`,
+              hospitalized = `Number of New Acute Hospital Admissions in Last 24 Hrs`) %>% 
+    complete(date = seq.Date(min(date), max(date), by = "days"),
+             fill = list(confirmed = 0,
+                         deaths = 0,
+                         hospitalized = 0)) %>% 
+    pivot_longer(cols = c(confirmed, deaths, hospitalized), names_to = "data_type") %>% 
+    mutate(countryIso3 = "QAT",
+           date_type = "report",
+           region = "QAT",
+           source = "Ministry of Public Health")
+  
+  return(getDataQAT)
+}
+
+  
+
 
 ##### South Africa #####
 
@@ -1143,6 +1231,8 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
       allDataList[[i]] <- getDataBEL(ECDCtemp = ECDCtemp, HMDtemp = HMDtemp, tReload = tReload)
     } else if (countries[i] == "FRA") {
       allDataList[[i]] <- getDataFRA()
+     } else if (countries[i] == "IRL") {
+        allDataList[[i]] <- getDataIRL(ECDCtemp = ECDCtemp)
     } else if (countries[i] == "ITA") {
       allDataList[[i]] <- getDataITA(ECDCtemp = ECDCtemp)
     } else if (countries[i] == "NLD") {
