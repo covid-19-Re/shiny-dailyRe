@@ -40,7 +40,7 @@ for i in "AFG" "ALB" "ATA" "DZA" "ASM" "AND" "AGO" "ATG" "AZE" "ARG" \
          "GRC" "GRL" "GRD" "GLP" "GUM" "GTM" "GIN" "GUY" "HTI" "HMD" \
          "VAT" "HND" "HKG" "HUN" "ISL" "IND" "IDN" "IRN" "IRQ" "IRL" \
          "ISR" "ITA" "CIV" "JAM" "JPN" "KAZ" "JOR" "KEN" "PRK" \
-         "KOR" "KWT" "KGZ" "LAO" "LBN" "LSO" "LVA" "LBR" "LBY" "LIE" \
+         "KOR" "KWT" "KGZ" "LAO" "LBN" "LSO" "LVA" "LBR" "LBY" \
          "LTU" "LUX" "MAC" "MDG" "MWI" "MYS" "MDV" "MLI" "MLT" "MTQ" \
          "MRT" "MUS" "MEX" "MCO" "MNG" "MDA" "MNE" "MSR" "MAR" "MOZ" \
          "OMN" "NAM" "NRU" "NPL" "NLD" "ANT" "CUW" "ABW" "SXM" "BES" \
