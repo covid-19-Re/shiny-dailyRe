@@ -646,6 +646,11 @@ getDataBEL <- function(ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
   return(allData)
 }
 
+
+##### Ireland #####
+
+
+
 ##### Netherlands #####
 getCaseDataNLD <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
   baseurl <- str_c("https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/",
