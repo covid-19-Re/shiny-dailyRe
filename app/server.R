@@ -257,7 +257,7 @@ server <- function(input, output, session) {
             c(name = "region", title = i18n()$t("Province")))
         } else {
           tabList <- list(
-            c(name = "data_type", title = i18n()$t(popData$country[popData$countryIso3 == countrySelectValue()])))
+            c(name = "data_type", title = i18n()$t(continents$country[continents$countryIso3 == countrySelectValue()])))
         }
       } else if (length(countrySelectValue()) == 0) {
           tabList <- list(
@@ -417,7 +417,8 @@ server <- function(input, output, session) {
       group_by(countryIso3) %>%
       filter(length(unique(region)) > 1) %>%
       dplyr::select(countryIso3, country) %>%
-      distinct()
+      distinct() %>%
+      filter(countryIso3 %in% c("CHE", "ZAF"))
 
     regionCountries <- regionCountriesDf$countryIso3
     names(regionCountries) <- regionCountriesDf$country
