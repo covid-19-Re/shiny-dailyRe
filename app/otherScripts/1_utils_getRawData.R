@@ -849,8 +849,7 @@ getExcessDeathGBR <- function(startAt = as.Date("2020-02-20"), path_to_data = ".
 }
 
 getHospitalDataGBR <- function() {
-  # nouveaux file contains the incidence
-  ##TODO change address once beta version becomes official
+  
   url <- "https://api.coronavirus-staging.data.gov.uk/v1/data?filters=areaName=United%2520Kingdom;areaType=overview&structure=%7B%22areaType%22:%22areaType%22,%22areaName%22:%22areaName%22,%22areaCode%22:%22areaCode%22,%22date%22:%22date%22,%22newAdmissions%22:%22newAdmissions%22,%22cumAdmissions%22:%22cumAdmissions%22%7D&format=csv"
   rawData <- try(read_csv(url))
   if ("try-error" %in% class(rawData)) {
@@ -878,6 +877,145 @@ getDataGBR <- function(ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
   allData <- bind_rows(caseData, excessDeath, hospitalData)
   return(allData)
 }
+
+
+##### Latvia #####
+getDataLVA <- function( ) {
+  
+  url <- "https://data.gov.lv/dati/dataset/f01ada0a-2e77-4a82-8ba2-09cf0cf90db3/resource/d499d2f0-b1ea-4ba2-9600-2c701b03bd4a/download/covid_19_izmeklejumi_rezultati.csv"
+  
+  raw_data <- try( read_delim(url, delim=";", na=c("", "NA", "...")))
+  if ("try-error" %in% class(raw_data)) {
+    warning(str_c("Couldn't read LVA data at ", url))
+    return(NULL)
+  }
+  
+  all_data <- raw_data %>% 
+    dplyr::select(Datums, ApstiprinataCOVID19InfekcijaSkaits, MirusoPersonuSkaits) %>%
+    dplyr::rename(date = Datums,
+                  confirmed = ApstiprinataCOVID19InfekcijaSkaits,
+                  deaths = MirusoPersonuSkaits) %>% 
+    pivot_longer(cols = c(confirmed, deaths), names_to = "data_type") %>% 
+    mutate(date = as.Date(date, format="%Y.%m.%d."),
+           countryIso3 = "LVA",
+           date_type = "report",
+           region = "LVA",
+           source = "data.gov.lv")
+  
+  return(all_data)
+}
+
+##### Czech Republic #####
+
+getDataCZE <- function(){
+  case_data <- getCaseDataCZE()
+  death_data <- getDeathDataCZE()
+  
+  return(rbind(case_data, death_data))
+}
+
+
+getCaseDataCZE <- function(){
+  
+  
+  url <- "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/osoby.csv"
+  raw_data <- try(read_csv(url))
+  if ("try-error" %in% class(raw_data)) {
+    warning(str_c("Couldn't read CZE case data at ", url))
+    return(NULL)
+  }
+  
+  case_data <- raw_data %>% 
+    dplyr::select(datum) %>% 
+    group_by(datum) %>% 
+    summarize(value = n()) %>% 
+    rename(date = datum) %>% 
+    complete(date = seq.Date(min(date), max(date), by = "days"),
+             fill = list(value = 0)) %>% 
+    mutate(countryIso3 = "CZE",
+           data_type = "confirmed",
+           date_type = "report",
+           region = "CZE",
+           source = "data.gov.cz")
+  
+  return(case_data)
+}
+
+getDeathDataCZE <- function(){
+  url <- "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/umrti.csv"
+  raw_data <- try(read_csv(url))
+  if ("try-error" %in% class(raw_data)) {
+    warning(str_c("Couldn't read CZE death data at ", url))
+    return(NULL)
+  }
+  
+  death_data <- raw_data %>% 
+    dplyr::select(datum) %>% 
+    group_by(datum) %>% 
+    summarize(value = n()) %>% 
+    rename(date = datum) %>% 
+    complete(date = seq.Date(min(date), max(date), by = "days"),
+             fill = list(value = 0)) %>% 
+    mutate(countryIso3 = "CZE",
+           data_type = "deaths",
+           date_type = "report",
+           region = "CZE",
+           source = "data.gov.cz")
+  
+  return(death_data)
+}
+
+
+##### Estonia #####
+
+getDataEST <- function(ECDCtemp = NULL, tReload = 15) {
+ case_data <- getCaseDataEST()
+ hosp_data <- getHospDataEST()
+ death_data <- getDataECDC(countries = "EST", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "death")
+ 
+ all_data <- rbind(case_data, hosp_data, death_data)
+ 
+ return(all_data)
+}
+
+getCaseDataEST <- function() {
+  url <- "https://opendata.digilugu.ee/opendata_covid19_tests_total.csv"
+  raw_data <- try(read_csv(url))
+  if ("try-error" %in% class(raw_data)) {
+    warning(str_c("Couldn't read EST case data at ", url))
+    return(NULL)
+  }
+  
+  case_data <- raw_data %>% 
+    transmute(date = as_date(StatisticsDate),
+              value = DailyCases) %>% 
+    mutate(countryIso3 = "EST",
+           data_type = "confirmed",
+           date_type = "report",
+           region = "EST",
+           source = "Terviseamet")
+  return(case_data)
+}
+
+getHospDataEST <- function() {
+  url <- "https://opendata.digilugu.ee/opendata_covid19_hospitalization_timeline.csv"
+  raw_data <- try(read_csv(url))
+  if ("try-error" %in% class(raw_data)) {
+    warning(str_c("Couldn't read EST hosp data at ", url))
+    return(NULL)
+  }
+  
+  hosp_data <- raw_data %>% 
+    transmute(date = as_date(StatisticsDate),
+              value = NewCases) %>% 
+    mutate(countryIso3 = "EST",
+           data_type = "hospitalized",
+           date_type = "report",
+           region = "EST",
+           source = "Terviseamet")
+  return(hosp_data)
+}
+
 
 ##### South Africa #####
 
@@ -973,7 +1111,7 @@ getDataZAF <- function() {
 
 # url <-  "https://data.cdc.gov/api/views/vbim-akqf/rows.csv?accessType=DOWNLOAD"
 
-               # cases <- read_csv(url)
+# cases <- read_csv(url)
 #https://data.cdc.gov/api/views/vbim-akqf/rows.csv?accessType=DOWNLOAD
 
 ##### generic functions #####
@@ -1006,6 +1144,12 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
       allDataList[[i]] <- getDataNLD()
     } else if (countries[i] == "ESP") {
       allDataList[[i]] <- getDataESP()
+    } else if (countries[i] == "LVA") {
+      allDataList[[i]] <- getDataLVA()
+    } else if (countries[i] == "EST") {
+      allDataList[[i]] <- getDataEST()
+    } else if (countries[i] == "CZE") {
+      allDataList[[i]] <- getDataCZE()
     } else if (countries[i] == "CHE") {
       allDataList[[i]] <- getDataCHE(data_path = here::here("app/data/CH"))
     } else if (countries[i] == "GBR") {
