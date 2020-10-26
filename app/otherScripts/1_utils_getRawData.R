@@ -218,23 +218,24 @@ sumGreaterRegions <- function(chData) {
   return(greaterRegionsData)
 }
 
-getDataCHEBAG <- function(path, filename = "incidence_data_CH.csv") {
+getDataBAG <- function(path, country = "CHE", filename = "incidence_data_CH.csv") {
   filePath <- file.path(path, filename)
   bagData <- read_csv(filePath,
-                      col_types = cols(
-                        date = col_date(format = ""),
-                        region = col_character(),
-                        countryIso3 = col_character(),
-                        source = col_character(),
-                        data_type = col_character(),
-                        value = col_double(),
-                        positiveTests = col_double(),
-                        negativeTests = col_double(),
-                        totalTests = col_double(),
-                        testPositivity = col_double(),
-                        date_type = col_character(),
-                        local_infection = col_logical()))
-  
+    col_types = cols(
+      date = col_date(format = ""),
+      region = col_character(),
+      countryIso3 = col_character(),
+      source = col_character(),
+      data_type = col_character(),
+      value = col_double(),
+      positiveTests = col_double(),
+      negativeTests = col_double(),
+      totalTests = col_double(),
+      testPositivity = col_double(),
+      date_type = col_character(),
+      local_infection = col_logical())) %>%
+    filter(countryIso3 == country)
+
   bagDataGreaterRegions <- sumGreaterRegions(filter(bagData, region != "CHE"))
   
   bagDataAll <- bind_rows(bagData, bagDataGreaterRegions)
@@ -288,16 +289,22 @@ getDataCHEexcessDeath <- function(startAt = as.Date("2020-02-20")) {
 }
 
 getDataCHE <- function(data_path) {
-  bagData <- getDataCHEBAG(path = data_path)
+  bagData <- getDataBAG(path = data_path)
   swissExcessDeath <- NULL #getDataCHEexcessDeath(startAt = as.Date("2020-02-20"))
   swissData <- bind_rows(
     bagData,
     swissExcessDeath) %>%
     mutate(
-      region = recode(region, "CH" = "CHE", "FL" = "LIE")) %>%
+      region = recode(region, "CH" = "CHE")) %>%
     ungroup()
-  
   return(swissData)
+}
+
+getDataLIE <- function(data_path) {
+  bagDataLIE <- getDataBAG(path = data_path, country = "LIE") %>%
+    mutate(
+      region = recode(region, "FL" = "LIE"))
+  return(bagDataLIE)
 }
 
 ##### Italy #######
@@ -1034,6 +1041,8 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
       allDataList[[i]] <- getDataESP()
     } else if (countries[i] == "CHE") {
       allDataList[[i]] <- getDataCHE(data_path = here::here("app/data/CH"))
+    } else if (countries[i] == "LIE") {
+      allDataList[[i]] <- getDataLIE(data_path = here::here("app/data/CH"))
     } else if (countries[i] == "GBR") {
       allDataList[[i]] <- getDataGBR(ECDCtemp = ECDCtemp, HMDtemp = HMDtemp, tReload = tReload)
     } else if (countries[i] == "ZAF") {

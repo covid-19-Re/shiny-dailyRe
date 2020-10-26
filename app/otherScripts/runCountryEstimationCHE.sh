@@ -29,6 +29,7 @@ echo "running R script to extract BAG data & calculate delays ..."
 runRScript format_BAG_data.R
 
 runRScript ReCountry.R "CHE"
+runRScript ReCountry.R "LIE"
 runRScript makeCHPlots.R
 
 runRScript sumData.R
