@@ -383,7 +383,18 @@ server <- function(input, output, session) {
 
     output$dataSourceUI <- renderUI({
       validate(need(countrySelectValue(), ""))
-      infoBox(width = 3,
+      tagList(
+        infoBox(width = 3,
+          i18n()$t("FAQ"),
+          HTML(str_c(
+            "<a href='https://twitter.com/TanjaStadler_CH/status/1320621000862687232'",
+            "target = 'blank' style='font-size:16px;'>",
+            "<i class='fa fa-external-link fa-fw'></i>",
+            i18n()$t("Why is the most recent R<sub>e</sub> estimate delayed by ~10 days?"),
+            "</a>")),
+          icon = icon("question-circle")
+        ),
+        infoBox(width = 3,
           i18n()$t("Last Data Updates"),
           HTML(
             dataUpdatesTable(
@@ -392,6 +403,7 @@ server <- function(input, output, session) {
           icon = icon("exclamation-circle"),
           color = "purple"
         )
+      )
     })
 
     output$methodsUI <- renderUI({
