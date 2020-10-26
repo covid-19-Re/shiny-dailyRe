@@ -1,40 +1,66 @@
 # helpers
 
-loadCountryData <- function(iso3, continent) {
-  deconvolutedData <- readRDS(file.path("data/countryData", continent, str_c(iso3, "-DeconvolutedData.rds")))
-  caseData <- readRDS(file.path("data/countryData", continent, str_c(iso3, "-Data.rds")))
-  estimates <- readRDS(file.path("data/countryData", continent, str_c(iso3, "-Estimates.rds")))
+loadCountryData <- function(iso3, dataDir = "data/countryData") {
 
-  deconvolutedData <- deconvolutedData %>%
-    mutate(data_type = str_sub(data_type, 11)) %>%
-    group_by(date, region, country, source, data_type) %>%
-    summarise(
-      deconvoluted = mean(value),
-      deconvolutedLow = deconvoluted - sd(value),
-      deconvolutedHigh = deconvoluted + sd(value),
-      .groups = "keep"
-    )
-  
-  # browser()
+  allPaths <- list.files(path = dataDir, recursive = TRUE)
 
-  caseData <- caseData %>%
-    dplyr::group_by(date, region, country, countryIso3, source, data_type, populationSize, continent) %>% 
-    dplyr::summarise(value = sum(value), .groups = "drop") %>%
-    left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "date")) %>%
-    arrange(countryIso3, region, source, data_type, date)
-
-  testsPath <- file.path("data/countryData", continent, str_c(iso3, "-Tests.rds"))
-  if (file.exists(testsPath)) {
-    tests <- readRDS(testsPath)
+  dataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Data.rds"))
+  if (!is_empty(dataPath)) {
+    caseData <- readRDS(file.path(dataDir, dataPath))
+    if ("report_plotting" %in% caseData$date_type) {
+      caseData <- caseData %>%
+        filter(date_type == "report_plotting", is.na(local_infection))
+    } else {
+      caseData <- caseData %>%
+        dplyr::group_by(date, region, country, countryIso3, source, data_type, populationSize) %>%
+        # there should only be one "date_type" but the summing is left in there in case.
+        dplyr::summarise(value = sum(value), .groups = "drop") %>%
+        mutate(local_infection = NA)
+    }
+  } else {
+    caseData <- NULL
   }
+
+  deconvolutedDataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-DeconvolutedData.rds"))
+  if (!is_empty(deconvolutedDataPath)) {
+
+    deconvolutedData <- readRDS(file.path(dataDir, deconvolutedDataPath)) %>%
+      mutate(data_type = str_sub(data_type, 11)) %>%
+      group_by(date, region, country, source, data_type, replicate) %>%
+      dplyr::summarise(value = sum(value), .groups = "drop") %>%
+      mutate(local_infection = NA) %>% 
+      group_by(date, region, country, source, data_type, local_infection) %>%
+      summarise(
+        deconvoluted = mean(value),
+        deconvolutedLow = deconvoluted - sd(value),
+        deconvolutedHigh = deconvoluted + sd(value),
+        .groups = "keep"
+      )
+    caseData <- caseData %>%
+      left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "local_infection", "date")) %>%
+      arrange(countryIso3, region, source, data_type, date)
+  }
+
+  estimatesPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Estimates.rds"))
+  if (!is_empty(estimatesPath)) {
+    estimates <- readRDS(file.path(dataDir, estimatesPath))
+  } else {
+    estimates <- NULL
+  }
+
+  if (!is.null(caseData)) {
+    estimateRanges <- estimateRanges(
+      filter(caseData, data_type != "Stringency Index"),
+      minConfirmedCases = 100,
+      delays = delaysDf)
+  } else (
+    estimateRanges <- NULL
+  )
 
   countryData <- list(
     caseData = caseData,
     estimates = estimates,
-    estimateRanges = estimateRanges(
-      caseData,
-      minConfirmedCases = 100,
-      delays = delaysDf))
+    estimateRanges = estimateRanges)
 
   return(countryData)
 }
@@ -46,7 +72,8 @@ dataUpdatesTable <- function(
   showDataType = FALSE) {
 
   updateData <- bind_rows(updateData) %>%
-    group_by(country, source) %>%
+    group_by(countryIso3, source) %>%
+    arrange(desc(lastData)) %>%
     slice(1L)
   showCountry <- length(unique(updateData$country)) > 1
 
@@ -164,4 +191,183 @@ getLOESSCases <- function(dates, count_data, days_incl = 21, degree = 1, truncat
     normalized_smoothed_counts <- append(normalized_smoothed_counts, rep(NA, truncation))
   }
   return(normalized_smoothed_counts)
+}
+
+mapLabels <- function(shapeFileData, mainLabel = "cases14d") {
+  if (mainLabel == "cases14d") {
+    labelOrder <- c("cases14d", "re")
+  } else (
+    labelOrder <- c("re", "cases14d")
+  )
+
+  mapLabels <- as_tibble(shapeFileData) %>%
+    transmute(
+      name = str_c("<strong>", NAME, "</strong>"),
+      cases14d = if_else(is.na(cases14d),
+        "<br>No data available",
+        str_c("<br>", round(cases14d, 3), " cases / 100'000 / 14d (", dateCases, ")")),
+      re = if_else(is.na(median_R_mean),
+        "<br>No R<sub>e</sub> estimate available",
+        str_c("<br>R<sub>e</sub>: ", round(median_R_mean, 3), " ",
+        "(", round(median_R_lowHPD, 3), " - ", round(median_R_highHPD, 3), ") (", dateEstimates, ")" ))
+    ) %>%
+    transmute(
+      label = str_c(name, .data[[labelOrder[1]]], .data[[labelOrder[2]]])) %>%
+    .$label %>%
+    lapply(htmltools::HTML)
+  return(mapLabels)
+}
+
+addPolygonLayer <- function(map, shapeFile, fillColor, group, labels, options = pathOptions(), layerId = NULL) {
+  map <- map %>%
+    addPolygons(
+      layerId = layerId,
+      data = shapeFile,
+      fillColor = fillColor,
+      weight = 0,
+      opacity = 0,
+      color = "transparent",
+      dashArray = "",
+      fillOpacity = 0.7,
+      highlight = highlightOptions(
+        weight = 1,
+        opacity = 1,
+        color = "#666",
+        dashArray = "",
+        fillOpacity = 0.7,
+        bringToFront = TRUE),
+      label = labels,
+      labelOptions = labelOptions(
+        style = list("font-weight" = "normal", padding = "3px 8px"),
+        textsize = "15px",
+        direction = "auto"),
+      group = group,
+      options = options)
+
+  return(map)
+}
+
+regionCheckboxInput <- function(checkboxGroupId, label, choices, selected, zoomLabel) {
+  out <- list()
+
+  header <- glue::glue(
+    "<div id='{checkboxGroupId}' class='shiny-input-checkboxgroup shiny-input-container shiny-bound-input'>
+      <label class='control-label' for='{checkboxGroupId}'>{label}</label>
+      <div class='shiny-options-group'>")
+
+
+  checkboxes <- list()
+  for (i in seq_along(choices)) {
+    checkboxes[[i]] <- glue::glue(
+      "<div class='checkbox'>",
+        "<label>",
+            "<input type='checkbox' name='{checkboxGroupId}' value='{choiceValue}' {checked}>",
+              "<span>{choiceName}",
+              "<a id='zoom{choiceValue}' href='#' class='action-button shiny-bound-input' style='display: inline'>{zoomLabel}</a>",
+              "</span>",
+        "</label>",
+      "</div>",
+      checked = if_else(choices[i] %in% selected, "checked='checked'", ""),
+      choiceValue = choices[i],
+      choiceName = names(choices)[i])
+  }
+
+  return(HTML(str_c(header, str_c(checkboxes, collapse = ""), "</div></div>")))   
+}
+
+divergentColorPal <- function(palette, domain, midpoint, na.color = "#808080", alpha = FALSE, reverse = FALSE) {
+  rng <- NULL
+  if (length(domain) > 0) {
+    rng <- range(domain, na.rm = TRUE)
+    if (!all(is.finite(rng))) {
+      stop("Wasn't able to determine range of domain")
+    }
+  }
+
+  pf <- leaflet:::safePaletteFunc(palette, na.color, alpha)
+
+  leaflet:::withColorAttr("numeric", list(na.color = na.color), function(x) {
+    if (length(x) == 0 || all(is.na(x))) {
+      return(pf(x))
+    }
+
+    if (is.null(rng)) rng <- range(x, na.rm = TRUE)
+
+    rescaled <- scales::rescale_mid(x, from = rng, mid = midpoint)
+    rescaled[rescaled > 1] <- 1
+    if (any(rescaled < 0 | rescaled > 1, na.rm = TRUE))
+      warning("Some values were outside the color scale and will be treated as NA")
+
+    if (reverse) {
+      rescaled <- 1 - rescaled
+    }
+    pf(rescaled)
+  })
+}
+
+casesLegendLabels <- function(type, cuts) {
+  out <- format(cuts, scientific = FALSE, big.mark = ",")
+  out[length(out)] <- str_c("≥", out[length(out)])
+  return(out)
+}
+
+rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverText, background = "bg-blue") {
+  collapseID <- str_c(popoverId, "collapse")
+  rEstimateText <- rEstimate %>%
+      mutate(across(where(is.numeric), ~sprintf("%.2f", round(.x, 2)))) %>%
+      glue::glue_data(
+        "<h3 style=margin-bottom:0px>{mean}",
+        "<span style='font-size:22px;padding-left:10px'>({low} - {high})</span></h3>",
+        "<p style=margin-top:0px>{country} ({date})</p>",
+      )
+  lRestimateText <- length(rEstimateText)
+  trunc <- 3
+  expandButton <- ""
+  if (lRestimateText > trunc) {
+    rEstimateText <- c(rEstimateText[1:trunc],
+      str_c("<div id='", collapseID, "' class='collapse ReCollapse'>"),
+        rEstimateText[(trunc + 1):lRestimateText],
+      "</div>"
+      )
+    expandButton <- glue::glue(
+      "<div class='inner expandButton'>
+        <a data-toggle='collapse' data-target='.ReCollapse' href='#' class='expandButtonLink'>
+          <span data-toggle='tooltip' data-placement='bottom' title='Show/Hide all'>...</span>
+        </a>
+      </div>")
+  }
+  rEstimateText <- rEstimateText %>%
+    str_c(collapse = "")
+
+  if (!is.null(icon)) {
+    iconHTML <- glue::glue(
+      "<div class = 'icon-large'>
+        {icon}
+      </div>")
+  } else {
+    iconHTML <- ""
+  }
+
+  rValueBox <- tagList(
+    HTML(
+      glue::glue(
+        "<div class='small-box {background}'>
+          <div class='inner'>
+            <p><b>
+              {text}
+            </b></p>
+            {rEstimateText}
+          </div>
+          {expandButton}
+          {iconHTML}
+        </div>"
+      )
+    ),
+    bsPopover(popoverId, popoverTitle,
+      popoverText,
+      placement = "bottom", trigger = "hover",
+      options = NULL)
+  )
+
+  return(rValueBox)
 }

@@ -2,7 +2,6 @@ dev-*
 app/data/*.txt
 app/data/*.Rdata
 app/data/*.rds
-app/data/*.Rd
 app/data/temp
 app/data/exploration
 app/data/BAG
@@ -11,6 +10,7 @@ app/data/*.xlsx
 app/otherScripts/*.Rout
 app/otherScripts/*.Rdata
 app/www/*
+!app/www/styles.css
 app/restart.txt
 !app/www/info.md
 .vscode

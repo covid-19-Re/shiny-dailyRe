@@ -1,0 +1,71 @@
+.sidebar-menu > li > a{ 
+  font-size:17px;
+}
+
+.shiny-input-checkboxgroup {
+  padding-bottom: 12px !important;
+}
+
+.action-button:hover{
+    color: #367fa9 !important;
+}
+
+.quickSelect{
+  display: inline-block;
+}
+
+.quickSelect > a{
+  margin-top:3px !important;
+  margin-left:3px !important;
+  margin-bottom:3px !important;
+  margin-right:3px !important;
+}
+
+.colorScaleContainer {
+  margin-top:0px !important;
+  margin-left:12px !important;
+  margin-bottom:15px !important;
+  margin-right:12px !important;
+}
+
+
+.selectize-control.multi .selectize-input:after {
+  content: '\e259'; /*This will draw the icon*/
+  color: gray;
+  font-family: "Glyphicons Halflings";
+  line-height: 3;
+  display: block;
+  position: absolute;
+  top: -5px;
+  right: 0;
+  background-color: white;
+  padding-right: 10px;
+}
+
+.selectize-control.multi .selectize-input.dropdown-active:after {
+  content: '\e260';
+  color: gray;
+  font-family: "Glyphicons Halflings";
+  background-color: white;
+  padding-right: 10px;
+}
+
+.small-box .icon-large {
+  top: -8px;
+}
+
+.valueHelp {
+  font-weight:normal;
+  font-size:12px !important
+}
+
+.small-box .expandButton {
+  position: absolute;
+  bottom: 0px;
+  right: 8px;
+}
+
+.expandButton > a {
+  color: white !important;
+  font-size: 38px !important;
+}

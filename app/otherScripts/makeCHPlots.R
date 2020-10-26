@@ -14,105 +14,68 @@ if (interactive()) {
   })
 }
 
-source(here::here("app", "otherScripts", "ReffPlotly.R"))
+source(here::here("app", "otherScripts", "plotlyFunctions.R"))
 source(here::here("app", "utils.R"))
 
-iso3 <- "CHE"
-cat(str_c("making ", iso3, " plots for ncs-tf website ...\n"))
+countrySelectValue <- "CHE"
+cat(str_c("making ", countrySelectValue, " plots for ncs-tf website ...\n"))
 
 # load data
 dataDir <- here::here("app/data")
 plotOutDir <- here::here("app/www")
-pathToCaseData <- file.path(dataDir, str_c("countryData/Europe/", iso3, "-Data.rds"))
-pathToEstimates <- file.path(dataDir, str_c("countryData/Europe/", iso3, "-Estimates.rds"))
+
+pathToAllCountryData <- file.path(dataDir, "allCountryData.rds")
 pathToUpdateData <- file.path(dataDir, "updateData.rds")
 pathToInterventionData <- here::here("../covid19-additionalData/interventions/interventions.csv")
+pathToContinentsData <- file.path(dataDir, "continents.csv")
 
-caseData <- readRDS(pathToCaseData)
-estimates <- readRDS(pathToEstimates)
-updateData <- readRDS(pathToUpdateData)[[iso3]]
+continents <- read_csv(pathToContinentsData, col_types = cols(.default = col_character()))
+allData <- readRDS(pathToAllCountryData)
+countryData <- list(
+  caseData = filter(allData$caseData, countryIso3 %in% countrySelectValue),
+  estimates = filter(allData$estimates, countryIso3 %in% countrySelectValue)
+)
 
-# prepare Data
-caseDataPlot <- caseData %>%
-  filter(
-    countryIso3 == iso3,
-    region == iso3,
-    data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
-  mutate(data_type = fct_drop(data_type))
-
-estimatePlotRanges <- estimateRanges(caseDataPlot,
-  minConfirmedCases = 100,
-  delays = delaysDf)
-
-estimatesPlot <- estimates %>%
-  filter(
-    estimate_type == "Cori_slidingWindow",
-    countryIso3 == iso3,
-    region == iso3,
-    data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths")) %>%
-  mutate(
-    region = fct_drop(region),
-    country = fct_drop(country),
-    data_type = fct_drop(data_type)
-  ) %>%
-  group_by(data_type) %>%
-  filter(
-    between(date,
-      left = estimatePlotRanges[[iso3]][[iso3]][["start"]][[as.character(data_type[1])]],
-      right = estimatePlotRanges[[iso3]][[iso3]][["end"]][[as.character(data_type[1])]]),
-  ) %>%
-  ungroup()
-
-updateDataPlot <- updateData %>%
+updateDataRaw <- readRDS(pathToUpdateData)
+updateData <- bind_rows(updateDataRaw[countrySelectValue]) %>%
   ungroup() %>%
-  filter(
-    countryIso3 == iso3,
-    region == iso3,
-    source %in% unique(estimates$source)) %>%
-  distinct()
+  select(-country) %>%
+  left_join(select(continents, countryIso3, country), by = "countryIso3")
 
-translator <- Translator$new(translation_json_path = here::here("app", "data", "shinyTranslations.json"))
-
-interventions <- read_csv(file = pathToInterventionData,
+interventions <- read_csv(
+  str_c(pathToInterventionData),
   col_types = cols(
-      .default = col_character(),
-      date = col_date(format = ""),
-      y = col_double())) %>%
-  filter(countryIso3 == iso3)
+    .default = col_character(),
+    date = col_date(format = ""),
+    y = col_double()
+  )) %>%
+  split(f = .$countryIso3)
+
+translator <- Translator$new(translation_json_path = file.path(dataDir, "shinyTranslations.json"))
+availableLanguages <- translator$get_languages()
 
 
-for (i in translator$languages) {
+for (i in availableLanguages) {
 
   translator$set_translation_language(i)
 
-  interventionsLocalized <- interventions %>%
-      mutate(
-        text = sapply(text, translator$t,  USE.NAMES = FALSE),
-        tooltip =  sapply(tooltip, translator$t,  USE.NAMES = FALSE))
+  plot <- rEffPlotlyShiny(
+    countryData,
+    updateData,
+    interventions,
+    seriesSelect = "data_type",
+    input = list(
+      estimationTypeSelect = "Cori_slidingWindow",
+      plotOptions = c("none"),
+      caseAverage = 1,
+      lang = i,
+      plotSize = "large"),
+    translator,
+    showHelpBox = TRUE)
 
-  updateDataPlotLocalized <- updateDataPlot %>%
-    mutate(
-      source = sapply(source, translator$t,  USE.NAMES = FALSE),
-      data_type = sapply(as.character(data_type), translator$t,  USE.NAMES = FALSE)
-    )
+  plot$sizingPolicy$browser$padding <- 0
 
-  plotlyPlotV <- rEffPlotly(
-    caseDataPlot,
-    estimatesPlot,
-    interventionsLocalized,
-    plotColors,
-    lastDataDate = updateDataPlotLocalized,
-    fixedRangeX = c(TRUE, TRUE, TRUE),
-    fixedRangeY = c(TRUE, TRUE, TRUE),
-    language = i,
-    translator = translator,
-    widgetID = "rEffplots")
-
-  plotlyPlotV$sizingPolicy$browser$padding <- 0
-
-  plotlyPlotV
-
-  saveWidget(plotlyPlotV,
+  saveWidget(plot,
     file.path(plotOutDir, str_c("rEffplotly_", i, ".html")), selfcontained = FALSE, libdir = "lib",
     title = "Effective reproductive number (Re) in Switzerland")
 }

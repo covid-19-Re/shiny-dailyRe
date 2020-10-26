@@ -1118,8 +1118,6 @@ getCountryPopData <- function(tempFileName = here::here("app/data/pop_sizes.xls"
     filter(!is.na(populationSize),
            year == max(year)) %>% 
     dplyr::select(c(country, countryIso3, populationSize))
-    
-  
   return(popData)
 }
 
