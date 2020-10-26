@@ -4,6 +4,7 @@ if (interactive()) {
   library("fitdistrplus")
   library("EpiEstim")
   library("cbsodataR")
+  library("readxl")
   library("here")
   library("tidyverse")
 } else {
@@ -12,6 +13,7 @@ if (interactive()) {
     library("fitdistrplus")
     library("EpiEstim")
     library("cbsodataR")
+    library("readxl")
     library("here")
     library("tidyverse")
   })
