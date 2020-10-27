@@ -549,8 +549,15 @@
     {
       "en-gb": "Quick select",
       "de-ch": "Alle Länder in Kontinent auswählen",
-      "fr-ch": "Séries chronologiques",
-      "it-ch": "Serie storica"
+      "fr-ch": "Quick select",
+      "it-ch": "Quick select"
+    },
+    {
+      "en-gb": "Why is the most recent R<sub>e</sub> estimate delayed by ~10 days?",
+      "de-ch": "Warum ist die jüngste Schatzung von R<sub>e</sub> von vor ca. 10 Tagen?",
+      "fr-ch": "Why is the most recent R<sub>e</sub> estimate delayed by ~10 days?",
+      "it-ch": "Why is the most recent R<sub>e</sub> estimate delayed by ~10 days?"
+
     }
     
   ]

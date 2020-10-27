@@ -257,7 +257,7 @@ server <- function(input, output, session) {
             c(name = "region", title = i18n()$t("Province")))
         } else {
           tabList <- list(
-            c(name = "data_type", title = i18n()$t(popData$country[popData$countryIso3 == countrySelectValue()])))
+            c(name = "data_type", title = i18n()$t(continents$country[continents$countryIso3 == countrySelectValue()])))
         }
       } else if (length(countrySelectValue()) == 0) {
           tabList <- list(
@@ -383,7 +383,18 @@ server <- function(input, output, session) {
 
     output$dataSourceUI <- renderUI({
       validate(need(countrySelectValue(), ""))
-      infoBox(width = 3,
+      tagList(
+        infoBox(width = 3,
+          i18n()$t("FAQ"),
+          HTML(str_c(
+            "<a href='https://twitter.com/TanjaStadler_CH/status/1320621000862687232'",
+            "target = 'blank' style='font-size:16px;'>",
+            "<i class='fa fa-external-link fa-fw'></i>",
+            i18n()$t("Why is the most recent R<sub>e</sub> estimate delayed by ~10 days?"),
+            "</a>")),
+          icon = icon("question-circle")
+        ),
+        infoBox(width = 3,
           i18n()$t("Last Data Updates"),
           HTML(
             dataUpdatesTable(
@@ -392,6 +403,7 @@ server <- function(input, output, session) {
           icon = icon("exclamation-circle"),
           color = "purple"
         )
+      )
     })
 
     output$methodsUI <- renderUI({
@@ -417,7 +429,8 @@ server <- function(input, output, session) {
       group_by(countryIso3) %>%
       filter(length(unique(region)) > 1) %>%
       dplyr::select(countryIso3, country) %>%
-      distinct()
+      distinct() %>%
+      filter(countryIso3 %in% c("CHE", "ZAF"))
 
     regionCountries <- regionCountriesDf$countryIso3
     names(regionCountries) <- regionCountriesDf$country
@@ -471,8 +484,8 @@ server <- function(input, output, session) {
 
       estimates <- allData$estimates %>%
         filter(
-          data_type == input$dataTypeSelect,
-          estimate_type == input$estimationTypeSelect) %>%
+          data_type == "Confirmed cases",
+          estimate_type == "Cori_slidingWindow") %>%
         group_by(region) %>%
         filter(date == max(date)) %>%
         dplyr::select(
@@ -489,7 +502,7 @@ server <- function(input, output, session) {
         bind_rows() %>%
         ungroup() %>%
         filter(
-          data_type == input$dataTypeSelect) %>%
+          data_type == "Confirmed cases") %>%
         arrange(countryIso3, region, data_type, date) %>%
         group_by(region) %>%
         mutate(
@@ -506,7 +519,7 @@ server <- function(input, output, session) {
           nCases = value,
           cases14d,
           populationSize) %>%
-        group_by(ADM0_A3_IS) %>%
+        group_by(ADM0_A3_IS, region) %>%
         filter(dateCases == max(dateCases)) %>%
         left_join(estimates, by = c("ADM0_A3_IS", "region")) %>%
         ungroup()

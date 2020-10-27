@@ -457,10 +457,10 @@ plotting_confirmedCHEDataTests <- data_hospitalization %>%
   arrange(date) %>% 
   left_join(
     mutate(nTests, data_type = "confirmed"),
-    by = c("date", "region", "countryIso3", "data_type")) %>% 
+    by = c("date", "region", "countryIso3", "data_type")) %>%
   mutate(
     data_type = "Confirmed cases / tests",
-    value = value / totalTests * mean(totalTests, na.rm = T)
+    value = value / totalTests
   )
 
 allBAGdata <- bind_rows(confirmedCHEDataTests, plotting_confirmedCHEDataTests, allBAGdata)

@@ -24,17 +24,25 @@ cat(str_c("making ", countrySelectValue, " plots for ncs-tf website ...\n"))
 dataDir <- here::here("app/data")
 plotOutDir <- here::here("app/www")
 
-pathToAllCountryData <- file.path(dataDir, "allCountryData.rds")
+pathToCountryData <- here::here("app", "data", "countryData")
 pathToUpdateData <- file.path(dataDir, "updateData.rds")
 pathToInterventionData <- here::here("../covid19-additionalData/interventions/interventions.csv")
 pathToContinentsData <- file.path(dataDir, "continents.csv")
 
 continents <- read_csv(pathToContinentsData, col_types = cols(.default = col_character()))
-allData <- readRDS(pathToAllCountryData)
-countryData <- list(
-  caseData = filter(allData$caseData, countryIso3 %in% countrySelectValue),
-  estimates = filter(allData$estimates, countryIso3 %in% countrySelectValue)
-)
+
+countryData <- loadCountryData(countrySelectValue, dataDir = pathToCountryData)
+
+countryData$estimates <- countryData$estimates %>%
+  filter(data_type != "Stringency Index") %>%
+  group_by(countryIso3, data_type) %>%
+  filter(
+      between(date,
+        left = countryData$estimateRanges[[countrySelectValue]][[countrySelectValue]][["start"]][[as.character(data_type[1])]],
+        right = countryData$estimateRanges[[countrySelectValue]][[countrySelectValue]][["end"]][[as.character(data_type[1])]])
+    ) %>%
+  mutate(data_type = as.character(data_type))
+
 
 updateDataRaw <- readRDS(pathToUpdateData)
 updateData <- bind_rows(updateDataRaw[countrySelectValue]) %>%
