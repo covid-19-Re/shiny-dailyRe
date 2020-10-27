@@ -16,7 +16,7 @@ BAG_data_dir <- here::here("app", "data", "BAG")
 BAG_data_dir_Git <- here::here("../ch-hospital-data/data/CH")
 
 # output_data_dir <- "/Users/scirej/Documents/nCov19/Incidence_analysis/data"
-outDir <- here::here("app", "data", "CH")
+outDir <- here::here("app", "data", "CHE")
 
 dir.create(outDir, showWarnings = FALSE)
 
@@ -91,7 +91,10 @@ final_delay_data_FOPH <- restructured_data_FOPH %>%
   dplyr::group_by(data_type, onset_date) %>%
   slice_sample(prop = 1) %>% # shuffle rows with the same date
   ungroup() %>%
-  mutate(country = "Switzerland", region = "CHE", source = "FOPH")
+  mutate(country = "Switzerland",
+         region = "CHE",
+         countryIso3 = "CHE",
+         source = "FOPH")
 
 normalized_test_delays <- final_delay_data_FOPH %>% filter(data_type == "Confirmed cases") %>% 
   mutate(data_type = "Confirmed cases / tests")
@@ -99,7 +102,7 @@ normalized_test_delays <- final_delay_data_FOPH %>% filter(data_type == "Confirm
 final_delay_data_FOPH <- bind_rows(final_delay_data_FOPH, normalized_test_delays)
 
 ### Save file
-write_csv(final_delay_data_FOPH, path = file.path(outDir, "FOPH_data_delays.csv"))
+write_csv(final_delay_data_FOPH, path = file.path(outDir, "CHE_data_delays.csv"))
 
 # cat("Mean Time from onset to Hospitalization:",
 #     mean(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 6.1 (15/05/20)
@@ -476,4 +479,4 @@ allBAGdata <- bind_rows(list(allBAGdata_plotting), list(allBAGdata_calculations)
 ## end of remove
 
 
-write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CH.csv"))
+write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CHE.csv"))

@@ -12,7 +12,7 @@ if (interactive()) {
   })
 }
 
-outDir <- here::here("app", "data", "HK")
+outDir <- here::here("app", "data", "HKG")
 
 dir.create(outDir, showWarnings = FALSE)
 
@@ -46,7 +46,7 @@ first_curation_data_Hong_Kong <- data_Hong_Kong %>%
             local_infection =  `Case classification*`) %>% 
   mutate(across(c(count_date, onset_date), ~ if_else(between(.x, min_date, max_date_plotting), .x, as.Date(NA)))) %>% 
   mutate(data_type = "Confirmed cases",
-         country = "Hong Kong", 
+         country = "Hong Kong",
          countryIso3 = "HKG",
          region = "HKG", 
          source = "Department of Health - HK")
@@ -64,22 +64,13 @@ delay_data_Hong_Kong <- first_curation_data_Hong_Kong %>%
   ungroup()
 
 ### Save file
-write_csv(delay_data_Hong_Kong, path = file.path(outDir, "HK_data_delays.csv"))
+write_csv(delay_data_Hong_Kong, path = file.path(outDir, "HKG_data_delays.csv"))
 
 confirmed_case_data <- first_curation_data_Hong_Kong %>%
   mutate(across(c(count_date, onset_date), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>%
   filter(!is.na(count_date)) %>%
-  mutate(date_type = if_else(is.na(onset_date), "report", "onset"),
-         date = if_else(is.na(onset_date), count_date, onset_date)) %>% 
-  dplyr::select(-c(onset_date,count_date)) %>% 
-  dplyr::group_by(region, source, countryIso3,country, data_type, date, date_type, local_infection) %>%
-  dplyr::count() %>%
-  ungroup()
-
-confirmed_case_data <- first_curation_data_Hong_Kong %>%
-  mutate(across(c(count_date, onset_date), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>%
-  filter(!is.na(count_date)) %>%
-  mutate(date_type = if_else(is.na(onset_date), "report", "onset"),
+  mutate(data_type = "confirmed",
+         date_type = if_else(is.na(onset_date), "report", "onset"),
          date = if_else(is.na(onset_date), count_date, onset_date)) %>% 
   dplyr::select(-c(onset_date,count_date)) %>% 
   dplyr::group_by(region, source, countryIso3,country, data_type, date, date_type, local_infection) %>%
@@ -109,14 +100,15 @@ confirmed_case_data <- confirmed_case_data %>%
 plotting_confirmed_case_data <- first_curation_data_Hong_Kong %>%
   rename(date = count_date) %>% 
   dplyr::select(-onset_date) %>% 
-  mutate(date_type = "report_plotting",
+  mutate(data_type = "confirmed",
+         date_type = "report_plotting",
          local_infection = NA) %>%
   filter(between(date, min_date, max_date_plotting)) %>% 
   dplyr::group_by(date, local_infection, data_type, date_type, country, countryIso3, region, source) %>%
   dplyr::count(name = "value") %>%
   ungroup() %>%
   arrange(region, date, date_type)
-  
+
 
 #TODO remove when imports are integrated
 confirmed_case_data <- confirmed_case_data %>% 
@@ -128,6 +120,6 @@ confirmed_case_data <- confirmed_case_data %>%
 
 HKdata <- rbind(confirmed_case_data, plotting_confirmed_case_data)
 
-write_csv(HKdata, path = file.path(outDir, "incidence_data_HK.csv"))
+write_csv(HKdata, path = file.path(outDir, "incidence_data_HKG.csv"))
 
 

@@ -218,7 +218,7 @@ sumGreaterRegions <- function(chData) {
   return(greaterRegionsData)
 }
 
-getDataCHEBAG <- function(path = here::here("app/data/CH"), filename = "incidence_data_CH.csv") {
+getDataCHEBAG <- function(path = here::here("app/data/CHE"), filename = "incidence_data_CHE.csv") {
   filePath <- file.path(path, filename)
   bagData <- read_csv(filePath,
                       col_types = cols(
@@ -302,8 +302,8 @@ getDataCHE <- function(data_path) {
 
 ##### Hong Kong #####
 
-getDataHK <- function(path = here::here("app/data/HK"), filename = "incidence_data_HK.csv") {
-  filePath <- file.path(path, filename)
+getDataHKG <- function(data_path = here::here("app/data/HKG"), filename = "incidence_data_HKG.csv") {
+  filePath <- file.path(data_path, filename)
   HKdata <- read_csv(filePath,
                       col_types = cols(
                         date = col_date(format = ""),
@@ -1051,9 +1051,9 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
     } else if (countries[i] == "ESP") {
       allDataList[[i]] <- getDataESP()
     } else if (countries[i] == "CHE") {
-      allDataList[[i]] <- getDataCHE(data_path = here::here("app/data/CH"))
+      allDataList[[i]] <- getDataCHE(data_path = here::here("app/data/CHE"))
     } else if (countries[i] == "HKG") {
-      allDataList[[i]] <- getDataHKG(data_path = here::here("app/data/HK"))
+      allDataList[[i]] <- getDataHKG(data_path = here::here("app/data/HKG"))
     } else if (countries[i] == "GBR") {
       allDataList[[i]] <- getDataGBR(ECDCtemp = ECDCtemp, HMDtemp = HMDtemp, tReload = tReload)
     } else if (countries[i] == "ZAF") {
@@ -1086,7 +1086,7 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
 getCountryPopData <- function(tempFileName = here::here("app/data/pop_sizes.xls"), tReload = 15) {
   url_file <- "http://api.worldbank.org/v2/en/indicator/SP.POP.TOTL?downloadformat=excel"
   if (is.null(tempFileName)) {
-    csvPath <- url_file
+    xls_path <- url_file
   } else {
     fileMod <- file.mtime(tempFileName)
     fileReload <- if_else(file.exists(tempFileName), now() > fileMod + minutes(tReload), TRUE)
@@ -1104,7 +1104,7 @@ getCountryPopData <- function(tempFileName = here::here("app/data/pop_sizes.xls"
     xls_path <- tempFileName
   }
   
-  popData <- readxl::read_xls(csvPath, sheet = 1, skip = 3) %>% 
+  popData <- readxl::read_xls(xls_path, sheet = 1, skip = 3) %>% 
     filter(`Indicator Name` == "Population, total") %>% 
     dplyr::select(-c(`Indicator Name`, `Indicator Code`)) %>%
     rename(country = `Country Name`,

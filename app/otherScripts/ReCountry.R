@@ -25,7 +25,8 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("CHE")
+  # args <- c("CHE")
+  args <- c("HKG")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -33,7 +34,7 @@ names(args) <- "country"
 # Fetch Population Data (do once)
 popDataPath <- here::here("app", "data", "popData.rds")
 
-popDataWorldBank <- getCountryPopData(here::here("app/data/temp/ECDCdata.csv"), 300) %>%
+popDataWorldBank <- getCountryPopData(here::here("app/data/temp/pop_sizes.xls"), 300) %>%
   filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
   mutate(region = countryIso3)
 popDataCH <- read_csv(
@@ -44,7 +45,7 @@ popDataCH <- read_csv(
   )
 )
 popData <- bind_rows(popDataWorldBank, popDataCH) %>%
-  dplyr::select(countryIso3, country, region, populationSize) %>%
+  dplyr::select(countryIso3, region, populationSize) %>%
   filter(!is.na(countryIso3))
 saveRDS(popData, file = popDataPath)
 
@@ -127,7 +128,7 @@ if (dim(countryData)[1] > 0) {
     # load parameter
     source(here::here("app/otherScripts/2_params_InfectionIncidencePars.R"))
     # load empirical delays
-    delays_data_path <- here::here("app/data/CH/FOPH_data_delays.csv")
+    delays_data_path <- here::here("app", "data", "all_delays.csv")
     delays_onset_to_count <- read_csv(delays_data_path,
                                       col_types = cols(
                                         data_type = col_character(),
@@ -161,7 +162,7 @@ if (dim(countryData)[1] > 0) {
     
     constant_delay_distributions <- c(constant_delay_distributions, constant_delay_symptom_to_report_distributions)
     
-    # filter out regions with to few cases for estimation
+    # filter out regions with too few cases for estimation
     countryData <- countryData %>%
       filterRegions(thresholdConfirmedCases = 500)
     # remove Oxford Stringenxy Index for Re calculation
@@ -327,8 +328,8 @@ if (dim(countryData)[1] > 0) {
           arrange(country, region, source, data_type, estimate_type, date) %>%
           ungroup() %>%
           left_join(
-            dplyr::select(popData, country, region, countryIso3),
-            by = c("country", "region")
+            dplyr::select(popData, region, countryIso3),
+            by = c("region")
           )
         countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
         saveRDS(countryEstimates, file = countryDataPath)
