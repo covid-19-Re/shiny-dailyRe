@@ -46,7 +46,6 @@ first_curation_data_Hong_Kong <- data_Hong_Kong %>%
             local_infection =  `Case classification*`) %>% 
   mutate(across(c(count_date, onset_date), ~ if_else(between(.x, min_date, max_date_plotting), .x, as.Date(NA)))) %>% 
   mutate(data_type = "Confirmed cases",
-         country = "Hong Kong",
          countryIso3 = "HKG",
          region = "HKG", 
          source = "Department of Health - HK")
@@ -73,7 +72,7 @@ confirmed_case_data <- first_curation_data_Hong_Kong %>%
          date_type = if_else(is.na(onset_date), "report", "onset"),
          date = if_else(is.na(onset_date), count_date, onset_date)) %>% 
   dplyr::select(-c(onset_date,count_date)) %>% 
-  dplyr::group_by(region, source, countryIso3,country, data_type, date, date_type, local_infection) %>%
+  dplyr::group_by(region, source, countryIso3, data_type, date, date_type, local_infection) %>%
   dplyr::count() %>%
   ungroup() %>% 
   rename(value = n)
@@ -82,12 +81,11 @@ start_date <- min(confirmed_case_data$date)
 end_date <- max(confirmed_case_data$date)
 
 confirmed_case_data <- confirmed_case_data %>% 
-  dplyr::group_by(region, source, countryIso3, country, date_type, local_infection) %>% 
+  dplyr::group_by(region, source, countryIso3, date_type, local_infection) %>% 
   complete(date = seq(start_date, end_date, by = "days"), 
            local_infection,
            region,
            countryIso3,
-           country,
            source,
            data_type,
            date_type,
@@ -104,7 +102,7 @@ plotting_confirmed_case_data <- first_curation_data_Hong_Kong %>%
          date_type = "report_plotting",
          local_infection = NA) %>%
   filter(between(date, min_date, max_date_plotting)) %>% 
-  dplyr::group_by(date, local_infection, data_type, date_type, country, countryIso3, region, source) %>%
+  dplyr::group_by(date, local_infection, data_type, date_type, countryIso3, region, source) %>%
   dplyr::count(name = "value") %>%
   ungroup() %>%
   arrange(region, date, date_type)
@@ -112,7 +110,7 @@ plotting_confirmed_case_data <- first_curation_data_Hong_Kong %>%
 
 #TODO remove when imports are integrated
 confirmed_case_data <- confirmed_case_data %>% 
-  group_by(date, region, countryIso3, country, source, data_type, date_type) %>% 
+  group_by(date, region, countryIso3, source, data_type, date_type) %>% 
   summarise(value = sum(value), .groups = "drop") %>% 
   mutate(local_infection = "TRUE") %>% 
   arrange(region, data_type, date_type, date)

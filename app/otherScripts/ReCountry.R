@@ -25,8 +25,7 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  # args <- c("CHE")
-  args <- c("HKG")
+  args <- c("CHE")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -44,8 +43,9 @@ popDataCH <- read_csv(
     populationSize = col_double()
   )
 )
+
 popData <- bind_rows(popDataWorldBank, popDataCH) %>%
-  dplyr::select(countryIso3, region, populationSize) %>%
+  dplyr::select(country, countryIso3, region, populationSize) %>%
   filter(!is.na(countryIso3))
 saveRDS(popData, file = popDataPath)
 
