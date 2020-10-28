@@ -25,8 +25,8 @@ git pull
 cd "$parent_path"
 rm *CHE.Rout
 
-echo "running R script to extract BAG data & calculate delays ..."
-runRScript format_BAG_data.R
+echo "running R script to extract linelist data ..."
+runRScript format_linelist_data.R
 
 runRScript ReCountry.R "CHE"
 runRScript ReCountry.R "LIE"

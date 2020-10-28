@@ -47,8 +47,8 @@ first_curation_data_Hong_Kong <- data_Hong_Kong %>%
   mutate(across(c(count_date, onset_date), ~ if_else(between(.x, min_date, max_date_plotting), .x, as.Date(NA)))) %>% 
   mutate(data_type = "Confirmed cases",
          countryIso3 = "HKG",
-         region = "HKG", 
-         source = "Department of Health - HK")
+         region = "HKG",
+         source = "HK - DoH")
 
 delay_data_Hong_Kong <- first_curation_data_Hong_Kong %>% 
   mutate(delay = as.integer(count_date - onset_date)) %>%
