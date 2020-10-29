@@ -230,7 +230,7 @@ if (dim(countryData)[1] > 0) {
         data_types = c("Confirmed cases",
                        "Hospitalized patients",
                        "Deaths"),
-        n_bootstrap = 1, #TODO change back
+        n_bootstrap = 50,
         verbose = FALSE)
       
       if (args["country"] %in% c("CHE")) {
@@ -242,7 +242,7 @@ if (dim(countryData)[1] > 0) {
           constant_delay_distributions = constant_delay_distributions,
           onset_to_count_empirical_delays = delays_onset_to_count,
           data_types = c("Confirmed cases / tests"),
-          n_bootstrap = 1, #TODO change back
+          n_bootstrap = 50,
           verbose = FALSE)
       }
       
