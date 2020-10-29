@@ -86,14 +86,24 @@ casesSubPlot <- function(
           ""
         ))
     )
+  
 
-  if (caseDataRightTruncation > 0) {
+
+  if (caseDataRightTruncation[[1]] > 0) {
+    right_truncate <- function(df, data_type, right_truncation){
+      dplyr::filter(df, date <= (max(date) - right_truncation[[unique(data_type)]]))
+    }
+    truncated <- function(df, data_type, right_truncation){
+      dplyr::filter(df, date > (max(date) - right_truncation[[unique(data_type)]]))
+    }
+    
     caseDataTrunc <- caseData %>%
-      group_by(series) %>%
-      filter(date <= max(date) - caseDataRightTruncation)
+      group_by(series, data_type) %>%
+      right_truncate(data_type, caseDataRightTruncation)
+    
     caseDataRest <- caseData %>%
-      group_by(series) %>%
-      filter(date > max(date) - caseDataRightTruncation) %>%
+      group_by(series, data_type) %>%
+      truncated(data_type, caseDataRightTruncation) %>% 
       mutate(series_plot = str_c(series, " truncated"))
   } else {
     caseDataTrunc <- caseData
@@ -117,7 +127,7 @@ casesSubPlot <- function(
       )
     )
 
-  if (caseDataRightTruncation > 0) {
+  if (caseDataRightTruncation[[1]] > 0) {
     pCases <- pCases %>%
       add_bars(
         data = caseDataRest,
@@ -807,7 +817,11 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     min(caseData$date) - 7
   )
 
-  right_truncation <- 3
+  right_truncation <- list()
+    right_truncation[["Confirmed cases"]] <- 3
+    right_truncation[["Confirmed cases / tests"]] <- 3
+    right_truncation[["Hospitalized patients"]] <- 5
+    right_truncation[["Deaths"]] <- 5
 
   plot <- rEffPlotly(
     caseData = caseData,
