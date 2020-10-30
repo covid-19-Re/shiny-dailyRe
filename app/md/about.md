@@ -10,13 +10,13 @@ If you are working on the epidemic in a country for which we use data of bad qua
 
 #### Contributors:
 
-  - Jérémie Scire, ETH Zürich, D-BSSE
-  - Jana S. Huisman, ETH Zürich, D-BSSE & D-USYS
-  - Daniel Angst, ETH Zürich, D-USYS
-  - Richard Neher, University of Basel, Biozentrum
-  - Gabriel Leventhal, MIT
-  - Sebastian Bonhoeffer, ETH Zürich, D-USYS
-  - Tanja Stadler, ETH Zürich, D-BSSE
+  - Jérémie Scire, ETH Zürich, D-BSSE: method development (*equal contributions)
+  - Jana S. Huisman, ETH Zürich, D-BSSE & D-USYS: method development (*equal contributions)
+  - Daniel Angst, ETH Zürich, D-USYS: web development and data visualisation
+  - Richard Neher, University of Basel, Biozentrum: consultation on method development
+  - Gabriel Leventhal, MIT: consultation on web design
+  - Sebastian Bonhoeffer, ETH Zürich, D-USYS: supervision and method development
+  - Tanja Stadler, ETH Zürich, D-BSSE: supervision and method development
 
 and a big thanks to everyone who (filed issues and pull requests)[https://github.com/covid-19-Re/shiny-dailyRe]!
 
