@@ -4,13 +4,13 @@
 mean_incubation <- 5.3
 sd_incubation <- 3.2
 
-# onset to test: pooled CH data from BAG (12/05/20 update)
-mean_onset_to_test <- 4.5
-sd_onset_to_test <- 4.9
+# onset to test: Kraemer et al.
+mean_onset_to_test <- 4.8
+sd_onset_to_test <- 3.0
 
-# onset to hospitalization report: pooled CH data from BAG (12/05/20 update)
-mean_onset_to_hosp <- 6.1
-sd_onset_to_hosp <- 4.7
+# onset to hospitalization report: Pellis et al
+mean_onset_to_hosp <- 5.1
+sd_onset_to_hosp <- 4.2
 
 ##TODO reconsider Excess death delay (discretize by week)
 # onset to death: mean =15.0 sd=6.9 (Linton et al. best gamma distr fit)
