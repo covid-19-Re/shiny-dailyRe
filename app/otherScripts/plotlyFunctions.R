@@ -410,6 +410,11 @@ rEffPlotly <- function(
     mutate(
       data_type = recode(as.character(data_type), !!!renameDataType))
 
+  rightTruncation <- lapply(rightTruncation, function(rt) {
+    names(rt) <- recode(names(rt), !!!renameDataType)
+    return(rt)
+  })
+
   if (dim(estimates)[1] != 0) {
     estimates <- estimates %>%
       mutate(
