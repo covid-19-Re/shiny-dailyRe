@@ -820,8 +820,8 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
   right_truncation <- list()
     right_truncation[["Confirmed cases"]] <- 3
     right_truncation[["Confirmed cases / tests"]] <- 3
-    right_truncation[["Hospitalized patients"]] <- 5
-    right_truncation[["Deaths"]] <- 5
+    right_truncation[["Hospitalized patients"]] <- 3
+    right_truncation[["Deaths"]] <- 3
 
   plot <- rEffPlotly(
     caseData = caseData,

@@ -183,13 +183,7 @@ if (dim(countryData)[1] > 0) {
       countryData <- countryData %>%
         filter(data_type != "Deaths")
       cat("ignoring data_type Deaths\n")
-    } else if (args["country"] == "CHE") {
-      # no estimation for deaths per canton (too few cases)
-      countryData <- countryData %>%
-        filter(!(region != "CHE" & data_type == "Deaths"))
-      cat("ignoring data_type Deaths on regional level\n")
-    }
-    
+    } 
     if (nrow(countryData) > 0) {
       
       countryData <- countryData %>%
@@ -201,8 +195,8 @@ if (dim(countryData)[1] > 0) {
       if(args["country"] %in% c("CHE", "LIE")) {
         right_truncation[["Confirmed cases"]] <- 3
         right_truncation[["Confirmed cases / tests"]] <- 3
-        right_truncation[["Hospitalized patients"]] <- 5
-        right_truncation[["Deaths"]] <- 5
+        right_truncation[["Hospitalized patients"]] <- 3
+        right_truncation[["Deaths"]] <- 3
       } else {
         right_truncation["Confirmed cases"] <- 3
         right_truncation["Confirmed cases / tests"] <- 3
