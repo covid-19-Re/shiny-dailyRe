@@ -192,7 +192,7 @@ if (dim(countryData)[1] > 0) {
         )
       
       right_truncation <- list()
-      if(args["country"] %in% c("CHE", "LIE")) {
+      if (args["country"] %in% c("CHE", "LIE")) {
         right_truncation[["Confirmed cases"]] <- 3
         right_truncation[["Confirmed cases / tests"]] <- 3
         right_truncation[["Hospitalized patients"]] <- 3
@@ -204,7 +204,7 @@ if (dim(countryData)[1] > 0) {
         right_truncation["Deaths"] <- 3
       }
       
-      right_truncate <- function(df, data_type, right_truncation){
+      right_truncate <- function(df, data_type, right_truncation) {
           dplyr::filter(df, date <= (max(date) - right_truncation[[unique(data_type)]]))
       }
     

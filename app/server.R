@@ -80,6 +80,30 @@ server <- function(input, output, session) {
       return(countryData)
     })
 
+    rightTruncation <- reactive({
+      validate(need(countrySelectValue() != "", "Please select a country"))
+      countrySelectValue <- countrySelectValue()
+
+      rightTruncation <- lapply(countrySelectValue, function(iso3) {
+        if (iso3 %in% c("CHE", "LIE")) {
+          rt <- list(
+            "Confirmed cases" = 3,
+            "Confirmed cases / tests" = 3,
+            "Hospitalized patients" = 5,
+            "Deaths" = 5)
+        } else {
+          rt <- list(
+            "Confirmed cases" = 3,
+            "Confirmed cases / tests" = 3,
+            "Hospitalized patients" = 3,
+            "Deaths" = 3)
+        }
+        return(rt)
+      })
+      names(rightTruncation) <- countrySelectValue
+      return(rightTruncation)
+    })
+
     updateData <- reactive({
       updateDataRaw <- readRDS(pathToUpdataData)
 
@@ -115,14 +139,18 @@ server <- function(input, output, session) {
       }
     })
 
+
+
   # outputs
     output$rePlot_data_type <- renderPlotly({
       countryData <- countryData()
       updateData <- updateData()
       interventions <- interventions()
       plotSize <- stateVals$plotSize
+      rightTruncation <- rightTruncation()
 
-      rEffPlotlyShiny(countryData, updateData, interventions, "data_type", input, i18n(), plotSize)
+      rEffPlotlyShiny(countryData, updateData, interventions, "data_type", input,
+        rightTruncation, i18n(), plotSize)
     })
 
     output$rePlot_region <- renderPlotly({
@@ -130,8 +158,10 @@ server <- function(input, output, session) {
       updateData <- updateData()
       interventions <- interventions()
       plotSize <- stateVals$plotSize
+      rightTruncation <- rightTruncation()
 
-      rEffPlotlyShiny(countryData, updateData, interventions, "region", input, i18n(), plotSize)
+      rEffPlotlyShiny(countryData, updateData, interventions, "region", input,
+        rightTruncation, i18n(), plotSize)
     })
 
     output$rePlot_greaterRegion <- renderPlotly({
@@ -139,8 +169,10 @@ server <- function(input, output, session) {
       updateData <- updateData()
       interventions <- interventions()
       plotSize <- stateVals$plotSize
+      rightTruncation <- rightTruncation()
 
-      rEffPlotlyShiny(countryData, updateData, interventions, "greaterRegion", input, i18n(), plotSize)
+      rEffPlotlyShiny(countryData, updateData, interventions, "greaterRegion", input,
+        rightTruncation, i18n(), plotSize)
     })
 
   # ui

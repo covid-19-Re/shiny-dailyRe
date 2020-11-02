@@ -62,6 +62,13 @@ interventions <- read_csv(
 translator <- Translator$new(translation_json_path = file.path(dataDir, "shinyTranslations.json"))
 availableLanguages <- translator$get_languages()
 
+rightTruncation <- list(
+  "CHE" = list(
+    "Confirmed cases" = 3,
+    "Confirmed cases / tests" = 3,
+    "Hospitalized patients" = 5,
+    "Deaths" = 5)
+)
 
 for (i in availableLanguages) {
 
@@ -78,6 +85,7 @@ for (i in availableLanguages) {
       caseAverage = 1,
       lang = i,
       plotSize = "large"),
+    rightTruncation,
     translator,
     showHelpBox = TRUE)
 
