@@ -191,7 +191,7 @@ getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"),
   return(longData)
 }
 
-##### Switzerland #######
+##### Switzerland  & Liechtenstein #######
 sumGreaterRegions <- function(chData) {
   greaterRegions <- tribble(
     ~greaterRegion,             ~region,
