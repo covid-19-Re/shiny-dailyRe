@@ -1,5 +1,5 @@
 ### Utilities ###
-filterRegions <- function(df, thresholdConfirmedCases = 500) {
+filterRegions <- function(df, thresholdConfirmedCases = 500, thresholdHospitalizedPatients = 0, thresholdDeaths = 0) {
   regionsIncluded <- df %>%
     filter(data_type == "Confirmed cases") %>%
     dplyr::group_by(region) %>%
@@ -8,6 +8,23 @@ filterRegions <- function(df, thresholdConfirmedCases = 500) {
   excludedRegions <- setdiff(unique(df$region), regionsIncluded$region)
   dfout <- df %>%
     filter(region %in% regionsIncluded$region)
+  
+  regionsIncludedHospital <- dfout %>%
+    filter(data_type == "Hospitalized patients") %>%
+    dplyr::group_by(region) %>%
+    dplyr::summarize(nCases = sum(value), .groups = "drop") %>%
+    filter(nCases >= thresholdHospitalizedPatients)
+  dfout <- dfout %>%
+    filter(data_type != "Hospitalized patients" | region %in% regionsIncludedHospital$region)
+  
+  regionsIncludedDeaths <- dfout %>%
+    filter(data_type == "Deaths") %>%
+    dplyr::group_by(region) %>%
+    dplyr::summarize(nCases = sum(value), .groups = "drop") %>%
+    filter(nCases >= thresholdDeaths)
+  dfout <- dfout %>%
+    filter(data_type != "Deaths" | region %in% regionsIncludedDeaths$region)
+  
   
   cat(str_c(
     "\tDiscarded ", length(excludedRegions), " regions because threshold of ",
@@ -522,7 +539,6 @@ get_infection_incidence_by_deconvolution <- function(
   return(bind_rows(results))
 }
 
-
 ### One gamma-distributed waiting time is the incubation period
 ### The second one is the period between symptom onset and report (of positive test, death, hospitalization...)
 get_all_infection_incidence <- function(data,
@@ -564,6 +580,8 @@ get_all_infection_incidence <- function(data,
                      local_infection == local_infection_i) %>%
               arrange(date)
             
+            country_i <- subset_data %>% distinct(country)
+            
             if (nrow(subset_data) == 0) {
               return(tibble())
             }
@@ -571,8 +589,9 @@ get_all_infection_incidence <- function(data,
             if (is_delays_data_available) {
               empirical_delays <- onset_to_count_empirical_delays %>%
                 filter(
-                  region == x,
+                  country %in% country_i,
                   data_type == count_type_i)
+              
             } else {
               empirical_delays <- tibble()
             }
@@ -649,3 +668,5 @@ get_all_infection_incidence <- function(data,
   
   return(combined_result)
 }
+
+
