@@ -71,7 +71,7 @@ casesSubPlot <- function(
   caseData <- caseData %>%
     group_by(series) %>%
     mutate(
-      tooltipText = str_c("<i>", format(date, dateFormatLong), " (", format(date, "%a") ,")", "</i> <br>",
+      tooltipText = str_c("<i>", format(date, dateFormatLong), " (", format(date, "%a") , ")", "</i> <br>",
         round(value, 3), " ", toLowerFirst(data_type),
         if_else(caseNormalize, " / 100'000", ""),
         if_else(caseAverage > 1, str_c(" (", caseAverage, " ", "day average", ")"), ""),
