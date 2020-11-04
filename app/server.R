@@ -203,20 +203,21 @@ server <- function(input, output, session) {
     dataTypeChoices <- reactive({
       validate(need(!is.null(input$plotTabs), ""))
 
+      countryData <- countryData()
+
       if (input$plotTabs != "data_type") {
         splitBy <- "region"
       } else {
         splitBy <- "countryIso3"
       }
 
-      if (dim(countryData()$estimates)[1] > 0) {
-        dataTypes <- countryData()$estimates %>%
-          group_by(.data[[splitBy]]) %>%
-          group_split() %>%
-          lapply(function(x) {
-            unique(x$data_type)
-          })
-        dataTypeChoices <- dataTypes[[which.min(lengths(dataTypes))]]
+      if (dim(countryData$estimates)[1] > 0) {
+        dataTypes <- countryData$estimates %>%
+          group_by(data_type) %>%
+          summarize(n = length(unique(region))) %>%
+          filter(n > 1)
+          
+        dataTypeChoices <- dataTypes$data_type
         names(dataTypeChoices) <- sapply(dataTypeChoices, i18n()$t,  USE.NAMES = FALSE)
       } else {
         dataTypeChoices <- "None"
