@@ -1,5 +1,5 @@
 ### Utilities ###
-filterRegions <- function(df, thresholdConfirmedCases = 500, thresholdHospitalizedPatients = 0, thresholdDeaths = 0) {
+filterRegions <- function(df, thresholdConfirmedCases = 500, thresholdHospitalizedPatients = 200, thresholdDeaths = 100) {
   regionsIncluded <- df %>%
     filter(data_type == "Confirmed cases") %>%
     dplyr::group_by(region) %>%
