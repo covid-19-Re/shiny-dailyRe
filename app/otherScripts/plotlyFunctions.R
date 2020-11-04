@@ -71,7 +71,7 @@ casesSubPlot <- function(
   caseData <- caseData %>%
     group_by(series) %>%
     mutate(
-      tooltipText = str_c("<i>", format(date, dateFormatLong), " (", format(date, "%a") , ")", "</i> <br>",
+      tooltipText = str_c("<i>", format(date, dateFormatLong), " (", format(date, "%a"), ")", "</i> <br>",
         round(value, 3), " ", toLowerFirst(data_type),
         if_else(caseNormalize, " / 100'000", ""),
         if_else(caseAverage > 1, str_c(" (", caseAverage, " ", "day average", ")"), ""),
@@ -200,7 +200,7 @@ estimatesSubPlot <- function(
       color = ~series, colors = seriesColors,
       legendgroup = ~series,
       marker = list(symbol = "asterisk-open"),
-      text = ~str_c("<i>", format(date, dateFormatLong),
+      text = ~str_c("<i>", format(date, dateFormatLong), " (", format(date, "%a"), ")",
       "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
       " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", series, ")"),
@@ -326,7 +326,7 @@ interventionsSubPlot <- function(
           x = ~date, y = ~y, color = I("rgba(50, 50, 50, 1)"),
           type = "scatter", mode = "markers+lines",
           showlegend = FALSE,
-          text = ~str_c("<i>", date, "</i><br>", tooltip),
+          text = ~str_c("<i>", date, " (", format(date, "%a"), ")", "</i><br>", tooltip),
           hoveron = "points",
           hoverinfo = "text")  %>%
         add_text(
