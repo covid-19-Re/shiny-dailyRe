@@ -99,7 +99,7 @@ normalized_test_delays <- final_delay_data_FOPH %>% filter(data_type == "Confirm
 final_delay_data_FOPH <- bind_rows(final_delay_data_FOPH, normalized_test_delays)
 
 ### Save file
-write_csv(final_delay_data_FOPH, path = file.path(outDir, "FOPH_data_delays.csv"))
+write_csv(final_delay_data_FOPH, file = file.path(outDir, "FOPH_data_delays.csv"))
 
 # cat("Mean Time from onset to Hospitalization:",
 #     mean(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 6.1 (15/05/20)

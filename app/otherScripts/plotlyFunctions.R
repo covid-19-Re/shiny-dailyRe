@@ -25,7 +25,7 @@ casesSubPlot <- function(
   seriesTitle = "Data types",
   startDate = min(caseData$date) - 1,
   endDate = max(caseData$date) + 1,
-  caseDataRightTruncation = 2,
+  rightTruncation = NULL,
   fixedRangeX = TRUE,
   fixedRangeY =TRUE,
   logYaxis = FALSE,
@@ -71,7 +71,7 @@ casesSubPlot <- function(
   caseData <- caseData %>%
     group_by(series) %>%
     mutate(
-      tooltipText = str_c("<i>", format(date, dateFormatLong), "</i> <br>",
+      tooltipText = str_c("<i>", format(date, dateFormatLong), " (", format(date, "%a"), ")", "</i> <br>",
         round(value, 3), " ", toLowerFirst(data_type),
         if_else(caseNormalize, " / 100'000", ""),
         if_else(caseAverage > 1, str_c(" (", caseAverage, " ", "day average", ")"), ""),
@@ -86,24 +86,15 @@ casesSubPlot <- function(
           ""
         ))
     )
-  
 
-
-  if (caseDataRightTruncation[[1]] > 0) {
-    right_truncate <- function(df, data_type, right_truncation){
-      dplyr::filter(df, date <= (max(date) - right_truncation[[unique(data_type)]]))
-    }
-    truncated <- function(df, data_type, right_truncation){
-      dplyr::filter(df, date > (max(date) - right_truncation[[unique(data_type)]]))
-    }
-    
+  if (!is.null(rightTruncation)) {
     caseDataTrunc <- caseData %>%
-      group_by(series, data_type) %>%
-      right_truncate(data_type, caseDataRightTruncation)
-    
+      group_by(countryIso3, series, data_type) %>%
+      dplyr::filter(date <= (max(date) - rightTruncation[[unique(countryIso3)]][[unique(data_type)]]))
+
     caseDataRest <- caseData %>%
-      group_by(series, data_type) %>%
-      truncated(data_type, caseDataRightTruncation) %>% 
+      group_by(countryIso3, series, data_type) %>%
+      dplyr::filter(date > (max(date) - rightTruncation[[unique(countryIso3)]][[unique(data_type)]])) %>%
       mutate(series_plot = str_c(series, " truncated"))
   } else {
     caseDataTrunc <- caseData
@@ -127,7 +118,7 @@ casesSubPlot <- function(
       )
     )
 
-  if (caseDataRightTruncation[[1]] > 0) {
+  if (!is.null(rightTruncation)) {
     pCases <- pCases %>%
       add_bars(
         data = caseDataRest,
@@ -209,7 +200,7 @@ estimatesSubPlot <- function(
       color = ~series, colors = seriesColors,
       legendgroup = ~series,
       marker = list(symbol = "asterisk-open"),
-      text = ~str_c("<i>", format(date, dateFormatLong),
+      text = ~str_c("<i>", format(date, dateFormatLong), " (", format(date, "%a"), ")",
       "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
       " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", series, ")"),
@@ -325,12 +316,6 @@ interventionsSubPlot <- function(
           visible = TRUE, fixedRange = fixedRangeY))
     }
 
- 
-
-
-
-    
-
     if (!is.null(interventions)) {
       interventionsPlot <- interventions %>%
         mutate(y = scales::rescale(y, to = c(0.05 * maxValue, 0.95 * maxValue)))
@@ -341,7 +326,7 @@ interventionsSubPlot <- function(
           x = ~date, y = ~y, color = I("rgba(50, 50, 50, 1)"),
           type = "scatter", mode = "markers+lines",
           showlegend = FALSE,
-          text = ~str_c("<i>", date, "</i><br>", tooltip),
+          text = ~str_c("<i>", date, " (", format(date, "%a"), ")", "</i><br>", tooltip),
           hoveron = "points",
           hoverinfo = "text")  %>%
         add_text(
@@ -362,7 +347,7 @@ rEffPlotly <- function(
   lastDataDate,
   startDate = min(caseData$date) - 1,
   endDate = max(caseData$date) + 1,
-  caseDataRightTruncation = 2,
+  rightTruncation,
   fixedRangeX = c(TRUE, TRUE, TRUE),
   fixedRangeY = c(TRUE, TRUE, TRUE),
   logCaseYaxis = FALSE,
@@ -425,6 +410,11 @@ rEffPlotly <- function(
     mutate(
       data_type = recode(as.character(data_type), !!!renameDataType))
 
+  rightTruncation <- lapply(rightTruncation, function(rt) {
+    names(rt) <- recode(names(rt), !!!renameDataType)
+    return(rt)
+  })
+
   if (dim(estimates)[1] != 0) {
     estimates <- estimates %>%
       mutate(
@@ -446,7 +436,7 @@ rEffPlotly <- function(
     seriesTitle,
     startDate,
     endDate,
-    caseDataRightTruncation,
+    rightTruncation,
     fixedRangeX = fixedRangeX[1],
     fixedRangeY = fixedRangeY[1],
     logYaxis = logCaseYaxis,
@@ -698,7 +688,7 @@ renameRegionTotal <- function(data, countries, countryNames) {
   return(renamedData)
 }
 
-rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect, input, translator,
+rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect, input, rightTruncation, translator,
   plotSize = "large", showHelpBox = FALSE) {
 
   countries <- unique(countryData$caseData$countryIso3)
@@ -817,12 +807,6 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     min(caseData$date) - 7
   )
 
-  right_truncation <- list()
-    right_truncation[["Confirmed cases"]] <- 3
-    right_truncation[["Confirmed cases / tests"]] <- 3
-    right_truncation[["Hospitalized patients"]] <- 3
-    right_truncation[["Deaths"]] <- 3
-
   plot <- rEffPlotly(
     caseData = caseData,
     estimates = estimates,
@@ -835,7 +819,7 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     fixedRangeX = fixedRangeX,
     fixedRangeY = fixedRangeY,
     logCaseYaxis = "logCases" %in% input$plotOptions,
-    caseDataRightTruncation = right_truncation,
+    rightTruncation = rightTruncation,
     caseAverage = input$caseAverage,
     caseNormalize = "caseNormalize" %in% input$plotOptions,
     caseLoess = "caseLoess" %in% input$plotOptions,

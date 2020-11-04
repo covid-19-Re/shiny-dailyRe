@@ -118,7 +118,7 @@ if (dim(countryData)[1] > 0) {
     !is.null(countryData)
   
   if (condition) {
-    cat(str_c("\n", args["country"], ": New data available. Calculating Re ...\n"))
+    cat(str_c("\n", args["country"], ": ", Sys.time(), " New data available. Calculating Re ...\n"))
     # get Infection Incidence
     # load functions
     source(here::here("app/otherScripts/2_utils_getInfectionIncidence.R"))
@@ -192,7 +192,7 @@ if (dim(countryData)[1] > 0) {
         )
       
       right_truncation <- list()
-      if(args["country"] %in% c("CHE", "LIE")) {
+      if (args["country"] %in% c("CHE", "LIE")) {
         right_truncation[["Confirmed cases"]] <- 3
         right_truncation[["Confirmed cases / tests"]] <- 3
         right_truncation[["Hospitalized patients"]] <- 3
@@ -204,7 +204,7 @@ if (dim(countryData)[1] > 0) {
         right_truncation["Deaths"] <- 3
       }
       
-      right_truncate <- function(df, data_type, right_truncation){
+      right_truncate <- function(df, data_type, right_truncation) {
           dplyr::filter(df, date <= (max(date) - right_truncation[[unique(data_type)]]))
       }
     
@@ -349,8 +349,8 @@ if (dim(countryData)[1] > 0) {
     }
     
   } else {
-    cat(str_c(args["country"], ": No new data available. Skipping Re calculation.\n"))
+    cat(str_c(args["country"], ": ", Sys.time(), " No new data available. Skipping Re calculation.\n"))
   }
 } else {
-  cat(str_c(args["country"], ": No data available.\n"))
+  cat(str_c(args["country"], ": ", Sys.time(), " No data available.\n"))
 }
