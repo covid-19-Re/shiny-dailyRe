@@ -214,9 +214,10 @@ server <- function(input, output, session) {
       if (dim(countryData$estimates)[1] > 0) {
         dataTypes <- countryData$estimates %>%
           group_by(data_type) %>%
-          summarize(n = length(unique(region))) %>%
+          summarize(n = length(unique(region)),
+            .groups = "drop") %>%
           filter(n > 1)
-          
+
         dataTypeChoices <- dataTypes$data_type
         names(dataTypeChoices) <- sapply(dataTypeChoices, i18n()$t,  USE.NAMES = FALSE)
       } else {
