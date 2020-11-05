@@ -106,8 +106,9 @@ server <- function(input, output, session) {
 
     updateData <- reactive({
       updateDataRaw <- readRDS(pathToUpdataData)
+      countrySelectValue <- countrySelectValue()
 
-      updateData <- bind_rows(updateDataRaw[countrySelectValue()]) %>%
+      updateData <- bind_rows(updateDataRaw[countrySelectValue]) %>%
         ungroup() %>%
         dplyr::select(-country) %>%
         left_join(dplyr::select(continents, countryIso3, country), by = "countryIso3")
@@ -139,8 +140,6 @@ server <- function(input, output, session) {
       }
     })
 
-
-
   # outputs
     output$rePlot_data_type <- renderPlotly({
       countryData <- countryData()
@@ -148,7 +147,6 @@ server <- function(input, output, session) {
       interventions <- interventions()
       plotSize <- stateVals$plotSize
       rightTruncation <- rightTruncation()
-
       rEffPlotlyShiny(countryData, updateData, interventions, "data_type", input,
         rightTruncation, i18n(), plotSize)
     })
@@ -215,8 +213,7 @@ server <- function(input, output, session) {
         dataTypes <- countryData$estimates %>%
           group_by(data_type) %>%
           summarize(n = length(unique(region)),
-            .groups = "drop") %>%
-          filter(n > 1)
+            .groups = "drop")
 
         dataTypeChoices <- dataTypes$data_type
         names(dataTypeChoices) <- sapply(dataTypeChoices, i18n()$t,  USE.NAMES = FALSE)
