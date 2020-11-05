@@ -195,8 +195,8 @@ if (dim(countryData)[1] > 0) {
       if (args["country"] %in% c("CHE", "LIE")) {
         right_truncation[["Confirmed cases"]] <- 3
         right_truncation[["Confirmed cases / tests"]] <- 3
-        right_truncation[["Hospitalized patients"]] <- 3
-        right_truncation[["Deaths"]] <- 3
+        right_truncation[["Hospitalized patients"]] <- 5
+        right_truncation[["Deaths"]] <- 5
       } else {
         right_truncation["Confirmed cases"] <- 3
         right_truncation["Confirmed cases / tests"] <- 3
