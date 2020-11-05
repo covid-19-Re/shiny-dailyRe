@@ -118,7 +118,7 @@ if (dim(countryData)[1] > 0) {
     !is.null(countryData)
   
   if (condition) {
-    cat(str_c("\n", args["country"], ": ", Sys.time(), " New data available. Calculating Re ...\n"))
+    cat(str_c("\n", Sys.time(), " | ", args["country"], ": New data available. Calculating Re ...\n"))
     # get Infection Incidence
     # load functions
     source(here::here("app/otherScripts/2_utils_getInfectionIncidence.R"))
@@ -345,12 +345,12 @@ if (dim(countryData)[1] > 0) {
         )
       }
     } else {
-      cat(str_c(args["country"], ": Not enough cases. Skipping Re calculation.\n"))
+      cat(str_c(Sys.time(), " | ", args["country"], ": Not enough cases. Skipping Re calculation.\n"))
     }
     
   } else {
-    cat(str_c(args["country"], ": ", Sys.time(), " No new data available. Skipping Re calculation.\n"))
+    cat(str_c(Sys.time(), " | ", args["country"], ": No new data available. Skipping Re calculation.\n"))
   }
 } else {
-  cat(str_c(args["country"], ": ", Sys.time(), " No data available.\n"))
+  cat(str_c(Sys.time(), " | ", args["country"], ": No data available.\n"))
 }
