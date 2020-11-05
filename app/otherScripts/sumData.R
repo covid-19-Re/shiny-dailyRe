@@ -1,5 +1,5 @@
-
 library(tidyverse)
+cat(str_c(Sys.time(), " | summarizing data ...\n"))
 source(here::here("app/utils.R"))
 
 pathToCountryData <- here::here("app", "data", "countryData")
@@ -12,13 +12,17 @@ allCountries <- str_match(
 
 allData <- list(caseData = list(), estimates = list())
 estimatePlotRanges <- list()
+pb <- txtProgressBar(min = 0, max = length(allCountries))
+pb_i <- 0
 for (iCountry in allCountries) {
   iCountryData <- loadCountryData(iCountry, dataDir = pathToCountryData)
   allData$caseData[[iCountry]] <- iCountryData$caseData
   allData$estimates[[iCountry]] <- iCountryData$estimates
   estimatePlotRanges[[iCountry]] <- iCountryData$estimateRanges[[iCountry]]
+  pb_i <- pb_i + 1
+  setTxtProgressBar(pb, pb_i)
 }
-
+close(pb)
 allData$caseData <- bind_rows(allData$caseData) %>%
   # fix country names
   dplyr::select(-country) %>%
@@ -42,3 +46,4 @@ saveRDS(allData, file = here::here("app", "data", "allCountryData.rds"))
 # update updateData
 updateData <- readRDS(here::here("app", "data", "temp", "updateDataTemp.rds"))
 saveRDS(updateData, here::here("app", "data", "updateData.rds"))
+cat(str_c(Sys.time(), " | summarizing data done.\n"))
