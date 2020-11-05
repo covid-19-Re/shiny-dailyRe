@@ -1,5 +1,5 @@
 ### Utilities ###
-filterRegions <- function(df, thresholdConfirmedCases = 500, thresholdHospitalizedPatients = 300, thresholdDeaths = 100) {
+filterRegions <- function(df, thresholdConfirmedCases = 500, thresholdHospitalizedPatients = 300, thresholdDeaths = 200) {
   regionsIncluded <- df %>%
     filter(data_type == "Confirmed cases") %>%
     dplyr::group_by(region) %>%
@@ -14,6 +14,8 @@ filterRegions <- function(df, thresholdConfirmedCases = 500, thresholdHospitaliz
     dplyr::group_by(region) %>%
     dplyr::summarize(nCases = sum(value), .groups = "drop") %>%
     filter(nCases >= thresholdHospitalizedPatients)
+  
+  excludedRegionsHospital <- setdiff(unique(dfout$region), regionsIncludedHospital$region)
   dfout <- dfout %>%
     filter(data_type != "Hospitalized patients" | region %in% regionsIncludedHospital$region)
   
@@ -22,14 +24,32 @@ filterRegions <- function(df, thresholdConfirmedCases = 500, thresholdHospitaliz
     dplyr::group_by(region) %>%
     dplyr::summarize(nCases = sum(value), .groups = "drop") %>%
     filter(nCases >= thresholdDeaths)
+  
+  excludedRegionsDeaths <- setdiff(unique(dfout$region), regionsIncludedDeaths$region)
   dfout <- dfout %>%
     filter(data_type != "Deaths" | region %in% regionsIncludedDeaths$region)
   
+  if(length(excludedRegions)  > 0) {
+    cat(str_c(
+      "\tDiscarded ", length(excludedRegions), " regions because threshold of ",
+      thresholdConfirmedCases, " confirmed cases wasn't reached.\n",
+      "\tDiscarded regions: ", str_c(excludedRegions, collapse = ", "), "\n"))
+  }
   
-  cat(str_c(
-    "\tDiscarded ", length(excludedRegions), " regions because threshold of ",
-    thresholdConfirmedCases, " confirmed cases wasn't reached.\n",
-    "\tDiscarded regions: ", str_c(excludedRegions, collapse = ", "), "\n"))
+  if(length(excludedRegionsHospital)  > 0) {
+    cat(str_c(
+      "\tDiscarded ", length(excludedRegionsHospital), " regions because cumulative threshold of ",
+      thresholdHospitalizedPatients, " hospital admissions wasn't reached.\n",
+      "\tDiscarded regions: ", str_c(excludedRegionsHospital, collapse = ", "), "\n"))
+  }
+  
+  if(length(excludedRegionsDeaths)  > 0) {
+    cat(str_c(
+      "\tDiscarded ", length(excludedRegionsDeaths), " regions because cumulative threshold of ",
+      thresholdDeaths, " deaths wasn't reached.\n",
+      "\tDiscarded regions: ", str_c(excludedRegionsDeaths, collapse = ", "), "\n"))
+  }
+
   
   return(dfout)
 }
