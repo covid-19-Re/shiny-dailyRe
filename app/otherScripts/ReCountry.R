@@ -341,7 +341,7 @@ if (dim(countryData)[1] > 0) {
         saveRDS(countryEstimates, file = countryDataPath)
         # Save as .csv for data upload
         write_csv(countryEstimates,
-                  path = here::here(str_c("../dailyRe-Data/", args["country"], "-estimates.csv"))
+                  path = file.path(basePath, "csv", str_c(args["country"], "-estimates.csv"))
         )
       }
     } else {
