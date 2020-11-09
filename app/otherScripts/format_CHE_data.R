@@ -48,6 +48,12 @@ data_hospitalization <- read.csv(
   sep = ";", stringsAsFactors = F, header = T)
 
 
+right_truncation <- list()
+right_truncation[["Confirmed cases"]] <- 3
+right_truncation[["Confirmed cases / tests"]] <- 3
+right_truncation[["Hospitalized patients"]] <- 5
+right_truncation[["Deaths"]] <- 5
+
 max_date <- date(maximum_file_date)
 max_date_plotting <- date(maximum_file_date)
 min_date <- as.Date("2020-02-01")
@@ -102,7 +108,8 @@ normalized_test_delays <- final_delay_data_FOPH %>% filter(data_type == "Confirm
 final_delay_data_FOPH <- bind_rows(final_delay_data_FOPH, normalized_test_delays)
 
 ### Save file
-write_csv(final_delay_data_FOPH, path = file.path(outDir, "CHE_data_delays.csv"))
+readr::write_csv(final_delay_data_FOPH, path = file.path(outDir, "CHE_data_delays.csv"))
+
 
 # cat("Mean Time from onset to Hospitalization:",
 #     mean(as.numeric(datesSymptoms$timeFromOnsetToHosp), na.rm = TRUE), "\n") # 6.1 (15/05/20)
@@ -113,7 +120,7 @@ confirmed_case_data <- data_hospitalization %>%
   filter(!is.na(fall_dt)) %>% 
   dplyr::select(manifestation_dt, fall_dt, ktn, exp_ort) %>%
   mutate(across(c(manifestation_dt, fall_dt), ymd)) %>% 
-  mutate(across(c(manifestation_dt, fall_dt), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>%
+  mutate(across(c(manifestation_dt, fall_dt), ~ if_else(between(.x, min_date, max_date - right_truncation[["Confirmed cases"]]), .x, as.Date(NA)))) %>%
   filter(!is.na(fall_dt)) %>%
   mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
@@ -191,7 +198,7 @@ death_data <- data_hospitalization %>%
   filter(!is.na(pttoddat)) %>% 
   dplyr::select(pttoddat, ktn, exp_ort) %>%
   mutate(pttoddat = ymd(pttoddat)) %>% 
-  mutate(pttoddat = if_else(between(pttoddat, min_date, max_date), pttoddat, as.Date(NA))) %>%
+  mutate(pttoddat = if_else(between(pttoddat, min_date, max_date - right_truncation[["Deaths"]]), pttoddat, as.Date(NA))) %>%
   filter(!is.na(pttoddat)) %>%
   mutate(date_type = "report",
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
@@ -257,7 +264,8 @@ hospital_data <- data_hospitalization %>%
   filter(hospitalisation == 1) %>% 
   dplyr::select(eingang_dt, manifestation_dt, hospdatin, ktn, exp_ort) %>% 
   mutate(across(c(eingang_dt, manifestation_dt, hospdatin), ymd)) %>% 
-  mutate(across(c(eingang_dt, manifestation_dt, hospdatin), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>% 
+  mutate(across(c(eingang_dt, manifestation_dt, hospdatin), ~ if_else(between(.x, min_date, max_date - right_truncation[["Hospitalized patients"]]), .x, as.Date(NA)))) %>% 
+  filter(!(is.na(hospdatin) & is.na(eingang_dt))) %>% 
   mutate(manifestation_dt = if_else(between(hospdatin - manifestation_dt, 0, max_delay_hosp), manifestation_dt, as.Date(NA))) %>% 
   mutate(hospdatin = if_else(is.na(hospdatin), eingang_dt, hospdatin)) %>% 
   mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
@@ -394,7 +402,7 @@ confirmedCHEDataTests <- data_hospitalization %>%
   dplyr::select(fall_dt, ktn, exp_ort) %>%
   mutate(date = ymd(fall_dt),
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE")) %>% 
-  filter(between(date, min_date, max_date)) %>% 
+  filter(between(date, min_date, max_date - right_truncation[["Confirmed cases / tests"]])) %>% 
   dplyr::group_by(date, local_infection) %>%
   dplyr::count() %>%
   ungroup() %>% 
@@ -469,14 +477,14 @@ allBAGdata <- bind_rows(confirmedCHEDataTests, plotting_confirmedCHEDataTests, a
 allBAGdata_plotting <- allBAGdata %>% filter(is.na(local_infection))
 allBAGdata_calculations <- allBAGdata %>% filter(!is.na(local_infection))
 
-allBAGdata_calculations <- allBAGdata_calculations %>% 
-  group_by(date, region, countryIso3, source, data_type, date_type, positiveTests, negativeTests, totalTests, testPositivity) %>% 
-  summarise(value = sum(value), .groups = "drop") %>% 
-  mutate(local_infection = "TRUE") %>% 
+allBAGdata_calculations <- allBAGdata_calculations %>%
+  group_by(date, region, countryIso3, source, data_type, date_type, positiveTests, negativeTests, totalTests, testPositivity) %>%
+  summarise(value = sum(value), .groups = "drop") %>%
+  mutate(local_infection = "TRUE") %>%
   arrange(region, data_type, date_type, date)
 
 allBAGdata <- bind_rows(list(allBAGdata_plotting), list(allBAGdata_calculations))
 ## end of remove
 
+readr::write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CHE.csv"))
 
-write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CHE.csv"))

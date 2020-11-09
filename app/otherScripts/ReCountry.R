@@ -121,7 +121,7 @@ if (dim(countryData)[1] > 0) {
     !is.null(countryData)
   
   if (condition) {
-    cat(str_c("\n", args["country"], ": New data available. Calculating Re ...\n"))
+    cat(str_c("\n", Sys.time(), " | ", args["country"], ": New data available. Calculating Re ...\n"))
     # get Infection Incidence
     # load functions
     source(here::here("app/otherScripts/2_utils_getInfectionIncidence.R"))
@@ -186,13 +186,7 @@ if (dim(countryData)[1] > 0) {
       countryData <- countryData %>%
         filter(data_type != "Deaths")
       cat("ignoring data_type Deaths\n")
-    } else if (args["country"] == "CHE") {
-      # no estimation for deaths per canton (too few cases)
-      countryData <- countryData %>%
-        filter(!(region != "CHE" & data_type == "Deaths"))
-      cat("ignoring data_type Deaths on regional level\n")
-    }
-    
+    } 
     if (nrow(countryData) > 0) {
       
       countryData <- countryData %>%
@@ -200,13 +194,28 @@ if (dim(countryData)[1] > 0) {
           data_type = fct_drop(data_type)
         )
       
-      right_truncation <- 3
+      right_truncation <- list()
+      if (args["country"] %in% c("CHE", "LIE")) {
+        right_truncation[["Confirmed cases"]] <- 0
+        right_truncation[["Confirmed cases / tests"]] <- 0
+        right_truncation[["Hospitalized patients"]] <- 0
+        right_truncation[["Deaths"]] <- 0
+      } else {
+        right_truncation["Confirmed cases"] <- 3
+        right_truncation["Confirmed cases / tests"] <- 3
+        right_truncation["Hospitalized patients"] <- 3
+        right_truncation["Deaths"] <- 3
+      }
       
+      right_truncate <- function(df, data_type, right_truncation) {
+          dplyr::filter(df, date <= (max(date) - right_truncation[[unique(data_type)]]))
+      }
+    
       countryData <- countryData %>%
-        group_by(country, region, source, data_type) %>%
-        filter(date <= (max(date) - right_truncation)) %>%
-        dplyr::select(-countryIso3, -populationSize) %>%
-        ungroup()
+      group_by(country, region, source, data_type) %>%
+      right_truncate(data_type, right_truncation) %>% 
+      dplyr::select(-countryIso3, -populationSize) %>%
+      ungroup()
       
       # Deconvolution
       deconvolvedData <- list()
@@ -335,16 +344,16 @@ if (dim(countryData)[1] > 0) {
         saveRDS(countryEstimates, file = countryDataPath)
         # Save as .csv for data upload
         write_csv(countryEstimates,
-                  path = here::here(str_c("../dailyRe-Data/", args["country"], "-estimates.csv"))
+                  path = file.path(basePath, "csv", str_c(args["country"], "-estimates.csv"))
         )
       }
     } else {
-      cat(str_c(args["country"], ": Not enough cases. Skipping Re calculation.\n"))
+      cat(str_c(Sys.time(), " | ", args["country"], ": Not enough cases. Skipping Re calculation.\n"))
     }
     
   } else {
-    cat(str_c(args["country"], ": No new data available. Skipping Re calculation.\n"))
+    cat(str_c(Sys.time(), " | ", args["country"], ": No new data available. Skipping Re calculation.\n"))
   }
 } else {
-  cat(str_c(args["country"], ": No data available.\n"))
+  cat(str_c(Sys.time(), " | ", args["country"], ": No data available.\n"))
 }

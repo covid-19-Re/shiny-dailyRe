@@ -191,7 +191,7 @@ getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"),
   return(longData)
 }
 
-##### Switzerland #######
+##### Switzerland  & Liechtenstein #######
 sumGreaterRegions <- function(chData) {
   greaterRegions <- tribble(
     ~greaterRegion,             ~region,
@@ -789,253 +789,280 @@ getDataCHEBAG <- function(path = here::here("app/data/CHE"), country = "CHE", fi
     return(allData)
   }
   
-  ##### Netherlands #####
-  getCaseDataNLD <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
-    baseurl <- str_c("https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/",
-                     "rivm_NL_covid19_national_by_date/rivm_NL_covid19_national_by_date_")
+
+##### Netherlands #####
+
+getCaseDataNLD <- function(){
+  url_file <- "https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data-geo/data-national/RIVM_NL_national.csv"
+  
+  raw_data <- try(read_csv(url_file))
+  if ("try-error" %in% class(raw_data)) {
+    warning(str_c("Couldn't read Dutch data at ", url_file))
+    return(NULL)
+  }
+  
+  longData <- raw_data %>%
+    dplyr::select(date = Datum, data_type = Type, value = Aantal) %>%
+    mutate(value = replace_na(value, 0)) %>% 
+    mutate(value = if_else(value < 0, 0, value)) %>% 
+    mutate(
+      data_type = recode(data_type,
+                         "Totaal" = "confirmed",
+                         "Ziekenhuisopname" = "hospitalized",
+                         "Overleden" = "deaths"),
+      countryIso3 = "NLD",
+      date_type = "report",
+      local_infection = TRUE,
+      region = countryIso3,
+      source = "RIVM")
+  
+  return(longData)
+  
+}
+
+##### EXCESS Death NL
+# install.packages("cbsodataR")
+# The netherlands has developed an R package
+# to access their central statistics data
+# https://www.cbs.nl/en-gb/our-services/open-data/statline-as-open-data/quick-start-guide
+#library("cbsodataR")
+
+getDeathNLD <- function() {
+  # Death data has the number 70895NED
+  # https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70895ned/table?fromstatweb
+  # unit: X0 is first week of year, may be partial; W1 normal weeks; JJ is whole year summed
+
+  raw_data <- cbs_get_data("70895NED")
+  data <- raw_data %>%
+    dplyr::select(sex = "Geslacht", age = "LeeftijdOp31December",
+                  period = "Perioden", deaths = "Overledenen_1") %>%
+    separate(period, c("year", "unit", "week"), sep = c(4, 6)) %>%
+    mutate(sex = recode(sex,
+                        "1100" = "all",
+                        "3000" = "men",
+                        "4000" = "women"),
+           age = recode(age,
+                        "10000" = "all",
+                        "21700" = "0-65",
+                        "41700" = "65-80",
+                        "53950" = "80+"))
+  return(data)
+}
+
+getRawExcessDeathNLD <- function(startAt = as.Date("2020-02-20")) {
+
+  relevant_weeks <- sprintf("%02d", seq(isoweek(startAt), isoweek(Sys.Date()) - 2))
+
+  raw_data <- getDeathNLD()
+
+  data <- raw_data %>%
+    filter(sex == "all", age == "all", unit == "W1", week %in% relevant_weeks)
+
+  past_data <- data %>% filter(year %in% seq(2015, 2019))
+
+  past_mean <- past_data %>%
+    group_by(week) %>%
+    #summarise_at(vars(deaths), mean)
+    summarise_at(vars(deaths), list(avg_deaths = mean, sd_deaths = sd))
+
+  excess_death <- data %>%
+    filter(year == 2020) %>%
+    dplyr::select(year, week, deaths) %>%
+    left_join(past_mean, by = "week") %>%
+    mutate(
+      excess_deaths = ceiling(deaths - avg_deaths),
+      perc_excess = 100 * (excess_deaths / avg_deaths),
+      date = ymd(
+        parse_date_time(
+          paste(year, week, "Mon", sep = "/"), "Y/W/a",
+          locale = "en_GB.UTF-8"
+        ), locale = "en_GB.UTF-8")) %>%
+    dplyr::select(-year, -week)
+  # this translation to a date associates the last day of the week
+
+  return(excess_death)
+}
+
+getExcessDeathNLD <- function(startAt = as.Date("2020-02-20")) {
+  excess_death <- suppressWarnings(getRawExcessDeathNLD(startAt))
+
+  longData <- excess_death %>%
+    dplyr::select(date, excess_deaths) %>%
+    pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
+    mutate(
+      countryIso3 = "NLD",
+      date_type = "report",
+      local_infection = TRUE,
+      region = countryIso3,
+      source = "CBS") %>%
+    mutate(value = ifelse(value < 0, 0, value))
+
+  return(longData)
+}
+
+getDataNLD <- function() {
+  caseData <- getCaseDataNLD()
+  excessDeath <- NULL#getExcessDeathNLD()
+  allData <- bind_rows(caseData, excessDeath)
+  return(allData)
+}
+
+## Spain
+
+getCaseDataESP <- function(){
+  url_csv_file <- "https://cnecovid.isciii.es/covid19/resources/datos_ccaas.csv"
+  
+  raw_data <- try(read_csv(url_csv_file))
+  
+  confirmed_onsets <- raw_data %>% 
+    dplyr::select(ccaa_iso, fecha, num_casos) %>% 
+    rename(date = fecha) %>% 
+    group_by(date) %>% 
+    dplyr::summarise(value = sum(num_casos), .groups = "drop") %>% 
+    arrange(date) %>% 
+    mutate(region = "ESP", 
+           countryIso3 = "ESP",
+           source = "RENAVE",
+           date_type = "onset",
+           local_infection = TRUE,
+           data_type = "confirmed")
+  
+  return(confirmed_onsets)
+}
+
+getDataESP <- function( ECDCtemp = NULL, tReload = 15) {
+  deathData <- getDataECDC(countries = "ESP", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "death")
+  caseData <- getCaseDataESP()
+  excessDeath <- NULL
+  allData <- bind_rows(caseData, deathData, excessDeath)
+  return(allData)
+}
+
+
+##### GBR #####
+
+getRawExcessDeathGBR <- function(startAt = as.Date("2020-02-20"), path_to_data = "../data/UK") {
+  
+  relevant_weeks <- seq(isoweek(startAt), isoweek(Sys.Date()) - 2)
+  #last_week <- isoweek(Sys.Date()) - 2
+  
+  # url <- str_c("https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/",
+  #   "deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales")
+  
+  raw_data <- suppressWarnings(
+    readxl::read_excel(
+      path = path_to_data,
+      sheet = "Weekly figures 2020", col_names = F))
+  
+  rowUK <- raw_data[c(5, 6, 9, 11, 19), ] %>%
+    mutate(...1 = coalesce(...1, ...2)) %>%
+    dplyr::select(-...2)
+  
+  columnUK <- data.frame(tmp = 2:dim(rowUK)[2])
+  for (row in 1:dim(rowUK)[1]) {
+    rowdata <- rowUK %>%
+      dplyr::select(-...1) %>%
+      slice(row) %>%
+      unlist(., use.names = FALSE)
     
-    urlfile <- paste0(baseurl, stopAfter, ".csv")
-    raw_data <- try(read_csv(urlfile))
-    
+    newdata <- data.frame(rowdata)
+    names(newdata) <- rowUK[[row, "...1"]]
+    columnUK <- cbind(columnUK, newdata)
+  }
+  
+  colnames(columnUK) <- c("tmp", "week", "date", "deaths", "avg_deaths", "covid_deaths")
+  
+  excess_deaths <- columnUK %>%
+    dplyr::select(-tmp) %>%
+    filter(!is.na(deaths), week %in% relevant_weeks) %>%
+    mutate(date = as.Date(date, origin = "1899-12-30", locale = "en_GB.UTF-8")) %>%
+    mutate(excess_deaths = deaths - avg_deaths)
+  
+  return(excess_deaths)
+}
+
+getExcessDeathGBR <- function(startAt = as.Date("2020-02-20"), path_to_data = "../data/UK") {
+  excess_death <- getRawExcessDeathGBR(startAt, path_to_data)
+  
+  longData <- excess_death %>%
+    dplyr::select(date, deaths = covid_deaths, excess_deaths) %>%
+    pivot_longer(cols = c(deaths, excess_deaths), names_to = "data_type") %>%
+    mutate(
+      countryIso3 = "GBR", 
+      date_type = "report",
+      local_infection = TRUE,
+      region = countryIso3,
+      source = "ONS",
+      value = ifelse(value < 0, 0, value))
+  
+  return(longData)
+}
+
+getDataGBR <- function(ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
+  url <- paste0("https://api.coronavirus.data.gov.uk/v1/data?filters=areaType=nation&structure=%7B%22areaType%22:%22areaType%22,",
+                "%22areaName%22:%22areaName%22,%22date%22:%22date%22,%22newAdmissions%22:%22newAdmissions%22,",
+                "%22newDeaths28DaysByDeathDate%22:%22newDeaths28DaysByDeathDate%22,",
+                "%22newCasesBySpecimenDate%22:%22newCasesBySpecimenDate%22%7D&format=csv")
+  
+  rawData <- try(read_csv(url))
+  if ("try-error" %in% class(rawData)) {
+    warning(str_c("Couldn't read UK data at ", url))
+    return(NULL)
+  }
+  
+  #for now we aggregate all the UK nations back together
+  longData <- rawData %>%
+    group_by(date, areaName) %>% 
+    summarise(confirmed = sum(newCasesBySpecimenDate),
+              hospitalized = sum(newAdmissions),
+              deaths = sum(newDeaths28DaysByDeathDate),
+              .groups = "drop") %>% 
+    pivot_longer(cols = c("confirmed", "hospitalized", "deaths"),
+                 values_to = "value",
+                 names_to = "data_type") %>% 
+    filter(!is.na(value)) %>% 
+    rename(region = areaName) %>% 
+    mutate( local_infection = TRUE,
+            countryIso3 = "GBR",
+            source = "Gov.UK",
+            date_type = "report") %>% 
+    arrange(region, data_type, date) 
+  
+  UK_data <- longData %>% 
+    group_by(date, data_type, date_type, local_infection, countryIso3, source) %>% 
+    summarise(value = sum(value),
+              .groups= "drop") %>% 
+    mutate(region = "GBR")
+  
+  
+  excessDeath <- NULL#getExcessDeathHMD(countries = "GBR", tempFileName = HMDtemp, tReload = tReload)
+  allData <- bind_rows(longData, UK_data, excessDeath)
+  return(allData)
+}
+  
+  getDeathDataCZE <- function(){
+    url <- "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/umrti.csv"
+    raw_data <- try(read_csv(url))
     if ("try-error" %in% class(raw_data)) {
-      urlfile <- paste0(baseurl, "latest.csv")
-      raw_data <- read_csv(urlfile)
-    }
-    
-    longData <- raw_data %>%
-      dplyr::select(date = Datum, data_type = Type, value = Aantal) %>%
-      mutate(
-        data_type = recode(data_type,
-                           "Totaal" = "confirmed",
-                           "Ziekenhuisopname" = "hospitalized",
-                           "Overleden" = "deaths"),
-        countryIso3 = "NLD",
-        date_type = "report",
-        local_infection = TRUE,
-        region = countryIso3,
-        source = "RIVM")
-    
-    return(longData)
-  }
-  
-  ##### EXCESS Death NL
-  # install.packages("cbsodataR")
-  # The netherlands has developed an R package
-  # to access their central statistics data
-  # https://www.cbs.nl/en-gb/our-services/open-data/statline-as-open-data/quick-start-guide
-  #library("cbsodataR")
-  
-  getDeathNLD <- function() {
-    # Death data has the number 70895NED
-    # https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70895ned/table?fromstatweb
-    # unit: X0 is first week of year, may be partial; W1 normal weeks; JJ is whole year summed
-    
-    raw_data <- cbs_get_data("70895NED")
-    data <- raw_data %>%
-      dplyr::select(sex = "Geslacht", age = "LeeftijdOp31December",
-                    period = "Perioden", deaths = "Overledenen_1") %>%
-      separate(period, c("year", "unit", "week"), sep = c(4, 6)) %>%
-      mutate(sex = recode(sex,
-                          "1100" = "all",
-                          "3000" = "men",
-                          "4000" = "women"),
-             age = recode(age,
-                          "10000" = "all",
-                          "21700" = "0-65",
-                          "41700" = "65-80",
-                          "53950" = "80+"))
-    return(data)
-  }
-  
-  getRawExcessDeathNLD <- function(startAt = as.Date("2020-02-20")) {
-    
-    relevant_weeks <- sprintf("%02d", seq(isoweek(startAt), isoweek(Sys.Date()) - 2))
-    
-    raw_data <- getDeathNLD()
-    
-    data <- raw_data %>%
-      filter(sex == "all", age == "all", unit == "W1", week %in% relevant_weeks)
-    
-    past_data <- data %>% filter(year %in% seq(2015, 2019))
-    
-    past_mean <- past_data %>%
-      group_by(week) %>%
-      #summarise_at(vars(deaths), mean)
-      summarise_at(vars(deaths), list(avg_deaths = mean, sd_deaths = sd))
-    
-    excess_death <- data %>%
-      filter(year == 2020) %>%
-      dplyr::select(year, week, deaths) %>%
-      left_join(past_mean, by = "week") %>%
-      mutate(
-        excess_deaths = ceiling(deaths - avg_deaths),
-        perc_excess = 100 * (excess_deaths / avg_deaths),
-        date = ymd(
-          parse_date_time(
-            paste(year, week, "Mon", sep = "/"), "Y/W/a",
-            locale = "en_GB.UTF-8"
-          ), locale = "en_GB.UTF-8")) %>%
-      dplyr::select(-year, -week)
-    # this translation to a date associates the last day of the week
-    
-    return(excess_death)
-  }
-  
-  getExcessDeathNLD <- function(startAt = as.Date("2020-02-20")) {
-    excess_death <- suppressWarnings(getRawExcessDeathNLD(startAt))
-    
-    longData <- excess_death %>%
-      dplyr::select(date, excess_deaths) %>%
-      pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
-      mutate(
-        countryIso3 = "NLD",
-        date_type = "report",
-        local_infection = TRUE,
-        region = countryIso3,
-        source = "CBS") %>%
-      mutate(value = ifelse(value < 0, 0, value))
-    
-    return(longData)
-  }
-  
-  getDataNLD <- function() {
-    caseData <- getCaseDataNLD()
-    excessDeath <- NULL#getExcessDeathNLD()
-    allData <- bind_rows(caseData, excessDeath)
-    return(allData)
-  }
-  
-  ## Spain
-  
-  
-  getCaseDataESP <- function(){
-    url_csv_file <- "https://cnecovid.isciii.es/covid19/resources/datos_ccaas.csv"
-    
-    raw_data <- try(read_csv(url_csv_file))
-    
-    confirmed_onsets <- raw_data %>% 
-      dplyr::select(ccaa_iso, fecha, num_casos) %>% 
-      rename(date = fecha) %>% 
-      group_by(date) %>% 
-      dplyr::summarise(value = sum(num_casos), .groups = "drop") %>% 
-      arrange(date) %>% 
-      mutate(region = "ESP", 
-             countryIso3 = "ESP",
-             source = "RENAVE",
-             date_type = "onset",
-             local_infection = TRUE,
-             data_type = "confirmed")
-    
-    return(confirmed_onsets)
-  }
-  
-  getDataESP <- function( ECDCtemp = NULL, tReload = 15) {
-    deathData <- getDataECDC(countries = "ESP", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "death")
-    caseData <- getCaseDataESP()
-    excessDeath <- NULL
-    allData <- bind_rows(caseData, deathData, excessDeath)
-    return(allData)
-  }
-  
-  ##### GBR #####
-  
-  getRawExcessDeathGBR <- function(startAt = as.Date("2020-02-20"), path_to_data = "../data/UK") {
-    
-    relevant_weeks <- seq(isoweek(startAt), isoweek(Sys.Date()) - 2)
-    #last_week <- isoweek(Sys.Date()) - 2
-    
-    # url <- str_c("https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/",
-    #   "deaths/datasets/weeklyprovisionalfiguresondeathsregisteredinenglandandwales")
-    
-    raw_data <- suppressWarnings(
-      readxl::read_excel(
-        path = path_to_data,
-        sheet = "Weekly figures 2020", col_names = F))
-    
-    rowUK <- raw_data[c(5, 6, 9, 11, 19), ] %>%
-      mutate(...1 = coalesce(...1, ...2)) %>%
-      dplyr::select(-...2)
-    
-    columnUK <- data.frame(tmp = 2:dim(rowUK)[2])
-    for (row in 1:dim(rowUK)[1]) {
-      rowdata <- rowUK %>%
-        dplyr::select(-...1) %>%
-        slice(row) %>%
-        unlist(., use.names = FALSE)
-      
-      newdata <- data.frame(rowdata)
-      names(newdata) <- rowUK[[row, "...1"]]
-      columnUK <- cbind(columnUK, newdata)
-    }
-    
-    colnames(columnUK) <- c("tmp", "week", "date", "deaths", "avg_deaths", "covid_deaths")
-    
-    excess_deaths <- columnUK %>%
-      dplyr::select(-tmp) %>%
-      filter(!is.na(deaths), week %in% relevant_weeks) %>%
-      mutate(date = as.Date(date, origin = "1899-12-30", locale = "en_GB.UTF-8")) %>%
-      mutate(excess_deaths = deaths - avg_deaths)
-    
-    return(excess_deaths)
-  }
-  
-  getExcessDeathGBR <- function(startAt = as.Date("2020-02-20"), path_to_data = "../data/UK") {
-    excess_death <- getRawExcessDeathGBR(startAt, path_to_data)
-    
-    longData <- excess_death %>%
-      dplyr::select(date, deaths = covid_deaths, excess_deaths) %>%
-      pivot_longer(cols = c(deaths, excess_deaths), names_to = "data_type") %>%
-      mutate(
-        countryIso3 = "GBR", 
-        date_type = "report",
-        local_infection = TRUE,
-        region = countryIso3,
-        source = "ONS",
-        value = ifelse(value < 0, 0, value))
-    
-    return(longData)
-  }
-  
-  getDataGBR <- function(ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
-    url <- paste0("https://api.coronavirus.data.gov.uk/v1/data?filters=areaType=nation&structure=%7B%22areaType%22:%22areaType%22,",
-                  "%22areaName%22:%22areaName%22,%22date%22:%22date%22,%22newAdmissions%22:%22newAdmissions%22,",
-                  "%22newDeaths28DaysByDeathDate%22:%22newDeaths28DaysByDeathDate%22,",
-                  "%22newCasesBySpecimenDate%22:%22newCasesBySpecimenDate%22%7D&format=csv")
-    
-    rawData <- try(read_csv(url))
-    if ("try-error" %in% class(rawData)) {
-      warning(str_c("Couldn't read UK data at ", url))
+      warning(str_c("Couldn't read CZE death data at ", url))
       return(NULL)
     }
     
-    #for now we aggregate all the UK nations back together
-    longData <- rawData %>%
-      group_by(date, areaName) %>% 
-      summarise(confirmed = sum(newCasesBySpecimenDate),
-                hospitalized = sum(newAdmissions),
-                deaths = sum(newDeaths28DaysByDeathDate),
-                .groups = "drop") %>% 
-      pivot_longer(cols = c("confirmed", "hospitalized", "deaths"),
-                   values_to = "value",
-                   names_to = "data_type") %>% 
-      filter(!is.na(value)) %>% 
-      rename(region = areaName) %>% 
-      mutate( local_infection = TRUE,
-              countryIso3 = "GBR",
-              source = "Gov.UK",
-              date_type = "report") %>% 
-      arrange(region, data_type, date) 
+    death_data <- raw_data %>% 
+      dplyr::select(datum) %>% 
+      group_by(datum) %>% 
+      summarize(value = n()) %>% 
+      rename(date = datum) %>% 
+      complete(date = seq.Date(min(date), max(date), by = "days"),
+               fill = list(value = 0)) %>% 
+      mutate(countryIso3 = "CZE",
+             local_infection = TRUE,
+             data_type = "deaths",
+             date_type = "report",
+             region = "CZE",
+             source = "data.gov.cz")
     
-    UK_data <- longData %>% 
-      group_by(date, data_type, date_type, local_infection, countryIso3, source) %>% 
-      summarise(value = sum(value),
-                .groups= "drop") %>% 
-      mutate(region = "GBR")
-    
-    
-    excessDeath <- NULL#getExcessDeathHMD(countries = "GBR", tempFileName = HMDtemp, tReload = tReload)
-    allData <- bind_rows(longData, UK_data, excessDeath)
-    return(allData)
+    return(death_data)
   }
   
   ##### Latvia #####
@@ -1063,68 +1090,6 @@ getDataCHEBAG <- function(path = here::here("app/data/CHE"), country = "CHE", fi
              source = "data.gov.lv")
     
     return(all_data)
-  }
-  
-  ##### Czech Republic #####
-  
-  getDataCZE <- function(){
-    case_data <- getCaseDataCZE()
-    death_data <- getDeathDataCZE()
-    
-    return(rbind(case_data, death_data))
-  }
-  
-  
-  getCaseDataCZE <- function(){
-    
-    
-    url <- "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/osoby.csv"
-    raw_data <- try(read_csv(url))
-    if ("try-error" %in% class(raw_data)) {
-      warning(str_c("Couldn't read CZE case data at ", url))
-      return(NULL)
-    }
-    
-    case_data <- raw_data %>% 
-      dplyr::select(datum) %>% 
-      group_by(datum) %>% 
-      summarize(value = n()) %>% 
-      rename(date = datum) %>% 
-      complete(date = seq.Date(min(date), max(date), by = "days"),
-               fill = list(value = 0)) %>% 
-      mutate(countryIso3 = "CZE",
-             local_infection = TRUE,
-             data_type = "confirmed",
-             date_type = "report",
-             region = "CZE",
-             source = "data.gov.cz")
-    
-    return(case_data)
-  }
-  
-  getDeathDataCZE <- function(){
-    url <- "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/umrti.csv"
-    raw_data <- try(read_csv(url))
-    if ("try-error" %in% class(raw_data)) {
-      warning(str_c("Couldn't read CZE death data at ", url))
-      return(NULL)
-    }
-    
-    death_data <- raw_data %>% 
-      dplyr::select(datum) %>% 
-      group_by(datum) %>% 
-      summarize(value = n()) %>% 
-      rename(date = datum) %>% 
-      complete(date = seq.Date(min(date), max(date), by = "days"),
-               fill = list(value = 0)) %>% 
-      mutate(countryIso3 = "CZE",
-             local_infection = TRUE,
-             data_type = "deaths",
-             date_type = "report",
-             region = "CZE",
-             source = "data.gov.cz")
-    
-    return(death_data)
   }
   
   
@@ -1243,6 +1208,43 @@ getDataCHEBAG <- function(path = here::here("app/data/CHE"), country = "CHE", fi
     return(all_data)
   }
   
+  ##### Czech Republic #####
+  
+  getDataCZE <- function(){
+    case_data <- getCaseDataCZE()
+    death_data <- getDeathDataCZE()
+    
+    return(rbind(case_data, death_data))
+  }
+  
+  
+  getCaseDataCZE <- function(){
+    
+    
+    url <- "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/osoby.csv"
+    raw_data <- try(read_csv(url))
+    if ("try-error" %in% class(raw_data)) {
+      warning(str_c("Couldn't read CZE case data at ", url))
+      return(NULL)
+    }
+    
+    case_data <- raw_data %>% 
+      dplyr::select(datum) %>% 
+      group_by(datum) %>% 
+      summarize(value = n()) %>% 
+      rename(date = datum) %>% 
+      complete(date = seq.Date(min(date), max(date), by = "days"),
+               fill = list(value = 0)) %>% 
+      mutate(countryIso3 = "CZE",
+             local_infection = TRUE,
+             data_type = "confirmed",
+             date_type = "report",
+             region = "CZE",
+             source = "data.gov.cz")
+    
+    return(case_data)
+  }
+  
   
   ##### United States
   
@@ -1270,7 +1272,7 @@ getDataCHEBAG <- function(path = here::here("app/data/CHE"), country = "CHE", fi
     
     for (i in seq_len(length(countries))) {
       if (v) {
-        cat(str_c(countries[i], ": getting data... "))
+        cat(Sys.time(), " | ", str_c(countries[i], ": getting data... "))
       }
       if (countries[i] == "BEL") {
         allDataList[[i]] <- getDataBEL(ECDCtemp = ECDCtemp, HMDtemp = HMDtemp, tReload = tReload)
@@ -1286,12 +1288,11 @@ getDataCHEBAG <- function(path = here::here("app/data/CHE"), country = "CHE", fi
         allDataList[[i]] <- getDataCHE(data_path = here::here("app/data/CHE"))
       } else if (countries[i] == "LIE") {
         allDataList[[i]] <- getDataLIE(data_path = here::here("app/data/CHE"))
-      }  else if (countries[i] == "HKG") {
+      } else if (countries[i] == "HKG") {
         allDataList[[i]] <- getDataHKG(data_path = here::here("app/data/HKG"))
-      } 
-      else if (countries[i] == "GBR") {
+      } else if (countries[i] == "GBR") {
         allDataList[[i]] <- getDataGBR(ECDCtemp = ECDCtemp, HMDtemp = HMDtemp, tReload = tReload)
-      }  else if (countries[i] == "LVA") {
+      } else if (countries[i] == "LVA") {
         allDataList[[i]] <- getDataLVA()
       } else if (countries[i] == "EST") {
         allDataList[[i]] <- getDataEST()

@@ -4,12 +4,12 @@
 mean_incubation <- 5.3
 sd_incubation <- 3.2
 
-# onset to test: (Kraemer et al.)
-mean_onset_to_test <- 4.8
-sd_onset_to_test <- 3.0
+# onset to test:
+mean_onset_to_test <- 5.5 #Bi et al.
+sd_onset_to_test <- 3.8
 
-# onset to hospitalization report: (Linton et al. best gamma distr fit)
-mean_onset_to_hosp <- 3.3
+# onset to hospitalization report: Pellis et al. 2020
+mean_onset_to_hosp <- 5.14
 sd_onset_to_hosp <- 4.2
 
 # onset to death: mean =15.0 sd=6.9 (Linton et al. best gamma distr fit)

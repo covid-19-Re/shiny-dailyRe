@@ -80,10 +80,35 @@ server <- function(input, output, session) {
       return(countryData)
     })
 
+    rightTruncation <- reactive({
+      validate(need(countrySelectValue() != "", "Please select a country"))
+      countrySelectValue <- countrySelectValue()
+
+      rightTruncation <- lapply(countrySelectValue, function(iso3) {
+        if (iso3 %in% c("CHE", "LIE")) {
+          rt <- list(
+            "Confirmed cases" = 3,
+            "Confirmed cases / tests" = 3,
+            "Hospitalized patients" = 5,
+            "Deaths" = 5)
+        } else {
+          rt <- list(
+            "Confirmed cases" = 3,
+            "Confirmed cases / tests" = 3,
+            "Hospitalized patients" = 3,
+            "Deaths" = 3)
+        }
+        return(rt)
+      })
+      names(rightTruncation) <- countrySelectValue
+      return(rightTruncation)
+    })
+
     updateData <- reactive({
       updateDataRaw <- readRDS(pathToUpdataData)
+      countrySelectValue <- countrySelectValue()
 
-      updateData <- bind_rows(updateDataRaw[countrySelectValue()]) %>%
+      updateData <- bind_rows(updateDataRaw[countrySelectValue]) %>%
         ungroup() %>%
         dplyr::select(-country) %>%
         left_join(dplyr::select(continents, countryIso3, country), by = "countryIso3")
@@ -121,8 +146,9 @@ server <- function(input, output, session) {
       updateData <- updateData()
       interventions <- interventions()
       plotSize <- stateVals$plotSize
-
-      rEffPlotlyShiny(countryData, updateData, interventions, "data_type", input, i18n(), plotSize)
+      rightTruncation <- rightTruncation()
+      rEffPlotlyShiny(countryData, updateData, interventions, "data_type", input,
+        rightTruncation, i18n(), plotSize)
     })
 
     output$rePlot_region <- renderPlotly({
@@ -130,8 +156,10 @@ server <- function(input, output, session) {
       updateData <- updateData()
       interventions <- interventions()
       plotSize <- stateVals$plotSize
+      rightTruncation <- rightTruncation()
 
-      rEffPlotlyShiny(countryData, updateData, interventions, "region", input, i18n(), plotSize)
+      rEffPlotlyShiny(countryData, updateData, interventions, "region", input,
+        rightTruncation, i18n(), plotSize)
     })
 
     output$rePlot_greaterRegion <- renderPlotly({
@@ -139,8 +167,10 @@ server <- function(input, output, session) {
       updateData <- updateData()
       interventions <- interventions()
       plotSize <- stateVals$plotSize
+      rightTruncation <- rightTruncation()
 
-      rEffPlotlyShiny(countryData, updateData, interventions, "greaterRegion", input, i18n(), plotSize)
+      rEffPlotlyShiny(countryData, updateData, interventions, "greaterRegion", input,
+        rightTruncation, i18n(), plotSize)
     })
 
   # ui
@@ -171,20 +201,21 @@ server <- function(input, output, session) {
     dataTypeChoices <- reactive({
       validate(need(!is.null(input$plotTabs), ""))
 
+      countryData <- countryData()
+
       if (input$plotTabs != "data_type") {
         splitBy <- "region"
       } else {
         splitBy <- "countryIso3"
       }
 
-      if (dim(countryData()$estimates)[1] > 0) {
-        dataTypes <- countryData()$estimates %>%
-          group_by(.data[[splitBy]]) %>%
-          group_split() %>%
-          lapply(function(x) {
-            unique(x$data_type)
-          })
-        dataTypeChoices <- dataTypes[[which.min(lengths(dataTypes))]]
+      if (dim(countryData$estimates)[1] > 0) {
+        dataTypes <- countryData$estimates %>%
+          group_by(data_type) %>%
+          summarize(n = length(unique(region)),
+            .groups = "drop")
+
+        dataTypeChoices <- dataTypes$data_type
         names(dataTypeChoices) <- sapply(dataTypeChoices, i18n()$t,  USE.NAMES = FALSE)
       } else {
         dataTypeChoices <- "None"

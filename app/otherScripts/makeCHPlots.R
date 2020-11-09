@@ -28,7 +28,6 @@ pathToCountryData <- here::here("app", "data", "countryData")
 pathToUpdateData <- file.path(dataDir, "updateData.rds")
 pathToInterventionData <- here::here("../covid19-additionalData/interventions/interventions.csv")
 pathToContinentsData <- file.path(dataDir, "continents.csv")
-
 continents <- read_csv(pathToContinentsData, col_types = cols(.default = col_character()))
 
 countryData <- loadCountryData(countrySelectValue, dataDir = pathToCountryData)
@@ -47,8 +46,8 @@ countryData$estimates <- countryData$estimates %>%
 updateDataRaw <- readRDS(pathToUpdateData)
 updateData <- bind_rows(updateDataRaw[countrySelectValue]) %>%
   ungroup() %>%
-  select(-country) %>%
-  left_join(select(continents, countryIso3, country), by = "countryIso3")
+  dplyr::select(-country) %>%
+  left_join(dplyr::select(continents, countryIso3, country), by = "countryIso3")
 
 interventions <- read_csv(
   str_c(pathToInterventionData),
@@ -62,6 +61,13 @@ interventions <- read_csv(
 translator <- Translator$new(translation_json_path = file.path(dataDir, "shinyTranslations.json"))
 availableLanguages <- translator$get_languages()
 
+rightTruncation <- list(
+  "CHE" = list(
+    "Confirmed cases" = 3,
+    "Confirmed cases / tests" = 3,
+    "Hospitalized patients" = 5,
+    "Deaths" = 5)
+)
 
 for (i in availableLanguages) {
 
@@ -78,6 +84,7 @@ for (i in availableLanguages) {
       caseAverage = 1,
       lang = i,
       plotSize = "large"),
+    rightTruncation,
     translator,
     showHelpBox = TRUE)
 

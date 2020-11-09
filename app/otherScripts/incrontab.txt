@@ -1,0 +1,1 @@
+/home/covid-19-re/BAGdata	IN_CREATE	/home/covid-19-re/dailyRe/app/otherScripts/runCountryEstimationCHE.sh

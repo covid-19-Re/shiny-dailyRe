@@ -3,6 +3,7 @@ app/data/*.txt
 app/data/*.Rdata
 app/data/*.rds
 app/data/temp
+app/data/countryData/csv
 app/data/exploration
 app/data/BAG
 app/data/CH
