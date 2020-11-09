@@ -10,6 +10,8 @@ app/data/CH
 app/data/*.xlsx
 app/otherScripts/*.Rout
 app/otherScripts/*.Rdata
+app/otherScripts/slackWebhook.txt
+app/otherScripts/sendNotifications.txt
 app/www/*
 !app/www/styles.css
 app/restart.txt

@@ -47,3 +47,24 @@ saveRDS(allData, file = here::here("app", "data", "allCountryData.rds"))
 updateData <- readRDS(here::here("app", "data", "temp", "updateDataTemp.rds"))
 saveRDS(updateData, here::here("app", "data", "updateData.rds"))
 cat(str_c(Sys.time(), " | summarizing data done.\n"))
+
+# send notifications
+if (file.exists(here::here("app/otherScripts/sendNotifications.txt")) &
+    file.exists(here::here("app/otherScripts/notificationsToSend.txt"))) {
+
+  source(here::here("app/otherScripts/utils.R"))
+  countries <- scan(here::here("app/otherScripts/notificationsToSend.txt"), what = "character")
+  urls <- scan(here::here("app/otherScripts/slackWebhook.txt"), what = "character")
+
+  for (country in countries) {
+    sendSlackNotification(
+      country = country,
+      event = "updateDone",
+      url = urls[1],
+      webhookUrl = urls[2]
+    )
+  }
+  cat(str_c(Sys.time(), " | Slack notifications sent.\n"))
+  system(str_c("rm ", here::here("app/otherScripts/notificationsToSend.txt")))
+}
+

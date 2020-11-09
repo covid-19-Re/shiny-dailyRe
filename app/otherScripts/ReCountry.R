@@ -119,6 +119,15 @@ if (dim(countryData)[1] > 0) {
   
   if (condition) {
     cat(str_c("\n", Sys.time(), " | ", args["country"], ": New data available. Calculating Re ...\n"))
+    # send notification
+    if (args["country"] %in% c("CHE") &
+        file.exists(here::here("app/otherScripts/sendNotifications.txt"))) {
+      urls <- scan(here::here("app/otherScripts/slackWebhook.txt"), what = "character")
+
+      sendSlackNotification(
+        country = args["country"],
+        event = "newData", url = urls[1], eTcompletion = Sys.time() + 60 * 60, webhookUrl = urls[2])
+    }
     # get Infection Incidence
     # load functions
     source(here::here("app/otherScripts/2_utils_getInfectionIncidence.R"))
@@ -347,7 +356,11 @@ if (dim(countryData)[1] > 0) {
     } else {
       cat(str_c(Sys.time(), " | ", args["country"], ": Not enough cases. Skipping Re calculation.\n"))
     }
-    
+    # send notification
+    if (args["country"] %in% c("CHE") &
+        file.exists(here::here("app/otherScripts/sendNotifications.txt"))) {
+      write(args["country"], file = here::here("app/otherScripts/notificationsToSend.txt"), append = TRUE)
+    }
   } else {
     cat(str_c(Sys.time(), " | ", args["country"], ": No new data available. Skipping Re calculation.\n"))
   }
