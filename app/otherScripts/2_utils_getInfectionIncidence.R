@@ -3,7 +3,7 @@ filterRegions <- function(df, thresholdConfirmedCases = 500, thresholdHospitaliz
   regionsIncluded <- df %>%
     filter(data_type == "Confirmed cases") %>%
     dplyr::group_by(region) %>%
-    dplyr::summarize(nCases = sum(value), .groups = "drop") %>%
+    dplyr::summarize(nCases = sum(value, na.rm = T), .groups = "drop") %>%
     filter(nCases >= thresholdConfirmedCases)
   excludedRegions <- setdiff(unique(df$region), regionsIncluded$region)
   dfout <- df %>%
@@ -12,7 +12,7 @@ filterRegions <- function(df, thresholdConfirmedCases = 500, thresholdHospitaliz
   regionsIncludedHospital <- dfout %>%
     filter(data_type == "Hospitalized patients") %>%
     dplyr::group_by(region) %>%
-    dplyr::summarize(nCases = sum(value), .groups = "drop") %>%
+    dplyr::summarize(nCases = sum(value, na.rm = T), .groups = "drop") %>%
     filter(nCases >= thresholdHospitalizedPatients)
   
   excludedRegionsHospital <- setdiff(unique(dfout$region), regionsIncludedHospital$region)
@@ -22,7 +22,7 @@ filterRegions <- function(df, thresholdConfirmedCases = 500, thresholdHospitaliz
   regionsIncludedDeaths <- dfout %>%
     filter(data_type == "Deaths") %>%
     dplyr::group_by(region) %>%
-    dplyr::summarize(nCases = sum(value), .groups = "drop") %>%
+    dplyr::summarize(nCases = sum(value, na.rm = T), .groups = "drop") %>%
     filter(nCases >= thresholdDeaths)
   
   excludedRegionsDeaths <- setdiff(unique(dfout$region), regionsIncludedDeaths$region)

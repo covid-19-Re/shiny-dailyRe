@@ -473,10 +473,10 @@ allBAGdata <- bind_rows(confirmedCHEDataTests, plotting_confirmedCHEDataTests, a
 allBAGdata_plotting <- allBAGdata %>% filter(is.na(local_infection))
 allBAGdata_calculations <- allBAGdata %>% filter(!is.na(local_infection))
 
-allBAGdata_calculations <- allBAGdata_calculations %>% 
-  group_by(date, region, countryIso3, source, data_type, date_type, positiveTests, negativeTests, totalTests, testPositivity) %>% 
-  summarise(value = sum(value), .groups = "drop") %>% 
-  mutate(local_infection = "TRUE") %>% 
+allBAGdata_calculations <- allBAGdata_calculations %>%
+  group_by(date, region, countryIso3, source, data_type, date_type, positiveTests, negativeTests, totalTests, testPositivity) %>%
+  summarise(value = sum(value), .groups = "drop") %>%
+  mutate(local_infection = "TRUE") %>%
   arrange(region, data_type, date_type, date)
 
 allBAGdata <- bind_rows(list(allBAGdata_plotting), list(allBAGdata_calculations))
