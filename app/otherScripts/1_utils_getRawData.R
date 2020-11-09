@@ -663,20 +663,20 @@ getDataBEL <- function(ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
 }
 
 ##### Netherlands #####
-getCaseDataNLD <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20")) {
-  baseurl <- str_c("https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data/",
-                   "rivm_NL_covid19_national_by_date/rivm_NL_covid19_national_by_date_")
+
+getCaseDataNLD <- function(){
+  url_file <- "https://raw.githubusercontent.com/J535D165/CoronaWatchNL/master/data-geo/data-national/RIVM_NL_national.csv"
   
-  urlfile <- paste0(baseurl, stopAfter, ".csv")
-  raw_data <- try(read_csv(urlfile))
-  
+  raw_data <- try(read_csv(url_file))
   if ("try-error" %in% class(raw_data)) {
-    urlfile <- paste0(baseurl, "latest.csv")
-    raw_data <- read_csv(urlfile)
+    warning(str_c("Couldn't read Dutch data at ", url_file))
+    return(NULL)
   }
   
   longData <- raw_data %>%
     dplyr::select(date = Datum, data_type = Type, value = Aantal) %>%
+    mutate(value = replace_na(value, 0)) %>% 
+    mutate(value = if_else(value < 0, 0, value)) %>% 
     mutate(
       data_type = recode(data_type,
                          "Totaal" = "confirmed",
@@ -689,6 +689,7 @@ getCaseDataNLD <- function(stopAfter = Sys.Date(), startAt = as.Date("2020-02-20
       source = "RIVM")
   
   return(longData)
+  
 }
 
 ##### EXCESS Death NL
@@ -702,7 +703,7 @@ getDeathNLD <- function() {
   # Death data has the number 70895NED
   # https://opendata.cbs.nl/statline/#/CBS/nl/dataset/70895ned/table?fromstatweb
   # unit: X0 is first week of year, may be partial; W1 normal weeks; JJ is whole year summed
-  
+
   raw_data <- cbs_get_data("70895NED")
   data <- raw_data %>%
     dplyr::select(sex = "Geslacht", age = "LeeftijdOp31December",
@@ -721,21 +722,21 @@ getDeathNLD <- function() {
 }
 
 getRawExcessDeathNLD <- function(startAt = as.Date("2020-02-20")) {
-  
+
   relevant_weeks <- sprintf("%02d", seq(isoweek(startAt), isoweek(Sys.Date()) - 2))
-  
+
   raw_data <- getDeathNLD()
-  
+
   data <- raw_data %>%
     filter(sex == "all", age == "all", unit == "W1", week %in% relevant_weeks)
-  
+
   past_data <- data %>% filter(year %in% seq(2015, 2019))
-  
+
   past_mean <- past_data %>%
     group_by(week) %>%
     #summarise_at(vars(deaths), mean)
     summarise_at(vars(deaths), list(avg_deaths = mean, sd_deaths = sd))
-  
+
   excess_death <- data %>%
     filter(year == 2020) %>%
     dplyr::select(year, week, deaths) %>%
@@ -750,13 +751,13 @@ getRawExcessDeathNLD <- function(startAt = as.Date("2020-02-20")) {
         ), locale = "en_GB.UTF-8")) %>%
     dplyr::select(-year, -week)
   # this translation to a date associates the last day of the week
-  
+
   return(excess_death)
 }
 
 getExcessDeathNLD <- function(startAt = as.Date("2020-02-20")) {
   excess_death <- suppressWarnings(getRawExcessDeathNLD(startAt))
-  
+
   longData <- excess_death %>%
     dplyr::select(date, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
@@ -767,7 +768,7 @@ getExcessDeathNLD <- function(startAt = as.Date("2020-02-20")) {
       region = countryIso3,
       source = "CBS") %>%
     mutate(value = ifelse(value < 0, 0, value))
-  
+
   return(longData)
 }
 
