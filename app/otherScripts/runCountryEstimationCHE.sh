@@ -1,4 +1,9 @@
 #!/bin/sh
+
+# deactivate crontab
+crontab -l > /home/covid-19-re/crontabBackup.txt
+crontab -r
+
 parent_path=$(
   cd "$(dirname "${BASH_SOURCE[0]}")"
   pwd -P
@@ -39,3 +44,5 @@ cd "../../../dailyRe-Data"
 git add .
 git commit -m "update data"
 git push
+
+crontab /home/covid-19-re/crontabBackup.txt
