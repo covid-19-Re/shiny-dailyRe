@@ -19,5 +19,5 @@ fi
 if [ "$latestDir" != "$lastDir" ]; then
   ./runCountryEstimationCHE.sh
   echo "$latestDir">lastBAGdir.txt
-done
+fi
 
