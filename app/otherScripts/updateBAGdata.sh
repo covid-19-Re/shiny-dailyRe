@@ -17,6 +17,6 @@ else
 fi
 
 if [ "$latestDir" != "$lastDir" ]; then
-  home/covid-19-re/runCountryEstimationCHE.sh
+  ./runCountryEstimationCHE.sh
 fi
 echo "$latestDir">lastBAGdir.txt
