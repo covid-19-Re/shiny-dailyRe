@@ -3,6 +3,12 @@
 # i.e. ln -s 'path/to/polybox/shared/BAG COVID19 Data' 'path/to/app/data/BAG'
 owncloudcmd -n -s ~/BAGdata https://polybox.ethz.ch/remote.php/webdav/BAG%20COVID19%20Data
 
+parent_path=$(
+  cd "$(dirname "${BASH_SOURCE[0]}")"
+  pwd -P
+)
+cd "$parent_path"
+
 latestDir=$(ls -td /home/covid-19-re/BAGdata/*/ | head -1)
 if [ -f lastBAGdir.txt ]; then
   lastDir=$(<lastBAGdir.txt)
@@ -11,6 +17,6 @@ else
 fi
 
 if [ "$latestDir" != "$lastDir" ]; then
-  ./runCountryEstimationCHE.sh
+  home/covid-19-re/runCountryEstimationCHE.sh
 fi
 echo "$latestDir">lastBAGdir.txt
