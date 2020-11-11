@@ -8,9 +8,9 @@ if (interactive()) {
   })
 }
 
+outDir <- here::here("app", "data")
 
-
-linelist_codes <- c("CHE", "HKG")
+linelist_codes <- c("CHE", "DEU", "HKG")
 
 for(code in linelist_codes) {
   source(here::here("app", "otherScripts", paste0("format_",code,"_data.R")))

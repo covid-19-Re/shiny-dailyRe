@@ -26,9 +26,8 @@ if ("try-error" %in% class(data_Hong_Kong)) {
   return(NULL)
 }
 
-# data_Hong_Kong %>% filter(`Date of onset` == "Asymptomatic") %>%  summarize(value = n()) 
-unique(data_Hong_Kong$`Case classification*`)
-# data_Hong_Kong %>% summarize(value = n())
+right_truncation <- list()
+right_truncation[["Confirmed cases"]] <- 3
 
 maximum_file_date <- max(as.Date(data_Hong_Kong$`Report date`, format = "%d/%m/%Y"))
 max_date <- date(maximum_file_date)
@@ -44,8 +43,10 @@ first_curation_data_Hong_Kong <- data_Hong_Kong %>%
   transmute(count_date = as.Date(`Report date`, format = "%d/%m/%Y"),
             onset_date = `Date of onset`,
             local_infection =  `Case classification*`) %>% 
+  mutate(onset_date = if_else(between((count_date - onset_date), 0, max_delay_confirm), onset_date, as.Date(NA))) %>% 
   mutate(across(c(count_date, onset_date), ~ if_else(between(.x, min_date, max_date_plotting), .x, as.Date(NA)))) %>% 
   mutate(data_type = "Confirmed cases",
+         country = "Hong Kong",
          countryIso3 = "HKG",
          region = "HKG",
          source = "HK - DoH")
@@ -66,7 +67,7 @@ delay_data_Hong_Kong <- first_curation_data_Hong_Kong %>%
 write_csv(delay_data_Hong_Kong, path = file.path(outDir, "HKG_data_delays.csv"))
 
 confirmed_case_data <- first_curation_data_Hong_Kong %>%
-  mutate(across(c(count_date, onset_date), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>%
+  mutate(across(c(count_date, onset_date), ~ if_else(between(.x, min_date, max_date - right_truncation[["Confirmed cases"]]), .x, as.Date(NA)))) %>%
   filter(!is.na(count_date)) %>%
   mutate(data_type = "confirmed",
          date_type = if_else(is.na(onset_date), "report", "onset"),

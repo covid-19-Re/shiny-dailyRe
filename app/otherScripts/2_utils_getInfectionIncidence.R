@@ -413,6 +413,10 @@ get_infection_incidence_by_deconvolution <- function(
   
   is_empirical = (nrow(empirical_delays) > 0)
   
+  if(verbose && is_empirical) {
+    cat("\tEmpirical delay distribution available\n")
+  }
+  
   if( is_onset_data ) {
     delay_distribution_matrix_incubation <- get_matrix_constant_waiting_time_distr(
       constant_delay_distribution_incubation,

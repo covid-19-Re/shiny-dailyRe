@@ -25,7 +25,7 @@ source(here::here("app/otherScripts/utils.R"))
 args <- commandArgs(trailingOnly = TRUE)
 # testing
 if (length(args) == 0) {
-  args <- c("CHE")
+  args <- c("DEU")
   warning(str_c("Testing mode!! Country: ", args))
 }
 names(args) <- "country"
@@ -195,7 +195,7 @@ if (dim(countryData)[1] > 0) {
         )
       
       right_truncation <- list()
-      if (args["country"] %in% c("CHE", "LIE")) {
+      if (args["country"] %in% c("CHE", "LIE", "DEU", "HKG")) {
         right_truncation[["Confirmed cases"]] <- 0
         right_truncation[["Confirmed cases / tests"]] <- 0
         right_truncation[["Hospitalized patients"]] <- 0
