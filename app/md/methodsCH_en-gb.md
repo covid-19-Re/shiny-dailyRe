@@ -1,10 +1,12 @@
 <h4>Assessment of current epidemiological situation</h4>
 
-The effective reproductive number R<sub>e</sub> in early March was 2-3, which is in the range of values reported for other countries. The R<sub>e</sub> fell below the critical value of 1 in mid March. R<sub>e</sub> increased continuously from the second week of May to a peak in mid-June, with maximum values around 1.4-1.9. Another smaller peak was observed in July. The peaks were driven by infection dynamics in separate geographic regions in Switzerland. During the summer, R<sub>e</sub> reached a steady value around 1.1. This meant that the case numbers doubled approximately every 4 weeks.
+From mid-September onwards, the R<sub>e</sub> rose very sharply with a peak of over 1.5 at the end of the month. This corresponded to a doubling time of the case numbers of about one week. The R<sub>e</sub> based on hospitalizations followed the same trend and rose significantly above 1 for the first time since March. The rapid spread was observed in all Swiss cantons. Currently, the R<sub>e</sub> is decreasing and is around 1 based on the number of cases and hospitalizations.
 
-*Since mid-September R<sub>e</sub> has increased very strongly and is currently above 1.5. This corresponds to a doubling time of case numbers of about one week. The R<sub>e</sub> estimate based on hospitalizations follows the same trend and is now significantly above 1 for the first time since March. This rapid spread is observed in all Swiss cantons.*
+*However, due to the high test positivity rate and delayed hospital reports, estimates based on the case numbers and hospitalizations may be too low.*
 
-We provide additional tools for the assessment of the epidemiological situation here. In particular, we provide estimates of R<sub>e</sub> for individual cantons, larger Swiss regions, and other countries. These R<sub>e</sub> estimates, as well as the case numbers per country, are displayed on a world map. Additionally, we show estimates on the changes of R<sub>e</sub> following the introduction or release of interventions. Lastly, we display the course of the estimated number of daily new infections based on the daily case data. This course is used for the R<sub>e</sub> calculations. The results for R<sub>e</sub> are available as a .csv file.
+The R<sub>e</sub> based on positivity (confirmed cases/tests) is reliable if the persons tested are a random cross section of the population; since we test specifically symptomatic persons, this R<sub>e</sub> value may also be biased. Currently, the R<sub>e</sub> value based on deaths is the most reliable. However, this R<sub>e</sub> value reflects the epidemiological situation with a time lag of about 3 weeks. The reason is that it takes about 17 days between new infection and death.
+A detailed weekly update of the epidemiological situation is published by the Science Task Force in the form of [Policy Briefs](https://ncs-tf.ch/de/policy-briefs).
+
 
 
 <h4>Methods</h4>
