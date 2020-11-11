@@ -1099,11 +1099,20 @@ getDataLVA <- function( ) {
 getConfirmedCasesZAF <- function(
   url = paste0("https://raw.githubusercontent.com/dsfsi/covid19za/master/data/",
                "covid19za_provincial_cumulative_timeline_confirmed.csv")) {
-  confirmedCases <- read_csv(url,
+  
+  raw_data <- try( read_csv(url,
                              col_types = cols(
                                .default = col_double(),
                                date = col_date(format = "%d-%m-%Y"),
-                               source = col_character())) %>%
+                               source = col_character())) )
+  
+  
+  if ("try-error" %in% class(raw_data)) {
+    warning(str_c("Couldn't read ZAF data at ", url))
+    return(NULL)
+  }
+  
+  confirmedCases <- raw_data  %>%
     dplyr::select(-YYYYMMDD, -source) %>%
     pivot_longer(cols = EC:total, names_to = "region") %>%
     arrange(region, date) %>%
@@ -1139,11 +1148,19 @@ getConfirmedCasesZAF <- function(
 getDeathsZAF <- function(
   url = paste0("https://raw.githubusercontent.com/dsfsi/covid19za/master/data/",
                "covid19za_provincial_cumulative_timeline_deaths.csv")) {
-  deaths <- read_csv(url,
-                     col_types = cols(
-                       .default = col_double(),
-                       date = col_date(format = "%d-%m-%Y"),
-                       source = col_character())) %>%
+  
+  raw_data <- try( read_csv(url,
+                       col_types = cols(
+                         .default = col_double(),
+                         date = col_date(format = "%d-%m-%Y"),
+                         source = col_character())) )
+  
+  if ("try-error" %in% class(raw_data)) {
+    warning(str_c("Couldn't read ZAF data at ", url))
+    return(NULL)
+  }
+  
+  deaths <- raw_data  %>%
     dplyr::select(-YYYYMMDD, -source) %>%
     pivot_longer(cols = EC:total, names_to = "region") %>%
     arrange(region, date) %>%

@@ -52,7 +52,7 @@ first_curation_DEU_data <- reformatted_DEU_data %>%
   mutate(across(c(count_date, reference_date), ~ if_else(between(.x, min_date, max_date_plotting), .x, as.Date(NA)))) %>% 
   filter(!is.na(count_date)) %>% 
   mutate(reference_date = if_else(symptom_onset == 1, reference_date, as.Date(NA))) %>% 
-  select(-symptom_onset) %>% 
+  dplyr::select(-symptom_onset) %>% 
   rename(onset_date = reference_date) %>% 
   mutate(onset_date = if_else(between((count_date - onset_date), 0, max_delay_confirm), onset_date, as.Date(NA))) %>% 
   mutate(data_type = "Confirmed cases",
