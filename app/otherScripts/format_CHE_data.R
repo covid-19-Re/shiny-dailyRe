@@ -126,7 +126,7 @@ confirmed_case_data <- data_hospitalization %>%
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
          date = if_else(is.na(manifestation_dt), fall_dt, manifestation_dt),
          region = ktn,
-         .keep = "none") %>% 
+         .keep = "none") %>%
   dplyr::group_by(region, date, date_type, local_infection) %>%
   dplyr::count() %>%
   ungroup() %>%
