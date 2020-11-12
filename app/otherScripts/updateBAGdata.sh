@@ -2,6 +2,7 @@
 # symlink your polybox folder to ../data/BAG
 # i.e. ln -s 'path/to/polybox/shared/BAG COVID19 Data' 'path/to/app/data/BAG'
 owncloudcmd -n -s ~/BAGdata https://polybox.ethz.ch/remote.php/webdav/BAG%20COVID19%20Data
+owncloudcmd -n -s ~/ICUdata https://polybox.ethz.ch/remote.php/webdav/Shared/outputTaskforce
 
 parent_path=$(
   cd "$(dirname "${BASH_SOURCE[0]}")"
