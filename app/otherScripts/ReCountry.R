@@ -53,7 +53,38 @@ if (!dir.exists(basePath)) {
 
 # fetch stringency data
 oxfordStringency <- getDataOxfordStringency(countries = args["country"],
-                                            tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300)
+  tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300) 
+
+oxfordStringencyPath <- file.path(basePath, str_c(args["country"], "-OxCGRT.rds"))
+
+if (file.exists(oxfordStringencyPath)) {
+  oxfordStringencyOld <- readRDS(oxfordStringencyPath)
+  # if new data is null, keep old data (can happen because of error in reading new data)
+  if (is.null(oxfordStringency)) {
+    oxfordStringency <- oxfordStringencyOld
+  }
+  stringencyUnchanged <- all.equal(oxfordStringency, oxfordStringencyOld)
+} else {
+  stringencyUnchanged <- FALSE
+}
+
+if (!isTRUE(stringencyUnchanged)) {
+  saveRDS(oxfordStringency, file = oxfordStringencyPath)
+}
+
+stringencyIndex <- oxfordStringency %>%
+  dplyr::transmute(
+    date,
+    countryIso3,
+    region,
+    data_type = "Stringency Index",
+    source = "BSG Covidtracker",
+    value = StringencyIndex
+  ) %>%
+  filter(!is.na(value))
+
+  stringencyIndex$region[is.na(stringencyIndex$region)] <-
+    stringencyIndex$countryIso3[is.na(stringencyIndex$region)]
 
 # Fetch Country Data
 countryData <- getCountryData(
@@ -66,7 +97,7 @@ countryData <- getCountryData(
     by = c("countryIso3", "region")
   ) %>%
   bind_rows(
-    mutate(oxfordStringency, date_type = if_else(args["country"] == "CHE", "report_plotting", "report"))
+    mutate(stringencyIndex, date_type = if_else(args["country"] == "CHE", "report_plotting", "report"))
   )
 
 if (dim(countryData)[1] > 0) {

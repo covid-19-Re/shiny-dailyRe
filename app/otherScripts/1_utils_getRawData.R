@@ -1145,34 +1145,29 @@ getDataOxfordStringency <- function(
     csvPath <- tempFileName
   }
 
-  oxfordStringencyData <- try(read_csv(csvPath, col_types = cols_only(
+  oxfordStringencyData <- try(read_csv(csvPath, col_types = cols(
+    .default = col_double(),
+    CountryName = col_character(),
     CountryCode = col_character(),
+    RegionName = col_character(),
     RegionCode = col_character(),
     Date = col_date(format = "%Y%m%d"),
-    StringencyIndex = col_double()
-  )))
+    M1_Wildcard = col_character()
+  ))) %>%
+  dplyr::rename(
+    date = Date,
+    countryIso3 = CountryCode,
+    region = RegionCode
+  )
 
   if ("try-error" %in% class(oxfordStringencyData)) {
     warning(str_c("couldn't get Oxford Stringency Data data from ", url, "."))
     return(NULL)
   }
 
-  longData <- oxfordStringencyData %>%
-    dplyr::transmute(
-      date = Date,
-      countryIso3 = CountryCode,
-      region = RegionCode,
-      data_type = "Stringency Index",
-      source = "BSG Covidtracker",
-      value = StringencyIndex
-    ) %>%
-    filter(!is.na(value))
-
-  longData$region[is.na(longData$region)] <- longData$countryIso3[is.na(longData$region)]
-
   if (!is.null(countries)) {
-    longData <- longData %>%
+    oxfordStringencyData <- oxfordStringencyData %>%
       filter(countryIso3 %in% countries)
   }
-  return(longData)
+  return(oxfordStringencyData)
 }
