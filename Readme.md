@@ -1,6 +1,10 @@
 # R Shiny app to calculate and display R<sub>e</sub> estimates 
 
-The R<sub>e</sub> for a particular day is the average R<sub>e</sub> over the three most recent days. We show estimated median R<sub>e</sub> values together with 95% uncertainty intervals. The method for estimating R<sub>e</sub> is explained [here](https://ibz-shiny.ethz.ch/covid-19-re/methods.pdf).
+The R<sub>e</sub> for a particular day is the average R<sub>e</sub> over the three most recent days.
+
+https://ibz-shiny.ethz.ch/covid-19-re
+
+We show estimated median R<sub>e</sub> values together with 95% uncertainty intervals. The method for estimating R<sub>e</sub> is explained [here](https://ibz-shiny.ethz.ch/covid-19-re/methods.pdf).
 
 **Contributors**: 
   - Jérémie Scire, ETH Zürich, D-BSSE: method development (*equal contributions)
