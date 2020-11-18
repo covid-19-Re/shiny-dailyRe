@@ -264,12 +264,14 @@ hospital_data <- data_hospitalization %>%
   filter(hospitalisation == 1) %>% 
   dplyr::select(eingang_dt, manifestation_dt, hospdatin, ktn, exp_ort) %>% 
   mutate(across(c(eingang_dt, manifestation_dt, hospdatin), ymd)) %>% 
-  mutate(across(c(eingang_dt, manifestation_dt, hospdatin), ~ if_else(between(.x, min_date, max_date - right_truncation[["Hospitalized patients"]]), .x, as.Date(NA)))) %>% 
-  filter(!(is.na(hospdatin) & is.na(eingang_dt))) %>% 
-  mutate(manifestation_dt = if_else(between(hospdatin - manifestation_dt, 0, max_delay_hosp), manifestation_dt, as.Date(NA))) %>% 
   mutate(hospdatin = if_else(is.na(hospdatin), eingang_dt, hospdatin)) %>% 
-  mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
-         date = if_else(is.na(manifestation_dt), hospdatin, manifestation_dt),
+  mutate(hospdatin = if_else(between( hospdatin, min_date, max_date - right_truncation[["Hospitalized patients"]]), hospdatin, as.Date(NA))) %>%
+  filter(!(is.na(hospdatin))) %>% 
+  mutate(manifestation_dt = if_else(between(hospdatin - manifestation_dt, 0, max_delay_hosp), manifestation_dt, as.Date(NA))) %>% 
+  # mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"), #TODO uncomment if onsets are useful
+  mutate(date_type = "report",
+         # date = if_else(is.na(manifestation_dt), hospdatin, manifestation_dt),
+         date = hospdatin,
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
          region = ktn,
          .keep = "none") %>% 
@@ -300,8 +302,9 @@ plotting_hospital_data <- data_hospitalization %>%
   filter(hospitalisation == 1) %>% 
   dplyr::select(eingang_dt, hospdatin, ktn) %>% 
   mutate(across(c(eingang_dt, hospdatin), ymd)) %>% 
-  mutate(across(c(eingang_dt, hospdatin), ~ if_else(between(.x, min_date, max_date_plotting), .x, as.Date(NA)))) %>% 
   mutate(hospdatin = if_else(is.na(hospdatin), eingang_dt, hospdatin)) %>% 
+  mutate(hospdatin = if_else(between( hospdatin, min_date, max_date_plotting), hospdatin, as.Date(NA))) %>% 
+  filter(!(is.na(hospdatin))) %>% 
   mutate(date_type = "report_plotting",
          date = hospdatin,
          region = ktn,
@@ -487,4 +490,3 @@ allBAGdata <- bind_rows(list(allBAGdata_plotting), list(allBAGdata_calculations)
 ## end of remove
 
 readr::write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CHE.csv"))
-
