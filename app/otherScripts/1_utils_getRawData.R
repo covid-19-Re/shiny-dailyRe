@@ -11,7 +11,7 @@ curateLongTimeSeries <- function(data, isIncidenceData = TRUE) {
       return(data.frame())
     }
   }
-  
+
   ## Remove missing data at the end of the series
   while (nrow(data) > 0 & is.na(data$value[nrow(data)])) {
     data <- data[-nrow(data), ]
@@ -19,7 +19,7 @@ curateLongTimeSeries <- function(data, isIncidenceData = TRUE) {
       return(data.frame())
     }
   }
-  
+
   if (isIncidenceData == TRUE) { # incidence time series
     ## Replace missing data in rest of series by zeroes (required for using EpiEstim)
     data[is.na(data$value), "value"] <- 0
@@ -49,7 +49,7 @@ calcIncidenceData <- function(data) {
 
 getDataECDC <- function(countries = NULL, tempFileName = NULL, tReload = 15) {
   urlfile <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
-  
+
   if (is.null(tempFileName)) {
     csvPath <- urlfile
   } else {
@@ -68,7 +68,7 @@ getDataECDC <- function(countries = NULL, tempFileName = NULL, tReload = 15) {
     }
     csvPath <- tempFileName
   }
-  
+
   world_data <- try(read_csv(csvPath,
                              col_types = cols_only(
                                dateRep = col_date(format = "%d/%m/%Y"),
@@ -77,12 +77,12 @@ getDataECDC <- function(countries = NULL, tempFileName = NULL, tReload = 15) {
                                deaths = col_double()
                              )
   ))
-  
+
   if ("try-error" %in% class(world_data)) {
-    warning(str_c("couldn't get ECDC data from ", url,"."))
+    warning(str_c("couldn't get ECDC data from ", url, "."))
     return(NULL)
   }
-  
+
   longData <- world_data %>%
     dplyr::select(
       date = "dateRep",
@@ -95,12 +95,12 @@ getDataECDC <- function(countries = NULL, tempFileName = NULL, tReload = 15) {
       local_infection = TRUE,
       source = "ECDC") %>%
     filter(!is.na(value))
-  
+
   if (!is.null(countries)) {
     longData <- longData %>%
       filter(countryIso3 %in% countries)
   }
-  
+
   longData[longData$value < 0, "value"] <- 0
   return(longData)
 }
@@ -127,7 +127,7 @@ getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"),
     }
     csvPath <- tempFileName
   }
-  
+
   rawData <- try(
     read_csv(csvPath, comment = "#",
              col_types = cols(
@@ -137,12 +137,12 @@ getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"),
              )
     )
   )
-  
+
   if ("try-error" %in% class(rawData)) {
     warning(str_c("couldn't get mortality data from ", csvPath, "."))
     return(NULL)
   }
-  
+
   tidy_data <- rawData %>%
     dplyr::select(countryIso3 = CountryCode, year = Year,
                   week = Week, sex = Sex, deaths = DTotal) %>%
@@ -152,12 +152,12 @@ getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"),
         countryIso3,
         DEUTNP = "DEU", GBRTENW = "GBR"),
       region = countryIso3)
-  
+
   past_data <- tidy_data %>%
     filter(year %in% seq(2015, 2019)) %>%
     group_by(countryIso3, week) %>%
     summarise(avg_deaths = mean(deaths), .groups = "keep")
-  
+
   excess_death <- tidy_data %>%
     filter(year == 2020,
            week > isoweek(startAt)) %>%
@@ -171,7 +171,7 @@ getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"),
           locale = "en_GB.UTF-8"
         ), locale = "en_GB.UTF-8")) %>%
     dplyr::select(-year, -week)
-  
+
   longData <- excess_death %>%
     dplyr::select(date, countryIso3, region, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
@@ -180,14 +180,14 @@ getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"),
       date_type = "report",
       source = "HMD") %>%
     mutate(value = if_else(value < 0, 0, value))
-  
+
   if (!is.null(countries)) {
     longData <- filter(
       longData,
       countryIso3 %in% countries
     )
   }
-  
+
   return(longData)
 }
 
@@ -203,7 +203,7 @@ sumGreaterRegions <- function(chData) {
     "grR Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
     "grR Ticino",                   c("TI")
   ) %>% unnest(cols = c(region))
-  
+
   greaterRegionsData <- chData %>%
     filter(countryIso3 == "CHE") %>%
     left_join(greaterRegions, by = "region") %>%
@@ -237,16 +237,16 @@ getDataBAG <- function(path, country = "CHE", filename = "incidence_data_CH.csv"
     filter(countryIso3 == country)
 
   bagDataGreaterRegions <- sumGreaterRegions(filter(bagData, region != "CHE"))
-  
+
   bagDataAll <- bind_rows(bagData, bagDataGreaterRegions)
-  
+
   return(bagDataAll)
 }
 
 getDataCHEexcessDeath <- function(startAt = as.Date("2020-02-20")) {
   # urlPastData = "https://www.bfs.admin.ch/bfsstatic/dam/assets/12607335/master"
   # pastData <- read_delim(urlPastData, delim = ";", comment = "#")
-  
+
   url2020 <- "https://www.bfs.admin.ch/bfsstatic/dam/assets/13047388/master"
   data2020 <- try(
     read_delim(url2020, delim = ";",
@@ -257,20 +257,20 @@ getDataCHEexcessDeath <- function(startAt = as.Date("2020-02-20")) {
                )
     )
   )
-  
+
   if ("try-error" %in% class(data2020)) {
     warning(str_c("Couldn't read swiss excess death data at ", url))
     return(NULL)
   }
-  
+
   relevant_weeks <- seq(isoweek(startAt), isoweek(Sys.Date()) - 2)
-  
+
   tidy_data <- data2020 %>%
     dplyr::select(date = Ending, week = Week, age = Age,
                   avg_deaths = Expected, deaths = NoDec_EP) %>%
     filter(week %in% relevant_weeks) %>%
     mutate(date = dmy(date))
-  
+
   longData <- tidy_data %>%
     group_by(date) %>%
     summarise_at(vars(deaths, avg_deaths), list(total = sum)) %>%
@@ -284,7 +284,7 @@ getDataCHEexcessDeath <- function(startAt = as.Date("2020-02-20")) {
       region = "CHE",
       source = "BFS") %>%
     mutate(value = ifelse(value < 0, 0, value))
-  
+
   return(longData)
 }
 
@@ -329,7 +329,7 @@ getExcessDeathITA <- function(filePath = here::here("../covid19-additionalData/e
   } else {
     return(NULL)
   }
-  
+
   tidy_data <- rawData %>%
     dplyr::select(commune_code = COD_PROVCOM, date = GE,
                   paste0("T_", seq(15, 20))) %>%
@@ -342,14 +342,14 @@ getExcessDeathITA <- function(filePath = here::here("../covid19-additionalData/e
     mutate(date = parse_date(date, format = "%Y%m%d"),
            commune_day = paste0(commune_code, "_", day))
   # we exclude the day 02-29 because it does not exist in all years
-  
+
   # in 2020 for some communes data is missing on some days
   # we exclude it, so we don't compare to a wrong total
   na_commune_days <- tidy_data %>%
     filter(year == "2020",
            is.na(deaths)) %>%
     pull(unique(commune_day))
-  
+
   past_data <- tidy_data %>%
     filter(!(commune_day %in% na_commune_days),
            year %in% seq(2015, 2019)) %>%
@@ -357,7 +357,7 @@ getExcessDeathITA <- function(filePath = here::here("../covid19-additionalData/e
     summarise_at(vars(deaths), sum, na.rm = TRUE) %>%
     group_by(day) %>%
     summarise_at(vars(deaths), list(avg_deaths = mean))
-  
+
   excess_death <- tidy_data %>%
     group_by(date, year, day) %>%
     summarise_at(vars(deaths), sum, na.rm = TRUE) %>%
@@ -367,7 +367,7 @@ getExcessDeathITA <- function(filePath = here::here("../covid19-additionalData/e
     mutate(excess_deaths = ceiling(deaths - avg_deaths)) %>%
     dplyr::select(-day) %>%
     ungroup()
-  
+
   longData <- excess_death %>%
     dplyr::select(date, excess_deaths) %>%
     pivot_longer(cols = excess_deaths, names_to = "data_type") %>%
@@ -379,14 +379,14 @@ getExcessDeathITA <- function(filePath = here::here("../covid19-additionalData/e
       source = "Istat") %>%
     mutate(value = ifelse(value < 0, 0, value)) %>%
     filter(!is.na(value))
-  
+
   return(longData)
 }
 
-getITADataPCM <- function(){
+getITADataPCM <- function() {
   url <- str_c("https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-nazionale/",
                "dpc-covid19-ita-andamento-nazionale.csv")
-  
+
   rawData <- try(read_csv(
     file = url,
     col_types = cols_only(
@@ -407,11 +407,11 @@ getITADataPCM <- function(){
       #note_it = col_character(),
       #note_en = col_character()
     )))
-  
+
   if ("try-error" %in% class(rawData)) {
     return(NULL)
   }
-  
+
   data <- rawData %>%
     transmute(
       date = as.Date(data),
@@ -427,16 +427,16 @@ getITADataPCM <- function(){
     mutate(deaths = if_else(deaths < 0, 0, deaths)) %>%
     pivot_longer(cols = confirmed:deaths, names_to = "data_type", values_to = "value") %>%
     arrange(countryIso3, region, source, date_type, data_type, date)
-  
+
   return(data)
 }
 
 getDataITA <- function(ECDCtemp = NULL, tReload = 15) {
   caseData <- getITADataPCM()
   excessDeath <- NULL#getExcessDeathITA()
-  
+
   allData <- bind_rows(caseData, excessDeath)
-  
+
   return(allData)
 }
 
@@ -458,7 +458,7 @@ getHospitalDataFRA <- function() {
     warning(str_c("Couldn't read french hospital data at ", url))
     return(NULL)
   }
-  
+
   longData <- rawData %>%
     dplyr::select(date = jour,
                   region = dep,
@@ -473,7 +473,7 @@ getHospitalDataFRA <- function() {
            local_infection = TRUE,
            region = "FRA",
            source = "SpF-DMI")
-  
+
   return(longData)
 }
 
@@ -495,25 +495,25 @@ getCaseDataFRA <- function() {
     warning(str_c("Couldn't read french case data at ", url))
     return(NULL)
   }
-  
+
   longData <- rawData %>%
-    filter(cl_age90 == 0) %>% 
+    filter(cl_age90 == 0) %>%
     dplyr::select(date = jour,
-                  value = P) %>% 
-    arrange(date) %>% 
+                  value = P) %>%
+    arrange(date) %>%
     mutate(data_type = "confirmed",
            countryIso3 = "FRA",
            date_type = "report",
            local_infection = TRUE,
            region = "FRA",
            source = "ECDC - SpF-DMI")
-  
+
   min_date_SPF <- min(longData$date)
-  
+
   ecdcData <- getDataECDC(countries = "FRA", tempFileName = NULL, tReload = 15)
-  
-  ecdcData <- ecdcData %>% 
-    filter(data_type == "confirmed", date <  min_date_SPF) %>% 
+
+  ecdcData <- ecdcData %>%
+    filter(data_type == "confirmed", date <  min_date_SPF) %>%
     arrange(date) %>% 
     mutate(source = "ECDC - SpF-DMI")
   
