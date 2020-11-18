@@ -1160,6 +1160,8 @@ getDataOxfordStringency <- function(
     countryIso3 = CountryCode,
     region = RegionCode
   )
+  oxfordStringencyData$region[is.na(oxfordStringencyData$region)] <-
+  oxfordStringencyData$countryIso3[is.na(oxfordStringencyData$region)]
 
   if ("try-error" %in% class(oxfordStringencyData)) {
     warning(str_c("couldn't get Oxford Stringency Data data from ", url, "."))

@@ -83,9 +83,6 @@ stringencyIndex <- oxfordStringency %>%
   ) %>%
   filter(!is.na(value))
 
-  stringencyIndex$region[is.na(stringencyIndex$region)] <-
-    stringencyIndex$countryIso3[is.na(stringencyIndex$region)]
-
 # in Re estimation, the interval starts on interval_end + 1
 # so the intervention start dates need to be shifted to - 1
 interval_ends_df <- stringencyIndex %>%
