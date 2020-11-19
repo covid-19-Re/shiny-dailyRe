@@ -553,7 +553,8 @@ server <- function(input, output, session) {
         group_by(ADM0_A3_IS, region) %>%
         filter(dateCases == max(dateCases)) %>%
         left_join(estimates, by = c("ADM0_A3_IS", "region")) %>%
-        ungroup()
+        ungroup() %>%
+        distinct()
 
       return(worldMapData)
     })
