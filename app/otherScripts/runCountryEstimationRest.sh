@@ -30,8 +30,8 @@ git pull
 cd "$parent_path"
 rm *Rest.Rout
 
-echo "running R script to extract BAG data & calculate delays ..."
-runRScript format_BAG_data.R
+echo "running R script to extract linelist data ..."
+runRScript format_linelist_data.R
 
 for i in "AFG" "ALB" "ATA" "DZA" "ASM" "AND" "AGO" "ATG" "AZE" "ARG" \
          "AUS" "AUT" "BHS" "BHR" "BGD" "ARM" "ARM" "BRB" "BEL" "BMU" \

@@ -12,8 +12,6 @@ sd_onset_to_test <- 3.8
 mean_onset_to_hosp <- 5.14
 sd_onset_to_hosp <- 4.2
 
-
-##TODO reconsider Excess death delay (discretize by week)
 # onset to death: mean =15.0 sd=6.9 (Linton et al. best gamma distr fit)
 mean_onset_to_death <- 15.0
 sd_onset_to_death <- 6.9

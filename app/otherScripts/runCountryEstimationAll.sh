@@ -30,8 +30,8 @@ git pull
 cd "$parent_path"
 rm *All.Rout
 
-echo "running R script to extract BAG data & calculate delays ..."
-runRScript format_BAG_data.R
+echo "running R script to extract linelist data ..."
+runRScript format_linelist_data.R
 
 for i in "AFG" "ALB" "ATA" "DZA" "ASM" "AND" "AGO" "ATG" "AZE" "ARG" \
          "AUS" "AUT" "BHS" "BHR" "BGD" "ARM" "BRB" "BEL" "BMU" \
@@ -58,7 +58,7 @@ for i in "AFG" "ALB" "ATA" "DZA" "ASM" "AND" "AGO" "ATG" "AZE" "ARG" \
          "SWZ" "SWE" "SYR" "TJK" "THA" "TGO" "TKL" "TON" "TTO" "ARE" \
          "TUN" "TUR" "TKM" "TCA" "TUV" "UGA" "UKR" "MKD" "EGY" \
          "GBR" "GGY" "JEY" "IMN" "TZA" "USA" "VIR" "BFA" "URY" "UZB" \
-         "VEN" "WLF" "WSM" "YEM" "ZMB" "XKX" "CHI" "ZAF" "CHE"
+         "VEN" "WLF" "WSM" "YEM" "ZMB" "XKX" "CHI" "ZAF" "CHE" "LIE"
 do
 	runRScript ReCountry.R "$i"
   if [ "$i" = "CHE" ]
