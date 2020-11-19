@@ -2,11 +2,14 @@ dev-*
 app/data/*.txt
 app/data/*.Rdata
 app/data/*.rds
+app/data/all_delays.csv
 app/data/temp
 app/data/countryData/csv
 app/data/exploration
 app/data/BAG
-app/data/CH
+app/data/CHE
+app/data/DEU
+app/data/HKG
 app/data/*.xlsx
 app/otherScripts/*.Rout
 app/otherScripts/*.Rdata
