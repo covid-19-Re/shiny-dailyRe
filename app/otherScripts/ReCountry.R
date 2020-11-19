@@ -106,7 +106,7 @@ countryData <- getCountryData(
     by = c("countryIso3", "region")
   ) %>%
   bind_rows(
-    mutate(oxfordStringency,
+    mutate(stringencyIndex,
       date_type = if_else(
         args["country"] %in% c("CHE", "DEU", "HKG"), "report_plotting", "report"))
   )
