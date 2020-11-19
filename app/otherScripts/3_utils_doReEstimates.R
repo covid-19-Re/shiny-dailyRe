@@ -331,6 +331,9 @@ doAllReEstimations <- function(
         ))
         region_interval_ends <- ""
       }
+      if (length(region_interval_ends) == 0) {
+        region_interval_ends <- ""
+      }
       ## Run EpiEstim
       for (data_type_i in unique(data$data_type)) {
         subset_data <- data %>% filter(region == region_i & source == source_i & data_type == data_type_i)
