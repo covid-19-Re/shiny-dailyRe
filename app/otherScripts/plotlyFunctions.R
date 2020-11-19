@@ -639,10 +639,12 @@ makeSlider <- function(zoomRange, x = 0.01, y = 1, anchor = c("top", "left")) {
 
 plotlyShowTraces <- function(plot, traceName, mode = "only") {
   for (i in seq_len(length(plot$x$data))) {
-    if (mode == "only" & !str_detect(plot$x$data[[i]]$name, fixed(traceName)) & plot$x$data[[i]]$yaxis != "y3") {
-       plot$x$data[[i]]$visible <- "legendonly"
-    } else if (mode == "not" & str_detect(plot$x$data[[i]]$name, fixed(traceName)) & plot$x$data[[i]]$yaxis != "y3") {
-      plot$x$data[[i]]$visible <- "legendonly"
+    if (!is.null(plot$x$data[[i]]$name)) {
+      if (mode == "only" & !(plot$x$data[[i]]$name %in% traceName) & plot$x$data[[i]]$yaxis != "y3") {
+        plot$x$data[[i]]$visible <- "legendonly"
+      } else if (mode == "not" & (plot$x$data[[i]]$name %in% traceName) & plot$x$data[[i]]$yaxis != "y3") {
+        plot$x$data[[i]]$visible <- "legendonly"
+      }
     }
   }
   return(plot)
@@ -676,14 +678,14 @@ toLowerFirst <- function(string) {
   str_replace(string, ".{1}", tolower(str_extract(string, ".{1}")))
 }
 
-renameRegionTotal <- function(data, countries, countryNames) {
-  renamedData <- data %>%
+renameRegionTotal <- function(caseData, countries, countryNames, regionSort) {
+  renamedData <- caseData %>%
       mutate(region = fct_relevel(
         as_factor(
           str_replace(region, pattern = countries, replacement = str_c(countryNames, " (Total)"))
         ),
-        str_c(countryNames, " (Total)"),
-        after = Inf)
+        c(regionSort[regionSort != countries], str_c(countryNames, " (Total)"))
+        )
       )
   return(renamedData)
 }
@@ -770,25 +772,39 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
       region %in% regionSelect)
 
   if (seriesSelect == "region") {
-    caseData <- renameRegionTotal(caseData, countries, countryNames)
-    estimates <- renameRegionTotal(estimates, countries, countryNames)
+    regionSort <- estimates %>%
+        group_by(region) %>%
+        slice_max(order_by = date, n = 1) %>%
+        arrange(-median_R_mean) %>%
+        pull(region)
+    caseData <- renameRegionTotal(caseData, countries, countryNames, regionSort)
+    estimates <- renameRegionTotal(estimates, countries, countryNames, regionSort)
     names(seriesColors) <- str_replace(names(seriesColors),
       pattern = countries, replacement = str_c(countryNames, " (Total)"))
     seriesColors[str_c(countryNames, " (Total)")] <- "#666666"
+    showRegions <- c(regionSort[1:5], str_c(countryNames, " (Total)"))
   } else if (seriesSelect == "greaterRegion") {
+    regionSort <- estimates %>%
+        group_by(region) %>%
+        slice_max(order_by = date, n = 1) %>%
+        arrange(-median_R_mean) %>%
+        pull(region)
     caseData <- caseData %>%
       mutate(region = str_replace(region, pattern = "grR ", replacement = ""))
     estimates <- estimates %>%
       mutate(region = str_replace(region, pattern = "grR ", replacement = ""))
     names(seriesColors) <- str_replace(names(seriesColors), pattern = "grR ", replacement = "")
 
-    caseData <- renameRegionTotal(caseData, countries, countryNames)
-    estimates <- renameRegionTotal(estimates, countries, countryNames)
+    caseData <- renameRegionTotal(caseData, countries, countryNames, regionSort)
+    estimates <- renameRegionTotal(estimates, countries, countryNames, regionSort)
 
     names(seriesColors) <- str_replace(names(seriesColors),
       pattern = countries, replacement = str_c(countryNames, " (Total)"))
     seriesColors[str_c(countryNames, " (Total)")] <- "#666666"
-  }
+    showRegions <- c(regionSort[1:5], str_c(countryNames, " (Total)"))
+  } else (
+    showRegions <- NULL
+  )
 
   updateDataPlot <- updateData %>%
     filter(
@@ -824,8 +840,8 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     caseNormalize = "caseNormalize" %in% input$plotOptions,
     caseLoess = "caseLoess" %in% input$plotOptions,
     caseDeconvoluted = "caseDeconvoluted" %in% input$plotOptions,
-    # showTraces = "Confirmed cases / tests",
-    # showTracesMode = "not",
+    showTraces = showRegions,
+    showTracesMode = "only",
     showHelpBox = showHelpBox,
     translator = translator,
     language = input$lang,
