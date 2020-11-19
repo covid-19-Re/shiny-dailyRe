@@ -485,9 +485,12 @@ server <- function(input, output, session) {
     validate(need(input$tabs, ""))
     if (input$tabs == "plots") {
       ui <- tagList(
-        radioButtons("estimationTypeSelect", i18n()$t("Select estimation type to show"),
-            choices = estimationTypeChoices(),
-            selected = "Cori_slidingWindow", inline = FALSE),
+        radioButtons("estimationTypeSelect",
+          HTML(i18n()$t("Select estimation type to show"),
+            tooltip("Step-wiese constant estimates R<sub>e</sub> according to changes in Oxford Stringency Index")
+          ),
+          choices = estimationTypeChoices(),
+          selected = "Cori_slidingWindow", inline = FALSE),
         radioButtons("caseAverage", i18n()$t("Display case data as ..."),
           choices = caseAverageChoices(),
           selected = 1, inline = FALSE),

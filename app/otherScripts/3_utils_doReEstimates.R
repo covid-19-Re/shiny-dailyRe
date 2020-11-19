@@ -236,60 +236,61 @@ doReEstimation <- function(
   return(end_result)
 }
 
-## Intervention Dates for the European countries
-getIntervalEnds <- function(
-  interval_ends,
-  region_i,
-  swissRegions = c("LIE", "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL",
-                   "GR", "grR Central Switzerland", "grR Eastern Switzerland",
-                   "grR Espace Mittelland", "grR Lake Geneva Region", "grR Northwestern Switzerland",
-                   "grR Ticino", "grR Zurich", "JU", "LU", "NE", "NW", "OW", "SG",
-                   "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH")) {
+## DEPRECATED Intervention Dates for the European countries
+# getIntervalEnds <- function(
+#   interval_ends,
+#   region_i,
+#   swissRegions = c("LIE", "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL",
+#                    "GR", "grR Central Switzerland", "grR Eastern Switzerland",
+#                    "grR Espace Mittelland", "grR Lake Geneva Region", "grR Northwestern Switzerland",
+#                    "grR Ticino", "grR Zurich", "JU", "LU", "NE", "NW", "OW", "SG",
+#                    "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH")) {
   
-  if ("data.frame" %in% class(interval_ends)) {
-    if (region_i %in% swissRegions) {
-      region_i <- "CHE"
-    }
+#   if ("data.frame" %in% class(interval_ends)) {
+#     if (region_i %in% swissRegions) {
+#       region_i <- "CHE"
+#     }
 
-    # in Re estimation, the interval starts on interval_end + 1
-    # so the intervention start dates need to be shifted to -1
-    interventionDataSubset <- interval_ends %>%
-      mutate(shift_date = as_date(ifelse(type == "end", date, date - 1))) %>%
-      filter(region == region_i,
-             measure != "testing",
-             shift_date != "9999-01-01")
+#     # in Re estimation, the interval starts on interval_end + 1
+#     # so the intervention start dates need to be shifted to -1
+#     interventionDataSubset <- interval_ends %>%
+#       mutate(shift_date = as_date(ifelse(type == "end", date, date - 1))) %>%
+#       filter(region == region_i,
+#              measure != "testing",
+#              shift_date != "9999-01-01")
 
-    region_interval_ends <- sort(unique(pull(interventionDataSubset, "shift_date")))
+#     region_interval_ends <- sort(unique(pull(interventionDataSubset, "shift_date")))
 
-  } else {
-    region_interval_ends <- interval_ends
-  }
-  if (length(region_interval_ends) < 1) {
-    region_interval_ends <- c(Sys.Date())
-  }
-  return(region_interval_ends)
-}
+#   } else {
+#     region_interval_ends <- interval_ends
+#   }
+#   if (length(region_interval_ends) < 1) {
+#     region_interval_ends <- c(Sys.Date())
+#   }
+#   return(region_interval_ends)
+# }
 
-addCustomIntervalEnds <- function(region_interval_ends,
-                                  additional_interval_ends,
-                                  region_i,
-                                  data_type_i,
-                                  swissRegions = c("LIE", "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL",
-                                                   "GR", "grR Central Switzerland", "grR Eastern Switzerland",
-                                                   "grR Espace Mittelland", "grR Lake Geneva Region", "grR Northwestern Switzerland",
-                                                   "grR Ticino", "grR Zurich", "JU", "LU", "NE", "NW", "OW", "SG",
-                                                   "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH")) {
+# DEPRECATED
+# addCustomIntervalEnds <- function(region_interval_ends,
+#                                   additional_interval_ends,
+#                                   region_i,
+#                                   data_type_i,
+#                                   swissRegions = c("LIE", "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL",
+#                                                    "GR", "grR Central Switzerland", "grR Eastern Switzerland",
+#                                                    "grR Espace Mittelland", "grR Lake Geneva Region", "grR Northwestern Switzerland",
+#                                                    "grR Ticino", "grR Zurich", "JU", "LU", "NE", "NW", "OW", "SG",
+#                                                    "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH")) {
   
-  if (region_i %in% swissRegions) {
-    region_i <- "CHE"
-  }
-  interventionDataSubset <- additional_interval_ends %>%
-    filter(region == region_i &
-           (data_type == data_type_i | data_type == "all"))
+#   if (region_i %in% swissRegions) {
+#     region_i <- "CHE"
+#   }
+#   interventionDataSubset <- additional_interval_ends %>%
+#     filter(region == region_i &
+#            (data_type == data_type_i | data_type == "all"))
   
-  all_interval_ends <- sort(unique(c(region_interval_ends, pull(interventionDataSubset, "date"))))
-  return(all_interval_ends)
-}
+#   all_interval_ends <- sort(unique(c(region_interval_ends, pull(interventionDataSubset, "date"))))
+#   return(all_interval_ends)
+# }
 
 
 
@@ -304,8 +305,7 @@ doAllReEstimations <- function(
   variationTypes = c("step", "slidingWindow"),
   all_delays,
   truncations,
-  interval_ends = c("2020-04-01"),
-  additional_interval_ends,
+  interval_ends = list(default = c("2020-04-01")),
   ...) {
   
   results_list <- list()
@@ -315,9 +315,22 @@ doAllReEstimations <- function(
     for (region_i in unique(data$region)) {
       cat("  Region: ", region_i, "\n")
 
-      ## take region specific interval_ends
-      region_interval_ends <- getIntervalEnds(interval_ends, region_i, ...)
-
+      if ("list" %in% class(interval_ends)) {
+        if (!is.null(interval_ends[[region_i]])) {
+          region_interval_ends <- interval_ends[[region_i]]
+        } else {
+          region_interval_ends <- interval_ends[["default"]]
+        }
+      } else if ("Date" %in% class(interval_ends)) {
+        region_interval_ends <- interval_ends
+      } else {
+        warning(str_c(
+          "no valid interval ends for region ", region_i, ". ",
+          "Interval ends must be a vector of dates or a named list with names corresponding to regions",
+          "(or \"default\")."
+        ))
+        region_interval_ends <- ""
+      }
       ## Run EpiEstim
       for (data_type_i in unique(data$data_type)) {
         subset_data <- data %>% filter(region == region_i & source == source_i & data_type == data_type_i)
@@ -327,11 +340,7 @@ doAllReEstimations <- function(
         cat("    Data type: ", data_type_i, "\n")
 
         delay_i <- all_delays[[data_type_i]]
-        all_interval_ends <- addCustomIntervalEnds(region_interval_ends,
-                                                   additional_interval_ends,
-                                                   region_i,
-                                                   data_type_i)
-
+        
         for (replicate_i in unique(unique(subset_data$replicate))) {
           subset_data_rep <- subset(subset_data, subset_data$replicate == replicate_i)
           results_list <- c(results_list,
@@ -341,7 +350,7 @@ doAllReEstimations <- function(
                                 slidingWindow = slidingWindow,
                                 methods = methods,
                                 variationTypes = variationTypes,
-                                interval_ends = all_interval_ends,
+                                interval_ends = region_interval_ends,
                                 delays = delay_i,
                                 truncations = truncations
                               )

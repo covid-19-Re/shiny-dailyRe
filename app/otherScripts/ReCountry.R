@@ -56,8 +56,45 @@ if (!dir.exists(basePath)) {
 
 # fetch stringency data
 oxfordStringency <- getDataOxfordStringency(countries = args["country"],
-                                            tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300)
+  tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300)
 
+oxfordStringencyPath <- file.path(basePath, str_c(args["country"], "-OxCGRT.rds"))
+
+if (file.exists(oxfordStringencyPath)) {
+  oxfordStringencyOld <- readRDS(oxfordStringencyPath)
+  # if new data is null, keep old data (can happen because of error in reading new data)
+  if (is.null(oxfordStringency)) {
+    oxfordStringency <- oxfordStringencyOld
+  }
+  stringencyUnchanged <- all.equal(oxfordStringency, oxfordStringencyOld)
+} else {
+  stringencyUnchanged <- FALSE
+}
+
+if (!isTRUE(stringencyUnchanged)) {
+  saveRDS(oxfordStringency, file = oxfordStringencyPath)
+}
+
+stringencyIndex <- oxfordStringency %>%
+  dplyr::transmute(
+    date,
+    countryIso3,
+    region,
+    data_type = "Stringency Index",
+    source = "BSG Covidtracker",
+    value = StringencyIndex
+  ) %>%
+  filter(!is.na(value))
+
+# in Re estimation, the interval starts on interval_end + 1
+# so the intervention start dates need to be shifted to - 1
+interval_ends_df <- stringencyIndex %>%
+  filter(c(0, diff(stringencyIndex$value, 1, 1)) != 0) %>%
+  mutate(interval_ends = date - 1) %>%
+  select(region, interval_ends)
+
+interval_ends <- split(interval_ends_df$interval_ends, interval_ends_df$region)
+interval_ends[["default"]] <- interval_ends[[args["country"]]]
 # Fetch Country Data
 countryData <- getCountryData(
   args["country"],
@@ -87,7 +124,7 @@ if (dim(countryData)[1] > 0) {
   } else {
     dataUnchanged <- FALSE
   }
-  
+
   if (!is.null(countryData)) {
     updateDataPath <- here::here("app", "data", "temp", "updateDataTemp.rds")
     if (file.exists(updateDataPath)) {
@@ -95,12 +132,12 @@ if (dim(countryData)[1] > 0) {
     } else {
       updateData <- list()
     }
-    
+
     # save updated data
     if (!isTRUE(dataUnchanged)) {
       saveRDS(countryData, file = countryDataPath)
     }
-    
+
     # fix because swiss data contains data for two countries (CHE & LIE)
     for (i in unique(countryData$countryIso3)) {
       updateData[[i]] <- countryData %>%
@@ -111,17 +148,17 @@ if (dim(countryData)[1] > 0) {
           lastChanged = file.mtime(countryDataPath),
           lastChecked = Sys.time())
     }
-    
-    saveRDS(updateData, updateDataPath)
+
+   saveRDS(updateData, updateDataPath)
   }
-  
-  cleanEnv(keepObjects = c("basePath", "countryData", "dataUnchanged", "args", "popData"))
-  
+
+  cleanEnv(keepObjects = c("basePath", "countryData", "dataUnchanged", "args", "popData", "interval_ends"))
+
   # calculate Re
   # only if (data has changed OR forceUpdate.txt exists) AND countryData is not null
   condition <- (!isTRUE(dataUnchanged) | file.exists(here::here("app", "data", "forceUpdate.txt"))) &
     !is.null(countryData)
-  
+
   if (condition) {
     cat(str_c("\n", Sys.time(), " | ", args["country"], ": New data available. Calculating Re ...\n"))
     # send notification
@@ -154,11 +191,11 @@ if (dim(countryData)[1] > 0) {
         scale_incubation,
         shape_onset_to_count[[type_i]],
         scale_onset_to_count[[type_i]])
-      
+
       constant_delay_distributions <- c(constant_delay_distributions, list(m))
     }
     names(constant_delay_distributions) <- unique(names(shape_onset_to_count))
-    
+
     constant_delay_symptom_to_report_distributions <- list()
     for (type_i in unique(names(shape_onset_to_count))) {
       m <- get_vector_constant_waiting_time_distr(
@@ -166,11 +203,11 @@ if (dim(countryData)[1] > 0) {
         0,
         shape_onset_to_count[[type_i]],
         scale_onset_to_count[[type_i]])
-      
+
       constant_delay_symptom_to_report_distributions <- c(constant_delay_symptom_to_report_distributions, list(m))
     }
     names(constant_delay_symptom_to_report_distributions) <- paste0('Onset to ',  unique(names(shape_onset_to_count)))
-    
+
     constant_delay_distributions <- c(constant_delay_distributions, constant_delay_symptom_to_report_distributions)
     
     # filter out regions with too few cases for estimation
@@ -179,14 +216,14 @@ if (dim(countryData)[1] > 0) {
     # remove Oxford Stringenxy Index for Re calculation
     countryData <- countryData %>%
       filter(data_type != "Stringency Index")
-    
+
     # filter out data_types with 0 total cases
     data_type0 <- countryData %>%
       group_by(data_type) %>%
       summarize(total = sum(value), .groups = "drop") %>%
       filter(total == 0) %>%
       .$data_type
-    
+
     countryData <- filter(countryData, !(data_type %in% data_type0))
     # country specific data filtering
     if (args["country"] == "ESP") {
@@ -197,14 +234,15 @@ if (dim(countryData)[1] > 0) {
       countryData <- countryData %>%
         filter(data_type != "Deaths")
       cat("ignoring data_type Deaths\n")
-    } 
+    }
+
     if (nrow(countryData) > 0) {
-      
+
       countryData <- countryData %>%
         mutate(
           data_type = fct_drop(data_type)
         )
-      
+
       right_truncation <- list()
       if (args["country"] %in% c("CHE", "LIE", "DEU", "HKG")) {
         right_truncation[["Confirmed cases"]] <- 0
@@ -217,20 +255,20 @@ if (dim(countryData)[1] > 0) {
         right_truncation["Hospitalized patients"] <- 3
         right_truncation["Deaths"] <- 3
       }
-      
+
       right_truncate <- function(df, data_type, right_truncation) {
           dplyr::filter(df, date <= (max(date) - right_truncation[[unique(data_type)]]))
       }
-    
+
       countryData <- countryData %>%
-      group_by(country, region, source, data_type) %>%
-      right_truncate(data_type, right_truncation) %>% 
-      dplyr::select(-countryIso3, -populationSize) %>%
-      ungroup()
-      
+        group_by(country, region, source, data_type) %>%
+        right_truncate(data_type, right_truncation) %>%
+        dplyr::select(-countryIso3, -populationSize) %>%
+        ungroup()
+
       # Deconvolution
       deconvolvedData <- list()
-      
+
       deconvolvedData[[1]] <- get_all_infection_incidence(
         countryData,
         constant_delay_distributions = constant_delay_distributions,
@@ -240,11 +278,11 @@ if (dim(countryData)[1] > 0) {
                        "Deaths"),
         n_bootstrap = 50,
         verbose = FALSE)
-      
+
       if (args["country"] %in% c("CHE")) {
         countryDataTests <- countryData %>%
           filter(region == args["country"], data_type == "Confirmed cases / tests")
-        
+
         deconvolvedData[[2]] <- get_all_infection_incidence(
           countryDataTests,
           constant_delay_distributions = constant_delay_distributions,
@@ -261,25 +299,8 @@ if (dim(countryData)[1] > 0) {
       } else {
         saveRDS(deconvolvedCountryData, file = countryDataPath)
         # Re Estimation
-        cleanEnv(keepObjects = c("basePath", "deconvolvedCountryData", "args", "popData"))
+        cleanEnv(keepObjects = c("basePath", "deconvolvedCountryData", "args", "popData", "interval_ends"))
         source(here::here("app/otherScripts/3_utils_doReEstimates.R"))
-        pathToAdditionalData <- here::here("../covid19-additionalData/interventions/")
-        
-        interventionData <- read_csv(
-          str_c(pathToAdditionalData, "interventions.csv"),
-          col_types = cols(
-            .default = col_character(),
-            date = col_date(format = ""))
-        )
-        
-        additionalIntervalEnds <-  read_csv(
-          str_c(pathToAdditionalData, "additional_interval_ends.csv"),
-          col_types = cols(
-            .default = col_character(),
-            date = col_date(format = ""))
-        )
-        
-        interval_ends <- interventionData
         
         swissRegions <- deconvolvedCountryData %>%
           filter(country %in% c("Switzerland", "Liechtenstein")) %>%
@@ -316,7 +337,6 @@ if (dim(countryData)[1] > 0) {
           all_delays = all_delays,
           truncations = truncations,
           interval_ends = interval_ends,
-          additional_interval_ends = additionalIntervalEnds,
           swissRegions = swissRegions)
         
         countryEstimates <- as_tibble(countryEstimatesRaw) %>%
@@ -355,7 +375,7 @@ if (dim(countryData)[1] > 0) {
         saveRDS(countryEstimates, file = countryDataPath)
         # Save as .csv for data upload
         write_csv(countryEstimates,
-                  path = file.path(basePath, "csv", str_c(args["country"], "-estimates.csv"))
+                  file = file.path(basePath, "csv", str_c(args["country"], "-estimates.csv"))
         )
       }
     } else {
