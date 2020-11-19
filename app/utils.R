@@ -48,6 +48,14 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
     estimates <- NULL
   }
 
+  OxCGRTPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-OxCGRT.rds"))
+  if (!is_empty(OxCGRTPath)) {
+
+    OxCGRTData <- readRDS(file.path(dataDir, OxCGRTPath)) %>%
+      select(countryIso3, region, date, matches("\\w\\d_"))
+    names(OxCGRTData)
+  }
+
   if (!is.null(caseData)) {
     estimateRanges <- estimateRanges(
       filter(caseData, data_type != "Stringency Index"),
@@ -371,3 +379,17 @@ rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverTex
 
   return(rValueBox)
 }
+
+tooltip <- function(text, placement = "right", symbol = "fa-question-circle") {
+  return(HTML(tooltipHtmlString(text, placement = placement, symbol = symbol)))
+}
+
+tooltipHtmlString <- function(text, placement = "right", symbol = "fa-question-circle") {
+  return(
+    glue::glue(
+      "<i class='fa {symbol} fa-fw ttIndicator'",
+      "data-toggle='tooltip' data-html='true' data-placement='{placement}' title='{text}'></i>"
+    )
+  )
+}
+
