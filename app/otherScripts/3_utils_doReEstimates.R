@@ -332,7 +332,7 @@ doAllReEstimations <- function(
         region_interval_ends <- ""
       }
       if (length(region_interval_ends) == 0) {
-        region_interval_ends <- ""
+        region_interval_ends <- "01-01-2020"
       }
       ## Run EpiEstim
       for (data_type_i in unique(data$data_type)) {
