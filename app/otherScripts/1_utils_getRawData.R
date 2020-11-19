@@ -1584,8 +1584,8 @@ getDataOxfordStringency <- function(
   longData$region[is.na(longData$region)] <- longData$countryIso3[is.na(longData$region)]
   
   if (!is.null(countries)) {
-    oxfordStringencyData <- oxfordStringencyData %>%
+    lognData <- lognData %>%
       filter(countryIso3 %in% countries)
   }
-  return(oxfordStringencyData)
+  return(lognData)
 }
