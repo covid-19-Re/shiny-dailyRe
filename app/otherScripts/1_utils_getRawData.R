@@ -271,7 +271,11 @@ getCaseDataBEL <- function() {
 getDeathDataBEL <- function() {
   url <- "https://epistat.sciensano.be/Data/COVID19BE_MORT.csv"
   rawData <- try(
-    read_csv(url)
+    read_csv(url, col_types = cols(
+      .default = col_character(),
+      DATE = col_date(format = ""),
+      DEATHS = col_double()
+    ))
   )
   
   if ("try-error" %in% class(rawData)) {
