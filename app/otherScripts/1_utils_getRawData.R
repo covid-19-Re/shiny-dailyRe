@@ -238,7 +238,9 @@ getCaseDataBEL <- function() {
                .default = col_double(),
                DATE = col_date(format = ""),
                PROVINCE = col_character(),
-               REGION = col_character()
+               REGION = col_character(),
+               SEX = col_character(),
+               AGEGROUP = col_character()
              )
     )
   )
@@ -1426,7 +1428,7 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
       cat(as.character(Sys.time()), " | ", str_c(countries[i], ": getting data... "))
     }
     if (countries[i] == "BEL") {
-      allDataList[[i]] <- getDataBEL(ECDCtemp = ECDCtemp, HMDtemp = HMDtemp, tReload = tReload)
+      allDataList[[i]] <- getDataBEL()
     } else if (countries[i] == "CHE") {
       allDataList[[i]] <- getDataCHE(data_path = here::here("app/data/CHE"))
     } else if (countries[i] == "CZE") {
