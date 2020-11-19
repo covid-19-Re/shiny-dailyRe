@@ -69,7 +69,9 @@ countryData <- getCountryData(
     by = c("countryIso3", "region")
   ) %>%
   bind_rows(
-    mutate(oxfordStringency, date_type = if_else(args["country"] == "CHE", "report_plotting", "report"))
+    mutate(oxfordStringency,
+      date_type = if_else(
+        args["country"] %in% c("CHE", "DEU", "HKG"), "report_plotting", "report"))
   )
 
 if (dim(countryData)[1] > 0) {
