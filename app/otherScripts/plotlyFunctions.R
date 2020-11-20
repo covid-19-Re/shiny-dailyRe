@@ -715,8 +715,8 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
       regionSelect <- countries
     } else if (seriesName == "region") {
       seriesTitle <- case_when(
-        countries == "CHE" ~ translator$t("Canton"),
-        countries == "ZAF" ~ translator$t("Province"),
+        countries == "CHE" ~ str_c(translator$t("Canton"), " (decreasing Re)"),
+        countries == "ZAF" ~ str_c(translator$t("Province"), " (decreasing Re)"),
         TRUE ~ "Region")
 
       validate(need(!is.null(input$dataTypeSelect), message = "loading..."))
