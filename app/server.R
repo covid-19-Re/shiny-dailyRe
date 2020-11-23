@@ -60,8 +60,7 @@ server <- function(input, output, session) {
       menuItem(i18n()$t("About"), tabName = "about", icon = icon("question-circle")),
       selectInput("lang", i18n()$t("Language"),
         languageSelect, selected = input$lang, multiple = FALSE,
-        selectize = TRUE, width = NULL, size = NULL),
-      bookmarkButton()
+        selectize = TRUE, width = NULL, size = NULL)
     )
   })
 
