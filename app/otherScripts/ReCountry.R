@@ -91,7 +91,7 @@ stringencyIndex <- oxfordStringency %>%
 interval_ends_df <- stringencyIndex %>%
   filter(c(0, diff(stringencyIndex$value, 1, 1)) != 0) %>%
   mutate(interval_ends = date - 1) %>%
-  select(region, interval_ends)
+  dplyr::select(region, interval_ends)
 
 interval_ends <- split(interval_ends_df$interval_ends, interval_ends_df$region)
 interval_ends[["default"]] <- interval_ends[[args["country"]]]
@@ -374,8 +374,8 @@ if (dim(countryData)[1] > 0) {
         countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
         saveRDS(countryEstimates, file = countryDataPath)
         # Save as .csv for data upload
-        write_csv(countryEstimates,
-                  file = file.path(basePath, "csv", str_c(args["country"], "-estimates.csv"))
+        readr::write_csv(countryEstimates,
+                  path = file.path(basePath, "csv", str_c(args["country"], "-estimates.csv"))
         )
       }
     } else {
