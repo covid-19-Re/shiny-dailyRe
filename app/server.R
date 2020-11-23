@@ -1,13 +1,13 @@
 server <- function(input, output, session) {
 
-  setBookmarkExclude(
-    c("sidebarItemExpanded", "dimension", "asiaSelect", "dataTypeSelect", "tabs",
-      "estimationTypeSelect", "reCutoff", "reMidpoint", "plotTabs", "plotly_relayout-A",
-      "lang", "europeSelect", "northAmericaSelect", "plotly_hover-A", "sidebarCollapsed",
-      "africaSelect", "casesCutoff", "clearSelect", ".clientValue-default-plotlyCrosstalkOpts",
-      "caseAverage", "southAmericaSelect", "casesMidpoint", "plotOptions", "plotly_afterplot-A",
-      "oceaniaSelect")
-  )
+  # setBookmarkExclude(
+  #   c("sidebarItemExpanded", "dimension", "asiaSelect", "dataTypeSelect", "tabs",
+  #     "estimationTypeSelect", "reCutoff", "reMidpoint", "plotTabs", "plotly_relayout-A",
+  #     "lang", "europeSelect", "northAmericaSelect", "plotly_hover-A", "sidebarCollapsed",
+  #     "africaSelect", "casesCutoff", "clearSelect", ".clientValue-default-plotlyCrosstalkOpts",
+  #     "caseAverage", "southAmericaSelect", "casesMidpoint", "plotOptions", "plotly_afterplot-A",
+  #     "oceaniaSelect")
+  # )
 
 # language switching
   stateVals <- reactiveValues(
