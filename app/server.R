@@ -545,7 +545,9 @@ server <- function(input, output, session) {
         bind_rows() %>%
         ungroup() %>%
         filter(
-          data_type == "Confirmed cases") %>%
+          data_type == "Confirmed cases",
+          #sanitize
+          !is.na(date)) %>%
         arrange(countryIso3, region, data_type, date) %>%
         group_by(region) %>%
         mutate(

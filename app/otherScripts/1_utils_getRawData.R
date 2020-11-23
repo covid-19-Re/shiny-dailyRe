@@ -263,7 +263,10 @@ getCaseDataBEL <- function() {
       date_type = "report",
       local_infection = TRUE,
       region = countryIso3,
-      source = "Sciensano")
+      source = "Sciensano") %>%
+    filter(
+      !is.na(date)
+    )
   
   return(longData)
 }
