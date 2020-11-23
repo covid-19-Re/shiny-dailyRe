@@ -1,5 +1,14 @@
 server <- function(input, output, session) {
 
+  setBookmarkExclude(
+    c("sidebarItemExpanded", "dimension", "asiaSelect", "dataTypeSelect", "tabs",
+      "estimationTypeSelect", "reCutoff", "reMidpoint", "plotTabs", "plotly_relayout-A",
+      "lang", "europeSelect", "northAmericaSelect", "plotly_hover-A", "sidebarCollapsed",
+      "africaSelect", "casesCutoff", "clearSelect", ".clientValue-default-plotlyCrosstalkOpts",
+      "caseAverage", "southAmericaSelect", "casesMidpoint", "plotOptions", "plotly_afterplot-A",
+      "oceaniaSelect")
+  )
+
 # language switching
   stateVals <- reactiveValues(
     lang = "en-gb",
@@ -51,7 +60,8 @@ server <- function(input, output, session) {
       menuItem(i18n()$t("About"), tabName = "about", icon = icon("question-circle")),
       selectInput("lang", i18n()$t("Language"),
         languageSelect, selected = input$lang, multiple = FALSE,
-        selectize = TRUE, width = NULL, size = NULL)
+        selectize = TRUE, width = NULL, size = NULL),
+      bookmarkButton()
     )
   })
 

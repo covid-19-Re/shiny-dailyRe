@@ -12,6 +12,8 @@ library(htmlwidgets)
 library(shinycssloaders)
 library(shinyBS)
 
+enableBookmarking(store = "url")
+
 source("otherScripts/plotlyFunctions.R")
 source("utils.R")
 
