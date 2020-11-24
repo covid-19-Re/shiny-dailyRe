@@ -1567,7 +1567,7 @@ getDataOxfordStringency <- function(
   }
 
   oxfordStringencyData <- try(read_csv(csvPath, col_types = cols(
-    .default = col_double(),
+    .default = col_guess(),
     CountryName = col_character(),
     CountryCode = col_character(),
     RegionName = col_character(),
