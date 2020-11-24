@@ -125,15 +125,19 @@ server <- function(input, output, session) {
     })
 
     interventions <- reactive({
-      interventions <- read_csv(
-        str_c(pathToInterventionData, "interventions.csv"),
-        col_types = cols(
-          .default = col_character(),
-          date = col_date(format = ""),
-          y = col_double()
-        )) %>%
-        split(f = .$countryIso3)
-      return(interventions)
+      if ("indInterventions" %in% input$plotOptions){
+        interventions <- read_csv(
+          str_c(pathToInterventionData, "interventions.csv"),
+          col_types = cols(
+            .default = col_character(),
+            date = col_date(format = ""),
+            y = col_double()
+          )) %>%
+          split(f = .$countryIso3)
+        return(interventions)
+      } else {
+        return(NULL)
+      }
     })
 
     # change plotSize based on window dimension
@@ -508,7 +512,9 @@ server <- function(input, output, session) {
             "Logarithmic axis for cases" = "logCases",
             "Normalize cases to per 100'000 inhabitants" = "caseNormalize",
             "Show smoothed data (Loess Fit)" = "caseLoess",
-            "Show estimated infection times (deconvolution)" = "caseDeconvoluted")
+            "Show estimated infection times (deconvolution)" = "caseDeconvoluted",
+            "Show individual interventions (where applicable)" = "indInterventions"),
+          selected = "indInterventions"
         )
       )
     } else {
