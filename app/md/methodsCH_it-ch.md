@@ -1,10 +1,8 @@
-<h4>Assessment of current epidemiological situation</h4>
+<h4>Assessment of the current epidemiological situation</h4>
 
-From mid-September onwards, the R<sub>e</sub> rose very sharply with a peak of over 1.5 at the end of the month. This corresponded to a doubling time of the case numbers of about one week. The R<sub>e</sub> based on hospitalizations followed the same trend and rose significantly above 1 for the first time since March. The rapid spread was observed in all Swiss cantons. Currently, the R<sub>e</sub> is decreasing and is around 1 based on the number of cases and hospitalizations.
+The effective reproductive number R<sub>e</sub> in early March was 2-3, which is in the range of values reported for other countries. The R<sub>e</sub> fell below the critical value of 1 in mid March. R<sub>e</sub> increased continuously from the second week of May to a peak in mid-June, with maximum values around 1.4-1.9. Another smaller peak was observed in July. The peaks were driven by infection dynamics in separate geographic regions in Switzerland. During the summer, R<sub>e</sub> reached a steady value around 1.1. This meant that the case numbers doubled approximately every 4 weeks.
 
-*However, due to the high test positivity rate and delayed hospital reports, estimates based on the case numbers and hospitalizations may be too low.*
-
-The R<sub>e</sub> based on positivity (confirmed cases/tests) is reliable if the persons tested are a random cross section of the population; since we test specifically symptomatic persons, this R<sub>e</sub> value may also be biased. Currently, the R<sub>e</sub> value based on deaths is the most reliable. However, this R<sub>e</sub> value reflects the epidemiological situation with a time lag of about 3 weeks. The reason is that it takes about 17 days between new infection and death.
+From mid-September onwards, the R<sub>e</sub> rose very sharply with a peak of over 1.5 at the end of the month. This corresponded to a doubling time of the case numbers of about one week. The R<sub>e</sub> based on hospitalizations followed the same trend and rose significantly above 1 for the first time since March. The rapid spread was observed in all Swiss cantons. Currently, the R<sub>e</sub> is decreasing and the Swiss-wide estimate is below 1 based on the number of cases and hospitalizations. However, not all cantons report an R<sub>e</sub> below 1.
 A detailed weekly update of the epidemiological situation is published by the Science Task Force in the form of [Policy Briefs](https://ncs-tf.ch/de/policy-briefs).
 
 
