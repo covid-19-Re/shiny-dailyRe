@@ -1,11 +1,11 @@
 R<sub>e</sub><h4>Evaluation de la situation épidémique</h4>
 
 
-Depuis la mi-septembre, R<sub>e</sub> a augmenté très rapidement jusqu’à un pic à 1.5 à la fin du mois. Cela correspondait à un doublement des cas chaque semaine environ. Le R<sub>e</sub> estimé à partir du nombre d’hospitalisations a suivé la même tendance et est passé au-dessus de 1 de manière significative pour la première fois depuis mars. Cette transmission rapide du virus a été observée dans tous les cantons suisses. Actuellement, le R<sub>e</sub> diminue et est autour de 1, en se basant sur le nombre de cas confirmés et d’admissions à l’hôpital.
+Le nombre de reproduction effectif R<sub>e</sub> était entre 2 et 3 à la début mars, ce qui correspond à la fourchette estimée ailleurs dans le monde. R<sub>e</sub> est passé sous le seuil critique de 1 à la mi-mars. R<sub>e</sub> a ensuite augmenté de façon continue entre la deuxième semaine de mai et la mi-juin, avec un pic entre 1.4 et 1.9. Un autre pic moins important a été observé en juillet. Ces deux pics étaient causés par des résurgences épidémiques dans des régions différentes de Suisse. Pendant l’été, R<sub>e</sub> s’est stabilisé autour de 1,1. Cela correspond à un doublement du nombre de cas toutes les 4 semaines environ.
 
-*Cependant, en raison du fort taux de positivité des tests et du retard dans les remontées des hospitalisations, ces estimations de R<sub>e</sub> pourraient être trop faibles.*
 
-Le R<sub>e</sub> calculé en prenant en compte le taux de positivité des tests (nombre de cas confirmés / nombre de tests) est une indicateur fiable si les personnes testées étaients prises au hasard dans la population. Puisque l’on teste spécifiquement les personnes symptomatiques, cette valeur de R<sub>e</sub> pourrait aussi être biaisée. Actuellement, l’estimation de R<sub>e</sub> fondée sur le nombre de morts est la plus fiable. Cependant, cette estimation de R<sub>e</sub> reflète la situation épidémique avec un retard d’environ 3 semaines. Car il s’écoule en moyenne environ 17 jours entre l’infection et le décès, lorsque celui-ci survient.
+Depuis la mi-septembre, R<sub>e</sub> a augmenté très rapidement jusqu’à un pic à 1.5 à la fin du mois. Cela correspondait à un doublement des cas chaque semaine environ. Le R<sub>e</sub> estimé à partir du nombre d’hospitalisations a suivi la même tendance et est passé au-dessus de 1 de manière significative pour la première fois depuis mars. Cette transmission rapide du virus a été observée dans tous les cantons suisses. Actuellement, le R<sub>e</sub> diminue et l’estimation à l’échelle de la Suisse est en-dessous de 1, en se basant sur le nombre de cas confirmés et d’admissions à l’hôpital. Cependant, tous les cantons n’ont pas un R<sub>e</sub> inférieur à 1.
+
 Un rapport hebdomadaire détaillé sur la situation épidémique est publié par la Science Task Force sous la forme de [Policy Briefs](https://ncs-tf.ch/de/policy-briefs).
 
 
