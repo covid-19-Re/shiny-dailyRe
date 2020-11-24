@@ -1,4 +1,5 @@
 source,sourceLong,url
+"KOF","Data from the KOF Swiss Economic Institute","https://kofdata.netlify.app"
 "FOPH","Data from the Swiss Federal Office of Public Health",""
 "RIVM","Data from the Dutch National Institute for Public Health and the Environment","https://github.com/J535D165/CoronaWatchNL"
 "ECDC","Data from the European Center for Disease Prevention and Control","https://opendata.ecdc.europa.eu/covid19/casedistribution/"
