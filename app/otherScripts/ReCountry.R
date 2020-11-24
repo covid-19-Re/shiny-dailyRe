@@ -55,36 +55,58 @@ if (!dir.exists(basePath)) {
 }
 
 # fetch stringency data
-oxfordStringency <- getDataOxfordStringency(countries = args["country"],
-  tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300)
+stringencyData <- getDataOxfordStringency(countries = args["country"],
+    tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300)
+if (args["country"] == "CHE") {
+  stringencyDataRegional <- read_csv(
+    "https://raw.githubusercontent.com/KOF-ch/economic-monitoring/master/data/ch.kof.stringency.csv",
+    col_types = cols(
+      time = col_date(format = ""),
+      geo = col_character(),
+      variable = col_character(),
+      value = col_double()
+    )) %>%
+    filter(
+      variable == "stringency_plus",
+      geo != "ch") %>%
+    dplyr::transmute(
+      date = time,
+      countryIso3 = "CHE",
+      region = toupper(geo),
+      source = "KOF",
+      StringencyIndex = value
+    )
+  stringencyData <- bind_rows(stringencyData, stringencyDataRegional)
+}
 
-oxfordStringencyPath <- file.path(basePath, str_c(args["country"], "-OxCGRT.rds"))
+stringencyDataPath <- file.path(basePath, str_c(args["country"], "-OxCGRT.rds"))
 
-if (file.exists(oxfordStringencyPath)) {
-  oxfordStringencyOld <- readRDS(oxfordStringencyPath)
+if (file.exists(stringencyDataPath)) {
+  stringencyDataOld <- readRDS(stringencyDataPath)
   # if new data is null, keep old data (can happen because of error in reading new data)
-  if (is.null(oxfordStringency)) {
-    oxfordStringency <- oxfordStringencyOld
+  if (is.null(stringencyData)) {
+    stringencyData <- stringencyDataOld
   }
-  stringencyUnchanged <- all.equal(oxfordStringency, oxfordStringencyOld)
+  stringencyUnchanged <- all.equal(stringencyData, stringencyDataOld)
 } else {
   stringencyUnchanged <- FALSE
 }
 
 if (!isTRUE(stringencyUnchanged)) {
-  saveRDS(oxfordStringency, file = oxfordStringencyPath)
+  saveRDS(stringencyData, file = stringencyDataPath)
 }
 
-stringencyIndex <- oxfordStringency %>%
+stringencyIndex <- stringencyData %>%
   dplyr::transmute(
     date,
     countryIso3,
     region,
     data_type = "Stringency Index",
-    source = "BSG Covidtracker",
+    source = replace_na(source, "BSG Covidtracker"),
     value = StringencyIndex
   ) %>%
-  filter(!is.na(value))
+  filter(!is.na(value)) %>%
+  arrange(countryIso3, region, date)
 
 # in Re estimation, the interval starts on interval_end + 1
 # so the intervention start dates need to be shifted to - 1
