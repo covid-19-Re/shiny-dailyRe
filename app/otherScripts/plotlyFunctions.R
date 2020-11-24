@@ -302,7 +302,7 @@ interventionsSubPlot <- function(
         showlegend = FALSE,
         legendgroup = ~series,
         text = ~str_c("<i>", date, "</i><br>", country, "<br>",
-          "Oxford Stringency Index: ", value),
+          if_else(source == "KOF", "KOF Stringency Index: ", "Oxford Stringency Index: "), value),
         hoveron = "lines",
         hoverinfo = "text") %>%
       # add_text(
@@ -465,7 +465,7 @@ rEffPlotly <- function(
     stringencyData <- caseData %>%
       filter(
         data_type == "Stringency Index") %>%
-      dplyr::select(countryIso3, country, series, date, value)
+      dplyr::select(countryIso3, country, source, series, date, value)
 
     pIntervention <- interventionsSubPlot(
       stringencyData,
