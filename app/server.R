@@ -74,7 +74,7 @@ server <- function(input, output, session) {
     # debounce countrySelect
     countrySelectValue <- reactive({
       input$countrySelect
-    }) %>% debounce(500)
+    }) %>% debounce(1000)
 
     countryData <- reactive({
       validate(need(countrySelectValue() != "", "Please select a country"))
