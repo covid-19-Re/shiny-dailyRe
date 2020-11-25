@@ -37,6 +37,9 @@ runRScript ReCountry.R "ZAF"
 
 runRScript sumData.R
 
+# reload data by restarting R shiny process
+touch ../restart.txt
+
 echo "updating covid19-Data ..."
 cd "../../../dailyRe-Data"
 git add .

@@ -66,10 +66,6 @@ server <- function(input, output, session) {
 
 # time series plots
   # data
-    allData <- reactive({
-      allData <- readRDS(pathToAllCountryData)
-      return(allData)
-    })
 
     # debounce countrySelect
     countrySelectValue <- reactive({
@@ -78,7 +74,6 @@ server <- function(input, output, session) {
 
     countryData <- reactive({
       validate(need(countrySelectValue() != "", "Please select a country"))
-      allData <- allData()
       countrySelectValue <- countrySelectValue()
 
       countryData <- list(
@@ -114,7 +109,6 @@ server <- function(input, output, session) {
     })
 
     updateData <- reactive({
-      updateDataRaw <- readRDS(pathToUpdataData)
       countrySelectValue <- countrySelectValue()
 
       updateData <- bind_rows(updateDataRaw[countrySelectValue]) %>%
@@ -125,16 +119,8 @@ server <- function(input, output, session) {
     })
 
     interventions <- reactive({
-      if ("indInterventions" %in% input$plotOptions){
-        interventions <- read_csv(
-          str_c(pathToInterventionData, "interventions.csv"),
-          col_types = cols(
-            .default = col_character(),
-            date = col_date(format = ""),
-            y = col_double()
-          )) %>%
-          split(f = .$countryIso3)
-        return(interventions)
+      if ("indInterventions" %in% input$plotOptions) {
+        return(interventionsData)
       } else {
         return(NULL)
       }
@@ -288,7 +274,7 @@ server <- function(input, output, session) {
     })
 
     output$timeseriesPlotTabsUI <- renderUI({
-      
+
       if (length(countrySelectValue()) == 1) {
         if (countrySelectValue() == "CHE") {
           tabList <- list(
@@ -467,7 +453,6 @@ server <- function(input, output, session) {
 
   # countries with regional data
   regionCountries <- reactive({
-    allData <- allData()
 
     regionCountriesDf <- allData$caseData %>%
       group_by(countryIso3) %>%
@@ -527,120 +512,6 @@ server <- function(input, output, session) {
   })
 
 # Map plot
-  # data
-    worldMapData <- reactive({
-      allData <- allData()
-
-      estimates <- allData$estimates %>%
-        filter(
-          data_type == "Confirmed cases",
-          estimate_type == "Cori_slidingWindow") %>%
-        group_by(region) %>%
-        filter(date == max(date)) %>%
-        dplyr::select(
-            ADM0_A3_IS = countryIso3,
-            region = region,
-            estimate_type,
-            data_typeEstimate = data_type,
-            dateEstimates = date,
-            median_R_mean,
-            median_R_highHPD,
-            median_R_lowHPD)
-
-      worldMapData <-  allData$caseData %>%
-        bind_rows() %>%
-        ungroup() %>%
-        filter(
-          data_type == "Confirmed cases",
-          #sanitize
-          !is.na(date)) %>%
-        arrange(countryIso3, region, data_type, date) %>%
-        group_by(region) %>%
-        mutate(
-          sum14days = slide_index_dbl(value, date, sum, .before = lubridate::days(14))
-        ) %>%
-        ungroup() %>%
-        mutate(cases14d = sum14days / populationSize * 100000) %>%
-        dplyr::select(
-          ADM0_A3_IS = countryIso3,
-          region = region,
-          sourceCases = source,
-          data_typeCases = data_type,
-          dateCases = date,
-          nCases = value,
-          cases14d,
-          populationSize) %>%
-        group_by(ADM0_A3_IS, region) %>%
-        filter(dateCases == max(dateCases)) %>%
-        left_join(estimates, by = c("ADM0_A3_IS", "region")) %>%
-        ungroup() %>%
-        distinct()
-
-      return(worldMapData)
-    })
-
-  # shapeFiles
-    countriesShape <- reactive({
-      worldMapData <- worldMapData()
-
-      countriesShape <- st_read("data/geoData/ne_50m_admin_0_countries.shp", quiet = TRUE)
-
-      countriesShape <- left_join(
-        countriesShape,
-        filter(worldMapData, region == ADM0_A3_IS),
-        by = "ADM0_A3_IS")
-
-      return(countriesShape)
-    })
-
-    CHEregionsShape <- reactive({
-      worldMapData <- worldMapData()
-      CHEregionsShape <- st_read("data/geoData/swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET.shp", quiet = TRUE) %>%
-        st_transform(st_crs(countriesShape())) %>%
-        st_zm()
-
-      cantonNames <- tibble(
-        region = c(
-          "ZH", "BE", "LU", "UR", "SZ",
-          "OW", "NW", "GL", "ZG", "FR",
-          "SO", "BS", "BL", "SH", "AR",
-          "AI", "SG", "GR", "AG", "TG",
-          "TI", "VD", "VS", "NE", "GE", "JU"),
-        KANTONSNUM = c(
-          1:26
-        )
-      )
-
-      CHEregionsShape <- left_join(
-        CHEregionsShape,
-        cantonNames,
-        by = "KANTONSNUM"
-      )
-      CHEregionsShape$ADM0_A3_IS <- "CHE"
-
-      CHEregionsShape <- left_join(
-        CHEregionsShape,
-        worldMapData,
-        by = c("ADM0_A3_IS", "region")
-      )
-      return(CHEregionsShape)
-    })
-
-    ZAFregionsShape <- reactive({
-      worldMapData <- worldMapData()
-      ZAFregionsShape <- st_read("data/geoData/zaf_admbnda_adm1_2016SADB_OCHA.shp", quiet = TRUE)
-      ZAFregionsShape$ADM0_A3_IS <- "ZAF"
-      ZAFregionsShape$region <- ZAFregionsShape$ADM1_EN %>% recode("Nothern Cape" = "Northern Cape")
-      ZAFregionsShape$NAME <- ZAFregionsShape$region
-
-      ZAFregionsShape <- left_join(
-        ZAFregionsShape,
-        worldMapData,
-      by = c("ADM0_A3_IS", "region"))
-
-      return(ZAFregionsShape)
-    })
-
   # palettes
     cases14pal <- reactive({
       cases14pal <- divergentColorPal(
@@ -663,8 +534,7 @@ server <- function(input, output, session) {
   # outputs
 
     output$mapPlot <- renderLeaflet({
-      worldMapData <- worldMapData()
-      countriesShape <- countriesShape()
+      countriesShapePlot <- countriesShape
       cases14pal <- cases14pal()
       repal <- repal()
 
@@ -674,13 +544,8 @@ server <- function(input, output, session) {
         addMapPane("region", zIndex = 420)
 
       if ("CHE" %in% input$regionCountrySelect) {
-        CHEregionsShape <- CHEregionsShape()
-        cheCasesLabels <- mapLabels(shapeFileData = CHEregionsShape, mainLabel = "cases14d")
-        cheReLabels <- mapLabels(shapeFileData = CHEregionsShape, mainLabel = "re")
-
         # remove CHE from countries
-
-        countriesShape <- filter(countriesShape, ADM0_A3_IS != "CHE")
+        countriesShapePlot <- filter(countriesShape, ADM0_A3_IS != "CHE")
 
         map <- map %>%
           addPolygonLayer(
@@ -696,13 +561,8 @@ server <- function(input, output, session) {
       }
 
       if ("ZAF" %in% input$regionCountrySelect) {
-        ZAFregionsShape <- ZAFregionsShape()
-
-        zafCasesLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "cases14d")
-        zafReLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "re")
-
-          # remove ZAF from countries
-        countriesShape <- filter(countriesShape, ADM0_A3_IS != "ZAF")
+        # remove ZAF from countries
+        countriesShapePlot <- filter(countriesShape, ADM0_A3_IS != "ZAF")
 
         map <- map %>%
           addPolygonLayer(
@@ -718,16 +578,16 @@ server <- function(input, output, session) {
             options = pathOptions(pane = "region"))
       }
 
-      countryCasesLabels <- mapLabels(shapeFileData = countriesShape, mainLabel = "cases14d")
-      countryReLabels <- mapLabels(shapeFileData = countriesShape, mainLabel = "re")
+      countryCasesLabels <- mapLabels(shapeFileData = countriesShapePlot, mainLabel = "cases14d")
+      countryReLabels <- mapLabels(shapeFileData = countriesShapePlot, mainLabel = "re")
 
       map <- map %>%
         addPolygonLayer(
-          shapeFile = countriesShape,
+          shapeFile = countriesShapePlot,
           fillColor = ~cases14pal(cases14d), group = "Cases / 100'000 / 14 d",
           labels = countryCasesLabels) %>%
         addPolygonLayer(
-          shapeFile = countriesShape,
+          shapeFile = countriesShapePlot,
           fillColor = ~repal(median_R_mean), group = "median Re",
           labels = countryReLabels) %>%
         addEasyButton(easyButton(
@@ -754,13 +614,13 @@ server <- function(input, output, session) {
             pal = cases14pal, opacity = 0.9, title = "Cases / 100'000 / 14 d",
             values = seq(0, input$casesCutoff, 100),
             labFormat = casesLegendLabels,
-            data = countriesShape(),
+            data = countriesShape,
             position = "bottomright", group = "Cases / 100'000 / 14 d", layerId = "casesLegend")
       } else {
         map <- map %>%
           addLegend(pal = repal, opacity = 0.9, title = "Most recent R<sub>e</sub> estimate",
             values = c(seq(0, input$reCutoff, 0.2)),
-            data = countriesShape(),
+            data = countriesShape,
             position = "bottomright", group = "median Re", layerId = "reLegend")
       }
 
@@ -781,7 +641,6 @@ server <- function(input, output, session) {
 
     output$mapHist <- renderPlotly({
       validate(need(input$mapPlot_groups, ""))
-      countriesShape <- countriesShape()
 
       if (input$mapPlot_groups == "Cases / 100'000 / 14 d") {
         midpoint <- input$casesMidpoint
@@ -881,7 +740,7 @@ server <- function(input, output, session) {
               pal = cases14pal(), opacity = 0.9, title = "Cases / 100'000 / 14 d",
               values = c(seq(0, input$casesCutoff, 100)),
               labFormat = casesLegendLabels,
-              data = countriesShape(),
+              data = countriesShape,
               position = "bottomright", group = "Cases / 100'000 / 14 d", layerId = "casesLegend") %>%
             hideGroup(selectedMapGroup$groups) %>%
             showGroup(selectedMapGroup$group)
@@ -891,7 +750,7 @@ server <- function(input, output, session) {
             removeControl("casesLegend") %>%
             addLegend(pal = repal(), opacity = 0.9, title = "Most recent R<sub>e</sub> estimate",
               values = c(seq(0, input$reCutoff, 0.2)),
-              data = countriesShape(),
+              data = countriesShape,
               position = "bottomright", group = "median Re", layerId = "reLegend") %>%
             hideGroup(selectedMapGroup$groups) %>%
             showGroup(selectedMapGroup$group)
@@ -922,35 +781,12 @@ server <- function(input, output, session) {
 
 
 # about page
-  # data
-    dataSources <- reactive({
-      updateDataRaw <- bind_rows(readRDS(pathToUpdataData))
-      sourceInfo <- read_csv("data/dataSources.csv", col_types = cols(.default = col_character()))
-
-      dataSources <- updateDataRaw %>%
-        ungroup() %>%
-        dplyr::select(countryIso3, source, data_type, lastData) %>%
-        filter(
-          data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths", "Stringency Index")
-        ) %>%
-        left_join(dplyr::select(continents, countryIso3, country), by = "countryIso3") %>%
-        left_join(sourceInfo, by = "source") %>%
-        group_by(source, sourceLong, url) %>%
-        dplyr::summarize(
-          countries = if_else(length(unique(country)) > 5, "other Countries", str_c(unique(country), collapse = ", ")),
-          data_type = str_c(sapply(as.character(unique(data_type)), i18n()$t,  USE.NAMES = FALSE), collapse = ", "),
-          .groups = "drop_last") %>%
-        mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
-        dplyr::select("Source" = source, "Description" = sourceLong,
-          "Countries" = countries, "Data types" = data_type, "URL" = url)
-
-      names(dataSources) <- sapply(unique(names(dataSources)), i18n()$t,  USE.NAMES = FALSE)
-      return(dataSources)
-    })
 
   # outputs
     output$sourcesTable <- renderDataTable({
-      dataSources()
+      dataSourcesTable <- dataSources
+      names(dataSourcesTable) <- sapply(unique(names(dataSources)), i18n()$t,  USE.NAMES = FALSE)
+      return(dataSourcesTable)
     }, escape = FALSE, options = list(paging = FALSE, searching = FALSE))
 
     output$aboutUI <- renderUI({
@@ -963,12 +799,4 @@ server <- function(input, output, session) {
         )
       )
     })
-
-  output$test <- renderPrint({
-    list(
-      input$mapPlot_bounds,
-      input$mapPlot_zoom,
-      input$mapPlot_center
-    )
-  })
 }
