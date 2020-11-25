@@ -138,7 +138,7 @@ confirmed_case_data <- data_hospitalization %>%
       .keep  = "unused"
     ) %>% 
   dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
-  complete(date = seq(min(date), max(date), by = "days"), 
+  complete(date = seq(min(date), max_date - right_truncation[["Confirmed cases"]], by = "days"), 
            local_infection,
            region, 
            countryIso3, 
@@ -168,6 +168,16 @@ plotting_confirmed_case_data <-  data_hospitalization %>%
     incidence = n,
     .keep  = "unused"
   ) %>% 
+  dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
+  complete(date = seq(min(date), max_date_plotting, by = "days"), 
+           local_infection,
+           region, 
+           countryIso3, 
+           source, 
+           data_type, 
+           date_type,
+           fill = list(incidence = 0)) %>% 
+  ungroup() %>% 
   arrange(region, date, date_type)
 
 # death_data <- data_hospitalization %>%
@@ -216,7 +226,7 @@ death_data <- data_hospitalization %>%
     .keep  = "unused"
   ) %>%
   dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
-  complete(date = seq(min(date), max(date), by = "days"), 
+  complete(date = seq(min(date), max_date - right_truncation[["Deaths"]], by = "days"), 
            local_infection,
            region, 
            countryIso3, 
@@ -249,7 +259,7 @@ plotting_death_data <- data_hospitalization %>%
     .keep  = "unused"
   ) %>% 
   dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
-  complete(date = seq(min(date), max(date), by = "days"), 
+  complete(date = seq(min(date), max_date_plotting, by = "days"), 
            local_infection,
            region, 
            countryIso3, 
@@ -287,7 +297,7 @@ hospital_data <- data_hospitalization %>%
     .keep  = "unused"
   ) %>%
   dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
-  complete(date = seq(min(date), max(date), by = "days"), 
+  complete(date = seq(min(date), max_date - right_truncation[["Hospitalized patients"]], by = "days"), 
            local_infection,
            region, 
            countryIso3, 
@@ -322,7 +332,7 @@ plotting_hospital_data <- data_hospitalization %>%
     .keep  = "unused"
   ) %>% 
   dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
-  complete(date = seq(min(date), max(date), by = "days"), 
+  complete(date = seq(min(date), max_date_plotting, by = "days"), 
            local_infection,
            region, 
            countryIso3, 
@@ -419,7 +429,7 @@ confirmedCHEDataTests <- data_hospitalization %>%
     .keep  = "unused"
   ) %>% 
   dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
-  complete(date = seq(min(date), max(date), by = "days"), 
+  complete(date = seq(min(date), max_date - right_truncation[["Confirmed cases / tests"]], by = "days"), 
            local_infection,
            region, 
            countryIso3, 
@@ -457,7 +467,7 @@ plotting_confirmedCHEDataTests <- data_hospitalization %>%
     .keep  = "unused"
   ) %>% 
   dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
-  complete(date = seq(min(date), max(max_date_plotting), by = "days"), 
+  complete(date = seq(min(date), max_date_plotting, by = "days"), 
            local_infection,
            region, 
            countryIso3, 
