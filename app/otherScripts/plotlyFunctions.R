@@ -301,7 +301,7 @@ interventionsSubPlot <- function(
         type = "scatter", mode = "lines",
         showlegend = FALSE,
         legendgroup = ~series,
-        text = ~str_c("<i>", date, "</i><br>", country, "<br>",
+        text = ~str_c("<i>", date, "</i><br>", series, "<br>",
           if_else(source == "KOF", "KOF Stringency Index: ", "Oxford Stringency Index: "), value),
         hoveron = "lines",
         hoverinfo = "text") %>%
