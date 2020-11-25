@@ -784,16 +784,17 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     seriesColors[str_c(countryNames, " (Total)")] <- "#666666"
     showRegions <- c(regionSort[1:5], str_c(countryNames, " (Total)"))
   } else if (seriesSelect == "greaterRegion") {
-    regionSort <- estimates %>%
-        group_by(region) %>%
-        slice_max(order_by = date, n = 1) %>%
-        arrange(-median_R_mean) %>%
-        pull(region)
+    
     caseData <- caseData %>%
       mutate(region = str_replace(region, pattern = "grR ", replacement = ""))
     estimates <- estimates %>%
       mutate(region = str_replace(region, pattern = "grR ", replacement = ""))
     names(seriesColors) <- str_replace(names(seriesColors), pattern = "grR ", replacement = "")
+    regionSort <- estimates %>%
+        group_by(region) %>%
+        slice_max(order_by = date, n = 1) %>%
+        arrange(-median_R_mean) %>%
+        pull(region)
 
     caseData <- renameRegionTotal(caseData, countries, countryNames, regionSort)
     estimates <- renameRegionTotal(estimates, countries, countryNames, regionSort)
