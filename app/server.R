@@ -649,17 +649,16 @@ server <- function(input, output, session) {
         midpoint = input$casesMidpoint,
         reverse = TRUE)
       return(cases14pal)
-    })
+    }) %>% debounce(1000)
 
     repal <- reactive({
-
       repal <- divergentColorPal(
         palette = c("RdYlGn"),
         domain = c(0, input$reCutoff),
         midpoint = input$reMidpoint,
         reverse = TRUE)
       return(repal)
-    })
+    }) %>% debounce(1000)
 
   # outputs
 
