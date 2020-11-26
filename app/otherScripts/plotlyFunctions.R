@@ -642,9 +642,9 @@ makeSlider <- function(zoomRange, x = 0.01, y = 1, anchor = c("top", "left")) {
 plotlyShowTraces <- function(plot, traceName, mode = "only") {
   for (i in seq_len(length(plot$x$data))) {
     if (!is.null(plot$x$data[[i]]$name)) {
-      if (mode == "only" & !(plot$x$data[[i]]$name %in% traceName) & plot$x$data[[i]]$yaxis != "y3") {
+      if (mode == "only" & !(plot$x$data[[i]]$name %in% traceName)) {
         plot$x$data[[i]]$visible <- "legendonly"
-      } else if (mode == "not" & (plot$x$data[[i]]$name %in% traceName) & plot$x$data[[i]]$yaxis != "y3") {
+      } else if (mode == "not" & (plot$x$data[[i]]$name %in% traceName)) {
         plot$x$data[[i]]$visible <- "legendonly"
       }
     }
