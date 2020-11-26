@@ -43,7 +43,7 @@ allData$estimates <- bind_rows(allData$estimates) %>%
     ) %>%
   mutate(data_type = as.character(data_type))
 
-qs::qsave(allData, file = "app/data/serialized/allCountryData.qs")
+qs::qsave(allData, file = here("app/data/serialized/allCountryData.qs"))
 
 # prep Data for app
 continents <- read_csv(here("app/data/continents.csv"),
