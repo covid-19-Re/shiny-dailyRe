@@ -465,7 +465,7 @@ rEffPlotly <- function(
 
     stringencyData <- caseData %>%
       filter(
-        series %in% unique(caseDataPlot$series),
+        region %in% unique(caseDataPlot$region),
         data_type == "Stringency Index") %>%
       dplyr::select(countryIso3, country, source, series, date, value)
 
