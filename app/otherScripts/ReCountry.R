@@ -31,8 +31,6 @@ if (length(args) == 0) {
 names(args) <- "country"
 
 # Fetch Population Data (do once)
-popDataPath <- here::here("app", "data", "popData.rds")
-
 popDataWorldBank <- getCountryPopData(here::here("app/data/temp/pop_sizes.xls"), 300) %>%
   filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
   mutate(region = countryIso3)
@@ -47,7 +45,6 @@ popDataCH <- read_csv(
 popData <- bind_rows(popDataWorldBank, popDataCH) %>%
   dplyr::select(country, countryIso3, region, populationSize) %>%
   filter(!is.na(countryIso3))
-saveRDS(popData, file = popDataPath)
 
 basePath <- here::here("app", "data", "countryData")
 if (!dir.exists(basePath)) {
@@ -148,9 +145,9 @@ if (dim(countryData)[1] > 0) {
   }
 
   if (!is.null(countryData)) {
-    updateDataPath <- here::here("app", "data", "temp", "updateDataTemp.rds")
+    updateDataPath <- here::here("app", "data", "temp", "updateDataTemp.qs")
     if (file.exists(updateDataPath)) {
-      updateData <- readRDS(updateDataPath)
+      updateData <- qs::qread(updateDataPath)
     } else {
       updateData <- list()
     }
@@ -171,7 +168,7 @@ if (dim(countryData)[1] > 0) {
           lastChecked = Sys.time())
     }
 
-   saveRDS(updateData, updateDataPath)
+   qs::qsave(updateData, updateDataPath)
   }
 
   cleanEnv(keepObjects = c("basePath", "countryData", "dataUnchanged", "args", "popData", "interval_ends"))

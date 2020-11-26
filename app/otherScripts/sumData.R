@@ -1,9 +1,11 @@
 library(tidyverse)
+library(here)
 cat(str_c(Sys.time(), " | summarizing data ...\n"))
-source(here::here("app/utils.R"))
 
-pathToCountryData <- here::here("app", "data", "countryData")
-countryNames <- read_csv(here::here("app", "data", "continents.csv"), col_types = cols(.default = col_character())) %>%
+source(here("app/utils.R"))
+
+pathToCountryData <- here("app", "data", "countryData")
+countryNames <- read_csv(here("app", "data", "continents.csv"), col_types = cols(.default = col_character())) %>%
   dplyr::select(-continent)
 
 allCountries <- str_match(
@@ -41,20 +43,173 @@ allData$estimates <- bind_rows(allData$estimates) %>%
     ) %>%
   mutate(data_type = as.character(data_type))
 
-saveRDS(allData, file = here::here("app", "data", "allCountryData.rds"))
+qs::qsave(allData, file = "app/data/serialized/allCountryData.qs")
+
+# prep Data for app
+continents <- read_csv(here("app/data/continents.csv"),
+  col_types = cols(.default = col_character()))
+countryList <- tibble(
+    countryIso3 = unique(allData$estimates$countryIso3)
+  ) %>%
+  left_join(
+    continents,
+    by = "countryIso3") %>%
+  arrange(continent, country) %>%
+  split(f = .$continent) %>%
+  lapply(function(df) {
+    df <- df %>% distinct()
+    selectList <- df$countryIso3
+    names(selectList) <- df$country
+    return(selectList)
+  })
+qs::qsave(countryList, file = here("app/data/serialized/countryList.qs"))
+
+interventionsData <- read_csv(
+  here("../covid19-additionalData/interventions/interventions.csv"),
+  col_types = cols(
+    .default = col_character(),
+    date = col_date(format = ""),
+    y = col_double()
+  )) %>%
+  split(f = .$countryIso3)
+qs::qsave(interventionsData, file = here("app/data/serialized/interventionsData.qs"))
+
+# map data
+worldMapEstimates <- allData$estimates %>%
+  filter(
+    data_type == "Confirmed cases",
+    estimate_type == "Cori_slidingWindow") %>%
+  group_by(region) %>%
+  filter(date == max(date)) %>%
+  dplyr::select(
+      ADM0_A3_IS = countryIso3,
+      region = region,
+      estimate_type,
+      data_typeEstimate = data_type,
+      dateEstimates = date,
+      median_R_mean,
+      median_R_highHPD,
+      median_R_lowHPD)
+
+worldMapData <-  allData$caseData %>%
+  bind_rows() %>%
+  ungroup() %>%
+  filter(
+    data_type == "Confirmed cases",
+    #sanitize
+    !is.na(date)) %>%
+  arrange(countryIso3, region, data_type, date) %>%
+  group_by(region) %>%
+  mutate(
+    sum14days = slider::slide_index_dbl(value, date, sum, .before = lubridate::days(14))
+  ) %>%
+  ungroup() %>%
+  mutate(cases14d = sum14days / populationSize * 100000) %>%
+  dplyr::select(
+    ADM0_A3_IS = countryIso3,
+    region = region,
+    sourceCases = source,
+    data_typeCases = data_type,
+    dateCases = date,
+    nCases = value,
+    cases14d,
+    populationSize) %>%
+  group_by(ADM0_A3_IS, region) %>%
+  filter(dateCases == max(dateCases)) %>%
+  left_join(worldMapEstimates, by = c("ADM0_A3_IS", "region")) %>%
+  ungroup() %>%
+  distinct()
+
+qs::qsave(worldMapData, file = here("app/data/serialized/worldMapData.qs"))
+
+countriesShape <- left_join(
+  sf::st_read(here("app/data/geoData/ne_50m_admin_0_countries.shp"), quiet = TRUE),
+  filter(worldMapData, region == ADM0_A3_IS),
+  by = "ADM0_A3_IS")
+
+qs::qsave(countriesShape, file = here("app/data/serialized/countriesShape.qs"))
+
+CHEregionsShape <- sf::st_read(
+    here("app/data/geoData/swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET.shp"), quiet = TRUE) %>%
+  sf::st_transform(sf::st_crs(countriesShape)) %>%
+  sf::st_zm() %>%
+  left_join(
+    tibble(
+      region = c(
+        "ZH", "BE", "LU", "UR", "SZ",
+        "OW", "NW", "GL", "ZG", "FR",
+        "SO", "BS", "BL", "SH", "AR",
+        "AI", "SG", "GR", "AG", "TG",
+        "TI", "VD", "VS", "NE", "GE", "JU"),
+      KANTONSNUM = c(
+        1:26
+      )),
+    by = "KANTONSNUM") %>%
+  mutate(
+    ADM0_A3_IS = "CHE"
+  ) %>%
+  left_join(
+    worldMapData,
+    by = c("ADM0_A3_IS", "region")
+  )
+qs::qsave(CHEregionsShape, file = here("app/data/serialized/CHEregionsShape.qs"))
+
+cheCasesLabels <- mapLabels(shapeFileData = CHEregionsShape, mainLabel = "cases14d")
+qs::qsave(cheCasesLabels, file = here("app/data/serialized/cheCasesLabels.qs"))
+
+cheReLabels <- mapLabels(shapeFileData = CHEregionsShape, mainLabel = "re")
+qs::qsave(cheReLabels, file = here("app/data/serialized/cheReLabels.qs"))
+
+ZAFregionsShape <- sf::st_read(
+    here("app/data/geoData/zaf_admbnda_adm1_2016SADB_OCHA.shp"), quiet = TRUE) %>%
+  mutate(
+    ADM0_A3_IS = "ZAF",
+    region = recode(ADM1_EN, "Nothern Cape" = "Northern Cape"),
+    NAME = region
+  ) %>%
+  left_join(
+    worldMapData,
+    by = c("ADM0_A3_IS", "region"))
+qs::qsave(ZAFregionsShape, file = here("app/data/serialized/ZAFregionsShape.qs"))
+
+zafCasesLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "cases14d")
+qs::qsave(zafCasesLabels, file = here("app/data/serialized/zafCasesLabels.qs"))
+zafReLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "re")
+qs::qsave(zafReLabels, file = here("app/data/serialized/zafReLabels.qs"))
 
 # update updateData
-updateData <- readRDS(here::here("app", "data", "temp", "updateDataTemp.rds"))
-saveRDS(updateData, here::here("app", "data", "updateData.rds"))
-cat(str_c(Sys.time(), " | summarizing data done.\n"))
+updateDataRaw <- qs::qread(here("app/data/temp/updateDataTemp.qs"))
+sourceInfo <- read_csv(here("app/data/dataSources.csv"),
+  col_types = cols(.default = col_character()))
+
+dataSources <- updateDataRaw %>%
+  bind_rows() %>%
+  ungroup() %>%
+  dplyr::select(countryIso3, source, data_type, lastData) %>%
+  filter(
+    data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths", "Stringency Index")
+  ) %>%
+  left_join(dplyr::select(continents, countryIso3, country), by = "countryIso3") %>%
+  left_join(sourceInfo, by = "source") %>%
+  group_by(source, sourceLong, url) %>%
+  dplyr::summarize(
+    countries = if_else(length(unique(country)) > 5, "other Countries", str_c(unique(country), collapse = ", ")),
+    data_type = str_c(as.character(unique(data_type)), collapse = ", "),
+    .groups = "drop_last") %>%
+  mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
+  dplyr::select("Source" = source, "Description" = sourceLong,
+    "Countries" = countries, "Data types" = data_type, "URL" = url)
+
+qs::qsave(dataSources, file = here("app/data/serialized/dataSources.qs"))
+qs::qsave(updateDataRaw, file = here("app/data/serialized/updateDataRaw.qs"))
 
 # send notifications
-if (file.exists(here::here("app/otherScripts/sendNotifications.txt")) &
-    file.exists(here::here("app/otherScripts/notificationsToSend.txt"))) {
+if (file.exists(here("app/otherScripts/sendNotifications.txt")) &
+    file.exists(here("app/otherScripts/notificationsToSend.txt"))) {
 
-  source(here::here("app/otherScripts/utils.R"))
-  countries <- scan(here::here("app/otherScripts/notificationsToSend.txt"), what = "character")
-  urls <- scan(here::here("app/otherScripts/slackWebhook.txt"), what = "character")
+  source(here("app/otherScripts/utils.R"))
+  countries <- scan(here("app/otherScripts/notificationsToSend.txt"), what = "character")
+  urls <- scan(here("app/otherScripts/slackWebhook.txt"), what = "character")
 
   for (country in countries) {
     sendSlackNotification(
@@ -65,6 +220,7 @@ if (file.exists(here::here("app/otherScripts/sendNotifications.txt")) &
     )
   }
   cat(str_c(Sys.time(), " | Slack notifications sent.\n"))
-  system(str_c("rm ", here::here("app/otherScripts/notificationsToSend.txt")))
+  system(str_c("rm ", here("app/otherScripts/notificationsToSend.txt")))
 }
 
+cat(str_c(Sys.time(), " | summarizing data done.\n"))
