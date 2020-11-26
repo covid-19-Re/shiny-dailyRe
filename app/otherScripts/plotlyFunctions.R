@@ -430,8 +430,9 @@ rEffPlotly <- function(
   }
 
   # cases plot
+  caseDataPlot <- filter(caseData, data_type != "Stringency Index")
   pCases <- casesSubPlot(
-    filter(caseData, data_type != "Stringency Index"),
+    caseDataPlot,
     seriesColors,
     seriesTitle,
     startDate,
@@ -464,6 +465,7 @@ rEffPlotly <- function(
 
     stringencyData <- caseData %>%
       filter(
+        series %in% unique(caseDataPlot$series),
         data_type == "Stringency Index") %>%
       dplyr::select(countryIso3, country, source, series, date, value)
 
@@ -784,7 +786,6 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     seriesColors[str_c(countryNames, " (Total)")] <- "#666666"
     showRegions <- c(regionSort[1:5], str_c(countryNames, " (Total)"))
   } else if (seriesSelect == "greaterRegion") {
-    
     caseData <- caseData %>%
       mutate(region = str_replace(region, pattern = "grR ", replacement = ""))
     estimates <- estimates %>%
