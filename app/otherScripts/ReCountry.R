@@ -53,7 +53,9 @@ if (!dir.exists(basePath)) {
 
 # fetch stringency data
 stringencyData <- getDataOxfordStringency(countries = args["country"],
-    tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300)
+    tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300) %>%
+    mutate(source = "BSG Covidtracker")
+
 if (args["country"] == "CHE") {
   stringencyDataRegional <- read_csv(
     "https://raw.githubusercontent.com/KOF-ch/economic-monitoring/master/data/ch.kof.stringency.csv",
@@ -99,7 +101,7 @@ stringencyIndex <- stringencyData %>%
     countryIso3,
     region,
     data_type = "Stringency Index",
-    source = replace_na(source, "BSG Covidtracker"),
+    source = source,
     value = StringencyIndex
   ) %>%
   filter(!is.na(value)) %>%
