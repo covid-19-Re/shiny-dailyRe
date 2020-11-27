@@ -192,6 +192,49 @@ getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"),
 }
 
 
+##### Austria #####
+
+getCaseandDeathDataAUT <- function() {
+  url <- "https://covid19-dashboard.ages.at/data/CovidFaelle_Timeline.csv"
+  
+  raw_data <- try(
+    read_delim(url,
+               delim = ";",
+               col_types = cols(
+                 .default = col_double(),
+                 Time = col_datetime(format = "%d.%m.%Y %H:%M:%S"),
+                 Bundesland = col_character()
+               )
+    )
+  )
+  
+  long_data <- raw_data %>% 
+    filter(Bundesland == "Österreich") %>% 
+    dplyr::transmute(date = as_date(Time),
+                  confirmed = AnzahlFaelle,
+                  deaths = AnzahlTotTaeglich
+                  ) %>% 
+    pivot_longer(cols = c(confirmed, deaths),
+                 names_to = "data_type") %>%
+    arrange(date) %>% 
+    mutate(
+      countryIso3 = "AUT",
+      date_type = "report",
+      local_infection = TRUE,
+      region = countryIso3,
+      source = "BMSGPK")
+  
+  return(long_data)
+}
+
+getDataAUT <- function() {
+  case_death_data <- getCaseandDeathDataAUT()
+  excessDeath <- NULL#getExcessDeathHMD(countries = "AUT", tempFileName = HMDtemp, tReload = tReload)
+  all_data <- bind_rows(case_death_data, excessDeath)
+  return(all_data)
+}
+
+
 ##### Belgium #####
 
 getHospitalDataBEL <- function() {
@@ -318,28 +361,47 @@ getDataBEL <- function() {
 
 
 ##### Chile #####
+getCaseAndDeathDataCHL <- function(){
+  url <- "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto5/TotalesNacionales.csv"
+  raw_data <- try(read_csv(url))
+  if ("try-error" %in% class(raw_data)) {
+    warning(str_c("Couldn't read CHL case data at ", url))
+    return(NULL)
+  }
 
-#TODO finish
-# getCaseAndDeathDataCHL <- function(){
-#   url <- "https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto5/TotalesNacionales.csv"
-#   raw_data <- try(read_csv(url))
-#   if ("try-error" %in% class(raw_data)) {
-#     warning(str_c("Couldn't read CHL case data at ", url))
-#     return(NULL)
-#   }
-#   
-#   long_data <- raw_data %>% 
-#     filter(Fecha == "Casos nuevos totales" | Fecha == "Fallecidos") %>% 
-#     pivot_longer(-c(Fecha)) %>% 
-#     rename(data_type = Fecha,
-#            date = name) %>% 
-#     mutate(date = as.Date(date),
-#            data_type = recode(data_type, "Fallecidos" = "deaths", "Casos nuevos totales"= "confirmed")) %>% 
-# 
-#     death_data <- long_data %>%
-#       filter(data_type == "deaths") %>% 
-#       mutate(value = diff(value))
-# }
+  long_data <- raw_data %>%
+    filter(Fecha == "Casos nuevos totales" | Fecha == "Fallecidos") %>%
+    pivot_longer(-c(Fecha)) %>%
+    rename(data_type = Fecha,
+           date = name) %>%
+    mutate(date = as.Date(date),
+           data_type = recode(data_type, "Fallecidos" = "deaths", "Casos nuevos totales"= "confirmed"))
+
+    death_data <- long_data %>%
+      filter(data_type == "deaths") %>%
+      mutate(value = c(NA, diff(value))) %>% 
+      filter(!is.na(value))
+    
+    case_data <- long_data %>% 
+      filter(data_type == "confirmed")
+    
+    all_data <- rbind(case_data, death_data) %>% 
+      mutate( countryIso3 = "CHL",
+                   date_type = "report",
+                   local_infection = TRUE,
+                   region = countryIso3,
+                   source = "MINSAL") %>% 
+      arrange(date)
+    
+    return(all_data)
+}
+
+getDataCHL <- function() {
+  caseAndDeathData <- getCaseAndDeathDataCHL()
+  excessDeath <- NULL#getExcessDeathHMD(countries = "CHL", tempFileName = HMDtemp, tReload = tReload)
+  all_data <- bind_rows(caseAndDeathData, excessDeath)
+  return(all_data)
+}
 
 
 
@@ -411,7 +473,7 @@ getDeathDataCZE <- function(){
 getDataEST <- function(ECDCtemp = NULL, tReload = 15) {
   case_data <- getCaseDataEST()
   hosp_data <- getHospDataEST()
-  death_data <- getDataECDC(countries = "EST", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "death")
+  death_data <- getDataECDC(countries = "EST", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "deaths")
   
   all_data <- rbind(case_data, hosp_data, death_data)
   
@@ -655,7 +717,7 @@ getCaseDataDEU <- function(data_path = here::here("app/data/DEU"), filename = "i
 }
 
 getDataDEU <- function( ECDCtemp = NULL, tReload = 15) {
-  deathData <- getDataECDC(countries = "DEU", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "death")
+  deathData <- getDataECDC(countries = "DEU", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "deaths")
   caseData <- getCaseDataDEU()
   excessDeath <- NULL
   allData <- bind_rows(caseData, deathData, excessDeath)
@@ -1049,7 +1111,7 @@ getCaseDataESP <- function(){
 }
 
 getDataESP <- function( ECDCtemp = NULL, tReload = 15) {
-  deathData <- getDataECDC(countries = "ESP", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "death")
+  deathData <- getDataECDC(countries = "ESP", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "deaths")
   caseData <- getCaseDataESP()
   excessDeath <- NULL
   allData <- bind_rows(caseData, deathData, excessDeath)
@@ -1062,20 +1124,24 @@ getDataESP <- function( ECDCtemp = NULL, tReload = 15) {
 
 ##### Qatar #####
 
-getDataQAT <- function(){
+getCaseDataQAT <- function(){
   url <- "https://www.data.gov.qa/explore/dataset/covid-19-cases-in-qatar/download/?format=csv&timezone=Europe/Berlin&lang=en&use_labels_for_header=true&csv_separator=%3B"
   raw_data <- try(read_delim(url, delim = ";"))
   
   all_data <- raw_data %>% 
+    # transmute(date = Date, # Removing rest of the data as it is not complete enough
+    #           confirmed = `Number of New Positive Cases in Last 24 Hrs`,
+    #           deaths = `Number of New Deaths in Last 24 Hrs`,
+    #           hospitalized = `Number of New Acute Hospital Admissions in Last 24 Hrs`) %>% 
+    # complete(date = seq.Date(min(date), max(date), by = "days"),
+    #          fill = list(confirmed = 0,
+    #                      deaths = 0,
+    #                      hospitalized = 0)) %>%
     transmute(date = Date,
-              confirmed = `Number of New Positive Cases in Last 24 Hrs`,
-              deaths = `Number of New Deaths in Last 24 Hrs`,
-              hospitalized = `Number of New Acute Hospital Admissions in Last 24 Hrs`) %>% 
+              confirmed = `Number of New Positive Cases in Last 24 Hrs`) %>% 
     complete(date = seq.Date(min(date), max(date), by = "days"),
-             fill = list(confirmed = 0,
-                         deaths = 0,
-                         hospitalized = 0)) %>% 
-    pivot_longer(cols = c(confirmed, deaths, hospitalized), names_to = "data_type") %>% 
+             fill = list(confirmed = 0)) %>%
+    pivot_longer(cols = c(confirmed), names_to = "data_type") %>% 
     mutate(countryIso3 = "QAT",
            local_infection = TRUE,
            date_type = "report",
@@ -1083,6 +1149,14 @@ getDataQAT <- function(){
            source = "QMPH")
   
   return(all_data)
+}
+
+getDataQAT <- function( ECDCtemp = NULL, tReload = 15) {
+  deathData <- getDataECDC(countries = "QAT", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "deaths")
+  caseData <- getCaseDataQAT()
+  excessDeath <- NULL
+  allData <- bind_rows(caseData, deathData, excessDeath)
+  return(allData)
 }
 
 ##### South Africa #####
@@ -1434,10 +1508,14 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
     if (v) {
       cat(as.character(Sys.time()), " | ", str_c(countries[i], ": getting data... "))
     }
-    if (countries[i] == "BEL") {
+    if(countries[i] == "AUT") {
+      allDataList[[i]] <- getDataAUT()
+    } else if (countries[i] == "BEL") {
       allDataList[[i]] <- getDataBEL()
     } else if (countries[i] == "CHE") {
       allDataList[[i]] <- getDataCHE(data_path = here::here("app/data/CHE"))
+    } else if (countries[i] == "CHL") {
+      allDataList[[i]] <- getDataCHL()
     } else if (countries[i] == "CZE") {
       allDataList[[i]] <- getDataCZE()
     } else if (countries[i] == "DEU") {
@@ -1463,7 +1541,7 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
     } else if (countries[i] == "NLD") {
       allDataList[[i]] <- getDataNLD()
     } else if (countries[i] == "QAT") {
-      allDataList[[i]] <- getDataQAT()
+      allDataList[[i]] <- getDataQAT(ECDCtemp = ECDCtemp, tReload = tReload)
     } else if (countries[i] == "ZAF") {
       allDataList[[i]] <- getDataZAF()
     } else {
