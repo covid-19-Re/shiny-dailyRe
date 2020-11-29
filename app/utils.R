@@ -1,29 +1,34 @@
 # helpers
 
 loadCountryData <- function(iso3, dataDir = "data/countryData") {
-
+  
   allPaths <- list.files(path = dataDir, recursive = TRUE)
-
+  
   dataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Data.rds"))
+  
   if (!is_empty(dataPath)) {
     caseData <- readRDS(file.path(dataDir, dataPath))
-    if ("report_plotting" %in% caseData$date_type) {
-      caseData <- caseData %>%
-        filter(date_type == "report_plotting", is.na(local_infection))
-    } else {
-      caseData <- caseData %>%
-        dplyr::group_by(date, region, country, countryIso3, source, data_type, populationSize) %>%
-        # there should only be one "date_type" but the summing is left in there in case.
-        dplyr::summarise(value = sum(value), .groups = "drop") %>%
-        mutate(local_infection = NA)
+    
+    keep_plotting_cases_data <- function(data) {
+      if("report_plotting" %in% data$date_type) { 
+        return(data %>%  filter(.,date_type == "report_plotting", is.na(local_infection))) 
+      } else {
+        return(data)
+      }
     }
+    
+    caseData <- caseData %>%
+      dplyr::group_by(date, region, country, countryIso3, source, data_type, populationSize) %>%
+      group_modify(~ keep_plotting_cases_data(.x)) %>% 
+      dplyr::summarise(value = sum(value), .groups = "drop") %>%
+      mutate(local_infection = NA)
   } else {
     caseData <- NULL
   }
-
+  
   deconvolutedDataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-DeconvolutedData.rds"))
   if (!is_empty(deconvolutedDataPath)) {
-
+    
     deconvolutedData <- readRDS(file.path(dataDir, deconvolutedDataPath)) %>%
       mutate(data_type = str_sub(data_type, 11)) %>%
       group_by(date, region, country, source, data_type, replicate) %>%
@@ -40,22 +45,14 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
       left_join(deconvolutedData, by = c("country", "region", "source", "data_type", "local_infection", "date")) %>%
       arrange(countryIso3, region, source, data_type, date)
   }
-
+  
   estimatesPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Estimates.rds"))
   if (!is_empty(estimatesPath)) {
     estimates <- readRDS(file.path(dataDir, estimatesPath))
   } else {
     estimates <- NULL
   }
-
-  OxCGRTPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-OxCGRT.rds"))
-  if (!is_empty(OxCGRTPath)) {
-
-    OxCGRTData <- readRDS(file.path(dataDir, OxCGRTPath)) %>%
-      select(countryIso3, region, date, matches("\\w\\d_"))
-    names(OxCGRTData)
-  }
-
+  
   if (!is.null(caseData)) {
     estimateRanges <- estimateRanges(
       filter(caseData, data_type != "Stringency Index"),
@@ -64,12 +61,12 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
   } else (
     estimateRanges <- NULL
   )
-
+  
   countryData <- list(
     caseData = caseData,
     estimates = estimates,
     estimateRanges = estimateRanges)
-
+  
   return(countryData)
 }
 
@@ -78,13 +75,13 @@ dataUpdatesTable <- function(
   updateData,
   dateFormat = "%Y-%m-%d",
   showDataType = FALSE) {
-
+  
   updateData <- bind_rows(updateData) %>%
     group_by(countryIso3, source) %>%
     arrange(desc(lastData)) %>%
     slice(1L)
   showCountry <- length(unique(updateData$country)) > 1
-
+  
   outList <- list("<table style=\"width:100%\">")
   for (i in 1:dim(updateData)[1]) {
     if (i == 1) {
@@ -92,25 +89,25 @@ dataUpdatesTable <- function(
     } else {
       printCountry <- (showCountry & updateData[i - 1, ]$country != updateData[i, ]$country)
     }
-
+    
     if (printCountry) {
       countryString <- str_c("<tr><td colspan=\"3\">", updateData[i, ]$country, "</td></tr>")
     } else {
       countryString <- ""
     }
-
+    
     sourceString <- str_c("<td style = \"font-weight: normal;\">", updateData[i, ]$source, "</td>")
     if (showCountry) {
       sourceString <- str_c("<td>&nbsp;&nbsp;</td>", sourceString)
     }
-
+    
     outList[[i + 1]] <- str_c(
       countryString,
       "<tr>",
-        sourceString,
-        "<td style = \"font-weight: normal;font-style: italic;\">",
-          format(updateData[i, ]$lastData, dateFormat),
-        "</td>",
+      sourceString,
+      "<td style = \"font-weight: normal;font-style: italic;\">",
+      format(updateData[i, ]$lastData, dateFormat),
+      "</td>",
       "</tr>")
   }
   outList[[i + 2]] <- "</table>"
@@ -121,17 +118,17 @@ dataUpdatesTable <- function(
 
 #TODO remove this entire right-side boundary on dates on the Re estimates, it's not needed
 delaysDf <- tibble(
-    data_type = factor(
-      c("Confirmed cases", "Confirmed cases / tests", "Hospitalized patients", "Deaths", "Excess deaths"),
-      levels = c("Confirmed cases", "Confirmed cases / tests", "Hospitalized patients", "Deaths", "Excess deaths")),
-    # delay = c(8, 8, 10, 18, 30))
-    delay = c(0, 0, 0, 0, 0))
+  data_type = factor(
+    c("Confirmed cases", "Confirmed cases / tests", "Hospitalized patients", "Deaths", "Excess deaths"),
+    levels = c("Confirmed cases", "Confirmed cases / tests", "Hospitalized patients", "Deaths", "Excess deaths")),
+  # delay = c(8, 8, 10, 18, 30))
+  delay = c(0, 0, 0, 0, 0))
 
 estimateRanges <- function(
   caseData,
   minConfirmedCases = 100,
   delays = delaysDf) {
-
+  
   estimateStartDates <- caseData %>%
     group_by(countryIso3, region, source, data_type) %>%
     arrange(countryIso3, region, source, data_type, date) %>%
@@ -141,7 +138,7 @@ estimateRanges <- function(
     filter(date == min(date)) %>%
     ungroup() %>%
     dplyr::select(countryIso3, region, estimateStart = date)
-
+  
   # figuring out when estimation ends i.e. applying the delays
   estimateDatesDf <- caseData %>%
     filter(
@@ -155,9 +152,9 @@ estimateRanges <- function(
     transmute(
       countryIso3 = countryIso3, region = region, data_type = data_type, estimateEnd = date - delay) %>%
     left_join(estimateStartDates, by = c("countryIso3", "region"))
-
+  
   estimatesDates <- list()
-
+  
   for (iCountry in unique(estimateDatesDf$countryIso3)) {
     tmpCountry <- filter(estimateDatesDf, countryIso3 == iCountry)
     for (iRegion in unique(tmpCountry$region)) {
@@ -174,7 +171,7 @@ estimateRanges <- function(
 
 # smooth time series with LOESS method
 getLOESSCases <- function(dates, count_data, days_incl = 21, degree = 1, truncation = 0) {
-
+  
   if (truncation != 0) {
     dates <- dates[1:(length(dates) - truncation)]
     count_data <- count_data[1:(length(count_data) - truncation)]
@@ -184,7 +181,7 @@ getLOESSCases <- function(dates, count_data, days_incl = 21, degree = 1, truncat
   sel_span <- days_incl / n_points
   
   n_pad <- round(length(count_data) * sel_span * 0.5)
-
+  
   c_data <- data.frame(value = c(rep(0, n_pad), count_data),
                        date_num = c(seq(as.numeric(dates[1]) - n_pad, as.numeric(dates[1]) - 1),
                                     as.numeric(dates)))
@@ -194,7 +191,7 @@ getLOESSCases <- function(dates, count_data, days_incl = 21, degree = 1, truncat
   raw_smoothed_counts <- smoothed[(n_pad + 1):length(smoothed)]
   normalized_smoothed_counts <-
     raw_smoothed_counts * sum(count_data, na.rm = T) / sum(raw_smoothed_counts, na.rm = T)
-
+  
   if (truncation != 0) {
     normalized_smoothed_counts <- append(normalized_smoothed_counts, rep(NA, truncation))
   }
@@ -207,17 +204,17 @@ mapLabels <- function(shapeFileData, mainLabel = "cases14d") {
   } else (
     labelOrder <- c("re", "cases14d")
   )
-
+  
   mapLabels <- as_tibble(shapeFileData) %>%
     transmute(
       name = str_c("<strong>", NAME, "</strong>"),
       cases14d = if_else(is.na(cases14d),
-        "<br>No data available",
-        str_c("<br>", round(cases14d, 3), " cases / 100'000 / 14d (", dateCases, ")")),
+                         "<br>No data available",
+                         str_c("<br>", round(cases14d, 3), " cases / 100'000 / 14d (", dateCases, ")")),
       re = if_else(is.na(median_R_mean),
-        "<br>No R<sub>e</sub> estimate available",
-        str_c("<br>R<sub>e</sub>: ", round(median_R_mean, 3), " ",
-        "(", round(median_R_lowHPD, 3), " - ", round(median_R_highHPD, 3), ") (", dateEstimates, ")" ))
+                   "<br>No R<sub>e</sub> estimate available",
+                   str_c("<br>R<sub>e</sub>: ", round(median_R_mean, 3), " ",
+                         "(", round(median_R_lowHPD, 3), " - ", round(median_R_highHPD, 3), ") (", dateEstimates, ")" ))
     ) %>%
     transmute(
       label = str_c(name, .data[[labelOrder[1]]], .data[[labelOrder[2]]])) %>%
@@ -251,35 +248,35 @@ addPolygonLayer <- function(map, shapeFile, fillColor, group, labels, options = 
         direction = "auto"),
       group = group,
       options = options)
-
+  
   return(map)
 }
 
 regionCheckboxInput <- function(checkboxGroupId, label, choices, selected, zoomLabel) {
   out <- list()
-
+  
   header <- glue::glue(
     "<div id='{checkboxGroupId}' class='shiny-input-checkboxgroup shiny-input-container shiny-bound-input'>
       <label class='control-label' for='{checkboxGroupId}'>{label}</label>
       <div class='shiny-options-group'>")
-
-
+  
+  
   checkboxes <- list()
   for (i in seq_along(choices)) {
     checkboxes[[i]] <- glue::glue(
       "<div class='checkbox'>",
-        "<label>",
-            "<input type='checkbox' name='{checkboxGroupId}' value='{choiceValue}' {checked}>",
-              "<span>{choiceName}",
-              "<a id='zoom{choiceValue}' href='#' class='action-button shiny-bound-input' style='display: inline'>{zoomLabel}</a>",
-              "</span>",
-        "</label>",
+      "<label>",
+      "<input type='checkbox' name='{checkboxGroupId}' value='{choiceValue}' {checked}>",
+      "<span>{choiceName}",
+      "<a id='zoom{choiceValue}' href='#' class='action-button shiny-bound-input' style='display: inline'>{zoomLabel}</a>",
+      "</span>",
+      "</label>",
       "</div>",
       checked = if_else(choices[i] %in% selected, "checked='checked'", ""),
       choiceValue = choices[i],
       choiceName = names(choices)[i])
   }
-
+  
   return(HTML(str_c(header, str_c(checkboxes, collapse = ""), "</div></div>")))   
 }
 
@@ -291,21 +288,21 @@ divergentColorPal <- function(palette, domain, midpoint, na.color = "#808080", a
       stop("Wasn't able to determine range of domain")
     }
   }
-
+  
   pf <- leaflet:::safePaletteFunc(palette, na.color, alpha)
-
+  
   leaflet:::withColorAttr("numeric", list(na.color = na.color), function(x) {
     if (length(x) == 0 || all(is.na(x))) {
       return(pf(x))
     }
-
+    
     if (is.null(rng)) rng <- range(x, na.rm = TRUE)
-
+    
     rescaled <- scales::rescale_mid(x, from = rng, mid = midpoint)
     rescaled[rescaled > 1] <- 1
     if (any(rescaled < 0 | rescaled > 1, na.rm = TRUE))
       warning("Some values were outside the color scale and will be treated as NA")
-
+    
     if (reverse) {
       rescaled <- 1 - rescaled
     }
@@ -322,21 +319,21 @@ casesLegendLabels <- function(type, cuts) {
 rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverText, background = "bg-blue") {
   collapseID <- str_c(popoverId, "collapse")
   rEstimateText <- rEstimate %>%
-      mutate(across(where(is.numeric), ~sprintf("%.2f", round(.x, 2)))) %>%
-      glue::glue_data(
-        "<h3 style=margin-bottom:0px>{mean}",
-        "<span style='font-size:22px;padding-left:10px'>({low} - {high})</span></h3>",
-        "<p style=margin-top:0px>{country} ({date})</p>",
-      )
+    mutate(across(where(is.numeric), ~sprintf("%.2f", round(.x, 2)))) %>%
+    glue::glue_data(
+      "<h3 style=margin-bottom:0px>{mean}",
+      "<span style='font-size:22px;padding-left:10px'>({low} - {high})</span></h3>",
+      "<p style=margin-top:0px>{country} ({date})</p>",
+    )
   lRestimateText <- length(rEstimateText)
   trunc <- 3
   expandButton <- ""
   if (lRestimateText > trunc) {
     rEstimateText <- c(rEstimateText[1:trunc],
-      str_c("<div id='", collapseID, "' class='collapse ReCollapse'>"),
-        rEstimateText[(trunc + 1):lRestimateText],
-      "</div>"
-      )
+                       str_c("<div id='", collapseID, "' class='collapse ReCollapse'>"),
+                       rEstimateText[(trunc + 1):lRestimateText],
+                       "</div>"
+    )
     expandButton <- glue::glue(
       "<div class='inner expandButton'>
         <a data-toggle='collapse' data-target='.ReCollapse' href='#' class='expandButtonLink'>
@@ -346,7 +343,7 @@ rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverTex
   }
   rEstimateText <- rEstimateText %>%
     str_c(collapse = "")
-
+  
   if (!is.null(icon)) {
     iconHTML <- glue::glue(
       "<div class = 'icon-large'>
@@ -355,7 +352,7 @@ rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverTex
   } else {
     iconHTML <- ""
   }
-
+  
   rValueBox <- tagList(
     HTML(
       glue::glue(
@@ -372,24 +369,10 @@ rValueBox <- function(rEstimate, text, icon, popoverId, popoverTitle, popoverTex
       )
     ),
     bsPopover(popoverId, popoverTitle,
-      popoverText,
-      placement = "bottom", trigger = "hover",
-      options = NULL)
+              popoverText,
+              placement = "bottom", trigger = "hover",
+              options = NULL)
   )
-
+  
   return(rValueBox)
 }
-
-tooltip <- function(text, placement = "right", symbol = "fa-question-circle") {
-  return(HTML(tooltipHtmlString(text, placement = placement, symbol = symbol)))
-}
-
-tooltipHtmlString <- function(text, placement = "right", symbol = "fa-question-circle") {
-  return(
-    glue::glue(
-      "<i class='fa {symbol} fa-fw ttIndicator'",
-      "data-toggle='tooltip' data-html='true' data-placement='{placement}' title='{text}'></i>"
-    )
-  )
-}
-
