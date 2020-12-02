@@ -72,10 +72,10 @@ runRScript sumData.R
 # reload data by restarting R shiny process
 touch ../restart.txt
 
-# echo "updating covid19-Data ..."
-# cd "../../../dailyRe-Data"
-# git add .
-# git commit -m "update data"
-# git push
+echo "updating covid19-Data ..."
+cd "../../../dailyRe-Data"
+git add .
+git commit -m "update data"
+git push
 
-# crontab /home/covid-19-re/crontabBackup.txt
+crontab /home/covid-19-re/crontabBackup.txt
