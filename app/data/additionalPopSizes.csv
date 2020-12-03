@@ -1,31 +1,31 @@
 countryIso2,countryIso3,country,region,year,populationSize
-CH,CHE,Switzerland,CHE,2020,8544527
-CH,CHE,Switzerland,ZH,2020,1520968
-CH,CHE,Switzerland,BE,2020,1034977
-CH,CHE,Switzerland,LU,2020,409557
-CH,CHE,Switzerland,UR,2020,36433
-CH,CHE,Switzerland,SZ,2020,159165
-CH,CHE,Switzerland,OW,2020,37841
-CH,CHE,Switzerland,NW,2020,43223
-CH,CHE,Switzerland,GL,2020,40403
-CH,CHE,Switzerland,ZG,2020,126837
-CH,CHE,Switzerland,FR,2020,318714
-CH,CHE,Switzerland,SO,2020,273194
-CH,CHE,Switzerland,BS,2020,194766
-CH,CHE,Switzerland,BL,2020,288132
-CH,CHE,Switzerland,SH,2020,81991
-CH,CHE,Switzerland,AR,2020,55234
-CH,CHE,Switzerland,AI,2020,16145
-CH,CHE,Switzerland,SG,2020,507697
-CH,CHE,Switzerland,GR,2020,198379
-CH,CHE,Switzerland,AG,2020,678207
-CH,CHE,Switzerland,TG,2020,276472
-CH,CHE,Switzerland,TI,2020,353343
-CH,CHE,Switzerland,VD,2020,799145
-CH,CHE,Switzerland,VS,2020,343955
-CH,CHE,Switzerland,NE,2020,176850
-CH,CHE,Switzerland,GE,2020,499480
-CH,CHE,Switzerland,JU,2020,73419
+CH,CHE,Switzerland,CHE,2020,8606033
+CH,CHE,Switzerland,ZH,2020,1539275
+CH,CHE,Switzerland,BE,2020,1039474
+CH,CHE,Switzerland,LU,2020,413120
+CH,CHE,Switzerland,UR,2020,36703
+CH,CHE,Switzerland,SZ,2020,160480
+CH,CHE,Switzerland,OW,2020,37930
+CH,CHE,Switzerland,NW,2020,43087
+CH,CHE,Switzerland,GL,2020,40590
+CH,CHE,Switzerland,ZG,2020,127642
+CH,CHE,Switzerland,FR,2020,321783
+CH,CHE,Switzerland,SO,2020,275247
+CH,CHE,Switzerland,BS,2020,195844
+CH,CHE,Switzerland,BL,2020,289468
+CH,CHE,Switzerland,SH,2020,82348
+CH,CHE,Switzerland,AR,2020,55445
+CH,CHE,Switzerland,AI,2020,16128
+CH,CHE,Switzerland,SG,2020,510734
+CH,CHE,Switzerland,GR,2020,199021
+CH,CHE,Switzerland,AG,2020,685845
+CH,CHE,Switzerland,TG,2020,279547
+CH,CHE,Switzerland,TI,2020,351491
+CH,CHE,Switzerland,VD,2020,805098
+CH,CHE,Switzerland,VS,2020,345525
+CH,CHE,Switzerland,NE,2020,176496
+CH,CHE,Switzerland,GE,2020,504128
+CH,CHE,Switzerland,JU,2020,73584
 LI,LIE,Liechtenstein,LIE,2020,38553
 CH,CHE,Switzerland,grR Central Switzerland,2020,813056
 CH,CHE,Switzerland,grR Eastern Switzerland,2020,1176321
@@ -35,12 +35,12 @@ CH,CHE,Switzerland,grR Northwestern Switzerland,2020,1161105
 CH,CHE,Switzerland,grR Ticino,2020,353343
 CH,CHE,Switzerland,grR Zurich,2020,1520968
 ZA,ZAF,South_Africa,Eastern Cape,2016,6996976
-ZA,ZAF,South_Africa,Free State,2016,2834714	
-ZA,ZAF,South_Africa,Gauteng,2016,13399724	
+ZA,ZAF,South_Africa,Free State,2016,2834714
+ZA,ZAF,South_Africa,Gauteng,2016,13399724
 ZA,ZAF,South_Africa,KwaZulu-Natal,2016,11065240
 ZA,ZAF,South_Africa,Limpopo,2016,5799090
 ZA,ZAF,South_Africa,Mpumalanga,2016,4335964
 ZA,ZAF,South_Africa,Northern Cape,2016,1193780
-ZA,ZAF,South_Africa,North West,2016,3748435	
+ZA,ZAF,South_Africa,North West,2016,3748435
 ZA,ZAF,South_Africa,Western Cape,2016,6279730
 ZA,ZAF,South_Africa,Unknown,2016,NA
