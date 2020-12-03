@@ -25,7 +25,7 @@ dataDir <- here::here("app/data")
 plotOutDir <- here::here("app/www")
 
 pathToCountryData <- here::here("app", "data", "countryData")
-pathToUpdateData <- file.path(dataDir, "updateData.rds")
+pathToUpdateData <- file.path(dataDir, "serialized", "updateDataRaw.qs")
 pathToInterventionData <- here::here("../covid19-additionalData/interventions/interventions.csv")
 pathToContinentsData <- file.path(dataDir, "continents.csv")
 continents <- read_csv(pathToContinentsData, col_types = cols(.default = col_character()))
@@ -43,7 +43,7 @@ countryData$estimates <- countryData$estimates %>%
   mutate(data_type = as.character(data_type))
 
 
-updateDataRaw <- readRDS(pathToUpdateData)
+updateDataRaw <-  qs::qread(pathToUpdateData)
 updateData <- bind_rows(updateDataRaw[countrySelectValue]) %>%
   ungroup() %>%
   dplyr::select(-country) %>%
@@ -82,10 +82,10 @@ for (i in availableLanguages) {
       estimationTypeSelect = "Cori_slidingWindow",
       plotOptions = c("none"),
       caseAverage = 1,
-      lang = i,
-      plotSize = "large"),
+      lang = i),
     rightTruncation,
     translator,
+    plotSize = "small",
     showHelpBox = TRUE)
 
   plot$sizingPolicy$browser$padding <- 0
