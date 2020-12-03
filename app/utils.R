@@ -115,7 +115,6 @@ dataUpdatesTable <- function(
   }
   outList[[i + 2]] <- "</table>"
   out <- str_c(outList, collapse = "")
-  out <- str_c(out, "<small style=\"font-weight: normal\"> last check: ", max(updateData$lastChecked), "</small>")
   return(out)
 }
 

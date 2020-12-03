@@ -27,7 +27,7 @@ casesSubPlot <- function(
   endDate = max(caseData$date) + 1,
   rightTruncation = NULL,
   fixedRangeX = TRUE,
-  fixedRangeY =TRUE,
+  fixedRangeY = TRUE,
   logYaxis = FALSE,
   caseAverage = 1,
   caseNormalize = FALSE,
@@ -267,7 +267,7 @@ interventionsSubPlot <- function(
   fixedRangeX = TRUE,
   fixedRangeY = TRUE,
   dateFormat) {
-    
+
     pIntervention <- plot_ly(data = stringencyData)
     maxValue <- 100 # max(stringencyData$value, na.rm = TRUE)
 
