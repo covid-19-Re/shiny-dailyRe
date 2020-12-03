@@ -86,7 +86,7 @@ for (i in availableLanguages) {
     rightTruncation,
     translator,
     plotSize = "small",
-    showHelpBox = TRUE)
+    showHelpBox = FALSE)
 
   plot$sizingPolicy$browser$padding <- 0
 
