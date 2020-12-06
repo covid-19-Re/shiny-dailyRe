@@ -78,4 +78,4 @@ git add .
 git commit -m "update data"
 git push
 
-crontab /home/covid-19-re/crontabBackup.txt
+crontab /home/covid-19-re/dailyRe/app/otherScripts/crontab.txt
