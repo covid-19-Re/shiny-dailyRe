@@ -108,7 +108,7 @@ normalized_test_delays <- final_delay_data_FOPH %>% filter(data_type == "Confirm
 final_delay_data_FOPH <- bind_rows(final_delay_data_FOPH, normalized_test_delays)
 
 ### Save file
-readr::write_csv(final_delay_data_FOPH, path = file.path(outDir, "CHE_data_delays.csv"))
+readr::write_csv(final_delay_data_FOPH, file = file.path(outDir, "CHE_data_delays.csv"))
 
 
 # cat("Mean Time from onset to Hospitalization:",
@@ -392,7 +392,8 @@ bagFileDates <- strptime(
   format = "%Y-%m-%d_%H-%M-%S")
 
 newestFile <- bagFiles[which(bagFileDates == max(bagFileDates))[1]]
-nTestsRaw <- read_delim(file = newestFile, delim = ";",
+
+nTestsRegions <- read_delim(file = newestFile, delim = ";",
   col_types = cols(
     ktn = col_character(),
     Datum = col_date(format = ""),
@@ -402,41 +403,30 @@ nTestsRaw <- read_delim(file = newestFile, delim = ";",
   )) %>%
   group_by(ktn, Datum) %>%
   summarise(
-    countryIso3 = "CHE",
-    Positive = sum(Positive),
-    Negative = sum(Negative),
-    .groups = "drop"
-  )
-
-nTestsCHE <- nTestsRaw %>%
-  filter(ktn != "FL") %>%
-  group_by(Datum) %>%
-  summarise(
-    Positive = sum(Positive),
-    Negative = sum(Negative),
+    positiveTests = sum(Positive),
+    negativeTests = sum(Negative),
     .groups = "drop"
   ) %>%
   mutate(
-    ktn = "CHE",
-    .before = "Datum"
-  )
-
-nTestsLIE <- nTestsRaw %>%
-  filter(ktn == "FL") %>%
-  mutate(
-    countryIso3 = "LIE",
-    ktn = "LIE",
-  )
-
-nTests <- nTestsRaw %>%
-  filter(ktn != "FL") %>%
-  bind_rows(nTestsCHE, nTestsLIE) %>%
-  transmute(
     date = Datum,
-    countryIso3 = countryIso3,
-    region = ktn,
-    positiveTests = Positive,
-    negativeTests = Negative,
+    region = recode(ktn, "FL" = "LIE"),
+    countryIso3 = if_else(region == "LIE", "LIE", "CHE")
+  ) %>%
+  select(countryIso3, region, date, positiveTests, negativeTests)
+
+nTestsCHE <- nTestsRegions %>%
+  filter(countryIso3 != "LIE", region != "LIE") %>%
+  group_by(date) %>%
+  summarise(
+    region = "CHE",
+    countryIso3 = "CHE",
+    positiveTests = sum(positiveTests),
+    negativeTests = sum(negativeTests),
+    .groups = "drop"
+  )
+
+nTests <- bind_rows(nTestsRegions, nTestsCHE) %>%
+  mutate(
     totalTests = positiveTests + negativeTests,
     testPositivity = positiveTests / totalTests
   )
