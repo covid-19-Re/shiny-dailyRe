@@ -383,7 +383,7 @@ if (!dir.exists(basePath)) {
 testsDataPath <- file.path(basePath, str_c("CHE-Tests.rds"))
 
 bagFiles <- list.files(here::here("app", "data", "BAG"),
-                       pattern = "*Time_series_tests.csv",
+                       pattern = "*Timeseries_tests_akl.csv",
                        full.names = TRUE,
                        recursive = TRUE)
 
@@ -392,18 +392,51 @@ bagFileDates <- strptime(
   format = "%Y-%m-%d_%H-%M-%S")
 
 newestFile <- bagFiles[which(bagFileDates == max(bagFileDates))[1]]
-nTests <- read_delim(file = newestFile, delim = ";",
-                     col_types = cols_only(
-                       Datum = col_date(format = ""),
-                       `Positive Tests` = col_double(),
-                       `Negative Tests` = col_double()
-                     )) %>%
+nTestsRaw <- read_delim(file = newestFile, delim = ";",
+  col_types = cols(
+    ktn = col_character(),
+    Datum = col_date(format = ""),
+    Altersklasse = col_character(),
+    Positive = col_double(),
+    Negative = col_double()
+  )) %>%
+  group_by(ktn, Datum) %>%
+  summarise(
+    countryIso3 = "CHE",
+    Positive = sum(Positive),
+    Negative = sum(Negative),
+    .groups = "drop"
+  )
+
+nTestsCHE <- nTestsRaw %>%
+  filter(ktn != "FL") %>%
+  group_by(Datum) %>%
+  summarise(
+    Positive = sum(Positive),
+    Negative = sum(Negative),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    ktn = "CHE",
+    .before = "Datum"
+  )
+
+nTestsLIE <- nTestsRaw %>%
+  filter(ktn == "FL") %>%
+  mutate(
+    countryIso3 = "LIE",
+    ktn = "LIE",
+  )
+
+nTests <- nTestsRaw %>%
+  filter(ktn != "FL") %>%
+  bind_rows(nTestsCHE, nTestsLIE) %>%
   transmute(
     date = Datum,
-    countryIso3 = "CHE",
-    region = countryIso3,
-    positiveTests = `Positive Tests`,
-    negativeTests = `Negative Tests`,
+    countryIso3 = countryIso3,
+    region = ktn,
+    positiveTests = Positive,
+    negativeTests = Negative,
     totalTests = positiveTests + negativeTests,
     testPositivity = positiveTests / totalTests
   )
@@ -431,10 +464,10 @@ confirmedCHEDataTests <- data_hospitalization %>%
   dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
   complete(date = seq(min(date), max_date - right_truncation[["Confirmed cases / tests"]], by = "days"), 
            local_infection,
-           region, 
-           countryIso3, 
-           source, 
-           data_type, 
+           region,
+           countryIso3,
+           source,
+           data_type,
            date_type,
            fill = list(value = 0)) %>% 
   ungroup() %>% 
@@ -469,12 +502,12 @@ plotting_confirmedCHEDataTests <- data_hospitalization %>%
   dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
   complete(date = seq(min(date), max_date_plotting, by = "days"), 
            local_infection,
-           region, 
-           countryIso3, 
-           source, 
-           data_type, 
+           region,
+           countryIso3,
+           source,
+           data_type,
            date_type,
-           fill = list(value = 0)) %>% 
+           fill = list(value = 0)) %>%
   arrange(date) %>% 
   left_join(
     mutate(nTests, data_type = "confirmed"),
@@ -500,3 +533,4 @@ allBAGdata <- bind_rows(list(allBAGdata_plotting), list(allBAGdata_calculations)
 ## end of remove
 
 readr::write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CHE.csv"))
+
