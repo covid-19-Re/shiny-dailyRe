@@ -132,6 +132,7 @@ countryData <- getCountryData(
         args["country"] %in% c("CHE", "DEU", "HKG"), "report_plotting", "report"))
   )
 
+
 if (dim(countryData)[1] > 0) {
   # check for changes in country data
   countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.rds"))
