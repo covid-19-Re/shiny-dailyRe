@@ -14,6 +14,7 @@ allCountries <- str_match(
 
 allData <- list(caseData = list(), estimates = list())
 estimatePlotRanges <- list()
+updateDataRaw <- list()
 pb <- txtProgressBar(min = 0, max = length(allCountries))
 pb_i <- 0
 for (iCountry in allCountries) {
@@ -21,6 +22,7 @@ for (iCountry in allCountries) {
   allData$caseData[[iCountry]] <- iCountryData$caseData
   allData$estimates[[iCountry]] <- iCountryData$estimates
   estimatePlotRanges[[iCountry]] <- iCountryData$estimateRanges[[iCountry]]
+  updateDataRaw[[iCountry]] <- iCountryData$updateData
   pb_i <- pb_i + 1
   setTxtProgressBar(pb, pb_i)
 }
@@ -178,7 +180,6 @@ zafReLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "re")
 qs::qsave(zafReLabels, file = here("app/data/serialized/zafReLabels.qs"))
 
 # update updateData
-updateDataRaw <- qs::qread(here("app/data/temp/updateDataTemp.qs"))
 sourceInfo <- read_csv(here("app/data/dataSources.csv"),
   col_types = cols(.default = col_character()))
 
