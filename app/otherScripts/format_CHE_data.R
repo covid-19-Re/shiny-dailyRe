@@ -429,6 +429,10 @@ allCH <- allKtn %>%
     countryIso3 = "CHE",
     source = "FOPH",
     incidence = sum(incidence),
+    positiveTests = sum(positiveTests),
+    negativeTests = sum(negativeTests),
+    totalTests = sum(positiveTests),
+    testPositivity = positiveTests / totalTests,
     .groups = "keep")
 
 plotting_allCH <- plotting_allKtn %>%
@@ -439,6 +443,10 @@ plotting_allCH <- plotting_allKtn %>%
     countryIso3 = "CHE",
     source = "FOPH",
     incidence = sum(incidence),
+    positiveTests = sum(positiveTests),
+    negativeTests = sum(negativeTests),
+    totalTests = sum(positiveTests),
+    testPositivity = positiveTests / totalTests,
     .groups = "keep")
 
 allBAGdata <- bind_rows(allKtn, allCH, plotting_allKtn, plotting_allCH) %>%

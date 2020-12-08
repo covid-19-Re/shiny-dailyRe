@@ -1215,6 +1215,10 @@ sumGreaterRegions <- function(chData) {
     dplyr::summarize(
       value = sum(value),
       countryIso3 = "CHE",
+      positiveTests = sum(positiveTests),
+      negativeTests = sum(negativeTests),
+      totalTests = sum(positiveTests),
+      testPositivity = positiveTests / totalTests,
       .groups = "keep")
   return(greaterRegionsData)
 }
