@@ -25,12 +25,12 @@ dir.create(outDir, showWarnings = FALSE)
 bagFiles <- c(
   # polybox
   list.files(BAG_data_dir,
-             pattern = "*FOPH_COVID19_data_extract.csv",
+             pattern = "*FOPH_COVID19_data_extract.rds",
              full.names = TRUE,
              recursive = TRUE),
   # git (legacy)
   list.files(BAG_data_dir_Git,
-             pattern = "*FOPH_COVID19_data_extract.csv",
+             pattern = "*FOPH_COVID19_data_extract.rds",
              full.names = TRUE,
              recursive = TRUE))
 
@@ -43,9 +43,7 @@ newestFile <- bagFiles[which(bagFileDates == maximum_file_date)[1]]
 
 ### Load file data
 cat("reading file", newestFile, "...\n")
-data_hospitalization <- read.csv(
-  newestFile,
-  sep = ";", stringsAsFactors = F, header = T)
+data_hospitalization <- readRDS(newestFile) %>% as_tibble()
 
 
 right_truncation <- list()
@@ -446,10 +444,21 @@ nTestsRegions <- read_delim(file = newestFile, delim = ";",
   ) %>%
   mutate(
     date = Datum,
-    region = recode(ktn, "FL" = "LIE"),
-    countryIso3 = if_else(region == "LIE", "LIE", "CHE")
+    region = ktn,
+    countryIso3 = if_else(region == "FL", "LIE", "CHE")
   ) %>%
   dplyr::select(countryIso3, region, date, positiveTests, negativeTests)
+
+nTestsGreaterRegions <- nTestsRegions %>%
+  left_join(greaterRegions, by = "region") %>% 
+  ungroup() %>%
+  mutate(region = greaterRegion) %>%
+  dplyr::select(-greaterRegion) %>%
+  group_by(countryIso3, region, date) %>%
+  dplyr::summarize(
+    positiveTests = sum(positiveTests),
+    negativeTests = sum(negativeTests),
+    .groups = "keep")
 
 bagFiles <- list.files(here::here("app", "data", "BAG"),
                        pattern = "*Time_series_tests.csv",
@@ -477,24 +486,54 @@ nTestsCHE <- read_delim(file = newestFile, delim = ";",
     negativeTests = `Negative Tests`
   )
 
-nTests <- bind_rows(nTestsRegions, nTestsCHE) %>%
+nTests <- bind_rows(nTestsRegions, nTestsGreaterRegions, nTestsCHE) %>%
   mutate(
     totalTests = positiveTests + negativeTests,
     testPositivity = positiveTests / totalTests
   )
 
 #TODO remove when imports are integrated
-allBAGdata_plotting <- allBAGdata %>% filter(is.na(local_infection))
-allBAGdata_calculations <- allBAGdata %>% filter(!is.na(local_infection))
 
+allBAGdata_plotting <- allBAGdata %>% filter(is.na(local_infection))
+
+# confirmed cases / test plotting
+allBAGdata_plotting_tests <- allBAGdata_plotting %>%
+  ungroup() %>%
+  filter(
+    data_type == "confirmed"
+  ) %>%
+  left_join(nTests, by = c("date", "region", "countryIso3")) %>%
+  mutate(
+    data_type = "Confirmed cases / tests",
+    value = value / totalTests
+  ) %>%
+  filter(!is.na(value))
+
+allBAGdata_plotting <- bind_rows(allBAGdata_plotting, allBAGdata_plotting_tests)
+
+allBAGdata_calculations <- allBAGdata %>% filter(!is.na(local_infection))
 allBAGdata_calculations <- allBAGdata_calculations %>%
   group_by(date, region, countryIso3, source, data_type, date_type) %>%
   summarise(value = sum(value), .groups = "drop") %>%
   mutate(local_infection = "TRUE") %>%
   arrange(region, data_type, date_type, date)
 
+# confirmed cases / test
+allBAGdata_calculations_tests <- allBAGdata_calculations %>%
+  ungroup() %>%
+  filter(
+    data_type == "confirmed"
+  ) %>%
+  left_join(nTests, by = c("date", "region", "countryIso3")) %>%
+  mutate(
+    data_type = "Confirmed cases / tests",
+    value = value / totalTests * mean(totalTests, na.rm = T)
+  ) %>%
+  filter(!is.na(value))
+
+allBAGdata_calculations <- bind_rows(allBAGdata_calculations, allBAGdata_calculations_tests)
+
 allBAGdata <- bind_rows(list(allBAGdata_plotting), list(allBAGdata_calculations))
 ## end of remove
 
-readr::write_csv(allBAGdata, file = file.path(outDir, "incidence_data_CHE.csv"))
-readr::write_csv(nTests, file = file.path(outDir, "tests_CHE.csv"))
+qs::qsave(allBAGdata, file = file.path(outDir, "incidence_data_CHE.qs"))
