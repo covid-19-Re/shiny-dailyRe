@@ -10,6 +10,8 @@ Erweiterte Möglichkeiten zur epidemiologischen Lagebeurteilung basierend auf R<
 
 Seit Start der Epidemie in der Schweiz beobachten wir folgende Trends in R<sub>e</sub>. Die effektive Reproduktionszahl R<sub>e</sub> war Anfang März zwischen 2-3, was Schätzungen für andere Länder entspricht. R<sub>e</sub> ist Mitte März unter den kritischen Schwellenwert von 1 gefallen. Das R<sub>e</sub> ist ab der zweiten Mai-Woche wieder angestiegen. Mitte Juni wurde ein Höchststand des R<sub>e</sub> mit einem Wert von 1.4-1.9 erreicht. Im Juli wurde ein weiterer, jedoch tieferer, Höchststand erreicht. Diese Höchststände sind auf das Infektionsgeschehen in verschiedenen schweizer Regionen zurückzuführen. Über den Sommer hat sich das R<sub>e</sub> auf einen Wert um 1.1 eingependelt. Dies bedeutete, dass sich die Fallzahlen circa alle 4 Wochen verdoppelt haben.
 
+Ab Mitte September ist das Re sehr stark angestiegen mit einem Höchstand von über 1.5 zum Monatswechsel. Dies entsprach einer Verdopplungszeit der Fallzahlen von etwa einer Woche. Das Re basierend auf Hospitalisierungen folgte dem gleichen Trend und ist zum ersten Mal seit März signifikant über 1 gestiegen. Die schnelle Ausbreitung wurde in allen Kantonen der Schweiz beobachtet. Ab Oktober ging das Re basierend auf allen Indikatoren zurück.
+
 <h4>Caveats</h4>
 
 Wir weisen generell darauf hin, dass die Schätzungen der letzten ca. fünf Tage leichten Schwankungen unterliegen können. Wir basieren unsere Einschätzung daher auf geschätzten Trends über mehrere Tage.

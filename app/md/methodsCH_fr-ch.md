@@ -16,6 +16,16 @@ Depuis le début de l’épidémie en Suisse, nous avons observé les tendances 
 
 Après la mi-septembre, le taux de repoduction a crû brutalement avec un pic au-delà de 1,5 à la fin du mois. Cela correspond a un doublement du nombre de cas chaque semaine. Cette propagation rapide du virus a été observée dans tous les cantons. Depuis octobre, le taux de reproduction a diminué, c’est ce qu’indiquent tous les indicateurs.
 
+<h4>Mises en garde</h4>
+
+En général, l’estimation de R<sub>e</sub> faite sur les 5 derniers jours est susceptible d’être consolidée les jours suivants. Nous fondons donc nos interprétations sur les tendances observées sur plusieurs jours.
+
+Cependant, en raison du fort taux de positivité et du retard accumulé dans les remontées des cas admis à l’hôpital pendant la deuxième vague, les estimations basées sur ces données sont susceptibles d’être en dessous de la réalité durant cette période. Le R<sub>e</sub> basé sur la positivité des tests (cas confirmés / nombre de tests) est fiable si les personnes testées sont tirées aléatoirement dans la population; puisque les personnes présentant des symptômes sont testées en priorité, cette valeur de R<sub>e</sub> peut aussi être biasée. Durant la deuxième vague, la valeur de R<sub>e</sub> estimée à partir du nombre de morts est la plus fiable. Cependant, cette valeur de R<sub>e</sub> a un retard d’environ 3 semaines par rapport au présent. Il s’écoule en moyenne environ 17 jours entre l’infection et le décès lorsque celui-ci survient.
+
+
+Les valeurs de R<sub>e</sub> au-dessus de 1 observées depuis l’été ne sont pas une conséquence de l’intensification de la campagne de tests, ou de tests faux-positifs.
+Le nombre de tests hebdomadaires a en effet augmenté significativement depuis l’été. Simultanément, le percentage de tests positifs (le taux de positivité) a augmenté de 0,4% en juin à plus de 20% en octobre. Cela signifie aussi que nous estimons que le R<sub>e</sub> était significativement au-dessus de 1 pendant la majeure partie de l’été. Par ailleurs, la spécificité des tests PCR étant très haute, le taux de faux-positifs est très faible, ce qui enlève une source de biais potentiel.
+
 
 <h4>Méthodes</h4>
 
@@ -24,16 +34,3 @@ La valeur de R<sub>e</sub> donnée pour un jour J est une moyenne des estimation
 Les résultats utilisant les données disponibles du 26 juin 2020 et reposant sur la méthode précédente sont accessibles [ici](https://smw.ch/article/doi/smw.2020.20271).
 
 Depuis juin 2020, toutes les estimations de R<sub>e</sub> sont faites à partir de données de l’OFSP. Pendant les jours de semaine, l’OFSP communique le nombre de nouveaux cas confirmés reçus durants les dernières 24 heures. Ces cas proviennent en général des trois derniers jours. Pour estimer R<sub>e</sub>, nous analysons le nombre de cas confirmés pour chaque jour en ignorant les deux derniers jours (non consolidés). En conséquence, le nombre de cas affichés sur le dashboard peuvent être différents des chiffres communiqués dans les rapports journaliers de l’OFSP.
-
-
-<h4>Mises en garde</h4>
-
-En général, l’estimation de R<sub>e</sub> faite sur les 5 derniers jours est susceptible d’être consolidée les jours suivants. Nous fondons donc nos interprétations sur les tendances observées sur plusieurs jours.
-
-
-
-Cependant, en raison du fort taux de positivité et du retard accumulé dans les remontées des cas admis à l’hôpital pendant la deuxième vague, les estimations basées sur ces données sont susceptibles d’être en dessous de la réalité durant cette période. Le R<sub>e</sub> basé sur la positivité des tests (cas confirmés / nombre de tests) est fiable si les personnes testées sont tirées aléatoirement dans la population; puisque les personnes présentant des symptômes sont testées en priorité, cette valeur de R<sub>e</sub> peut aussi être biasée. Durant la deuxième vague, la valeur de R<sub>e</sub> estimée à partir du nombre de morts est la plus fiable. Cependant, cette valeur de R<sub>e</sub> a un retard d’environ 3 semaines par rapport au présent. Il s’écoule en moyenne environ 17 jours entre l’infection et le décès lorsque celui-ci survient.
-
-
-Les valeurs de R<sub>e</sub> au-dessus de 1 observées depuis l’été ne sont pas une conséquence de l’intensification de la campagne de tests, ou de tests faux-positifs.
-Le nombre de tests hebdomadaires a en effet augmenté significativement depuis l’été. Simultanément, le percentage de tests positifs (le taux de positivité) a augmenté de 0,4% en juin à plus de 20% en octobre. Cela signifie aussi que nous estimons que le R<sub>e</sub> était significativement au-dessus de 1 pendant la majeure partie de l’été. Par ailleurs, la spécificité des tests PCR étant très haute, le taux de faux-positifs est très faible, ce qui enlève une source de biais potentiel.
