@@ -413,7 +413,7 @@ plotting_confirmed_case_data_tests <- plotting_confirmed_case_data %>%
   left_join(nTests, by = c("date", "region", "countryIso3")) %>%
   mutate(
     data_type = "Confirmed cases / tests",
-    incidence = incidence / totalTests * mean(totalTests, na.rm = T)) %>%
+    incidence = incidence / totalTests) %>%
   filter(!is.na(incidence))
 
 
