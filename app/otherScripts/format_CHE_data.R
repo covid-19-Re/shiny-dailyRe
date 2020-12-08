@@ -347,6 +347,19 @@ allKtn <- bind_rows(confirmed_case_data, hospital_data, death_data)
 
 plotting_allKtn <- bind_rows(plotting_confirmed_case_data, plotting_hospital_data, plotting_death_data)
 
+# summarize for CHE and greater Regions
+
+greaterRegions <- tribble(
+    ~greaterRegion,             ~region,
+    "grR Lake Geneva Region",       c("VD", "VS", "GE"),
+    "grR Espace Mittelland",        c("BE", "FR", "SO", "NE", "JU"),
+    "grR Northwestern Switzerland", c("BS", "BL", "AG"),
+    "grR Zurich",                   c("ZH"),
+    "grR Eastern Switzerland",      c("GL", "SH", "AR", "AI", "SG", "GR", "TG"),
+    "grR Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
+    "grR Ticino",                   c("TI")
+  ) %>% unnest(cols = c(region))
+
 allCH <- allKtn %>%
   ungroup() %>%
   dplyr::group_by(date, data_type, date_type, local_infection) %>%
@@ -355,6 +368,19 @@ allCH <- allKtn %>%
     countryIso3 = "CHE",
     source = "FOPH",
     incidence = sum(incidence),
+    .groups = "keep")
+
+allGreaterRegions <- allKtn %>%
+  ungroup() %>%
+  filter(countryIso3 == "CHE") %>%
+  left_join(greaterRegions, by = "region") %>%
+  ungroup() %>%
+  mutate(region = greaterRegion) %>%
+  dplyr::select(-greaterRegion) %>%
+  group_by(date, region, data_type, date_type, local_infection) %>%
+  dplyr::summarize(
+    incidence = sum(incidence),
+    countryIso3 = "CHE",
     .groups = "keep")
 
 plotting_allCH <- plotting_allKtn %>%
@@ -367,7 +393,24 @@ plotting_allCH <- plotting_allKtn %>%
     incidence = sum(incidence),
     .groups = "keep")
 
-allBAGdata <- bind_rows(allKtn, allCH, plotting_allKtn, plotting_allCH) %>%
+plotting_allGreaterRegions <- plotting_allKtn %>%
+  ungroup() %>%
+  filter(countryIso3 == "CHE") %>%
+  left_join(greaterRegions, by = "region") %>%
+  ungroup() %>%
+  mutate(region = greaterRegion) %>%
+  dplyr::select(-greaterRegion) %>%
+  group_by(date, region, data_type, date_type, local_infection) %>%
+  dplyr::summarize(
+    incidence = sum(incidence),
+    countryIso3 = "CHE",
+    .groups = "keep")
+
+
+allBAGdata <- bind_rows(
+    allKtn, allCH, allGreaterRegions,
+    plotting_allKtn, plotting_allCH, plotting_allGreaterRegions
+  ) %>%
   ungroup() %>%
   mutate(value = replace_na(incidence, 0), .keep = "unused") %>%
   arrange(countryIso3, region, data_type, date_type, local_infection, date) %>%
