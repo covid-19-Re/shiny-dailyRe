@@ -343,14 +343,39 @@ plotting_hospital_data <- data_hospitalization %>%
   ungroup() %>% 
   arrange(region, date, date_type)
 
-## confirmed case data normalized by tests
+allKtn <- bind_rows(confirmed_case_data, hospital_data, death_data)
 
-basePath <- here::here("app", "data", "countryData")
-if (!dir.exists(basePath)) {
-  dir.create(basePath)
-}
-testsDataPath <- file.path(basePath, str_c("CHE-Tests.rds"))
+plotting_allKtn <- bind_rows(plotting_confirmed_case_data, plotting_hospital_data, plotting_death_data)
 
+allCH <- allKtn %>%
+  ungroup() %>%
+  dplyr::group_by(date, data_type, date_type, local_infection) %>%
+  summarize(
+    region = "CHE",
+    countryIso3 = "CHE",
+    source = "FOPH",
+    incidence = sum(incidence),
+    .groups = "keep")
+
+plotting_allCH <- plotting_allKtn %>%
+  ungroup() %>%
+  dplyr::group_by(date, data_type, date_type, local_infection) %>%
+  summarize(
+    region = "CHE",
+    countryIso3 = "CHE",
+    source = "FOPH",
+    incidence = sum(incidence),
+    .groups = "keep")
+
+allBAGdata <- bind_rows(allKtn, allCH, plotting_allKtn, plotting_allCH) %>%
+  ungroup() %>%
+  mutate(value = replace_na(incidence, 0), .keep = "unused") %>%
+  arrange(countryIso3, region, data_type, date_type, local_infection, date) %>%
+  dplyr::group_by(countryIso3, region, source, data_type) %>%
+  mutate(countryIso3 = if_else(region == "FL", "LIE", countryIso3))
+
+
+## tests data
 bagFiles <- list.files(here::here("app", "data", "BAG"),
                        pattern = "*Timeseries_tests_akl.csv",
                        full.names = TRUE,
@@ -383,15 +408,30 @@ nTestsRegions <- read_delim(file = newestFile, delim = ";",
   ) %>%
   dplyr::select(countryIso3, region, date, positiveTests, negativeTests)
 
-nTestsCHE <- nTestsRegions %>%
-  filter(countryIso3 != "LIE", region != "LIE") %>%
-  group_by(date) %>%
-  summarise(
-    region = "CHE",
+bagFiles <- list.files(here::here("app", "data", "BAG"),
+                       pattern = "*Time_series_tests.csv",
+                       full.names = TRUE,
+                       recursive = TRUE)
+
+bagFileDates <- strptime(
+  stringr::str_match(bagFiles, ".*\\/(\\d*-\\d*-\\d*_\\d*-\\d*-\\d*)")[, 2],
+  format = "%Y-%m-%d_%H-%M-%S")
+
+newestFile <- bagFiles[which(bagFileDates == max(bagFileDates))[1]]
+
+nTestsCHE <- read_delim(file = newestFile, delim = ";",
+    col_types = cols(
+      X1 = col_double(),
+      Datum = col_date(format = ""),
+      `Positive Tests` = col_double(),
+      `Negative Tests` = col_double()
+  )) %>%
+  transmute(
     countryIso3 = "CHE",
-    positiveTests = sum(positiveTests),
-    negativeTests = sum(negativeTests),
-    .groups = "drop"
+    region = "CHE",
+    date = Datum,
+    positiveTests = `Positive Tests`,
+    negativeTests = `Negative Tests`
   )
 
 nTests <- bind_rows(nTestsRegions, nTestsCHE) %>%
@@ -400,68 +440,12 @@ nTests <- bind_rows(nTestsRegions, nTestsCHE) %>%
     testPositivity = positiveTests / totalTests
   )
 
-saveRDS(nTests, testsDataPath)
-
-confirmed_case_data_tests <- confirmed_case_data %>%
-  left_join(nTests, by = c("date", "region", "countryIso3")) %>%
-  mutate(
-    data_type = "Confirmed cases / tests",
-    incidence = incidence / totalTests * mean(totalTests, na.rm = T)) %>%
-  filter(!is.na(incidence))
-
-plotting_confirmed_case_data_tests <- plotting_confirmed_case_data %>%
-  left_join(nTests, by = c("date", "region", "countryIso3")) %>%
-  mutate(
-    data_type = "Confirmed cases / tests",
-    incidence = incidence / totalTests) %>%
-  filter(!is.na(incidence))
-
-
-allKtn <- bind_rows(confirmed_case_data, hospital_data, death_data, confirmed_case_data_tests)
-
-plotting_allKtn <- bind_rows(plotting_confirmed_case_data, plotting_hospital_data, plotting_death_data, plotting_confirmed_case_data_tests)
-
-allCH <- allKtn %>%
-  ungroup() %>%
-  dplyr::group_by(date, data_type, date_type, local_infection) %>%
-  summarize(
-    region = "CHE",
-    countryIso3 = "CHE",
-    source = "FOPH",
-    incidence = sum(incidence),
-    positiveTests = sum(positiveTests),
-    negativeTests = sum(negativeTests),
-    totalTests = sum(positiveTests),
-    testPositivity = positiveTests / totalTests,
-    .groups = "keep")
-
-plotting_allCH <- plotting_allKtn %>%
-  ungroup() %>%
-  dplyr::group_by(date, data_type, date_type, local_infection) %>%
-  summarize(
-    region = "CHE",
-    countryIso3 = "CHE",
-    source = "FOPH",
-    incidence = sum(incidence),
-    positiveTests = sum(positiveTests),
-    negativeTests = sum(negativeTests),
-    totalTests = sum(positiveTests),
-    testPositivity = positiveTests / totalTests,
-    .groups = "keep")
-
-allBAGdata <- bind_rows(allKtn, allCH, plotting_allKtn, plotting_allCH) %>%
-  ungroup() %>%
-  mutate(value = replace_na(incidence, 0), .keep = "unused") %>%
-  arrange(countryIso3, region, data_type, date_type, local_infection, date) %>%
-  dplyr::group_by(countryIso3, region, source, data_type) %>%
-  mutate(countryIso3 = if_else(region == "FL", "LIE", countryIso3))
-
 #TODO remove when imports are integrated
 allBAGdata_plotting <- allBAGdata %>% filter(is.na(local_infection))
 allBAGdata_calculations <- allBAGdata %>% filter(!is.na(local_infection))
 
 allBAGdata_calculations <- allBAGdata_calculations %>%
-  group_by(date, region, countryIso3, source, data_type, date_type, positiveTests, negativeTests, totalTests, testPositivity) %>%
+  group_by(date, region, countryIso3, source, data_type, date_type) %>%
   summarise(value = sum(value), .groups = "drop") %>%
   mutate(local_infection = "TRUE") %>%
   arrange(region, data_type, date_type, date)
@@ -470,3 +454,4 @@ allBAGdata <- bind_rows(list(allBAGdata_plotting), list(allBAGdata_calculations)
 ## end of remove
 
 readr::write_csv(allBAGdata, file = file.path(outDir, "incidence_data_CHE.csv"))
+readr::write_csv(nTests, file = file.path(outDir, "tests_CHE.csv"))

@@ -1204,7 +1204,7 @@ sumGreaterRegions <- function(chData) {
     "grR Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
     "grR Ticino",                   c("TI")
   ) %>% unnest(cols = c(region))
-  
+
   greaterRegionsData <- chData %>%
     filter(countryIso3 == "CHE") %>%
     left_join(greaterRegions, by = "region") %>%
@@ -1215,36 +1215,79 @@ sumGreaterRegions <- function(chData) {
     dplyr::summarize(
       value = sum(value),
       countryIso3 = "CHE",
-      positiveTests = sum(positiveTests),
-      negativeTests = sum(negativeTests),
-      totalTests = sum(positiveTests),
-      testPositivity = positiveTests / totalTests,
       .groups = "keep")
   return(greaterRegionsData)
 }
 
-getDataCHEBAG <- function(path = here::here("app/data/CHE"), country = "CHE", filename = "incidence_data_CHE.csv") {
-  filePath <- file.path(path, filename)
-  bagData <- read_csv(filePath,
-                      col_types = cols(
-                        date = col_date(format = ""),
-                        region = col_character(),
-                        countryIso3 = col_character(),
-                        source = col_character(),
-                        data_type = col_character(),
-                        value = col_double(),
-                        positiveTests = col_double(),
-                        negativeTests = col_double(),
-                        totalTests = col_double(),
-                        testPositivity = col_double(),
-                        date_type = col_character(),
-                        local_infection = col_logical())) %>%
+sumGreaterRegionsTests <- function(testsData) {
+  greaterRegions <- tribble(
+    ~greaterRegion,             ~region,
+    "grR Lake Geneva Region",       c("VD", "VS", "GE"),
+    "grR Espace Mittelland",        c("BE", "FR", "SO", "NE", "JU"),
+    "grR Northwestern Switzerland", c("BS", "BL", "AG"),
+    "grR Zurich",                   c("ZH"),
+    "grR Eastern Switzerland",      c("GL", "SH", "AR", "AI", "SG", "GR", "TG"),
+    "grR Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
+    "grR Ticino",                   c("TI")
+  ) %>% unnest(cols = c(region))
+
+  greaterRegionsTests <- testsData %>%
+    filter(countryIso3 == "CHE") %>%
+    left_join(greaterRegions, by = "region") %>%
+    ungroup() %>%
+    mutate(region = greaterRegion) %>%
+    dplyr::select(-greaterRegion) %>%
+    group_by(countryIso3, region, date) %>%
+    dplyr::summarize(
+      positiveTests = sum(positiveTests),
+      negativeTests = sum(negativeTests),
+      totalTests = sum(totalTests),
+      .groups = "keep") %>%
+    mutate(testPositivity = positiveTests / totalTests)
+  return(greaterRegionsTests)
+}
+
+getDataCHEBAG <- function(path = here::here("app/data/CHE"), country = "CHE",
+  incidenceFilename = "incidence_data_CHE.csv",
+  testsFilename = "tests_CHE.csv"
+  ) {
+  
+  bagData <- read_csv(file.path(path, incidenceFilename),
+    col_types = cols(
+      date = col_date(format = ""),
+      region = col_character(),
+      countryIso3 = col_character(),
+      source = col_character(),
+      data_type = col_character(),
+      value = col_double(),
+      date_type = col_character(),
+      local_infection = col_logical())) %>%
     filter(countryIso3 == country)
-  
+
   bagDataGreaterRegions <- sumGreaterRegions(filter(bagData, region != "CHE"))
-  
   bagDataAll <- bind_rows(bagData, bagDataGreaterRegions)
-  
+
+  testsData <- read_csv(file.path(path, testsFilename),
+    col_types = cols(
+      countryIso3 = col_character(),
+      region = col_character(),
+      date = col_date(format = ""),
+      positiveTests = col_double(),
+      negativeTests = col_double(),
+      totalTests = col_double(),
+      testPositivity = col_double()
+    ))
+
+  testDataGreaterRegions <- sumGreaterRegionsTests(testsData)
+  testsDataAll <- bind_rows(testsData, testDataGreaterRegions)
+
+  bagDataAllConfirmed <- bagDataAll %>%
+    filter(
+      data_type == "confirmed",
+      date_type == report
+    )
+
+  unique(bagDataAll$data_type)
   return(bagDataAll)
 }
 
