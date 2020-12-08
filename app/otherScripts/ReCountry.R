@@ -303,10 +303,10 @@ if (dim(countryData)[1] > 0) {
 
       if (args["country"] %in% c("CHE")) {
         countryDataTests <- countryData %>%
-          filter(region == args["country"], data_type == "Confirmed cases / tests")
+          filter(data_type == "Confirmed cases / tests")
 
         deconvolvedData[[2]] <- get_all_infection_incidence(
-          countryDataTests,
+          data = countryDataTests,
           constant_delay_distributions = constant_delay_distributions,
           onset_to_count_empirical_delays = delays_onset_to_count,
           data_types = c("Confirmed cases / tests"),
