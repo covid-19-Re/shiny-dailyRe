@@ -7,6 +7,7 @@ app/data/all_delays.csv
 app/data/temp
 app/data/serialized/*
 app/data/countryData/csv
+app/data/countryData/*.qs
 app/data/exploration
 app/data/BAG
 app/data/CHE
@@ -26,3 +27,4 @@ app/restart.txt
 .Rproj.user
 *.Rdata
 *.rds
+

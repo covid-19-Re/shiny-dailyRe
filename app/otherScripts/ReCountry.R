@@ -264,6 +264,8 @@ if (dim(countryData)[1] > 0) {
           data_type = fct_drop(data_type)
         )
 
+      
+
       right_truncation <- list()
       if (args["country"] %in% c("CHE", "LIE", "DEU", "HKG")) {
         right_truncation[["Confirmed cases"]] <- 0
@@ -275,6 +277,29 @@ if (dim(countryData)[1] > 0) {
         right_truncation["Confirmed cases / tests"] <- 3
         right_truncation["Hospitalized patients"] <- 3
         right_truncation["Deaths"] <- 3
+      }
+
+      # additional truncation for weekends
+      if (args["country"] %in% c("CHE", "LIE")) {
+        lastValidDay <- countryData %>%
+          filter(
+            date_type == "onset",
+            data_type == "Confirmed cases") %>%
+          pull(date) %>%
+          max()
+        additionalTruncation <- case_when(
+          lubridate::wday(lastValidDay) == 7 ~ 1, # 7 = Sat, exclude
+          lubridate::wday(lastValidDay) == 1 ~ 2, # 1 = Sun, exclude Sun and Sat
+          lubridate::wday(lastValidDay) == 2 ~ 3, # 2 = Mon, exclude Mon, Sun and Sat,
+          TRUE ~ 0                                # otherwise don't exclude more days
+        )
+
+        right_truncation[["Confirmed cases"]] <- right_truncation[["Confirmed cases"]] + additionalTruncation
+        right_truncation[["Confirmed cases / tests"]] <- right_truncation[["Confirmed cases / tests"]] +
+          additionalTruncation
+
+        right_truncationPath <- file.path(basePath, str_c(args["country"], "-addRightTruncation.qs"))
+        qs::qsave(right_truncation, file = right_truncationPath)
       }
 
       right_truncate <- function(df, data_type, right_truncation) {

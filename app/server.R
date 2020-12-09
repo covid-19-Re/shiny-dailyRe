@@ -91,10 +91,10 @@ server <- function(input, output, session) {
       rightTruncation <- lapply(countrySelectValue, function(iso3) {
         if (iso3 %in% c("CHE", "LIE")) {
           rt <- list(
-            "Confirmed cases" = 3,
-            "Confirmed cases / tests" = 3,
-            "Hospitalized patients" = 5,
-            "Deaths" = 5)
+            "Confirmed cases" = 3  + CHErightTruncation[["Confirmed cases"]],
+            "Confirmed cases / tests" = 3 + CHErightTruncation[["Confirmed cases / tests"]],
+            "Hospitalized patients" = 5 + CHErightTruncation[["Hospitalized patients"]],
+            "Deaths" = 5 + CHErightTruncation[["Deaths"]])
         } else {
           rt <- list(
             "Confirmed cases" = 3,

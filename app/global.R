@@ -42,3 +42,5 @@ cheReLabels <-  qs::qread("data/serialized/cheReLabels.qs")
 ZAFregionsShape <-  qs::qread("data/serialized/ZAFregionsShape.qs")
 zafCasesLabels <-  qs::qread("data/serialized/zafCasesLabels.qs")
 zafReLabels <-  qs::qread("data/serialized/zafReLabels.qs")
+
+CHErightTruncation <- qs::qread("data/countryData/CHE-addRightTruncation.qs")
