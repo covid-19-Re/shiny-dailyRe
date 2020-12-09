@@ -10,8 +10,6 @@ parent_path=$(
 )
 cd "$parent_path"
 
-ls -t /home/covid-19-re/BAGdata/*/*FOPH_COVID19_data_extract.csv | head -1
-
 latestFile=$(ls -t /home/covid-19-re/BAGdata/*/*FOPH_COVID19_data_extract.csv | head -1)
 if [ -f lastBAGFile.txt ]; then
   lastFile=$(<lastBAGFile.txt)
