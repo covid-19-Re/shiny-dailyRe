@@ -95,7 +95,7 @@ server <- function(input, output, session) {
             lubridate::wday(max_date) == 3 ~ 1, # 3 = Tue, exclude Sat,
             lubridate::wday(max_date) == 4 ~ 2, # 4 = Wed, exclude Sun and Sat,
             lubridate::wday(max_date) == 5 ~ 3, # 5 = Thu, exclude Mon, Sun and Sat,
-            TRUE ~ 0                                # otherwise don't exclude more days
+            TRUE ~ 0                            # otherwise don't exclude more days
           )
 
           rt <- list(
