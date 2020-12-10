@@ -386,6 +386,7 @@ allGreaterRegions <- allKtn %>%
   dplyr::summarize(
     incidence = sum(incidence),
     countryIso3 = "CHE",
+    source = "FOPH",
     .groups = "keep")
 
 plotting_allCH <- plotting_allKtn %>%
@@ -409,6 +410,7 @@ plotting_allGreaterRegions <- plotting_allKtn %>%
   dplyr::summarize(
     incidence = sum(incidence),
     countryIso3 = "CHE",
+    source = "FOPH",
     .groups = "keep")
 
 
