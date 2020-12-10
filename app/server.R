@@ -103,9 +103,6 @@ server <- function(input, output, session) {
             "Confirmed cases / tests" = 3 + additionalTruncation,
             "Hospitalized patients" = 5,
             "Deaths" = 5)
-          
-          
-
         } else {
           rt <- list(
             "Confirmed cases" = 3,
