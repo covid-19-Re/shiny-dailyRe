@@ -46,15 +46,22 @@ cat("reading file", newestFile, "...\n")
 data_hospitalization <- readRDS(newestFile) %>% as_tibble()
 
 
-right_truncation <- list()
-right_truncation[["Confirmed cases"]] <- 3
-right_truncation[["Confirmed cases / tests"]] <- 3
-right_truncation[["Hospitalized patients"]] <- 5
-right_truncation[["Deaths"]] <- 5
-
 max_date <- date(maximum_file_date)
 max_date_plotting <- date(maximum_file_date)
 min_date <- as.Date("2020-02-01")
+
+additionalTruncation <- case_when(
+  lubridate::wday(max_date) == 3 ~ 1, # 3 = Tue, exclude Sat,
+  lubridate::wday(max_date) == 4 ~ 2, # 4 = Wed, exclude Sun and Sat,
+  lubridate::wday(max_date) == 5 ~ 3, # 5 = Thu, exclude Mon, Sun and Sat,
+  TRUE ~ 0                                # otherwise don't exclude more days
+)
+
+right_truncation <- list()
+right_truncation[["Confirmed cases"]] <- 3 + additionalTruncation
+right_truncation[["Confirmed cases / tests"]] <- 3 + additionalTruncation
+right_truncation[["Hospitalized patients"]] <- 5
+right_truncation[["Deaths"]] <- 5
 
 max_delay_hosp <- 30
 max_delay_confirm <- 30

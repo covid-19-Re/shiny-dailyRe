@@ -17,6 +17,7 @@ app/otherScripts/*.Rout
 app/otherScripts/*.Rdata
 app/otherScripts/slackWebhook.txt
 app/otherScripts/sendNotifications.txt
+app/otherScripts/lastBAGFile.txt
 app/www/*
 !app/www/styles.css
 app/restart.txt
