@@ -1390,7 +1390,7 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
   
   for (i in seq_len(length(countries))) {
     if (v) {
-      cat(as.character(Sys.time()), " | ", str_c(countries[i], ": getting data... "))
+      cat(as.character(Sys.time()), "|", str_c(countries[i], ": getting data... "))
     }
     if (countries[i] == "BEL") {
       allDataList[[i]] <- getDataBEL()
