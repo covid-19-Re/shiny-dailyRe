@@ -90,11 +90,11 @@ casesSubPlot <- function(
   if (!is.null(rightTruncation)) {
     caseDataTrunc <- caseData %>%
       group_by(countryIso3, series, data_type) %>%
-      dplyr::filter(date <= (max(date) - rightTruncation[[unique(countryIso3)]][[unique(data_type)]]))
+      dplyr::filter(date <= (max(date) - rightTruncation[[unique(countryIso3)]][[unique(data_type)]] + 1))
 
     caseDataRest <- caseData %>%
       group_by(countryIso3, series, data_type) %>%
-      dplyr::filter(date > (max(date) - rightTruncation[[unique(countryIso3)]][[unique(data_type)]])) %>%
+      dplyr::filter(date > (max(date) - rightTruncation[[unique(countryIso3)]][[unique(data_type)]] + 1)) %>%
       mutate(series_plot = str_c(series, " truncated"))
   } else {
     caseDataTrunc <- caseData
