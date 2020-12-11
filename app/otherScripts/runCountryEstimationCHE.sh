@@ -1,8 +1,12 @@
 #!/bin/sh
 
 # deactivate crontab
-crontab -l > /home/covid-19-re/crontabBackup.txt
-crontab -r
+cr=$(crontab -l)
+if  [ ! -z "$cr" ]; then
+  crontab -l > crontabBackup.txt
+  echo "deactivating crontab. Backed up to crontabBackup.txt"
+  crontab -r
+fi
 
 parent_path=$(
   cd "$(dirname "${BASH_SOURCE[0]}")"
@@ -11,7 +15,7 @@ parent_path=$(
 
 runRScript () {
   echo "running" $1 $2 "..."
-  Rscript --vanilla --verbose $1 $2 >>messagesCHE.Rout 2>>errorsCHE.Rout
+  Rscript --verbose $1 $2 >>messagesCHE.Rout 2>>errorsCHE.Rout
   retVal=$?
   if [ $retVal -ne 0 ]; then
     echo "Script didn't run successfully (Error" $retVal ")"
@@ -48,4 +52,8 @@ git add .
 git commit -m "update data"
 git push
 
-crontab /home/covid-19-re/dailyRe/app/otherScripts/crontab.txt
+# reactivate crontab
+if  [ ! -z "$cr" ]; then
+  echo "restoring crontab from backup"
+  crontab crontabBackup.txt
+fi
