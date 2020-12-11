@@ -491,7 +491,9 @@ get_infection_incidence_by_deconvolution <- function(
     if (smooth_incidence == T) {
       smoothed_incidence_data <- time_series %>%
         complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(value = 0)) %>% 
-        mutate(value = getLOESSCases(dates = date, count_data = value))
+        # mutate(value = getLOESSCases(dates = date, count_data = value)) # turning off LOESS smoothing
+        mutate(value = rollmean(value, 7, align = c("center"), fill = NA)) %>%  # seven day rolling average
+        filter(!is.na(value))
       
       raw_total_incidence <- sum(time_series$value, na.rm = TRUE)
       smoothed_total_incidence <- sum(smoothed_incidence_data$value, na.rm = T)

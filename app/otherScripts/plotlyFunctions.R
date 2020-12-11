@@ -133,7 +133,9 @@ casesSubPlot <- function(
     caseDataTruncLoess <- caseDataTrunc %>%
       filter(data_type != "Excess deaths") %>%
       group_by(country, region, source, data_type) %>%
-      mutate(incidenceLoess = getLOESSCases(date, value))
+      # mutate(incidenceLoess = getLOESSCases(date, value)) # turning off LOESS smoothing
+      mutate(incidenceLoess = rollmean(value, 7, align = c("center"), fill = NA))  # seven day rolling average
+      
     pCases <- pCases %>%
       add_trace(
         data = caseDataTruncLoess,
