@@ -83,7 +83,7 @@ if (args["country"] == "CHE") {
 stringencyDataPath <- file.path(basePath, str_c(args["country"], "-OxCGRT.qs"))
 
 if (file.exists(stringencyDataPath)) {
-  stringencyDataOld <- qload(stringencyDataPath)
+  stringencyDataOld <- qread(stringencyDataPath)
   # if new data is null, keep old data (can happen because of error in reading new data)
   if (is.null(stringencyData)) {
     stringencyData <- stringencyDataOld
@@ -139,7 +139,7 @@ if (dim(countryData)[1] > 0) {
   # check for changes in country data
   countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.qs"))
   if (file.exists(countryDataPath)) {
-    countryDataOld <- qload(countryDataPath)
+    countryDataOld <- qread(countryDataPath)
     # if new data is null, keep old data (can happen because of error in reading new data)
     if (is.null(countryData)) {
       countryData <- countryDataOld

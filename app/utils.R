@@ -6,7 +6,7 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
 
   dataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Data.qs"))
   if (!is_empty(dataPath)) {
-    caseData <- qload(file.path(dataDir, dataPath))
+    caseData <- qread(file.path(dataDir, dataPath))
     if ("report_plotting" %in% caseData$date_type) {
       caseData <- caseData %>%
         filter(date_type == "report_plotting", is.na(local_infection))
@@ -24,7 +24,7 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
   deconvolutedDataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-DeconvolutedData.qs"))
   if (!is_empty(deconvolutedDataPath)) {
 
-    deconvolutedData <- qload(file.path(dataDir, deconvolutedDataPath)) %>%
+    deconvolutedData <- qread(file.path(dataDir, deconvolutedDataPath)) %>%
       mutate(data_type = str_sub(data_type, 11)) %>%
       group_by(date, region, country, source, data_type, replicate) %>%
       dplyr::summarise(value = sum(value), .groups = "drop") %>%
@@ -43,7 +43,7 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
 
   estimatesPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Estimates.qs"))
   if (!is_empty(estimatesPath)) {
-    estimates <- qload(file.path(dataDir, estimatesPath))
+    estimates <- qread(file.path(dataDir, estimatesPath))
   } else {
     estimates <- NULL
   }
@@ -51,7 +51,7 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
   OxCGRTPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-OxCGRT.qs"))
   if (!is_empty(OxCGRTPath)) {
 
-    OxCGRTData <- qload(file.path(dataDir, OxCGRTPath)) %>%
+    OxCGRTData <- qread(file.path(dataDir, OxCGRTPath)) %>%
       select(countryIso3, region, date, matches("\\w\\d_"))
     names(OxCGRTData)
   }
