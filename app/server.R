@@ -506,7 +506,8 @@ server <- function(input, output, session) {
           choices = c(
             "Logarithmic axis for cases" = "logCases",
             "Normalize cases to per 100'000 inhabitants" = "caseNormalize",
-            "Show smoothed data (Loess Fit)" = "caseLoess",
+            # "Show smoothed data (Loess Fit)" = "caseLoess",
+            "Show smoothed data" = "caseLoess", # Changing text for 7 days averaging
             "Show estimated infection times (deconvolution)" = "caseDeconvoluted",
             "Show individual interventions (where applicable)" = "indInterventions"),
           selected = "indInterventions"
