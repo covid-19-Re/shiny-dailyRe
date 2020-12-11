@@ -1,6 +1,7 @@
 # TO-DO: deduplicate code & general clean up...
 library(viridisLite)
 library(shades)
+library(zoo)
 
 # plot colors
 allCols <- viridis(6)
