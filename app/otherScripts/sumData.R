@@ -1,5 +1,6 @@
 library(tidyverse)
 library(here)
+library(qs)
 cat(str_c(Sys.time(), " | summarizing data ...\n"))
 
 source(here("app/utils.R"))
@@ -45,7 +46,7 @@ allData$estimates <- bind_rows(allData$estimates) %>%
     ) %>%
   mutate(data_type = as.character(data_type))
 
-qs::qsave(allData, file = here("app/data/serialized/allCountryData.qs"))
+qsave(allData, file = here("app/data/serialized/allCountryData.qs"))
 
 # prep Data for app
 continents <- read_csv(here("app/data/continents.csv"),
@@ -64,7 +65,7 @@ countryList <- tibble(
     names(selectList) <- df$country
     return(selectList)
   })
-qs::qsave(countryList, file = here("app/data/serialized/countryList.qs"))
+qsave(countryList, file = here("app/data/serialized/countryList.qs"))
 
 interventionsData <- read_csv(
   here("../covid19-additionalData/interventions/interventions.csv"),
@@ -74,7 +75,7 @@ interventionsData <- read_csv(
     y = col_double()
   )) %>%
   split(f = .$countryIso3)
-qs::qsave(interventionsData, file = here("app/data/serialized/interventionsData.qs"))
+qsave(interventionsData, file = here("app/data/serialized/interventionsData.qs"))
 
 # map data
 worldMapEstimates <- allData$estimates %>%
@@ -122,14 +123,14 @@ worldMapData <-  allData$caseData %>%
   ungroup() %>%
   distinct()
 
-qs::qsave(worldMapData, file = here("app/data/serialized/worldMapData.qs"))
+qsave(worldMapData, file = here("app/data/serialized/worldMapData.qs"))
 
 countriesShape <- left_join(
   sf::st_read(here("app/data/geoData/ne_50m_admin_0_countries.shp"), quiet = TRUE),
   filter(worldMapData, region == ADM0_A3_IS),
   by = "ADM0_A3_IS")
 
-qs::qsave(countriesShape, file = here("app/data/serialized/countriesShape.qs"))
+qsave(countriesShape, file = here("app/data/serialized/countriesShape.qs"))
 
 CHEregionsShape <- sf::st_read(
     here("app/data/geoData/swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET.shp"), quiet = TRUE) %>%
@@ -154,13 +155,13 @@ CHEregionsShape <- sf::st_read(
     worldMapData,
     by = c("ADM0_A3_IS", "region")
   )
-qs::qsave(CHEregionsShape, file = here("app/data/serialized/CHEregionsShape.qs"))
+qsave(CHEregionsShape, file = here("app/data/serialized/CHEregionsShape.qs"))
 
 cheCasesLabels <- mapLabels(shapeFileData = CHEregionsShape, mainLabel = "cases14d")
-qs::qsave(cheCasesLabels, file = here("app/data/serialized/cheCasesLabels.qs"))
+qsave(cheCasesLabels, file = here("app/data/serialized/cheCasesLabels.qs"))
 
 cheReLabels <- mapLabels(shapeFileData = CHEregionsShape, mainLabel = "re")
-qs::qsave(cheReLabels, file = here("app/data/serialized/cheReLabels.qs"))
+qsave(cheReLabels, file = here("app/data/serialized/cheReLabels.qs"))
 
 ZAFregionsShape <- sf::st_read(
     here("app/data/geoData/zaf_admbnda_adm1_2016SADB_OCHA.shp"), quiet = TRUE) %>%
@@ -172,12 +173,12 @@ ZAFregionsShape <- sf::st_read(
   left_join(
     worldMapData,
     by = c("ADM0_A3_IS", "region"))
-qs::qsave(ZAFregionsShape, file = here("app/data/serialized/ZAFregionsShape.qs"))
+qsave(ZAFregionsShape, file = here("app/data/serialized/ZAFregionsShape.qs"))
 
 zafCasesLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "cases14d")
-qs::qsave(zafCasesLabels, file = here("app/data/serialized/zafCasesLabels.qs"))
+qsave(zafCasesLabels, file = here("app/data/serialized/zafCasesLabels.qs"))
 zafReLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "re")
-qs::qsave(zafReLabels, file = here("app/data/serialized/zafReLabels.qs"))
+qsave(zafReLabels, file = here("app/data/serialized/zafReLabels.qs"))
 
 # update updateData
 sourceInfo <- read_csv(here("app/data/dataSources.csv"),
@@ -201,8 +202,8 @@ dataSources <- updateDataRaw %>%
   dplyr::select("Source" = source, "Description" = sourceLong,
     "Countries" = countries, "Data types" = data_type, "URL" = url)
 
-qs::qsave(dataSources, file = here("app/data/serialized/dataSources.qs"))
-qs::qsave(updateDataRaw, file = here("app/data/serialized/updateDataRaw.qs"))
+qsave(dataSources, file = here("app/data/serialized/dataSources.qs"))
+qsave(updateDataRaw, file = here("app/data/serialized/updateDataRaw.qs"))
 
 # send notifications
 if (file.exists(here("app/otherScripts/sendNotifications.txt")) &
@@ -225,3 +226,5 @@ if (file.exists(here("app/otherScripts/sendNotifications.txt")) &
 }
 
 cat(str_c(Sys.time(), " | summarizing data done.\n"))
+
+
