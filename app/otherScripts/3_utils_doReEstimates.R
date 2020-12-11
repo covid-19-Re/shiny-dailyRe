@@ -366,3 +366,81 @@ doAllReEstimations <- function(
   
   return(bind_rows(results_list))
 }
+
+
+
+
+# Clean up Re Estimates and summarise the confidence intervals
+# across bootstrap replicates
+
+cleanCountryReEstimate <- function(countryEstimatesRaw, method = 'bootstrap',
+                                   alpha=0.95){
+  
+  cleanEstimate <- as_tibble(countryEstimatesRaw) %>%
+    mutate(
+      data_type = factor(
+        data_type,
+        levels = c(
+          "infection_Confirmed cases",
+          "infection_Confirmed cases / tests",
+          "infection_Hospitalized patients",
+          "infection_Deaths",
+          "infection_Excess deaths"),
+        labels = c(
+          "Confirmed cases",
+          "Confirmed cases / tests",
+          "Hospitalized patients",
+          "Deaths",
+          "Excess deaths")))
+  
+  if (method == 'legacy'){
+    ReEstimates <- cleanEstimate %>%
+      pivot_wider(names_from = "variable", values_from = "value") %>%
+      dplyr::group_by(date, country, region, data_type, source, estimate_type) %>%
+      dplyr::summarize(
+        median_R_mean = median(R_mean),
+        median_R_highHPD = median(R_highHPD),
+        median_R_lowHPD = median(R_lowHPD),
+        .groups = "keep"
+      ) %>%
+      dplyr::select(country, region, source, data_type, estimate_type, date,
+                    median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
+      arrange(country, region, source, data_type, estimate_type, date) %>%
+      ungroup()
+    
+  } else if (method == 'bootstrap'){
+    
+    low_quan <- (1-alpha)/2
+    high_quan <- 1-(1-alpha)/2
+    
+    orig_ReEstimate <- cleanEstimate %>%
+      filter(variable == 'R_mean',
+             replicate == 0 ) %>%
+      rename(median_R_mean = value)
+    
+    ReEstimates <- cleanEstimate %>%
+      filter(variable == 'R_mean',
+             replicate != 0 ) %>% 
+      dplyr::group_by(date, country, region, data_type, source, estimate_type) %>%
+      dplyr::summarize(
+        sd = sd(value), #across all bootstrap replicates
+        .groups = "drop"
+      ) %>%
+      right_join(orig_ReEstimate, by = c('date', 'country', 'region', 
+                                         'data_type', 'source', 'estimate_type')) %>%
+      dplyr::mutate(median_R_highHPD = median_R_mean + qnorm(high_quan)*sd,
+                    median_R_lowHPD = median_R_mean - qnorm(high_quan)*sd) %>%
+      mutate(median_R_highHPD = ifelse(median_R_highHPD <0, 0, median_R_highHPD),
+             median_R_lowHPD = ifelse(median_R_lowHPD <0, 0, median_R_lowHPD)) %>%
+      dplyr::select(country, region, source, data_type, estimate_type, date,
+                    median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
+      arrange(country, region, source, data_type, estimate_type, date) %>%
+      ungroup()
+  }
+  return(ReEstimates)
+}
+
+
+
+
+
