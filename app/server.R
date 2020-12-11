@@ -90,9 +90,17 @@ server <- function(input, output, session) {
 
       rightTruncation <- lapply(countrySelectValue, function(iso3) {
         if (iso3 %in% c("CHE", "LIE")) {
+          max_date <- max(countryData()$caseData$date)
+          additionalTruncation <- case_when(
+            lubridate::wday(max_date) == 3 ~ 1, # 3 = Tue, exclude Sat,
+            lubridate::wday(max_date) == 4 ~ 2, # 4 = Wed, exclude Sun and Sat,
+            lubridate::wday(max_date) == 5 ~ 3, # 5 = Thu, exclude Mon, Sun and Sat,
+            TRUE ~ 0                            # otherwise don't exclude more days
+          )
+
           rt <- list(
-            "Confirmed cases" = 3,
-            "Confirmed cases / tests" = 3,
+            "Confirmed cases" = 3 + additionalTruncation,
+            "Confirmed cases / tests" = 3 + additionalTruncation,
             "Hospitalized patients" = 5,
             "Deaths" = 5)
         } else {
@@ -104,6 +112,8 @@ server <- function(input, output, session) {
         }
         return(rt)
       })
+
+
       names(rightTruncation) <- countrySelectValue
       return(rightTruncation)
     })
