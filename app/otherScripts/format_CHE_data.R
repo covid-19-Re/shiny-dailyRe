@@ -3,12 +3,14 @@ if (interactive()) {
   library("fitdistrplus")
   library(here)
   library(tidyverse)
+  library(qs)
 } else {
   suppressPackageStartupMessages({
     library("lubridate")
     library("fitdistrplus")
     library(here)
     library(tidyverse)
+    library(qs)
   })
 }
 
@@ -387,7 +389,7 @@ basePath <- here::here("app", "data", "countryData")
 if (!dir.exists(basePath)) {
   dir.create(basePath)
 }
-testsDataPath <- file.path(basePath, str_c("CHE-Tests.rds"))
+testsDataPath <- file.path(basePath, str_c("CHE-Tests.qs"))
 
 bagFiles <- list.files(here::here("app", "data", "BAG"),
                        pattern = "*Time_series_tests.csv",
@@ -415,7 +417,7 @@ nTests <- read_delim(file = newestFile, delim = ";",
     testPositivity = positiveTests / totalTests
   )
 
-saveRDS(nTests, testsDataPath)
+qsave(nTests, testsDataPath)
 
 confirmedCHEDataTests <- data_hospitalization %>%
   filter(!is.na(fall_dt)) %>% 

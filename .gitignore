@@ -3,6 +3,7 @@ app/data/*.txt
 app/data/*.Rdata
 app/data/*.rds
 app/data/*.qs
+app/data/countryData/*.qs
 app/data/all_delays.csv
 app/data/temp
 app/data/serialized/*
