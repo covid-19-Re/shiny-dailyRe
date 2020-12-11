@@ -3,12 +3,14 @@ if (interactive()) {
   library("fitdistrplus")
   library(here)
   library(tidyverse)
+  library(qs)
 } else {
   suppressPackageStartupMessages({
     library("lubridate")
     library("fitdistrplus")
     library(here)
     library(tidyverse)
+    library(qs)
   })
 }
 

@@ -7,6 +7,7 @@ if (interactive()) {
   library("readxl")
   library("here")
   library("tidyverse")
+  library("qs")
 } else {
   suppressPackageStartupMessages({
     library("lubridate")
@@ -16,6 +17,7 @@ if (interactive()) {
     library("readxl")
     library("here")
     library("tidyverse")
+    library("qs")
   })
 }
 
@@ -78,10 +80,10 @@ if (args["country"] == "CHE") {
   stringencyData <- bind_rows(stringencyData, stringencyDataRegional)
 }
 
-stringencyDataPath <- file.path(basePath, str_c(args["country"], "-OxCGRT.rds"))
+stringencyDataPath <- file.path(basePath, str_c(args["country"], "-OxCGRT.qs"))
 
 if (file.exists(stringencyDataPath)) {
-  stringencyDataOld <- readRDS(stringencyDataPath)
+  stringencyDataOld <- qload(stringencyDataPath)
   # if new data is null, keep old data (can happen because of error in reading new data)
   if (is.null(stringencyData)) {
     stringencyData <- stringencyDataOld
@@ -92,7 +94,7 @@ if (file.exists(stringencyDataPath)) {
 }
 
 if (!isTRUE(stringencyUnchanged)) {
-  saveRDS(stringencyData, file = stringencyDataPath)
+  qsave(stringencyData, file = stringencyDataPath)
 }
 
 stringencyIndex <- stringencyData %>%
@@ -135,9 +137,9 @@ countryData <- getCountryData(
 
 if (dim(countryData)[1] > 0) {
   # check for changes in country data
-  countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.rds"))
+  countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.qs"))
   if (file.exists(countryDataPath)) {
-    countryDataOld <- readRDS(countryDataPath)
+    countryDataOld <- qload(countryDataPath)
     # if new data is null, keep old data (can happen because of error in reading new data)
     if (is.null(countryData)) {
       countryData <- countryDataOld
@@ -150,7 +152,7 @@ if (dim(countryData)[1] > 0) {
   if (!is.null(countryData)) {
     # save updated data
     if (!isTRUE(dataUnchanged)) {
-      saveRDS(countryData, file = countryDataPath)
+      qsave(countryData, file = countryDataPath)
     }
   }
 
@@ -295,11 +297,11 @@ if (dim(countryData)[1] > 0) {
       }
 
       deconvolvedCountryData <- bind_rows(deconvolvedData)
-      countryDataPath <- file.path(basePath, str_c(args["country"], "-DeconvolutedData.rds"))
+      countryDataPath <- file.path(basePath, str_c(args["country"], "-DeconvolutedData.qs"))
       if (dim(deconvolvedCountryData)[1] == 0) {
         print("no data remaining")
       } else {
-        saveRDS(deconvolvedCountryData, file = countryDataPath)
+        qsave(deconvolvedCountryData, file = countryDataPath)
         # Re Estimation
         cleanEnv(keepObjects = c("basePath", "deconvolvedCountryData", "args", "popData", "interval_ends"))
         source(here::here("app/otherScripts/3_utils_doReEstimates.R"))
@@ -373,8 +375,8 @@ if (dim(countryData)[1] > 0) {
             dplyr::select(popData, region, countryIso3),
             by = c("region")
           )
-        countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
-        saveRDS(countryEstimates, file = countryDataPath)
+        countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.qs"))
+        qsave(countryEstimates, file = countryDataPath)
         # Save as .csv for data upload
         readr::write_csv(countryEstimates,
                   path = file.path(basePath, "csv", str_c(args["country"], "-estimates.csv"))
