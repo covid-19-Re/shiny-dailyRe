@@ -90,11 +90,11 @@ casesSubPlot <- function(
   if (!is.null(rightTruncation)) {
     caseDataTrunc <- caseData %>%
       group_by(countryIso3, series, data_type) %>%
-      dplyr::filter(date <= (max(date) - rightTruncation[[unique(countryIso3)]][[unique(data_type)]] + 1))
+      dplyr::filter(date <= (max(date) - rightTruncation[[unique(countryIso3)]][[unique(data_type)]]))
 
     caseDataRest <- caseData %>%
       group_by(countryIso3, series, data_type) %>%
-      dplyr::filter(date > (max(date) - rightTruncation[[unique(countryIso3)]][[unique(data_type)]] + 1)) %>%
+      dplyr::filter(date > (max(date) - rightTruncation[[unique(countryIso3)]][[unique(data_type)]])) %>%
       mutate(series_plot = str_c(series, " truncated"))
   } else {
     caseDataTrunc <- caseData
@@ -717,8 +717,8 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
       regionSelect <- countries
     } else if (seriesName == "region") {
       seriesTitle <- case_when(
-        countries == "CHE" ~ str_c(translator$t("Canton"), " (decreasing Re)"),
-        countries == "ZAF" ~ str_c(translator$t("Province"), " (decreasing Re)"),
+        countries == "CHE" ~ str_c(translator$t("Canton"), "\n(ordered by decreasing Re)"),
+        countries == "ZAF" ~ str_c(translator$t("Province"), "\n(ordered by decreasing Re)"),
         TRUE ~ "Region")
 
       validate(need(!is.null(input$dataTypeSelect), message = "loading..."))
