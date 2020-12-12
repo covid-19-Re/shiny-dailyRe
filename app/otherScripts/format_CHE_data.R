@@ -129,9 +129,14 @@ confirmed_case_data <- data_hospitalization %>%
   mutate(across(c(manifestation_dt, fall_dt), ymd)) %>% 
   mutate(across(c(manifestation_dt, fall_dt), ~ if_else(between(.x, min_date, max_date - right_truncation[["Confirmed cases"]]), .x, as.Date(NA)))) %>%
   filter(!is.na(fall_dt)) %>%
-  mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
+  # mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
+  #        local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
+  #        date = if_else(is.na(manifestation_dt), fall_dt, manifestation_dt),
+  #        region = ktn,
+  #        .keep = "none") %>% #turning off symptom onsets
+  mutate(date_type = "report",
          local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE"),
-         date = if_else(is.na(manifestation_dt), fall_dt, manifestation_dt),
+         date = fall_dt,
          region = ktn,
          .keep = "none") %>%
   dplyr::group_by(region, date, date_type, local_infection) %>%
