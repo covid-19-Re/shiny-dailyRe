@@ -1,0 +1,673 @@
+{
+  "languages": [
+    "en-gb",
+    "it-ch",
+    "fr-ch",
+    "de-ch"
+  ],
+  "translation": [
+    {
+      "en-gb": "R<sub>e</sub> by canton",
+      "it-ch": "R<sub>e</sub> nei cantoni",
+      "fr-ch": "R<sub>e</sub> dans les cantons",
+      "de-ch": "R<sub>e</sub> in den Kantonen"
+    },
+    {
+      "en-gb": "Last Data Updates",
+      "it-ch": "Ultimo aggiornamento",
+      "fr-ch": "Dernières mises à jour",
+      "de-ch": "Letztes Update"
+    },
+    {
+      "en-gb": "R<sub>e</sub> in Switzerland",
+      "it-ch": "R<sub>e</sub> in Svizzera",
+      "fr-ch": "R<sub>e</sub> en Suisse",
+      "de-ch": "R<sub>e</sub> in der Schweiz"
+    },
+    {
+      "en-gb": "R<sub>e</sub> for greater Regions",
+      "it-ch": "R<sub>e</sub> nei grandi regioni",
+      "fr-ch": "R<sub>e</sub> dans les grandes régions",
+      "de-ch": "R<sub>e</sub> in den Grossregionen"
+    },
+    {
+      "en-gb": "Greater regions",
+      "it-ch": "Grandi regioni",
+      "fr-ch": "Grandes régions",
+      "de-ch": "Grossregionen"
+    },
+    {
+      "en-gb": "R<sub>e</sub> in Europe",
+      "it-ch": "R<sub>e</sub> nei Europa",
+      "fr-ch": "R<sub>e</sub> en Europe",
+      "de-ch": "R<sub>e</sub> in Europa"
+    },
+    {
+      "en-gb": "About",
+      "it-ch": "Informazioni su questo sito",
+      "fr-ch": "À propos de ce site",
+      "de-ch": "Über diese Seite"
+    },
+    {
+      "en-gb": "Download R<sub>e</sub> estimates",
+      "it-ch": "Scarica stime R<sub>e</sub>",
+      "fr-ch": "Télécharger R<sub>e</sub> estimations",
+      "de-ch": "R<sub>e</sub> Schätzungen herunterladen"
+    },
+    {
+      "en-gb": "Download estimates for Europe",
+      "it-ch": "Scarica stime Europa",
+      "fr-ch": "Télécharger estimations Europe",
+      "de-ch": "Schätzungen für Europa herunterladen"
+    },
+    {
+      "en-gb": "Download estimates for Switzerland",
+      "it-ch": "Scarica stime Svizzera",
+      "fr-ch": "Télécharger estimations Suisse",
+      "de-ch": "Schätzungen für die Schweiz herunterladen"
+    },
+    {
+      "en-gb": "Language",
+      "it-ch": "Lingua",
+      "fr-ch": "Langue",
+      "de-ch": "Sprache"
+    },
+    {
+      "en-gb": "%Y-%m-%d",
+      "it-ch": "%d.%m.%Y",
+      "fr-ch": "%d.%m.%Y",
+      "de-ch": "%d.%m.%Y"
+    },
+    {
+      "en-gb": "%b-%d",
+      "it-ch": "%d. %b",
+      "fr-ch": "%d. %b",
+      "de-ch": "%d. %b"
+    },
+    {
+      "en-gb": "Estimation of the effective reproductive number (R<sub>e</sub>)",
+      "it-ch": "Stima del numero di riproduzione effettivo (R <sub> e </sub>)",
+      "fr-ch": "Estimation du nombre de reproduction effectif (R<sub>e</sub>)",
+      "de-ch": "Schätzung der effektiven Reproduktionszahl (R<sub>e</sub>) in der Schweiz"
+    },
+    {
+      "en-gb": "Estimating the effective reproductive number (R<sub>e</sub>) in Switzerland",
+      "it-ch": "Stima del numero di riproduzione effettivo (R <sub> e </sub>) in Svizzera",
+      "fr-ch": "Estimation du nombre de reproduction effectif (R<sub>e</sub>) en Suisse",
+      "de-ch": "Schätzung der effektiven Reproduktionszahl (R<sub>e</sub>) in der Schweiz"
+    },
+    {
+      "en-gb": "Estimating the effective reproductive number (R<sub>e</sub>) for cantons",
+      "it-ch": "Stima del numero di riproduzione effettivo (R <sub> e </sub>) per i cantoni",
+      "fr-ch": "Estimation du nombre de reproduction effectif (R<sub>e</sub>) pour les cantons",
+      "de-ch": "Schätzung der effektiven Reproduktionszahl (R<sub>e</sub>) für Kantone"
+    },
+    {
+      "en-gb": "End of closure of all stores and markets",
+      "it-ch": "Termine della chiusura di tutti i negozi e mercati",
+      "fr-ch": "Réouverture de tous les magasins et marchés",
+      "de-ch": "Ende der Schliessung aller Läden und Märkten"
+    },
+    {
+      "en-gb": "Closure of all stores and markets",
+      "it-ch": "Chiusura di tutti i negozi e mercati",
+      "fr-ch": "Fermeture des magasins et des marchés",
+      "de-ch": "Schliessung aller Läden und Märkte"
+    },
+    {
+      "en-gb": "Closure of all stores and markets <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 17.03.2020",
+      "it-ch": "Chiusura di tutti i negozi e mercati <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 17.03.2020",
+      "fr-ch": "Fermeture des magasins et des marchés <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 17.03.2020",
+      "de-ch": "Schliessung aller Läden und Märkte <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 17.03.2020"
+    },
+    {
+      "en-gb": "End of closure of restaurants and bars <br>",
+      "it-ch": "Termine della chiusura ristoranti e bar",
+      "fr-ch": "Réouverture des restaurants et bars <br>",
+      "de-ch": "Ende der Schliessung von Restaurationsbetrieben <br>"
+    },
+    {
+      "en-gb": "Closure of restaurants and bars",
+      "it-ch": "Chiusura ristoranti e bar",
+      "fr-ch": "Fermeture des restaurants et des bars",
+      "de-ch": "Schliessung von Restaurationsbetrieben"
+    },
+    {
+      "en-gb": "Closure of restaurants and bars <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 17.3.2020",
+      "it-ch": "Chiusura ristoranti e bar <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 17.3.2020",
+      "fr-ch": "Fermeture des restaurants et bars <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 17.3.2020",
+      "de-ch": "Schliessung von Restaurationsbetrieben <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 17.3.2020"
+    },
+    {
+      "en-gb": "End of closure of hairdresser, hardware stores & garden centers <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 16.4.2020",
+      "it-ch": "Termine della chiusura parrucchieri, esercizi commerciali del fai da te ed esercizi commerciali florovivaistici <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 16.4.2020",
+      "fr-ch": "Réouverture des coiffeurs, des jardineries et des magasins de bricolage <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 16.4.2020",
+      "de-ch": "Ende der Schliessung von Coiffeuren sowie Bau- und Gartenfachmärkte <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 16.4.2020"
+    },
+    {
+      "en-gb": "Closure of hairdresser, hardware stores & garden centers",
+      "it-ch": "Chiusura parrucchieri, esercizi commerciali del fai da te ed esercizi commerciali florovivaistici",
+      "fr-ch": "Fermeture des coiffeurs, des jardineries et des magasins de bricolage",
+      "de-ch": "Schliessung von Coiffeuren sowie Bau- und Gartenfachmärkten"
+    },
+    {
+      "en-gb": "Closure of hairdresser, hardware stores & garden centers <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 17.03.2020",
+      "it-ch": "Chiusura parrucchieri, esercizi commerciali del fai da te ed esercizi commerciali florovivaistici <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 17.03.2020",
+      "fr-ch": "Fermeture des coiffeurs, des jardineries et des magasins de bricolage <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 17.03.2020",
+      "de-ch": "Schliessung von Coiffeuren sowie Bau- und Gartenfachmärkte <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 17.03.2020"
+    },
+    {
+      "en-gb": "End of closure of museums, zoos, nightclubs, etc.",
+      "it-ch": "Termine della chiusura musei, zoo, discoteca, etc",
+      "fr-ch": "Réouverture des musées, des zoos, des discothèque...",
+      "de-ch": "Ende der Schliessung von Museen, Zoos, Nachtklubs, etc."
+    },
+    {
+      "en-gb": "Closure of museums, zoos, nightclubs, etc.",
+      "it-ch": "Chiusura musei, zoo, discoteca, etc.",
+      "fr-ch": "Fermeture des musées, des zoos, des discothèque...",
+      "de-ch": "Schliessung von Museen, Zoos, Nachtklubs, etc."
+    },
+    {
+      "en-gb": "Closure of museums, zoos, nightclubs, etc. <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 17.03.2020",
+      "it-ch": "Chiusura musei, zoo, etc <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 17.03.2020",
+      "fr-ch": "Fermeture des musées, des zoos… <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 17.03.2020",
+      "de-ch": "Schliessung von Museen, Zoos, etc. <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 17.03.2020"
+    },
+    {
+      "en-gb": "End of ban of events > 1000 people",
+      "it-ch": "Termine del divieto di eventi> 1000 persone",
+      "fr-ch": "Fin de l’interdiction des évènements de plus de 1000 personnes",
+      "de-ch": "Ende des Verbots von Veranstaltungen mit > 1000 Personen"
+    },
+    {
+      "en-gb": "Ban of events > 1000 people",
+      "it-ch": "Divieto di eventi > 1000 persone",
+      "fr-ch": "Interdiction des évènements de plus de 1000 personnes",
+      "de-ch": "Verbot von Veranstaltungen mit > 1000 Personen"
+    },
+    {
+      "en-gb": "Ban of events > 300 people",
+      "it-ch": "Divieto di eventi > 300 persone",
+      "fr-ch": "Interdiction des évènements de plus de 300 personnes",
+      "de-ch": "Verbot von Veranstaltungen mit > 300 Personen"
+    },
+    {
+      "en-gb": "Ban of events > 1000 people <br> SR 818.101.24 COVID-19 Ordinance 1, 28.2.2020",
+      "it-ch": "Divieto di eventi > 1000 persone <br> SR 818.101.24 Ordinanza 2 COVID-19 1, 28.2.2020",
+      "fr-ch": "Interdiction des évènements de plus de 1000 personnes <br> SR 818.101.24 Ordonnance 1 COVID-19, 28.2.2020",
+      "de-ch": "Verbot von Veranstaltungen mit > 1000 Personen <br> SR 818.101.24 COVID-19 Verordnung 1, 28.2.2020"
+    },
+    {
+      "en-gb": "End of ban of events > 100 people",
+      "it-ch": "Termine del divieto di eventi > 100 persone",
+      "fr-ch": "Fin de l’interdiction des évènements de plus de 100 personnes",
+      "de-ch": "Ende des Verbots von Veranstaltungen mit > 100 Personen"
+    },
+    {
+      "en-gb": "End of ban of events > 300 people",
+      "it-ch": "Termine del divieto di eventi > 300 persone",
+      "fr-ch": "Fin de l’interdiction des évènements de plus de 300 personnes",
+      "de-ch": "Ende des Verbots von Veranstaltungen mit > 300 Personen"
+    },
+    {
+      "en-gb": "Ban of events > 100 people",
+      "it-ch": "Divieto di eventi > 100 persone",
+      "fr-ch": "Interdiction des évènements de plus de 100 personnes",
+      "de-ch": "Verbot von Veranstaltungen mit > 100 Personen"
+    },
+    {
+      "en-gb": "Ban of events > 100 people <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020",
+      "it-ch": "Divieto di eventi > 100 persone <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020",
+      "fr-ch": "Interdiction des évènements de plus de 100 personnes <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020",
+      "de-ch": "Verbot von Veranstaltungen mit > 100 Personen <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020"
+    },
+    {
+      "en-gb": "End of ban of gatherings > 5 people <br>",
+      "it-ch": "Termine del divieto di assembramenti > 5 persone",
+      "fr-ch": "Fin de l’interdiction des groupes de plus de 5 personnes <br>",
+      "de-ch": "Ende des Verbots von Menschenansammlungen > 5 Personen <br>"
+    },
+    {
+      "en-gb": "Ban of gatherings > 5 people",
+      "it-ch": "divieto di assembramenti > 5 persone",
+      "fr-ch": "Interdiction des regroupements de plus de 5 personnes",
+      "de-ch": "Verbot von Menschenansammlungen > 5 Personen"
+    },
+    {
+      "en-gb": "Ban of gatherings > 30 people",
+      "it-ch": "divieto di assembramenti > 30 persone",
+      "fr-ch": "Interdiction des regroupements de plus de 30 personnes",
+      "de-ch": "Verbot von Menschenansammlungen > 30 Personen"
+    },
+    {
+      "en-gb": "End of ban of gatherings > 30 people",
+      "it-ch": "Termine del divieto di assembramenti > 30 persone",
+      "fr-ch": "Fin de l’interdiction des groupes de plus de 30 personnes",
+      "de-ch": "Ende des Verbots von Menschenansammlungen > 30 Personen"
+    },
+    {
+      "en-gb": "Ban of gatherings > 5 people <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 20.3.2020",
+      "it-ch": "divieto di assembramenti > 5 persone <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 20.3.2020",
+      "fr-ch": "Interdiction des groupes de plus de 5 personnes <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 20.3.2020",
+      "de-ch": "Verbot von Menschenansammlungen > 5 Personen <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 20.3.2020"
+    },
+    {
+      "en-gb": "Additional hygiene rules",
+      "it-ch": "Norme igieniche supplementari",
+      "fr-ch": "Nouvelles règles d’hygiènes.",
+      "de-ch": "Zusätzliche Hygieneregeln"
+    },
+    {
+      "en-gb": "FOPH communicates additional hygiene rules",
+      "it-ch": "UFSP ha comunicato le norme igieniche supplementari",
+      "fr-ch": "Communication de nouvelles règles d’hygiène par l’OFSP",
+      "de-ch": "BAG kommuniziert zusätzliche Hygieneregeln"
+    },
+    {
+      "en-gb": "End of partial border closure",
+      "it-ch": "Termine della parziale chiusura delle frontiere",
+      "fr-ch": "Réouverture des frontières",
+      "de-ch": "end of Teilweise Schliessung der Grenzen"
+    },
+    {
+      "en-gb": "Partial border closure",
+      "it-ch": "Parziale chiusura delle frontiere",
+      "fr-ch": "Fermeture partielle des frontières",
+      "de-ch": "Teilweise Schliessung der Grenzen"
+    },
+    {
+      "en-gb": "partial border closure <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020",
+      "it-ch": "Parziale chiusura delle frontiere <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020",
+      "fr-ch": "Fermeture partielle des frontières <br> SR 818.101.24 Ordonance 2 COVID-19, 13.3.2020",
+      "de-ch": "Teilweise Schliessung der Grenzen <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020"
+    },
+    {
+      "en-gb": "End of full school closure <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020",
+      "it-ch": "Termine della chiusura scuole<br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020",
+      "fr-ch": "Réouverture des écoles <br> SR 818.101.24 COVID-19-Verordnung 3, 13.3.2020",
+      "de-ch": "Ende der Schulschliessung <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020"
+    },
+    {
+      "en-gb": "School closure",
+      "it-ch": "Chiusura scuole",
+      "fr-ch": "Fermeture des écoles",
+      "de-ch": "Schulschliessung"
+    },
+    {
+      "en-gb": "Partial School Closure",
+      "it-ch": "Parziale chiusura scuole",
+      "fr-ch": "Fermeture partielle des écoles",
+      "de-ch": "Teilweise Schulschliessung"
+    },
+    {
+      "en-gb": "End of partial School Closure",
+      "it-ch": "Termine della parziale chiusura scuole",
+      "fr-ch": "Réouverture des écoles",
+      "de-ch": "Ende der teilweisen Schulschliessung"
+    },
+    {
+      "en-gb": "School closure <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020",
+      "it-ch": "Chiusura scuole<br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020",
+      "fr-ch": "Fermeture des écoles <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020",
+      "de-ch": "Schulschliessung <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020"
+    },
+    {
+      "en-gb": "Testing of all symptomatic patients",
+      "it-ch": "Test su tutti I pazienti sintomatici",
+      "fr-ch": "Test de tous les patients symptomatiques",
+      "de-ch": "Testen von allen symptomatischen Patienten"
+    },
+    {
+      "en-gb": "stop testing of all symptomatic patients",
+      "it-ch": "Fine test su tutti I pazienti sintomatici",
+      "fr-ch": "Arrêt du test de tous les patients symptomatiques",
+      "de-ch": "kein Testen von allen symptomatischen Patienten"
+    },
+    {
+      "en-gb": "New observations",
+      "de-ch": "Neue Beobachtungen",
+      "fr-ch": "Nombre d’observations",
+      "it-ch": "Nuove osservazioni"
+    },
+    {
+      "en-gb": "Reproductive number R<sub>e</sub>",
+      "de-ch": "Reproduktionszahl R<sub>e</sub>",
+      "fr-ch": "Nombre de reproduction R<sub>e</sub>",
+      "it-ch": "Numero di riproduzione R<sub>e</sub>"
+    },
+    {
+      "en-gb": "Data types",
+      "de-ch": "Datentypen",
+      "fr-ch": "Type de données",
+      "it-ch": "Tipo di dati"
+    },
+    {
+      "en-gb": "Select data type for comparison",
+      "de-ch": "Datentyp zum Vergleich auswählen",
+      "fr-ch": "Choisir le type de donné",
+      "it-ch": "Tipo di dati"
+    },
+    {
+      "en-gb": "Canton",
+      "de-ch": "Kanton",
+      "fr-ch": "Canton",
+      "it-ch": "Canton"
+    },
+    {
+      "en-gb": "Country",
+      "de-ch": "Land",
+      "fr-ch": "Pays",
+      "it-ch": "Paese"
+    },
+    {
+      "en-gb": "Countries",
+      "de-ch": "Länder",
+      "fr-ch": "Pays",
+      "it-ch": "Paesi"
+    },
+    {
+      "en-gb": "Confirmed cases",
+      "de-ch": "Bestätigte Fälle",
+      "fr-ch": "Cas confirmés",
+      "it-ch": "Casi confermati"
+    },
+    {
+      "en-gb": "Confirmed cases / tests",
+      "de-ch": "Bestätigte Fälle / Tests",
+      "fr-ch": "Cas confirmés / test",
+      "it-ch": "Casi confermati / test"
+    },
+    {
+      "en-gb": "Hospitalized patients",
+      "de-ch": "Hospitalisierte Patienten",
+      "fr-ch": "Patients hospitalisés",
+      "it-ch": "Pazienti ospedalizzati"
+    },
+    {
+      "en-gb": "Deaths",
+      "de-ch": "Todesfälle",
+      "fr-ch": "Décès",
+      "it-ch": "Decessi"
+    },
+    {
+      "en-gb": "Excess deaths",
+      "de-ch": "Übersterblichkeit",
+      "fr-ch": "Surmortalité",
+      "it-ch": "Eccesso di mortalità"
+    },
+    {
+      "en-gb": "Exponential increase<br>in number of new cases",
+      "de-ch": "Exponentieller Anstieg<br>neuer Fälle",
+      "fr-ch": "Augmentation exponentielle<br>du nombre de nouveaux cas",
+      "it-ch": "Aumento esponenziale<br>di nuovi casi"
+    },
+    {
+      "en-gb": "Decrease in number of new cases",
+      "de-ch": "Abnahme neuer Fälle",
+      "fr-ch": "Diminution du nombre de nouveaux cas",
+      "it-ch": "Decremento del numero di nuovi casi"
+    },
+    {
+      "en-gb": "This is the most recent possible R<sub>e</sub> estimate due to delays between infection and the last data observation.",
+      "de-ch": "Letzte mögliche Schätzung von R<sub>e</sub> aufgrund von Verzögerungen zwischen Infektion und Beobachtung.",
+      "fr-ch": "Ceci est la dernière estimation disponible de R<sub>e</sub> en raison du délai entre l'infection et le moment de sa détection.",
+      "it-ch": "Questo e' la piu' recente possibile stima di R<sub>e</sub> dovuta al ritardo tra l'infezione e l'ultima osservazione dei dati."
+    },
+    {
+      "en-gb": "&nbsp;<b>Interactive plot</b><br>&nbsp;&nbsp;• Click on legend toggles<br>&nbsp;&nbsp;&nbsp;&nbsp;datatypes; doubleclick<br>&nbsp;&nbsp;&nbsp;&nbsp;isolates datatypes.<br>&nbsp;&nbsp;• Hovering the mouse over<br>&nbsp;&nbsp;&nbsp;&nbsp;data points shows details.",
+      "de-ch": "&nbsp;<b>Interaktive Grafik</b><br>&nbsp;&nbsp;• Klick auf die Legende<br>&nbsp;&nbsp;&nbsp;&nbsp;blendet einzelne Daten-<br>&nbsp;&nbsp;&nbsp;&nbsp;typen ein/aus. Doppelklick<br>&nbsp;&nbsp;&nbsp;&nbsp;isoliert Datentyp.<br>&nbsp;&nbsp;• Positionierung der Maus<br>&nbsp;&nbsp;&nbsp;&nbsp;über Datenpunkten zeigt<br>&nbsp;&nbsp;&nbsp;&nbsp;detaillierte Informationen<br>&nbsp;&nbsp;&nbsp;&nbsp;an.",
+      "fr-ch": "&nbsp;<b>Graphe interactif</b><br>&nbsp;&nbsp;• Cliquez sur la légende pour<br>&nbsp;&nbsp;&nbsp;&nbsp;masquer le type de<br>&nbsp;&nbsp;&nbsp;&nbsp;données. Double-cliquez<br>&nbsp;&nbsp;&nbsp;&nbsp;pour sélectionner.<br>&nbsp;&nbsp;• Survolez le graphe avec<br>&nbsp;&nbsp;&nbsp;&nbsp;la souris pour en voir<br>&nbsp;&nbsp;&nbsp;&nbsp;le détail.",
+      "it-ch": "&nbsp;<b>Grafico interattivo</b><br>&nbsp;&nbsp;• Cliccare sulla legenda per<br>&nbsp;&nbsp;&nbsp;&nbsp;attivare/disattivare i tipi di<br>&nbsp;&nbsp;&nbsp;&nbsp;dati. Doppio click per<br>&nbsp;&nbsp;&nbsp;&nbsp;isolare i tipi di dati.<br>&nbsp;&nbsp;• passare con il mouse sulle<br>&nbsp;&nbsp;&nbsp;&nbsp;barre/punti per<br>&nbsp;&nbsp;&nbsp;&nbsp;piu' informazioni"
+    },
+    {
+      "en-gb": "&nbsp;<b>Interactive plot</b><br>&nbsp;&nbsp;• Click on legend toggles datatypes; doubleclick isolates datatypes.<br>&nbsp;&nbsp;• Hovering the mouse over data points shows details.",
+      "de-ch": "&nbsp;<b>Interaktive Grafik</b><br>&nbsp;&nbsp;• Klick auf die Legende blendet einzelne Daten- typen ein/aus. Doppelklick isoliert Datentyp.<br>&nbsp;&nbsp;• Positionierung der Maus über Datenpunkten zeigt detaillierte Informationen an.",
+      "fr-ch": "&nbsp;<b>Graphe interactif</b><br>&nbsp;&nbsp;• Cliquez sur la légende pour masquer le type de données. Double-cliquez pour sélectionner.<br>&nbsp;&nbsp;• Survolez le graphe avec la souris pour en voir le détail.",
+      "it-ch": "&nbsp;<b>Grafico interattivo</b><br>&nbsp;&nbsp;• Cliccare sulla legenda per attivare/disattivare i tipi di dati. Doppio click per isolare i tipi di dati.<br>&nbsp;&nbsp;• passare con il mouse sulle barre/punti per piu' informazioni"
+    },
+    {
+      "en-gb": "<b>Interactive plot:</b> Click on legend toggles datatypes; doubleclick isolates datatypes. Hovering the mouse over data points shows details.",
+      "de-ch": "<b>Interaktive Grafik</b> Klick auf die Legende blendet einzelne Daten- typen ein/aus. Doppelklick isoliert Datentyp. Positionierung der Maus über Datenpunkten zeigt detaillierte Informationen an.",
+      "fr-ch": "<b>Graphe interactif</b> Cliquez sur la légende pour masquer le type de données. Double-cliquez pour sélectionner. Survolez le graphe avec la souris pour en voir le détail.",
+      "it-ch": "<b>Grafico interattivo</b> Cliccare sulla legenda per attivare/disattivare i tipi di dati. Doppio click per isolare i tipi di dati. passare con il mouse sulle barre/punti per piu' informazioni"
+    },
+    {
+      "en-gb": "Data Source",
+      "de-ch": "Datenquelle",
+      "fr-ch": "Source",
+      "it-ch": "Fonte dei dati"
+    },
+    {
+      "en-gb": "Switzerland",
+      "de-ch": "Schweiz",
+      "fr-ch": "Suisse",
+      "it-ch": "Svizzera"
+    },
+    {
+      "en-gb": "Switzerland (Total)",
+      "de-ch": "Schweiz (Total)",
+      "fr-ch": "Suisse (Total)",
+      "it-ch": "Svizzera (Totalmente)"
+    },
+    {
+      "en-gb": "FOPH",
+      "de-ch": "BAG",
+      "fr-ch": "OFSP",
+      "it-ch": "UFSP"
+    },
+    {
+      "en-gb": "NA",
+      "de-ch": "",
+      "fr-ch": "",
+      "it-ch": ""
+    },
+    {
+      "en-gb": "Maps",
+      "de-ch": "Karten",
+      "fr-ch": "Plans",
+      "it-ch": "Mappe"
+    },
+    {
+      "en-gb": "Options",
+      "de-ch": "Optionen",
+      "fr-ch": "Options",
+      "it-ch": "Opzioni"
+    },
+    {
+      "en-gb": "More Options",
+      "de-ch": "Mehr Optionen",
+      "fr-ch": "Plus d'options",
+      "it-ch": "Più opzioni"
+    },
+    {
+      "en-gb": "Select estimation type to show",
+      "de-ch": "Schätzungsmethode wählen",
+      "fr-ch": "Sélectionnez le type d'estimation",
+      "it-ch": "Seleziona il tipo di stima"
+    },
+    {
+      "en-gb": "daily case numbers",
+      "de-ch": "Tägliche Fälle",
+      "fr-ch": "Numéros de cas quotidiens",
+      "it-ch": "Numeri di casi giornalieri"
+    },
+    {
+      "en-gb": "7-day average",
+      "de-ch": "7-Tage Mittel",
+      "fr-ch": "Moyenne sur 7 jours",
+      "it-ch": "Media di 7 giorni"
+    },
+    {
+      "en-gb": "Display case data as ...",
+      "de-ch": "Anzeige der Falldaten als",
+      "fr-ch": "Afficher les données de cas comme ...",
+      "it-ch": "Visualizza i dati del caso come ..."
+    },
+    {
+      "en-gb": "Africa",
+      "de-ch": "Afrika",
+      "fr-ch": "Afrique",
+      "it-ch": "Africa"
+    },
+    {
+      "en-gb": "Asia",
+      "de-ch": "Asien",
+      "fr-ch": "Asie",
+      "it-ch": "Asia"
+    },
+    {
+      "en-gb": "Europe",
+      "de-ch": "Europa",
+      "fr-ch": "Europe",
+      "it-ch": "Europa"
+    },
+    {
+      "en-gb": "North America",
+      "de-ch": "Nordamerika",
+      "fr-ch": "Amérique du Nord",
+      "it-ch": "Nord America"
+    },
+    {
+      "en-gb": "South America",
+      "de-ch": "Südamerika",
+      "fr-ch": "Amérique du Sud",
+      "it-ch": "Sud America"
+    },
+    {
+      "en-gb": "Oceania",
+      "de-ch": "Ozeanien"
+    },
+    {
+      "en-gb": "Clear all",
+      "de-ch": "Alle entfernen",
+      "fr-ch": "Enlever tout",
+      "it-ch": "Rimuovi tutto"
+    },
+    {
+      "en-gb": "Timeseries",
+      "de-ch": "Zeitreihen",
+      "fr-ch": "Séries chronologiques",
+      "it-ch": "Serie storica"
+    },
+    {
+      "en-gb": "Quick select",
+      "de-ch": "Schnellauswahl"
+    },
+    {
+      "en-gb": "Why is the most recent R<sub>e</sub> estimate delayed by ~10 days?",
+      "de-ch": "Warum ist die jüngste Schatzung von R<sub>e</sub> von vor ca. 10 Tagen?"
+    },
+    {
+      "en-gb": "Masks mandatory on public transport",
+      "de-ch": "Maskenpflicht im öffentlichen Verkehr"
+    },
+    {
+      "en-gb": "Masks mandatory in busy public spaces",
+      "de-ch": "Maskenpflicht in belebten öffentlichen Räumen"
+    },
+    {
+      "en-gb": "End of Masks mandatory in busy public spaces",
+      "de-ch": "Ende der Maskenpflicht in belebten öffentlichen Räumen"
+    },
+    {
+      "en-gb": "Masks mandatory in public buildings",
+      "de-ch": "Maskenpflicht in öffentlichen Gebäuden"
+    },
+    {
+      "en-gb": "End of Masks mandatory in public buildings",
+      "de-ch": "Ende der Maskenpflicht in öffentlichen Gebäuden"
+    },
+    {
+      "en-gb": "Restrictions for Restaurants",
+      "de-ch": "Einschränkungen für Restaurationsbetriebe"
+    },
+    {
+      "en-gb": "End of Restrictions for Restaurants",
+      "de-ch": "Ende der Einschränkungen für Restaurationsbetriebe"
+    },
+    {
+      "en-gb": "Closure of night clubs",
+      "de-ch": "Schliessung von Nachtklubs"
+    },
+    {
+      "en-gb": "End of Closure of night clubs",
+      "de-ch": "Ende der Schliessung von Nachtklubs"
+    },
+    {
+      "en-gb": "Launch of SwissCovid App",
+      "de-ch": "Einführung der SwissCovid App"
+    },
+    {
+      "en-gb": "Launch of SwissCovid App <br>Apple/Google API",
+      "de-ch": "Einführung der SwissCovid App <br>Apple/Google API"
+    },
+    {
+      "en-gb": "Ban of events > 50 people",
+      "de-ch": "Verbot von Veranstaltungen mit > 50 Personen"
+    },
+    {
+      "en-gb": "End of ban of events > 50 people",
+      "de-ch": "Ende des Verbots von Veranstaltungen mit > 50 Personen"
+    },
+    {
+      "en-gb": "Ban of in person events in higher education",
+      "de-ch": "Verbot von Veranstaltungen in der höheren Bildung"
+    },
+    {
+      "en-gb": "End of Ban of in person events in higher education",
+      "de-ch": "Ende des Verbots von Veranstaltungen in der höheren Bildung"
+    },
+    {
+      "en-gb": "Home office recommended",
+      "de-ch": "Home Office Empfehlung"
+    },
+    {
+      "en-gb": "End of Home office recommendation",
+      "de-ch": "Ende der Home Office Empfehlung"
+    },
+    {
+      "en-gb": "Ban of spontaneous gatherings > 15 people",
+      "de-ch": "Verbot von spontanen Treffen mit > 15 Personen"
+    },
+    {
+      "en-gb": "End of ban of spontaneous gatherings > 15 people",
+      "de-ch": "Ende des Verbots von spontanen Treffen mit > 15 Personen"
+    },
+    {
+      "en-gb": "Ban of private gatherings > 10 people",
+      "de-ch": "Verbot von privaten Treffen mit > 10 Personen"
+    },
+    {
+      "en-gb": "End of ban of private gatherings > 10 people",
+      "de-ch": "Ende des Verbots von privaten Treffen mit > 10 Personen"
+    },
+    {
+      "en-gb": "sliding window",
+      "de-ch": "gleitendes Fenster"
+    },
+    {
+      "en-gb": "step-wise constant",
+      "de-ch": "stufenweise Konstant"
+    },
+    {
+      "en-gb": "Most recent effective reproductive number estimate",
+      "de-ch": "Aktuellste Schätzung der effektiven Reproduktionszahl"
+    },
+    {
+      "en-gb": "Average effective reproductive number over the last 7 days",
+      "de-ch": "Durchschnittliche effektive Reproduktionszahl in den letzten 7 Tagen"
+    },
+    {
+      "en-gb": "FAQ",
+      "de-ch": "FAQ"
+    },
+    {
+      "en-gb": "Stringency Index",
+      "de-ch": "Stringency Index",
+      "fr-ch": "Stringency Index",
+      "it-ch": "Stringency Index"
+    }   
+  ]
+}
+
