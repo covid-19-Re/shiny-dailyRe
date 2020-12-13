@@ -37,7 +37,7 @@ dashboardPage(title = "COVID-19 Re",
           column(6, uiOutput("avgR")),
           column(6, uiOutput("currentR")),
           conditionalPanel(
-            condition = "input.countrySelect.includes('CHE')",
+            condition = "input.countrySelect == 'CHE'",
             column(12, uiOutput("disclaimer"))
           )
         ),
