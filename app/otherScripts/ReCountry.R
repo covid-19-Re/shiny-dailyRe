@@ -277,7 +277,7 @@ if (dim(countryData)[1] > 0) {
         data_types = c("Confirmed cases",
                        "Hospitalized patients",
                        "Deaths"),
-        n_bootstrap = 50,
+        n_bootstrap = 100,
         verbose = FALSE)
 
       if (args["country"] %in% c("CHE")) {
@@ -289,7 +289,7 @@ if (dim(countryData)[1] > 0) {
           constant_delay_distributions = constant_delay_distributions,
           onset_to_count_empirical_delays = delays_onset_to_count,
           data_types = c("Confirmed cases / tests"),
-          n_bootstrap = 50,
+          n_bootstrap = 100,
           verbose = FALSE)
       }
 
@@ -372,6 +372,27 @@ if (dim(countryData)[1] > 0) {
             dplyr::select(popData, region, countryIso3),
             by = c("region")
           )
+        
+        # add extra truncation of 4 days for all Swiss cantonal estimates due to consolidation
+        if (args["country"] %in% c("CHE")) {
+          days_truncated <- 4
+          canton_list <- c("AG", "BE", "BL","BS", "FR", "GE", "GR", "JU", "LU", "NE", "SG", "SO", "SZ", "TG", "TI", "VD", "VS", "ZG", "ZH", "SH", "AR", "GL", "NW", "OW", "UR", "AI" )
+          
+          countryEstimates_cantons <- countryEstimates %>% 
+            filter(region %in% canton_list) %>% 
+            group_by(country, region, source, data_type, estimate_type) %>% 
+              filter(row_number() <= (n() - days_truncated)) %>% 
+            ungroup()
+          
+          countryEstimates_CH <- countryEstimates %>% 
+            filter(!(region %in% canton_list))
+          
+          countryEstimates <- bind_rows(countryEstimates_cantons, countryEstimates_CH)
+          
+          
+        }
+        
+        
         countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
         saveRDS(countryEstimates, file = countryDataPath)
         # Save as .csv for data upload
