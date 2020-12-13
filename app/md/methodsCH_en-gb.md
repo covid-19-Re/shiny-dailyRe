@@ -1,17 +1,6 @@
-<h4>Assessment of the current epidemiological situation</h4>
+The effective reproductive number R<sub>e</sub> quantifies how many people are infected on average by an infected person. We provide the latest estimate of the effective reproductive number R<sub>e</sub> in Switzerland. This figure is updated daily with the latest available data from the FOPH. The R<sub>e</sub> value which is calculated today reflects the infection dynamics of about 10 days ago, due to the delay between infection and positive test result. The most recent R<sub>e</sub> value is marked with an asterisk in the figure.
 
-The effective reproductive number R<sub>e</sub> quantifies how many people are infected on average by an infected person. In the following figure, we provide the latest estimate of the effective reproductive number R<sub>e</sub> in Switzerland. This figure is updated daily with the latest available data from the FOPH. The R<sub>e</sub> value which is calculated today reflects the infection dynamics of about 10 days ago, due to the delay between infection and positive test result. The most recent R<sub>e</sub> value is marked with an asterisk in the figure.
-
-An overview of the current epidemiological situation based on the reproductive number R<sub>e</sub> and other indicators can be found [here](https://sciencetaskforce.ch/en/news-english/). More extensive updates of the epidemiological situation are published by the Science Task Force in the form of [Policy Briefs](https://ncs-tf.ch/en/policy-briefs).
-
-More information and additional tools for the assessment of the epidemiological situation based on R<sub>e</sub> can be found [here](https://ibz-shiny.ethz.ch/covid-19-re/). In particular, we provide estimates of R<sub>e</sub> for individual cantons, larger Swiss regions, and other countries. These R<sub>e</sub> estimates, as well as the case numbers per country, are displayed on a world map. Additionally, we show estimates on the changes of R<sub>e</sub> following the introduction or release of interventions. Lastly, we display the estimated number of daily new infections based on the daily case data. This time course is used for the R<sub>e</sub> calculations. The results for R<sub>e</sub> are available as a .csv file.
-
-<h4>Summary of the course of the epidemic so far, based on R<sub>e</sub></h4>
-
-Since the beginning of the epidemic in Switzerland we have observed the following trends in R<sub>e</sub>. The effective reproductive number R<sub>e</sub> in early March was 2-3, which is in the range of values reported for other countries. The R<sub>e</sub> fell below the critical value of 1 in mid March. R<sub>e</sub> increased continuously from the second week of May to a peak in mid-June, with maximum values around 1.4-1.9. Another smaller peak was observed in July. The peaks were driven by infection dynamics in separate geographic regions in Switzerland. During the summer, R<sub>e</sub> reached a steady value around 1.1. This meant that the case numbers doubled approximately every 4 weeks.
-
-From mid-September onwards, R<sub>e</sub> rose very sharply with a peak of over 1.5 at the end of the month. This corresponded to a doubling time of the case numbers of about one week. The R<sub>e</sub> based on hospitalizations followed the same trend and rose significantly above 1 for the first time since March. The rapid spread was observed in all Swiss cantons. From October onwards, R<sub>e</sub> has declined based on all indicators.
-
+An overview of the current epidemiological situation in Switzerland based on the reproductive number R<sub>e</sub> and other indicators can be found [here](https://sciencetaskforce.ch/en/news-english/). More extensive updates of the epidemiological situation are published by the Science Task Force in the form of [Policy Briefs](https://ncs-tf.ch/en/policy-briefs).
 
 <h4>Caveats</h4>
 
