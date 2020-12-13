@@ -2,7 +2,7 @@ Die effektive Reproduktionszahl R<sub>e</sub> gibt an, wie viele Personen eine i
 
 Eine Einschätzung der momentanen epidemiologischen Lage in der Schweiz basierend auf der Reproduktionszahl R<sub>e</sub> und weiteren Indikatoren finden sie [hier](https://sciencetaskforce.ch/news/). Grössere detaillierte Updates der epidemiologischen Lage werden von der Science Task Force in Form von [Policy Briefs](https://ncs-tf.ch/de/policy-briefs) veröffentlicht.
 
-<h4>Caveats</h4>
+<h4>Vorbehalte bei der Interpretation der Ergebnisse </h4>
 
 Wir weisen generell darauf hin, dass die Schätzungen der letzten ca. fünf Tage leichten Schwankungen unterliegen können. Wir basieren unsere Einschätzung daher auf geschätzten Trends über mehrere Tage. Wir stellen zudem einen 7-Tages Durchschnittswert zur Verfügung. Dieser ist der Durchschnitt der Werte über die letzten 7 Tage zusammen mit dem minimalen unteren Wert und maximalen oberen Wert des Unsicherheitsintervalls der letzten 7 Tage.
 
