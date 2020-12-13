@@ -4,7 +4,7 @@ An overview of the current epidemiological situation in Switzerland based on the
 
 <h4>Caveats</h4>
 
-In general, we note that the R<sub>e</sub> estimates for the last five days may still be consolidated during subsequent days. We thus base our interpretation on estimated trends over several days. In particular, we further provide a 7-day estimate which is the mean of the estimates from the last 7 days together with the minimum lower bound and the maximum upper bound.
+In general, we note that the R<sub>e</sub> estimates for the last five days may still be consolidated during subsequent days. We thus base our interpretation on estimated trends over several days. In particular, we further provide a 7-day estimate  for Switzerland which is the mean of the estimates from the last 7 days together with the minimum lower bound and the maximum upper bound.
 
 However, due to the high test positivity rate and delayed hospital reports during the second wave, estimates based on the case numbers and hospitalizations may be too low during this time. The R<sub>e</sub> based on positivity (confirmed cases/tests) is reliable if the persons tested are a random cross section of the population; since we test specifically symptomatic persons, this R<sub>e</sub> value may also be biased. During the second wave, the R<sub>e</sub> value based on deaths is the most reliable. However, this R<sub>e</sub> value reflects the epidemiological situation with a time lag of about 3 weeks. The reason is that it takes about 17 days between new infection and death.
 

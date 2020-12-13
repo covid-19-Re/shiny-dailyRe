@@ -4,7 +4,7 @@ Une synthèse de la situation épidémique actuelle en Suisse basée sur le taux
 
 <h4>Mises en garde</h4>
 
-En général, l’estimation de R<sub>e</sub> faite sur les 5 derniers jours est susceptible d’être consolidée les jours suivants. Nous fondons donc nos interprétations sur les tendances observées sur plusieurs jours.
+En général, l’estimation de R<sub>e</sub> faite sur les 5 derniers jours est susceptible d’être consolidée les jours suivants. Nous fondons donc nos interprétations sur les tendances observées sur plusieurs jours. En particulier, nous communiquons une estimation sur 7 jours pour la Suisse, qui correspond à la moyenne des estimations sur les 7 derniers jours. Cette estimation est accompagnée des limites basses et hautes de l'intervalle d'incertitude.
 
 Cependant, en raison du fort taux de positivité et du retard accumulé dans les remontées des cas admis à l’hôpital pendant la deuxième vague, les estimations basées sur ces données sont susceptibles d’être en dessous de la réalité durant cette période. Le R<sub>e</sub> basé sur la positivité des tests (cas confirmés / nombre de tests) est fiable si les personnes testées sont tirées aléatoirement dans la population; puisque les personnes présentant des symptômes sont testées en priorité, cette valeur de R<sub>e</sub> peut aussi être biasée. Durant la deuxième vague, la valeur de R<sub>e</sub> estimée à partir du nombre de morts est la plus fiable. Cependant, cette valeur de R<sub>e</sub> a un retard d’environ 3 semaines par rapport au présent. Il s’écoule en moyenne environ 17 jours entre l’infection et le décès lorsque celui-ci survient.
 
