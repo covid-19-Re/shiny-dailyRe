@@ -1,0 +1,5 @@
+- Le nombre de reproduction R<sub>e</sub> représente le nombre moyen de personnes qu’infecte une personne infectée. Nous donnons la dernière estimation du taux de reproduction R<sub>e</sub> en Suisse. Ce graphe est mis-à-jour quotidiennement avec les dernières données de l’OFSP. Le format .csv du R<sub>e</sub>: https://github.com/covid-19-Re/dailyRe-Data.
+- La valeur de R<sub>e</sub> la plus récente calculée aujourd’hui reflète la dynamique épidémique d’il y a environ 10 jours pour la Suisse et 14 jours pour les cantons, en raison du décalage entre infections et résultats des tests. Cette valeur la plus récente est marquée d’un astérisque sur le graphe.
+- IMPORTANT: En général, l’estimation de R<sub>e</sub> faite sur les derniers jours est susceptible d’être consolidée les jours suivants. Cette consolidation est notamment importante dans le cas de régions de plus petites taille, en particulier lorsque des changements de dynamique de l'épidémie surviennent, ou lorsque le nombre de cas observés est faible. Pour les methodes et les mises en garde cf. ci-dessous.
+
+

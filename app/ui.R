@@ -35,7 +35,11 @@ dashboardPage(title = "COVID-19 Re",
         # ))),
         fluidRow(
           column(6, uiOutput("avgR")),
-          column(6, uiOutput("currentR"))
+          column(6, uiOutput("currentR")),
+          conditionalPanel(
+            condition = "input.countrySelect.includes('CHE')",
+            column(12, uiOutput("disclaimer"))
+          )
         ),
         fluidRow(column(12,
           uiOutput("timeseriesPlotUI"),
