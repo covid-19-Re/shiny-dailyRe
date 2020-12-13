@@ -4,7 +4,7 @@ Eine Einschätzung der momentanen epidemiologischen Lage in der Schweiz basieren
 
 <h4>Caveats</h4>
 
-Wir weisen generell darauf hin, dass die Schätzungen der letzten ca. fünf Tage leichten Schwankungen unterliegen können. Wir basieren unsere Einschätzung daher auf geschätzten Trends über mehrere Tage.
+Wir weisen generell darauf hin, dass die Schätzungen der letzten ca. fünf Tage leichten Schwankungen unterliegen können. Wir basieren unsere Einschätzung daher auf geschätzten Trends über mehrere Tage. Wir stellen zudem einen 7-Tages Durchschnittswert zur Verfügung. Dieser ist der Durchschnitt der Werte über die letzten 7 Tage zusammen mit dem minimalen unteren Wert und maximalen oberen Wert des Unsicherheitsintervalls der letzten 7 Tage.
 
 Wegen der hohen Positivitätsrate und verspäteten Spitalmeldungen während der zweiten Welle sind die Schätzungen basierend auf Fallzahlen und Hospitalisierungen in dieser Zeit möglicherweise zu tief. Das R<sub>e</sub> basierend auf der Positivität (bestätigte Fälle/Tests) ist zuverlässig wenn die getesteten Personen ein zufälliger Querschnitt der Bevölkerung sind; nachdem wir insb. symptomatische Personen testen ist auch dieser R<sub>e</sub> Wert möglicherweise verzerrt. Während der zweiten Welle ist der R<sub>e</sub> Wert basierend auf den Todesfällen am zuverlässigsten. Dieser bildet jedoch die epidemiologische Lage sehr zeitverzögert, nämlich von vor ca. 3 Wochen, ab. Grund ist dass in etwa 17 Tage zwischen Neuansteckung und Todesfall vergehen.
 
