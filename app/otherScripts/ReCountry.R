@@ -398,8 +398,8 @@ if (dim(countryData)[1] > 0) {
         readr::write_csv(countryEstimates,
                   path = file.path(basePath, "csv", str_c(args["country"], "-estimates.csv"))
         )
-        # save simpler csvs for CHE
-        if (args["country"] == "CHE") {
+        # save simpler csvs for CHE, LIE
+        if (args["country"] %in% c("CHE", "LIE")) {
           countryEstimates %>%
             filter(data_type == "Confirmed cases", estimate_type == "Cori_slidingWindow") %>%
             select(region, date, median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
