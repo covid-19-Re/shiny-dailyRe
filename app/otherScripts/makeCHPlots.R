@@ -24,24 +24,17 @@ cat(str_c("making ", countrySelectValue, " plots for ncs-tf website ...\n"))
 dataDir <- here::here("app/data")
 plotOutDir <- here::here("app/www")
 
-pathToCountryData <- here::here("app", "data", "countryData")
+pathToCountryData <- file.path(dataDir, "serialized", "allCountryData.qs")
 pathToUpdateData <- file.path(dataDir, "serialized", "updateDataRaw.qs")
 pathToInterventionData <- here::here("../covid19-additionalData/interventions/interventions.csv")
 pathToContinentsData <- file.path(dataDir, "continents.csv")
 continents <- read_csv(pathToContinentsData, col_types = cols(.default = col_character()))
 
-countryData <- loadCountryData(countrySelectValue, dataDir = pathToCountryData)
-
-countryData$estimates <- countryData$estimates %>%
-  filter(data_type != "Stringency Index") %>%
-  group_by(countryIso3, data_type) %>%
-  filter(
-      between(date,
-        left = countryData$estimateRanges[[countrySelectValue]][[countrySelectValue]][["start"]][[as.character(data_type[1])]],
-        right = countryData$estimateRanges[[countrySelectValue]][[countrySelectValue]][["end"]][[as.character(data_type[1])]])
-    ) %>%
-  mutate(data_type = as.character(data_type))
-
+allData <- qs::qread(pathToCountryData)
+countryData <- list(
+  caseData = filter(allData$caseData, countryIso3 %in% countrySelectValue),
+  estimates = filter(allData$estimates, countryIso3 %in% countrySelectValue)
+)
 
 updateDataRaw <-  qs::qread(pathToUpdateData)
 updateData <- bind_rows(updateDataRaw[countrySelectValue]) %>%
@@ -58,7 +51,7 @@ interventions <- read_csv(
   )) %>%
   split(f = .$countryIso3)
 
-translator <- Translator$new(translation_json_path = file.path(dataDir, "shinyTranslations.json"))
+translator <- Translator$new(translation_json_path = file.path(dataDir, "covid19reTranslations.json"))
 availableLanguages <- translator$get_languages()
 
 rightTruncation <- list(
