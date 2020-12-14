@@ -372,33 +372,42 @@ if (dim(countryData)[1] > 0) {
             dplyr::select(popData, region, countryIso3),
             by = c("region")
           )
-        
+
         # add extra truncation of 4 days for all Swiss cantonal estimates due to consolidation
         if (args["country"] %in% c("CHE")) {
           days_truncated <- 4
-          canton_list <- c("AG", "BE", "BL","BS", "FR", "GE", "GR", "JU", "LU", "NE", "SG", "SO", "SZ", "TG", "TI", "VD", "VS", "ZG", "ZH", "SH", "AR", "GL", "NW", "OW", "UR", "AI" )
-          
-          countryEstimates_cantons <- countryEstimates %>% 
-            filter(region %in% canton_list) %>% 
-            group_by(country, region, source, data_type, estimate_type) %>% 
-              filter(row_number() <= (n() - days_truncated)) %>% 
+          canton_list <- c("AG", "BE", "BL","BS", "FR", "GE", "GR", "JU", "LU", "NE", "SG", "SO", "SZ", "TG", "TI",
+            "VD", "VS", "ZG", "ZH", "SH", "AR", "GL", "NW", "OW", "UR", "AI")
+
+          countryEstimates_cantons <- countryEstimates %>%
+            filter(region %in% canton_list) %>%
+            group_by(country, region, source, data_type, estimate_type) %>%
+              filter(row_number() <= (n() - days_truncated)) %>%
             ungroup()
-          
-          countryEstimates_CH <- countryEstimates %>% 
+
+          countryEstimates_CH <- countryEstimates %>%
             filter(!(region %in% canton_list))
-          
+
           countryEstimates <- bind_rows(countryEstimates_cantons, countryEstimates_CH)
-          
-          
+
         }
-        
-        
+
         countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
         saveRDS(countryEstimates, file = countryDataPath)
         # Save as .csv for data upload
         readr::write_csv(countryEstimates,
                   path = file.path(basePath, "csv", str_c(args["country"], "-estimates.csv"))
         )
+        # save simpler csvs for CHE
+        if (args["country"] == "CHE") {
+          countryEstimates %>%
+            filter(data_type == "Confirmed cases", estimate_type == "Cori_slidingWindow") %>%
+            select(region, date, median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
+            mutate(across(.cols = median_R_mean:median_R_lowHPD, .fns = round, digits = 2)) %>%
+            readr::write_csv(
+              file = file.path(basePath, "csv", str_c(args["country"], "-confCasesSWestimates.csv"))
+            )
+        }
       }
     } else {
       cat(str_c(Sys.time(), " | ", args["country"], ": Not enough cases. Skipping Re calculation.\n"))
