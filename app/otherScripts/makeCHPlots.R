@@ -139,7 +139,7 @@ regionLoop <- estimatesTrunc %>%
 widthCHE <- 800 / 150
 heightCHE <- 400 / 150
 widthCanton <- widthCHE / 2
-heightCanton <- heightCHE
+heightCanton <- heightCHE * 0.75
 
 
 for (iregion in regionLoop) {
@@ -186,7 +186,7 @@ for (iregion in regionLoop) {
     geom_hline(yintercept = 1, linetype = 2) +
     labs(
       title = plotTitle,
-      caption = plotCaption) +
+      caption = if_else(iregion == "CHE", plotCaption, "")) +
     plotTheme
 
   ggsave(
