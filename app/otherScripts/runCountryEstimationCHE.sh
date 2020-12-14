@@ -51,6 +51,9 @@ git add .
 git commit -m "update data"
 git push
 
+# update plots on eth cms
+curl -nT "{$(echo *.png | tr ' ' ',')}" https://cms-author.ethz.ch/content/dam/ethz/special-interest/usys/ibz/theoreticalbiology/plots/
+
 # reactivate crontab
 if  [ ! -z "$cr" ]; then
   cd "$parent_path"
