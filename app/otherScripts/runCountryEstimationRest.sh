@@ -1,18 +1,4 @@
 #!/bin/sh
-
-# deactivate crontab
-cr=$(crontab -l)
-if  [ ! -z "$cr" ]; then
-  crontab -l > crontabBackup.txt
-  echo "deactivating crontab. Backed up to crontabBackup.txt"
-  crontab -r
-fi
-
-parent_path=$(
-  cd "$(dirname "${BASH_SOURCE[0]}")"
-  pwd -P
-)
-
 runRScript () {
   echo "running" $1 $2 "..."
   Rscript --verbose $1 $2 >>messagesRest.Rout 2>>errorsRest.Rout
@@ -24,7 +10,20 @@ runRScript () {
   fi
 }
 
+parent_path=$(
+  cd "$(dirname "${BASH_SOURCE[0]}")"
+  pwd -P
+)
+
 cd "$parent_path"
+
+# deactivate crontab
+cr=$(crontab -l)
+if  [ ! -z "$cr" ]; then
+  crontab -l > crontabBackup.txt
+  echo "deactivating crontab. Backed up to crontabBackup.txt"
+  crontab -r
+fi
 
 echo "updating covid19-additionalData ..."
 cd "../../../covid19-additionalData"
