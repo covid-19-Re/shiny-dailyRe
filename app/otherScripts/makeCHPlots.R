@@ -88,4 +88,113 @@ for (i in availableLanguages) {
     title = "Effective reproductive number (Re) in Switzerland")
 }
 
+
+# eth website plots
+
+timeSpan <- 21
+
+estimatesTrunc <- countryData$estimates %>%
+  filter(date > max(date) - timeSpan)
+
+plotTheme <- theme_bw() +
+  theme(
+    # overall text size
+    text = element_text(size = 8),
+    # legend
+    legend.position = "right",
+    legend.key = element_rect(color = NA),
+    # panel
+    panel.border = element_rect(color = NA),
+    panel.grid.major = element_line(size = 0.2),
+    panel.grid.minor = element_line(size = 0.2),
+    # axis
+    axis.line = element_line(size = 0.2),
+    axis.ticks = element_line(size = 0.2),
+    axis.title.x = element_text(margin = margin(10, 0, 0, 0)),
+    axis.title.y = element_text(margin = margin(0, 10, 0, 0))
+  )
+
+allCols <- viridis(6)
+plotColors <-  c(
+  "Confirmed cases" = allCols[1],
+  "Confirmed cases / tests" = allCols[2],
+  "Hospitalized patients" = allCols[3],
+  "Deaths" = allCols[5],
+  "Excess deaths" = allCols[6])
+
+
+translator$set_translation_language("en-gb")
+
+yAxisTitle <- translator$t("Reproductive number R<sub>e</sub>") %>%
+  str_remove(pattern = "<sub>") %>%
+  str_remove(pattern = "</sub>")
+
+iregion <- "GR"
+
+regionLoop <- estimatesTrunc %>%
+  filter(str_detect(region, "grR", negate = TRUE)) %>%
+  pull(region) %>%
+  unique()
+
+widthCHE <- 800 / 150
+heightCHE <- 400 / 150
+widthCanton <- widthCHE / 2
+heightCanton <- heightCHE
+
+
+for (iregion in regionLoop) {
+  staticPlotData <- estimatesTrunc %>%
+    filter(
+      data_type == "Confirmed cases",
+      estimate_type == "Cori_slidingWindow",
+      region == iregion,
+    )
+
+  lastDataDate <- updateData %>%
+    filter(
+      data_type == "Confirmed cases",
+      region == iregion,
+    ) %>%
+    pull(lastData) %>%
+    format(translator$t("%Y-%m-%d"))
+
+  plotCaption <- str_c(
+    translator$t("Last Data Updates"), ": ",
+    lastDataDate
+  )
+
+  plotTitle <- if_else(staticPlotData$region[1] == "CHE", translator$t("Switzerland"), staticPlotData$region[1])
+
+  yAxisBreaks <- staticPlotData$date[c(1, 7, 14, 21)]
+
+
+  plot <- ggplot(
+    data = staticPlotData,
+    mapping = aes(x = date, y = median_R_mean, ymin = median_R_lowHPD, ymax = median_R_highHPD,
+      label = round(median_R_mean, 2))) +
+    geom_ribbon(alpha = 0.1, fill = allCols[1]) +
+    geom_line(color = allCols[1]) +
+    # geom_text(
+    #   data = filter(staticPlotData, date > max(date) - 7),
+    #   # mapping = aes(x = date, y = 0.1),
+    #   hjust = 1, vjust = 0, nudge_y = c(0.1),
+    #   size = 1.8
+    # ) +
+    scale_x_date(name = NULL, breaks = yAxisBreaks, date_minor_breaks = "1 day") +
+    scale_y_continuous(name = yAxisTitle) +
+    coord_cartesian(ylim = c(0, max(estimatesTrunc$median_R_highHPD))) +
+    geom_hline(yintercept = 1, linetype = 2) +
+    labs(
+      title = plotTitle,
+      caption = plotCaption) +
+    plotTheme
+
+  ggsave(
+    filename = file.path(plotOutDir, "cantonPlots", str_c(iregion, availableLanguages[1], "rePlot.png", sep = "_")),
+    width = if_else(iregion == "CHE", widthCHE, widthCanton),
+    height = if_else(iregion == "CHE", heightCHE, heightCanton),
+    units = "in",
+    dpi = 300)
+}
+
 cat("done making CH plots for ncs-tf website.\n")
