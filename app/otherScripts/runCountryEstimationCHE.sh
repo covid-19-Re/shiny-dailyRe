@@ -52,6 +52,7 @@ git commit -m "update data"
 git push
 
 # update plots on eth cms
+cd "../dailyRe/app/www/cantonPlots"
 curl -nT "{$(echo *.png | tr ' ' ',')}" https://cms-author.ethz.ch/content/dam/ethz/special-interest/usys/ibz/theoreticalbiology/plots/
 
 # reactivate crontab
