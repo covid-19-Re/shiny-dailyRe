@@ -52,6 +52,7 @@ git push
 
 # reactivate crontab
 if  [ ! -z "$cr" ]; then
+  cd "$parent_path"
   echo "restoring crontab from backup"
   crontab crontabBackup.txt
 fi

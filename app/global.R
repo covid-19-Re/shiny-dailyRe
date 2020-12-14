@@ -18,7 +18,7 @@ source("otherScripts/plotlyFunctions.R")
 source("utils.R")
 
 # set up translation
-translator <- Translator$new(translation_json_path = file.path("data/shinyTranslations.json"))
+translator <- Translator$new(translation_json_path = file.path("data/covid19reTranslations.json"))
 languageSelect <- translator$get_languages()
 names(languageSelect) <- c("EN", "IT", "FR", "DE")
 

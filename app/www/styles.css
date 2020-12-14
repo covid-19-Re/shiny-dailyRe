@@ -69,3 +69,20 @@
   color: white !important;
   font-size: 38px !important;
 }
+
+.importantBox {
+  line-height: 20px;
+  margin-bottom: 20px;
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 1px 0px;
+  box-sizing: border-box;
+  padding: 10px;
+  background-color: #00FF33;
+}
+
+.importantBox >* a {
+  color: black !important;
+}
