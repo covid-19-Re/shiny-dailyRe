@@ -178,7 +178,7 @@ for (iregion in regionLoop) {
     # ) +
     scale_x_date(name = NULL, breaks = yAxisBreaks, date_minor_breaks = "1 day") +
     scale_y_continuous(name = yAxisTitle) +
-    coord_cartesian(ylim = c(0, max(estimatesTrunc$median_R_highHPD))) +
+    coord_cartesian(ylim = c(0, 2)) +
     geom_hline(yintercept = 1, linetype = 2) +
     labs(
       title = plotTitle,
