@@ -144,7 +144,7 @@ for (iregion in regionLoop) {
     ) %>%
   filter(date > max(date) - (timeSpan + 2))
 
-  xLimits <- c(max(staticPlotData$date) - timeSpan, max(staticPlotData$date))
+  xLimits <- c(max(staticPlotData$date) - timeSpan, max(staticPlotData$date) + 1)
 
   lastDataDate <- updateData %>%
     filter(
@@ -152,7 +152,7 @@ for (iregion in regionLoop) {
       region == iregion,
     ) %>%
     pull(lastData) %>%
-    format(translator$t("%Y-%m-%d"))
+    format(translator$t("%b-%d"))
 
   plotCaption <- str_c(
     translator$t("Last Data Updates"), ": ",
@@ -161,7 +161,7 @@ for (iregion in regionLoop) {
 
   plotTitle <- if_else(staticPlotData$region[1] == "CHE", translator$t("Switzerland"), staticPlotData$region[1])
 
-  yAxisBreaks <- staticPlotData$date[c(1, 7, 14, 21)+2]
+  yAxisBreaks <- staticPlotData$date[c(1, 7, 14, 21) + 2]
 
 
   plot <- ggplot(
