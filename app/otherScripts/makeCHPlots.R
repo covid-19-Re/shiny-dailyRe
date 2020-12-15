@@ -93,8 +93,6 @@ for (i in availableLanguages) {
 
 timeSpan <- 21
 
-estimatesTrunc <- 
-
 plotTheme <- theme_bw() +
   theme(
     # overall text size
@@ -126,7 +124,7 @@ translator$set_translation_language("en-gb")
 
 yAxisTitle <- bquote(Reproductive~number~R[e])
 
-regionLoop <- estimatesTrunc %>%
+regionLoop <- countryData$estimates %>%
   filter(str_detect(region, "grR", negate = TRUE)) %>%
   pull(region) %>%
   unique()
