@@ -38,9 +38,9 @@ runRScript format_linelist_data.R
 
 runRScript ReCountry.R "CHE"
 runRScript ReCountry.R "LIE"
-runRScript makeCHPlots.R
 
 runRScript sumData.R
+runRScript makeCHPlots.R
 
 # reload data by restarting R shiny process
 touch ../restart.txt
