@@ -93,8 +93,7 @@ for (i in availableLanguages) {
 
 timeSpan <- 21
 
-estimatesTrunc <- countryData$estimates %>%
-  filter(date > max(date) - timeSpan)
+estimatesTrunc <- 
 
 plotTheme <- theme_bw() +
   theme(
@@ -139,12 +138,15 @@ heightCanton <- heightCHE * 0.75
 
 
 for (iregion in regionLoop) {
-  staticPlotData <- estimatesTrunc %>%
+  staticPlotData <- countryData$estimates %>%
     filter(
       data_type == "Confirmed cases",
       estimate_type == "Cori_slidingWindow",
       region == iregion,
-    )
+    ) %>%
+  filter(date > max(date) - (timeSpan + 2))
+
+  xLimits <- c(max(staticPlotData$date) - timeSpan, max(staticPlotData$date))
 
   lastDataDate <- updateData %>%
     filter(
@@ -161,7 +163,7 @@ for (iregion in regionLoop) {
 
   plotTitle <- if_else(staticPlotData$region[1] == "CHE", translator$t("Switzerland"), staticPlotData$region[1])
 
-  yAxisBreaks <- staticPlotData$date[c(1, 7, 14, 21)]
+  yAxisBreaks <- staticPlotData$date[c(1, 7, 14, 21)+2]
 
 
   plot <- ggplot(
@@ -178,7 +180,7 @@ for (iregion in regionLoop) {
     # ) +
     scale_x_date(name = NULL, breaks = yAxisBreaks, date_minor_breaks = "1 day") +
     scale_y_continuous(name = yAxisTitle) +
-    coord_cartesian(ylim = c(0, 2)) +
+    coord_cartesian(ylim = c(0, 2), xlim = xLimits) +
     geom_hline(yintercept = 1, linetype = 2) +
     labs(
       title = plotTitle,
