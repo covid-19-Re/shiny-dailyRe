@@ -125,11 +125,7 @@ plotColors <-  c(
 
 translator$set_translation_language("en-gb")
 
-yAxisTitle <- translator$t("Reproductive number R<sub>e</sub>") %>%
-  str_remove(pattern = "<sub>") %>%
-  str_remove(pattern = "</sub>")
-
-iregion <- "GR"
+yAxisTitle <- bquote(Reproductive~number~R[e])
 
 regionLoop <- estimatesTrunc %>%
   filter(str_detect(region, "grR", negate = TRUE)) %>%
