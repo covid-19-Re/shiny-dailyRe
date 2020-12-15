@@ -171,9 +171,9 @@ for (iregion in regionLoop) {
     geom_ribbon(alpha = 0.1, fill = allCols[1]) +
     geom_line(color = allCols[1]) +
     # geom_text(
-    #   data = filter(staticPlotData, date > max(date) - 7),
+    #   data = filter(staticPlotData, date == max(date)),
     #   # mapping = aes(x = date, y = 0.1),
-    #   hjust = 1, vjust = 0, nudge_y = c(0.1),
+    #   hjust = 0, vjust = 0.5, nudge_x = 0.1,
     #   size = 1.8
     # ) +
     scale_x_date(name = NULL, breaks = yAxisBreaks, date_minor_breaks = "1 day") +
