@@ -151,8 +151,7 @@ for (iregion in regionLoop) {
       data_type == "Confirmed cases",
       region == iregion,
     ) %>%
-    pull(lastData) %>%
-    format(translator$t("%b-%d"))
+    pull(lastData)
 
   plotCaption <- str_c(
     translator$t("Last Data Updates"), ": ",
