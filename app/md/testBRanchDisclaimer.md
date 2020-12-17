@@ -1,0 +1,1 @@
+**IMPORTANT** You are currently viewing the test version of the Covid-19 R_e Dashboard. Reported values might be different to the [public version](https://ibz-shiny.ethz.ch/covid-19-re-international/) and subject to larger uncertainties.
