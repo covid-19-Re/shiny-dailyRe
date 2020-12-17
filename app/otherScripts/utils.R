@@ -16,6 +16,7 @@ sendSlackNotification <- function(country, event, url, eTcompletion, webhookUrl)
           type = "mrkdwn",
           text = str_c(
             Sys.time(), ": *New incidence data for ", country, " is available.*\n",
+            "updating ", url, "\n",
             "Estimated time of completion of update: ~ ", eTcompletion)
         )
       ))
