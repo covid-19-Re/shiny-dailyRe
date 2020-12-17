@@ -3,6 +3,7 @@ app/data/*.txt
 app/data/*.Rdata
 app/data/*.rds
 app/data/*.qs
+app/data/countryData/*.qs
 app/data/all_delays.csv
 app/data/temp
 app/data/serialized/*
@@ -26,3 +27,9 @@ app/restart.txt
 .Rproj.user
 *.Rdata
 *.rds
+
+# profiling
+app/recording.log
+app/report.html
+app/run1
+app/run2

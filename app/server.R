@@ -381,6 +381,19 @@ server <- function(input, output, session) {
       return(ui)
     })
 
+    output$disclaimer <- renderUI({
+      ui <- tagList(
+        HTML(
+          "<div class='importantBox'>
+            <div class='inner'>"),
+        includeMarkdown(str_c("md/disclaimerCHE_", input$lang, ".md")),
+        HTML(
+            "</div>
+          </div>"
+        )
+      )
+    })
+
     avgRestimate <- reactive({
       countryData <- countryData()
       countrySelectValue <- countrySelectValue()
