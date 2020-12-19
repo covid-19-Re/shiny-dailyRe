@@ -55,6 +55,10 @@ git push
 cd "../dailyRe/app/www/cantonPlots"
 curl -nT "{$(echo *.png | tr ' ' ',')}" https://cms-author.ethz.ch/content/dam/ethz/special-interest/usys/ibz/theoreticalbiology/plots/
 
+# copy csv files of test server into www dir so tey are accessible
+cp /home/covid-19-re/test-dailyRe/app/data/countryData/csv/CHE-confCasesSWestimates.csv /home/covid-19-re/test-dailyRe/app/www/CHE-confCasesSWestimates-TEST.csv
+cp /home/covid-19-re/test-dailyRe/app/data/countryData/csv/LIE-confCasesSWestimates.csv /home/covid-19-re/test-dailyRe/app/www/LIE-confCasesSWestimates-TEST.csv
+
 # reactivate crontab
 if  [ ! -z "$cr" ]; then
   cd "$parent_path"
