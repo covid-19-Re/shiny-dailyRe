@@ -400,13 +400,21 @@ if (dim(countryData)[1] > 0) {
         )
         # save simpler csvs for CHE, LIE
         if (args["country"] %in% c("CHE", "LIE")) {
-          countryEstimates %>%
+          simpleCsv <- countryEstimates %>%
             filter(data_type == "Confirmed cases", estimate_type == "Cori_slidingWindow") %>%
             select(region, date, median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
-            mutate(across(.cols = median_R_mean:median_R_lowHPD, .fns = round, digits = 2)) %>%
-            readr::write_csv(
-              file = file.path(basePath, "csv", str_c(args["country"], "-confCasesSWestimates.csv"))
-            )
+            mutate(across(.cols = median_R_mean:median_R_lowHPD, .fns = round, digits = 2))
+
+          # write to csv directory
+          readr::write_csv(
+            simpleCsv,
+            file = file.path(basePath, "csv", str_c(args["country"], "-confCasesSWestimates.csv"))
+          )
+          # write to test directory
+          readr::write_csv(
+            simpleCsv,
+            file = str_c("/home/covid-19-re/test-dailyRe/app/www/", args["country"], "-confCasesSWestimates.csv")
+          )
         }
       }
     } else {
