@@ -410,11 +410,18 @@ if (dim(countryData)[1] > 0) {
             simpleCsv,
             file = file.path(basePath, "csv", str_c(args["country"], "-confCasesSWestimates.csv"))
           )
-          # write to test directory
-          readr::write_csv(
-            simpleCsv,
-            file = str_c("/home/covid-19-re/test-dailyRe/app/www/", args["country"], "-confCasesSWestimates.csv")
-          )
+          if (Sys.info()["nodename"] == "ibz-shiny.ethz.ch") {
+            # write to test directory
+            readr::write_csv(
+              simpleCsv,
+              file = str_c("/home/covid-19-re/test-dailyRe/app/www/", args["country"], "-confCasesSWestimates.csv")
+            )
+            if (str_detect(here(), "test") {
+              # write estimates to main app for publication
+              saveRDS(countryEstimates,
+                file = str_c("/home/covid-19-re/dailyRe/app/data/countryData/", args["country"], "-confCasesSWestimates.csv"))
+            }
+          }
         }
       }
     } else {
