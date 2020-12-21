@@ -416,7 +416,7 @@ if (dim(countryData)[1] > 0) {
               simpleCsv,
               file = str_c("/home/covid-19-re/test-dailyRe/app/www/", args["country"], "-confCasesSWestimates.csv")
             )
-            if (str_detect(here(), "test") {
+            if (str_detect(here(), "test")) {
               # write estimates to main app for publication
               saveRDS(countryEstimates,
                 file = str_c("/home/covid-19-re/dailyRe/app/data/countryData/",
