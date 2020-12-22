@@ -29,7 +29,7 @@ sendSlackNotification <- function(country, event, url, eTcompletion, webhookUrl)
         text = list(
           type = "mrkdwn",
           text = str_c(
-            Sys.time(), ": *New Re estimates for ", country, " are available. Will go live 15:00!*")
+            Sys.time(), ": *New Re estimates for ", country, " are available. Will go live 13:30 (Mon-Fri) / 15:30 (Sat/Sun)!*")
         )
       ))
     )
