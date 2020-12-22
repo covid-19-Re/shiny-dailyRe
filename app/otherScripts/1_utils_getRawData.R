@@ -105,6 +105,65 @@ getDataECDC <- function(countries = NULL, tempFileName = NULL, tReload = 15) {
   return(longData)
 }
 
+##### Our World in Data
+getDataOWID <- function(countries = NULL, tempFileName = NULL, tReload = 300) {
+  urlfile <- "https://covid.ourworldindata.org/data/owid-covid-data.csv"
+
+  if (is.null(tempFileName)) {
+    csvPath <- urlfile
+  } else {
+    fileMod <- file.mtime(tempFileName)
+    fileReload <- if_else(file.exists(tempFileName), now() > fileMod + minutes(tReload), TRUE)
+    if (fileReload) {
+      downloadOK <- try(download.file(urlfile, destfile = tempFileName))
+      if ("try-error" %in% class(downloadOK)) {
+        if (file.exists(tempFileName)) {
+          warning("Couldn't fetch new ECDC data. Using data from ", fileMod)
+        } else {
+          warning("Couldn't fetch new ECDC data.")
+          return(NULL)
+        }
+      }
+    }
+    csvPath <- tempFileName
+  }
+
+  world_data <- try(read_csv(csvPath,
+    col_types = cols_only(
+      iso_code = col_character(),
+      date = col_date(format = ""),
+      new_cases = col_double(),
+      new_deaths = col_double())
+    ))
+
+
+  if ("try-error" %in% class(world_data)) {
+    warning(str_c("couldn't get ECDC data from ", url, "."))
+    return(NULL)
+  }
+
+  longData <- world_data %>%
+    dplyr::select(
+      date = "date",
+      countryIso3 = "iso_code",
+      region = "iso_code",
+      confirmed = "new_cases", deaths = "new_deaths") %>%
+    pivot_longer(cols = c(confirmed, deaths), names_to = "data_type") %>%
+    mutate(
+      date_type = "report",
+      local_infection = TRUE,
+      source = "OWID") %>%
+    filter(!is.na(value))
+
+  if (!is.null(countries)) {
+    longData <- longData %>%
+      filter(countryIso3 %in% countries)
+  }
+
+  longData[longData$value < 0, "value"] <- 0
+  return(longData)
+}
+
 ##### Human Mortality Database #####
 
 getExcessDeathHMD <- function(countries = NULL, startAt = as.Date("2020-02-20"), tempFileName = NULL, tReload = 15) {
@@ -206,12 +265,12 @@ getHospitalDataBEL <- function() {
              )
     )
   )
-  
+
   if ("try-error" %in% class(rawData)) {
     warning(str_c("Couldn't read belgian hospital data at ", url))
     return(NULL)
   }
-  
+
   longData <- rawData %>%
     dplyr::select(date = DATE,
                   value = NEW_IN) %>%
@@ -408,10 +467,10 @@ getDeathDataCZE <- function(){
 
 ##### Estonia #####
 
-getDataEST <- function(ECDCtemp = NULL, tReload = 15) {
+getDataEST <- function(tempFile = NULL, tReload = 15) {
   case_data <- getCaseDataEST()
   hosp_data <- getHospDataEST()
-  death_data <- getDataECDC(countries = "EST", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "death")
+  death_data <- getDataOWID()(countries = "EST", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "death")
   
   all_data <- rbind(case_data, hosp_data, death_data)
   
@@ -623,9 +682,7 @@ getExcessDeathFRA <- function(startAt = as.Date("2020-02-20")) {
   return(longData)
 }
 
-# getDataFRA <- function(ECDCtemp = NULL, tReload = 15){
 getDataFRA <- function(){
-  # caseData <- getDataECDC(countries = "FRA", tempFileName = ECDCtemp, tReload = tReload)
   caseData <- getCaseDataFRA()
   excessDeath <- NULL #getExcessDeathFRA()
   hospitalAndDeathData <- getHospitalAndDeathDataFRA()
@@ -654,8 +711,8 @@ getCaseDataDEU <- function(data_path = here::here("app/data/DEU"), filename = "i
   return(DEUdata)
 }
 
-getDataDEU <- function( ECDCtemp = NULL, tReload = 15) {
-  deathData <- getDataECDC(countries = "DEU", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "death")
+getDataDEU <- function(tempFile = NULL, tReload = 15) {
+  deathData <- getDataOWID(countries = "DEU", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "death")
   caseData <- getCaseDataDEU()
   excessDeath <- NULL
   allData <- bind_rows(caseData, deathData, excessDeath)
@@ -899,7 +956,7 @@ getITADataPCM <- function(){
   return(data)
 }
 
-getDataITA <- function(ECDCtemp = NULL, tReload = 15) {
+getDataITA <- function(tempFile = NULL, tReload = 15) {
   caseData <- getITADataPCM()
   excessDeath <- NULL#getExcessDeathITA()
   
@@ -1048,8 +1105,8 @@ getCaseDataESP <- function(){
   return(confirmed_onsets)
 }
 
-getDataESP <- function( ECDCtemp = NULL, tReload = 15) {
-  deathData <- getDataECDC(countries = "ESP", tempFileName = ECDCtemp, tReload = tReload) %>%  filter(data_type == "death")
+getDataESP <- function(tempFile = NULL, tReload = 15) {
+  deathData <- getDataECDC(countries = "ESP", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "death")
   caseData <- getCaseDataESP()
   excessDeath <- NULL
   allData <- bind_rows(caseData, deathData, excessDeath)
@@ -1368,7 +1425,7 @@ getExcessDeathGBR <- function(startAt = as.Date("2020-02-20"), path_to_data = ".
   return(longData)
 }
 
-getDataGBR <- function(ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
+getDataGBR <- function(tempFile = NULL, HMDtemp = NULL, tReload = 15) {
   url <- paste0("https://api.coronavirus.data.gov.uk/v1/data?filters=areaType=nation&structure=%7B%22areaType%22:%22areaType%22,",
                 "%22areaName%22:%22areaName%22,%22date%22:%22date%22,%22newAdmissions%22:%22newAdmissions%22,",
                 "%22newDeaths28DaysByDeathDate%22:%22newDeaths28DaysByDeathDate%22,",
@@ -1419,14 +1476,14 @@ getDataGBR <- function(ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
 # currently implemented
 # Austria, Belgium*, France*, Germany, Italy*, Netherlands*, Spain, Switzerland*, Sweden, UK*
 
-getDataGeneric <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload = 15) {
-  caseData <- getDataECDC(countries = countries, tempFileName = ECDCtemp, tReload = tReload)
-  excessDeath <- NULL#getExcessDeathHMD(countries = countries, tempFileName = HMDtemp, tReload = tReload)
+getDataGeneric <- function(countries, tempFile = NULL, HMDtemp = NULL, tReload = 300) {
+  caseData <- getDataOWID(countries = countries, tempFileName = tempFile, tReload = tReload)
+  excessDeath <- NULL #getExcessDeathHMD(countries = countries, tempFileName = HMDtemp, tReload = tReload)
   allData <- bind_rows(caseData, excessDeath)
   return(allData)
 }
 
-getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload = 15, v = TRUE) {
+getCountryData <- function(countries, tempFile = NULL, HMDtemp = NULL, tReload = 300, v = TRUE) {
   
   allDataList <- list()
   
@@ -1441,7 +1498,7 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
     } else if (countries[i] == "CZE") {
       allDataList[[i]] <- getDataCZE()
     } else if (countries[i] == "DEU") {
-      allDataList[[i]] <- getDataDEU(ECDCtemp = ECDCtemp, tReload = tReload)
+      allDataList[[i]] <- getDataDEU(tempFile = tempFile, tReload = tReload)
     } else if (countries[i] == "ESP") {
       allDataList[[i]] <- getDataESP()
     } else if (countries[i] == "EST") {
@@ -1449,13 +1506,13 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
     } else if (countries[i] == "FRA") {
       allDataList[[i]] <- getDataFRA()
     } else if (countries[i] == "GBR") {
-      allDataList[[i]] <- getDataGBR(ECDCtemp = ECDCtemp, HMDtemp = HMDtemp, tReload = tReload)
+      allDataList[[i]] <- getDataGBR(tempFile = tempFile, HMDtemp = HMDtemp, tReload = tReload)
     } else if (countries[i] == "HKG") {
       allDataList[[i]] <- getDataHKG(data_path = here::here("app/data/HKG"))
     } else if (countries[i] == "IRL") {
       allDataList[[i]] <- getDataIRL()
     } else if (countries[i] == "ITA") {
-      allDataList[[i]] <- getDataITA(ECDCtemp = ECDCtemp)
+      allDataList[[i]] <- getDataITA(tempFile = tempFile)
     } else if (countries[i] == "LIE") {
       allDataList[[i]] <- getDataLIE(data_path = here::here("app/data/CHE"))
     } else if (countries[i] == "LVA") {
@@ -1467,7 +1524,7 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
     } else if (countries[i] == "ZAF") {
       allDataList[[i]] <- getDataZAF()
     } else {
-      allDataList[[i]] <- getDataGeneric(countries[i], ECDCtemp = ECDCtemp, HMDtemp = HMDtemp, tReload = tReload)
+      allDataList[[i]] <- getDataGeneric(countries[i], tempFile = tempFile, HMDtemp = HMDtemp, tReload = tReload)
     }
     if (v) {
       cat("done. \n")
