@@ -20,7 +20,7 @@ cd "$parent_path"
 echo "updating covid19-Data ..."
 
 # if on test server copy csv files
-FILE=/home/covid-19-re/test-dailyRe/app/otherScripts/isTestServer.txt
+FILE=isTestServer.txt
 if test -f "$FILE"; then
   cp /home/covid-19-re/test-dailyRe/app/data/countryData/csv/CHE-*.csv /home/covid-19-re/dailyRe-Data/
   cp /home/covid-19-re/test-dailyRe/app/data/countryData/csv/LIE-*.csv /home/covid-19-re/dailyRe-Data/
