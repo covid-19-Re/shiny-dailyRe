@@ -1,11 +1,10 @@
 library(tidyverse)
 library(here)
 
-if (file.exists(here("app/otherScripts/sendNotifications.txt")) &
-    file.exists(here("app/otherScripts/notificationsToSend.txt"))) {
+if (file.exists(here("app/otherScripts/sendNotifications.txt"))) {
 
   source(here("app/otherScripts/utils.R"))
-  countries <- scan(here("app/otherScripts/notificationsToSend.txt"), what = "character")
+  countries <- "CHE"
   urls <- scan(here("app/otherScripts/slackWebhook.txt"), what = "character")
 
   for (country in countries) {
