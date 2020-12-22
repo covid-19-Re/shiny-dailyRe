@@ -17,9 +17,6 @@ parent_path=$(
 
 cd "$parent_path"
 
-# make plots
-runRScript makeCHPlots.R
-
 echo "updating covid19-Data ..."
 
 # if on test server copy csv files
@@ -41,6 +38,9 @@ mv ../data/temp/*.qs ../data/serialized/
 
 # reload data by restarting R shiny process
 touch ../restart.txt
+
+# make plots
+runRScript makeCHPlots.R
 
 # update plots on eth cms
 cd "../www/cantonPlots"
