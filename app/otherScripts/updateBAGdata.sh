@@ -11,14 +11,14 @@ parent_path=$(
 cd "$parent_path"
 
 latestFile=$(ls -t /home/covid-19-re/BAGdata/*/*FOPH_COVID19_data_extract.csv | head -1)
-if [ -f lastBAGFile.txt ]; then
-  lastFile=$(<lastBAGFile.txt)
+if [ -f /home/covid-19-re/lastBAGFile.txt ]; then
+  lastFile=$(</home/covid-19-re/lastBAGFile.txt)
 else
   lastFile="no latest dir found"
 fi
 
 if [ "$latestFile" != "$lastFile" ]; then
   ./runCountryEstimationCHE.sh
-  echo "$latestFile">lastBAGFile.txt
+  echo "$latestFile">/home/covid-19-re/lastBAGFile.txt
 fi
 
