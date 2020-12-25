@@ -2,5 +2,6 @@
 30 13 * * 1-5 /home/covid-19-re/dailyRe/app/otherScripts/putSwissDataLive.sh
 15-45 11 * * 0,6 /home/covid-19-re/test-dailyRe/app/otherScripts/updateBAGdata.sh
 30 15 * * 0,6 /home/covid-19-re/test-dailyRe/app/otherScripts/putSwissDataLive.sh
+30 15 * * 0,6 /home/covid-19-re/dailyRe/app/otherScripts/putSwissDataLive.sh
 0 0 * * * /home/covid-19-re/dailyRe/app/otherScripts/runCountryEstimationZAF.sh
 0 2 * * * /home/covid-19-re/dailyRe/app/otherScripts/runCountryEstimationRest.sh
