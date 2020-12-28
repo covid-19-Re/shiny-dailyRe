@@ -52,12 +52,8 @@ if (!dir.exists(basePath)) {
 }
 
 # fetch stringency data
-stringencyData <- getDataOxfordStringency(countries = args["country"],
-    tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300) %>%
-    mutate(source = "BSG Covidtracker")
-
 if (args["country"] == "CHE") {
-  stringencyDataRegional <- read_csv(
+  stringencyData <- read_csv(
     "https://raw.githubusercontent.com/KOF-ch/economic-monitoring/master/data/ch.kof.stringency.csv",
     col_types = cols(
       time = col_date(format = ""),
@@ -66,16 +62,18 @@ if (args["country"] == "CHE") {
       value = col_double()
     )) %>%
     filter(
-      variable == "stringency_plus",
-      geo != "ch") %>%
+      variable == "stringency") %>%
     dplyr::transmute(
       date = time,
       countryIso3 = "CHE",
-      region = toupper(geo),
+      region = recode(toupper(geo), "CH" = "CHE"),
       source = "KOF",
       StringencyIndex = value
     )
-  stringencyData <- bind_rows(stringencyData, stringencyDataRegional)
+} else {
+  stringencyData <- getDataOxfordStringency(countries = args["country"],
+    tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300) %>%
+    mutate(source = "BSG Covidtracker")
 }
 
 stringencyDataPath <- file.path(basePath, str_c(args["country"], "-OxCGRT.rds"))
