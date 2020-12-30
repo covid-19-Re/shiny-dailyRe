@@ -331,10 +331,10 @@
       "it-ch": "Nuove osservazioni"
     },
     {
-      "en-gb": "Reproductive number R<sub>e</sub>",
-      "de-ch": "Reproduktionszahl R<sub>e</sub>",
-      "fr-ch": "Nombre de reproduction R<sub>e</sub>",
-      "it-ch": "Numero di riproduzione R<sub>e</sub>"
+      "en-gb": "Reproductive number R<sub>e</sub> (95% CI)",
+      "de-ch": "Reproduktionszahl R<sub>e</sub> (95% KI)",
+      "fr-ch": "Nombre de reproduction R<sub>e</sub> (95% CI)",
+      "it-ch": "Numero di riproduzione R<sub>e</sub> (95% CI)"
     },
     {
       "en-gb": "Data types",
