@@ -355,6 +355,8 @@ if (dim(countryData)[1] > 0) {
           deconvolvedCountryData,
           slidingWindow = window,
           methods = "Cori",
+          #variationTypes = c("step", "slidingWindow"),
+          variationTypes = c("slidingWindow"),
           all_delays = all_delays,
           truncations = truncations,
           interval_ends = interval_ends,

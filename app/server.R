@@ -478,7 +478,10 @@ server <- function(input, output, session) {
   })
 
   estimationTypeChoices <- reactive({
-    estimationTypeChoices <- c("sliding window" = "Cori_slidingWindow", "step-wise constant" = "Cori_step")
+    estimationTypeChoices <- c("bagged HPD" = "Cori_slidingWindow", 
+                               "MM" = "Cori_slidingWindow_MM", 
+                               "Union of bagged HPD and MM" = "Cori_slidingWindow_simple_Union", 
+                               "bootstrapped HPD" = "Cori_slidingWindow_wideHPDs")
     names(estimationTypeChoices) <- sapply(names(estimationTypeChoices), i18n()$t,  USE.NAMES = FALSE)
     return(estimationTypeChoices)
   })
