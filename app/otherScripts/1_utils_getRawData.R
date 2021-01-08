@@ -1219,8 +1219,8 @@ sumGreaterRegions <- function(chData) {
   return(greaterRegionsData)
 }
 
-getDataCHEBAG <- function(path = here::here("app/data/CHE"), country = "CHE", filename = "incidence_data_CHE.csv") {
-  filePath <- file.path(path, filename)
+getDataCHEBAG <- function(path = here::here("app/data/CHE"), country = "CHE", filename) {
+  filePath <- filename
   bagData <- read_csv(filePath,
                       col_types = cols(
                         date = col_date(format = ""),
@@ -1289,8 +1289,8 @@ getDataCHEexcessDeath <- function(startAt = as.Date("2020-02-20")) {
   return(longData)
 }
 
-getDataCHE <- function(data_path) {
-  bagData <- getDataCHEBAG(path = data_path, country = "CHE")
+getDataCHE <- function(data_path, filename = "incidence_data_CHE.csv") {
+  bagData <- getDataCHEBAG(path = data_path, country = "CHE", filename)
   swissExcessDeath <- NULL #getDataCHEexcessDeath(startAt = as.Date("2020-02-20"))
   swissData <- bind_rows(
     bagData,
@@ -1426,7 +1426,7 @@ getDataGeneric <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
   return(allData)
 }
 
-getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload = 15, v = TRUE) {
+getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload = 15, v = TRUE, filename = "incidence_data_CHE.csv") {
   
   allDataList <- list()
   
@@ -1437,7 +1437,8 @@ getCountryData <- function(countries, ECDCtemp = NULL, HMDtemp = NULL, tReload =
     if (countries[i] == "BEL") {
       allDataList[[i]] <- getDataBEL()
     } else if (countries[i] == "CHE") {
-      allDataList[[i]] <- getDataCHE(data_path = here::here("app/data/CHE"))
+      print(filename)
+      allDataList[[i]] <- getDataCHE(data_path = here::here("app/data/CHE"), filename)
     } else if (countries[i] == "CZE") {
       allDataList[[i]] <- getDataCZE()
     } else if (countries[i] == "DEU") {

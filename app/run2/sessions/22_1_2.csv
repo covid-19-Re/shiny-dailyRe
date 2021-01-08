@@ -1,0 +1,9 @@
+# http://127.0.0.1:7696 --workers 10 --loaded-duration-minutes 5 --output-dir run2
+# {"appUrl":"http://127.0.0.1:7696","debugLog":false,"loadedDurationMinutes":5.0,"logLevel":"WARN","outputDir":"run2","overwriteOutput":false,"recordingPath":"recording.log","workers":10}
+session_id,worker_id,iteration,event,timestamp,input_line_number,comment
+22,1,2,PLAYER_SESSION_CREATE,1607701650507,0,
+22,1,2,REQ_HOME_START,1607701650507,4,
+22,1,2,REQ_HOME_END,1607701650659,4,
+22,1,2,WS_OPEN_START,1607701650659,5,
+22,1,2,WS_OPEN_END,1607701650679,5,
+22,1,2,PLAYBACK_SLEEPBEFORE_START,1607701650679,6,

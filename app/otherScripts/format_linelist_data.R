@@ -17,7 +17,7 @@ for(code in linelist_codes) {
 }
 
 delay_data <- c()
-for(code in linelist_codes) {
+for (code in linelist_codes) {
   country_delay_data <- read_csv(here::here("app", "data", code, paste0(code, "_data_delays.csv")))
   delay_data <- c(delay_data, list(country_delay_data))
 }
