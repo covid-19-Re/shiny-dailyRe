@@ -119,9 +119,9 @@ interval_ends[["default"]] <- interval_ends[[args["country"]]]
 # Fetch Country Data
 countryData <- getCountryData(
   args["country"],
-  ECDCtemp = here::here("app/data/temp/ECDCdata.csv"),
+  tempFile = here::here("app/data/temp/ECDCdata.csv"),
   HMDtemp = here::here("app/data/temp/HMDdata.csv"),
-  tReload = 30) %>%
+  tReload = 300) %>%
   left_join(
     popData,
     by = c("countryIso3", "region")
