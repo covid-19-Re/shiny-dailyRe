@@ -332,7 +332,7 @@ do_deconvolution <- function(
   
   # use mode of 'constant_delay_distribution'. -1 because indices are offset by one as the delay can be 0.
   
-  first_guess_delay <- initial_delta
+  first_guess_delay <- ceiling(initial_delta)
   
   if (verbose) {
     cat("\tDelay on first guess: ", first_guess_delay, "\n")

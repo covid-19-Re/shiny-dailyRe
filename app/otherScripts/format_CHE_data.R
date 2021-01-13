@@ -115,7 +115,7 @@ normalized_test_delays <- final_delay_data_FOPH %>% filter(data_type == "Confirm
 final_delay_data_FOPH <- bind_rows(final_delay_data_FOPH, normalized_test_delays)
 
 ### Save file
-readr::write_csv(final_delay_data_FOPH, file = file.path(outDir, "CHE_data_delays.csv"))
+readr::write_csv(final_delay_data_FOPH, path = file.path(outDir, "CHE_data_delays.csv"))
 
 
 # cat("Mean Time from onset to Hospitalization:",
@@ -507,3 +507,4 @@ allBAGdata <- bind_rows(list(allBAGdata_plotting), list(allBAGdata_calculations)
 ## end of remove
 
 readr::write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CHE.csv"))
+
