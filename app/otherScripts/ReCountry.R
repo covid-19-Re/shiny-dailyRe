@@ -225,11 +225,7 @@ if (dim(countryData)[1] > 0) {
 
     countryData <- filter(countryData, !(data_type %in% data_type0))
     # country specific data filtering
-    if (args["country"] == "ESP") {
-      countryData <- countryData %>%
-        filter(data_type != "Deaths")
-      cat("ignoring data_type Deaths\n")
-    } else if (args["country"] == "AUT") {
+    if (args["country"] %in% c("ESP", "AUT", "CHE")) {
       countryData <- countryData %>%
         filter(data_type != "Deaths")
       cat("ignoring data_type Deaths\n")
