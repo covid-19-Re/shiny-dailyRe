@@ -1121,10 +1121,7 @@ getCaseDataESP <- function(){
 
 getDataESP <- function(tempFile = NULL, tReload = 15) {
   #deathData <- getDataECDC(countries = "ESP", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "death")
-  deathData <- try(getDataOWID(countries = "ESP", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "deaths"))
-  if ("try-error" %in% class(deathData)){
-    deathData <- NULL
-  }
+  deathData <- getDataOWID(countries = "ESP", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "deaths")
   caseData <- getCaseDataESP()
   excessDeath <- NULL
   allData <- bind_rows(caseData, deathData, excessDeath)
