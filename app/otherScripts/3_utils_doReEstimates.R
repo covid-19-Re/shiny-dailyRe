@@ -474,13 +474,23 @@ cleanCountryReEstimate <- function(countryEstimatesRaw, method = 'bootstrap',
       dplyr::mutate(median_R_highHPD = median_R_mean + qnorm(high_quan)*sd_mean,
                     median_R_lowHPD = median_R_mean - qnorm(high_quan)*sd_mean) %>%
       mutate(median_R_highHPD = ifelse(median_R_highHPD <0, 0, median_R_highHPD),
-             median_R_lowHPD = ifelse(median_R_lowHPD <0, 0, median_R_lowHPD)) %>%
-      mutate(estimate_type = paste0(estimate_type, '_MM_baggedMean'))
+             median_R_lowHPD = ifelse(median_R_lowHPD <0, 0, median_R_lowHPD)) #%>%
+      #mutate(estimate_type = paste0(estimate_type, '_MM_baggedMean'))
+    
+    bag_Union <- MM_baggedMean %>%
+      left_join(legacy_ReEstimates, by = c('date', 'country', 'region', 
+                                           'data_type', 'source', 'estimate_type')) %>%
+      rowwise() %>%
+      mutate(median_R_mean = median_R_mean.x,
+             median_R_highHPD = max(median_R_highHPD.x, median_R_highHPD.y),
+             median_R_lowHPD = min(median_R_lowHPD.x, median_R_lowHPD.y),
+             estimate_type = paste0(estimate_type, '_bag_Union'))
     
     ReEstimates <- bind_rows(legacy_ReEstimates, 
                              MM_ReEstimates %>% mutate(estimate_type = paste0(estimate_type, '_MM')),
-                             MM_baggedMean,
-                             simple_Union, wideHPDs) %>%
+                             MM_baggedMean %>% mutate(estimate_type = paste0(estimate_type, '_MM_baggedMean')),
+                             simple_Union, bag_Union,
+                             wideHPDs) %>%
       dplyr::select(country, region, source, data_type, estimate_type, date,
                     median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
       arrange(country, region, source, data_type, estimate_type, date) %>%
