@@ -1,17 +1,7 @@
 #!/bin/sh
-
-# deactivate crontab
-crontab -l > /home/covid-19-re/crontabBackup.txt
-crontab -r
-
-parent_path=$(
-  cd "$(dirname "${BASH_SOURCE[0]}")"
-  pwd -P
-)
-
 runRScript () {
   echo "running" $1 $2 "..."
-  Rscript --vanilla --verbose $1 $2 >>messagesZAF.Rout 2>>errorsZAF.Rout
+  Rscript --verbose $1 $2 >>messagesZAF.Rout 2>>errorsZAF.Rout
   retVal=$?
   if [ $retVal -ne 0 ]; then
     echo "Script didn't run successfully (Error" $retVal ")"
@@ -20,7 +10,20 @@ runRScript () {
   fi
 }
 
+parent_path=$(
+  cd "$(dirname "${BASH_SOURCE[0]}")"
+  pwd -P
+)
+
 cd "$parent_path"
+
+# deactivate crontab
+cr=$(crontab -l)
+if  [ ! -z "$cr" ]; then
+  crontab -l > crontabBackup.txt
+  echo "deactivating crontab. Backed up to crontabBackup.txt"
+  crontab -r
+fi
 
 echo "updating covid19-additionalData ..."
 cd "../../../covid19-additionalData"
@@ -46,4 +49,9 @@ git add .
 git commit -m "update data"
 git push
 
-crontab /home/covid-19-re/dailyRe/app/otherScripts/crontab.txt
+# reactivate crontab
+if  [ ! -z "$cr" ]; then
+  cd "$parent_path"
+  echo "restoring crontab from backup"
+  crontab crontabBackup.txt
+fi

@@ -105,6 +105,7 @@ getDataECDC <- function(countries = NULL, tempFileName = NULL, tReload = 15) {
   return(longData)
 }
 
+
 ##### Our World in Data
 getDataOWID <- function(countries = NULL, tempFileName = NULL, tReload = 300) {
   urlfile <- "https://covid.ourworldindata.org/data/owid-covid-data.csv"
@@ -118,9 +119,9 @@ getDataOWID <- function(countries = NULL, tempFileName = NULL, tReload = 300) {
       downloadOK <- try(download.file(urlfile, destfile = tempFileName))
       if ("try-error" %in% class(downloadOK)) {
         if (file.exists(tempFileName)) {
-          warning("Couldn't fetch new ECDC data. Using data from ", fileMod)
+          warning("Couldn't fetch new OWID data. Using data from ", fileMod)
         } else {
-          warning("Couldn't fetch new ECDC data.")
+          warning("Couldn't fetch new OWID data.")
           return(NULL)
         }
       }
@@ -138,7 +139,7 @@ getDataOWID <- function(countries = NULL, tempFileName = NULL, tReload = 300) {
 
 
   if ("try-error" %in% class(world_data)) {
-    warning(str_c("couldn't get ECDC data from ", url, "."))
+    warning(str_c("couldn't get OWID data from ", url, "."))
     return(NULL)
   }
 
@@ -470,8 +471,8 @@ getDeathDataCZE <- function(){
 getDataEST <- function(tempFile = NULL, tReload = 15) {
   case_data <- getCaseDataEST()
   hosp_data <- getHospDataEST()
-  death_data <- getDataOWID()(countries = "EST", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "death")
-  
+  death_data <- getDataOWID(countries = "EST", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "deaths")
+
   all_data <- rbind(case_data, hosp_data, death_data)
   
   return(all_data)
@@ -584,18 +585,27 @@ getCaseDataFRA <- function() {
            date_type = "report",
            local_infection = TRUE,
            region = "FRA",
-           source = "ECDC - SpF-DMI")
+           #source = "ECDC - SpF-DMI")
+           source = "OWID - SpF-DMI")
 
   min_date_SPF <- min(longData$date)
 
-  ecdcData <- getDataECDC(countries = "FRA", tempFileName = NULL, tReload = 15)
+  #ecdcData <- getDataECDC(countries = "FRA", tempFileName = NULL, tReload = 15)
 
-  ecdcData <- ecdcData %>%
-    filter(data_type == "confirmed", date <  min_date_SPF) %>%
-    arrange(date) %>% 
-    mutate(source = "ECDC - SpF-DMI")
+  # ecdcData <- ecdcData %>%
+  #   filter(data_type == "confirmed", date <  min_date_SPF) %>%
+  #   arrange(date) %>% 
+  #   mutate(source = "ECDC - SpF-DMI")
   
-  return(bind_rows(ecdcData, longData))
+  owidData <- getDataOWID(countries = "FRA", tempFileName = NULL, tReload = 15)
+  # this is quite ugly (non standardised data)
+  owidData <- owidData %>%
+       filter(data_type == "confirmed", date <  min_date_SPF) %>%
+       arrange(date) %>% 
+       mutate(source = "OWID - SpF-DMI")
+  
+  #return(bind_rows(ecdcData, longData))
+  return(bind_rows(owidData, longData))
 }
 
 
@@ -712,10 +722,14 @@ getCaseDataDEU <- function(data_path = here::here("app/data/DEU"), filename = "i
 }
 
 getDataDEU <- function(tempFile = NULL, tReload = 15) {
-  deathData <- getDataOWID(countries = "DEU", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "death")
+  deathData <- getDataOWID(countries = "DEU", tempFileName = tempFile, tReload = tReload) %>% filter(data_type == "deaths")
+  # unfortunately this code is hacky as hell, but otherwise line 42-46 in sumData fails
+  deathData_dups <- deathData %>%
+                    mutate(date_type = "report_plotting",
+                           local_infection = NA)
   caseData <- getCaseDataDEU()
   excessDeath <- NULL
-  allData <- bind_rows(caseData, deathData, excessDeath)
+  allData <- bind_rows(caseData, deathData, deathData_dups, excessDeath)
   return(allData)
 }
 
@@ -1085,7 +1099,8 @@ getDataNLD <- function() {
 ## Spain
 
 getCaseDataESP <- function(){
-  url_csv_file <- "https://cnecovid.isciii.es/covid19/resources/datos_ccaas.csv"
+  #url_csv_file <- "https://cnecovid.isciii.es/covid19/resources/datos_ccaas.csv"
+  url_csv_file <- "https://cnecovid.isciii.es/covid19/resources/casos_diagnostico_ccaa.csv"
   
   raw_data <- try(read_csv(url_csv_file))
   
@@ -1105,8 +1120,10 @@ getCaseDataESP <- function(){
   return(confirmed_onsets)
 }
 
+
 getDataESP <- function(tempFile = NULL, tReload = 15) {
-  deathData <- getDataECDC(countries = "ESP", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "death")
+  #deathData <- getDataECDC(countries = "ESP", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "death")
+  deathData <- getDataOWID(countries = "ESP", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "deaths")
   caseData <- getCaseDataESP()
   excessDeath <- NULL
   allData <- bind_rows(caseData, deathData, excessDeath)

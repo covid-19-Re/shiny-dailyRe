@@ -507,3 +507,4 @@ allBAGdata <- bind_rows(list(allBAGdata_plotting), list(allBAGdata_calculations)
 ## end of remove
 
 readr::write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CHE.csv"))
+

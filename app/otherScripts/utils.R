@@ -16,11 +16,24 @@ sendSlackNotification <- function(country, event, url, eTcompletion, webhookUrl)
           type = "mrkdwn",
           text = str_c(
             Sys.time(), ": *New incidence data for ", country, " is available.*\n",
+            "updating ", url, "\n",
             "Estimated time of completion of update: ~ ", eTcompletion)
         )
       ))
     )
   } else if (event == "updateDone") {
+    message <- list(
+      text = str_c(country, ": new Re estimates calculated"),
+      blocks = list(list(
+        type = "section",
+        text = list(
+          type = "mrkdwn",
+          text = str_c(
+            Sys.time(), ": *New Re estimates for ", country, " are available. Will go live 13:30 (Mon-Fri) / 15:30 (Sat/Sun)!*")
+        )
+      ))
+    )
+  } else if (event == "dataLive") {
     message <- list(
       text = str_c(country, ": new Re estimates"),
       blocks = list(list(
