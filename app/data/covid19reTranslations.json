@@ -169,7 +169,7 @@
       "de-ch": "Schliessung von Museen, Zoos, Nachtklubs, etc."
     },
     {
-      "en-gb": "Closure of museums, zoos, etc <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 17.03.2020",
+      "en-gb": "Closure of museums, zoos, nightclubs, etc. <br> SR 818.101.24 COVID-19 Ordinance 2, 13.3.2020, Status as of 17.03.2020",
       "it-ch": "Chiusura musei, zoo, etc <br> SR 818.101.24 Ordinanza 2 COVID-19 2, 13.3.2020, Stato 17.03.2020",
       "fr-ch": "Fermeture des musées, des zoos… <br> SR 818.101.24 Ordonnance 2 COVID-19, 13.3.2020, Version du 17.03.2020",
       "de-ch": "Schliessung von Museen, Zoos, etc. <br> SR 818.101.24 COVID-19 Verordnung 2, 13.3.2020, Stand am 17.03.2020"
@@ -331,10 +331,10 @@
       "it-ch": "Nuove osservazioni"
     },
     {
-      "en-gb": "Reproductive number R<sub>e</sub>",
-      "de-ch": "Reproduktionszahl R<sub>e</sub>",
-      "fr-ch": "Nombre de reproduction R<sub>e</sub>",
-      "it-ch": "Numero di riproduzione R<sub>e</sub>"
+      "en-gb": "Reproductive number R<sub>e</sub> (95% CI)",
+      "de-ch": "Reproduktionszahl R<sub>e</sub> (95% KI)",
+      "fr-ch": "Nombre de reproduction R<sub>e</sub> (95% CI)",
+      "it-ch": "Numero di riproduzione R<sub>e</sub> (95% CI)"
     },
     {
       "en-gb": "Data types",
@@ -535,6 +535,10 @@
       "it-ch": "Sud America"
     },
     {
+      "en-gb": "Oceania",
+      "de-ch": "Ozeanien"
+    },
+    {
       "en-gb": "Clear all",
       "de-ch": "Alle entfernen",
       "fr-ch": "Enlever tout",
@@ -548,18 +552,122 @@
     },
     {
       "en-gb": "Quick select",
-      "de-ch": "Alle Länder in Kontinent auswählen",
-      "fr-ch": "Quick select",
-      "it-ch": "Quick select"
+      "de-ch": "Schnellauswahl"
     },
     {
       "en-gb": "Why is the most recent R<sub>e</sub> estimate delayed by ~10 days?",
-      "de-ch": "Warum ist die jüngste Schatzung von R<sub>e</sub> von vor ca. 10 Tagen?",
-      "fr-ch": "Why is the most recent R<sub>e</sub> estimate delayed by ~10 days?",
-      "it-ch": "Why is the most recent R<sub>e</sub> estimate delayed by ~10 days?"
-
-    }
-    
+      "de-ch": "Warum ist die jüngste Schatzung von R<sub>e</sub> von vor ca. 10 Tagen?"
+    },
+    {
+      "en-gb": "Masks mandatory on public transport",
+      "de-ch": "Maskenpflicht im öffentlichen Verkehr"
+    },
+    {
+      "en-gb": "Masks mandatory in busy public spaces",
+      "de-ch": "Maskenpflicht in belebten öffentlichen Räumen"
+    },
+    {
+      "en-gb": "End of Masks mandatory in busy public spaces",
+      "de-ch": "Ende der Maskenpflicht in belebten öffentlichen Räumen"
+    },
+    {
+      "en-gb": "Masks mandatory in public buildings",
+      "de-ch": "Maskenpflicht in öffentlichen Gebäuden"
+    },
+    {
+      "en-gb": "End of Masks mandatory in public buildings",
+      "de-ch": "Ende der Maskenpflicht in öffentlichen Gebäuden"
+    },
+    {
+      "en-gb": "Restrictions for Restaurants",
+      "de-ch": "Einschränkungen für Restaurationsbetriebe"
+    },
+    {
+      "en-gb": "End of Restrictions for Restaurants",
+      "de-ch": "Ende der Einschränkungen für Restaurationsbetriebe"
+    },
+    {
+      "en-gb": "Closure of night clubs",
+      "de-ch": "Schliessung von Nachtklubs"
+    },
+    {
+      "en-gb": "End of Closure of night clubs",
+      "de-ch": "Ende der Schliessung von Nachtklubs"
+    },
+    {
+      "en-gb": "Launch of SwissCovid App",
+      "de-ch": "Einführung der SwissCovid App"
+    },
+    {
+      "en-gb": "Launch of SwissCovid App <br>Apple/Google API",
+      "de-ch": "Einführung der SwissCovid App <br>Apple/Google API"
+    },
+    {
+      "en-gb": "Ban of events > 50 people",
+      "de-ch": "Verbot von Veranstaltungen mit > 50 Personen"
+    },
+    {
+      "en-gb": "End of ban of events > 50 people",
+      "de-ch": "Ende des Verbots von Veranstaltungen mit > 50 Personen"
+    },
+    {
+      "en-gb": "Ban of in person events in higher education",
+      "de-ch": "Verbot von Veranstaltungen in der höheren Bildung"
+    },
+    {
+      "en-gb": "End of Ban of in person events in higher education",
+      "de-ch": "Ende des Verbots von Veranstaltungen in der höheren Bildung"
+    },
+    {
+      "en-gb": "Home office recommended",
+      "de-ch": "Home Office Empfehlung"
+    },
+    {
+      "en-gb": "End of Home office recommendation",
+      "de-ch": "Ende der Home Office Empfehlung"
+    },
+    {
+      "en-gb": "Ban of spontaneous gatherings > 15 people",
+      "de-ch": "Verbot von spontanen Treffen mit > 15 Personen"
+    },
+    {
+      "en-gb": "End of ban of spontaneous gatherings > 15 people",
+      "de-ch": "Ende des Verbots von spontanen Treffen mit > 15 Personen"
+    },
+    {
+      "en-gb": "Ban of private gatherings > 10 people",
+      "de-ch": "Verbot von privaten Treffen mit > 10 Personen"
+    },
+    {
+      "en-gb": "End of ban of private gatherings > 10 people",
+      "de-ch": "Ende des Verbots von privaten Treffen mit > 10 Personen"
+    },
+    {
+      "en-gb": "sliding window",
+      "de-ch": "gleitendes Fenster"
+    },
+    {
+      "en-gb": "step-wise constant",
+      "de-ch": "stufenweise Konstant"
+    },
+    {
+      "en-gb": "Most recent effective reproductive number estimate",
+      "de-ch": "Aktuellste Schätzung der effektiven Reproduktionszahl"
+    },
+    {
+      "en-gb": "Average effective reproductive number over the last 7 days",
+      "de-ch": "Durchschnittliche effektive Reproduktionszahl in den letzten 7 Tagen"
+    },
+    {
+      "en-gb": "FAQ",
+      "de-ch": "FAQ"
+    },
+    {
+      "en-gb": "Stringency Index",
+      "de-ch": "Stringency Index",
+      "fr-ch": "Stringency Index",
+      "it-ch": "Stringency Index"
+    }   
   ]
 }
 

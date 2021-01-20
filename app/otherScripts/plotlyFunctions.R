@@ -237,7 +237,7 @@ estimatesSubPlot <- function(
     layout(
       xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
       yaxis = plotlyYaxis(
-        title = translator$t("Reproductive number R<sub>e</sub>"),
+        title = translator$t("Reproductive number R<sub>e</sub> (95% CI)"),
         range = c(0, 4),
         fixedRange = fixedRangeY,
         zeroline = TRUE),

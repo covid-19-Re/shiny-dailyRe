@@ -380,6 +380,19 @@ server <- function(input, output, session) {
       return(ui)
     })
 
+    output$disclaimer <- renderUI({
+      ui <- tagList(
+        HTML(
+          "<div class='importantBox'>
+            <div class='inner'>"),
+        includeMarkdown(str_c("md/disclaimerCHE_", input$lang, ".md")),
+        HTML(
+            "</div>
+          </div>"
+        )
+      )
+    })
+
     avgRestimate <- reactive({
       countryData <- countryData()
       countrySelectValue <- countrySelectValue()
@@ -479,9 +492,17 @@ server <- function(input, output, session) {
 
   estimationTypeChoices <- reactive({
     estimationTypeChoices <- c("bagged HPD" = "Cori_slidingWindow", 
-                               "MM" = "Cori_slidingWindow_MM", 
-                               "Union of bagged HPD and MM" = "Cori_slidingWindow_simple_Union", 
-                               "bootstrapped HPD" = "Cori_slidingWindow_wideHPDs")
+                               "MM w. orig mean" = "Cori_slidingWindow_MM", 
+                               "MM w. bagged mean" = "Cori_slidingWindow_MM_baggedMean", 
+                               "Union of bagged HPD and orig. MM" = "Cori_slidingWindow_simple_Union", 
+                               "Union of bagged HPD and bagged mean MM" = "Cori_slidingWindow_bag_Union", 
+                               "bootstrapped HPD" = "Cori_slidingWindow_wideHPDs",
+                               "STEP: bagged HPD" = "Cori_step", 
+                               "STEP: MM w. orig mean" = "Cori_step_MM", 
+                               "STEP: MM w. bagged mean" = "Cori_step_MM_baggedMean", 
+                               "STEP: Union of bagged HPD and orig. MM" = "Cori_step_simple_Union", 
+                               "STEP: Union of bagged HPD and bagged mean MM" = "Cori_step_bag_Union", 
+                               "STEP: bootstrapped HPD" = "Cori_step_wideHPDs")
     names(estimationTypeChoices) <- sapply(names(estimationTypeChoices), i18n()$t,  USE.NAMES = FALSE)
     return(estimationTypeChoices)
   })

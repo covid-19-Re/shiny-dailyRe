@@ -282,20 +282,20 @@ get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_de
 # }
 
 # NEW VERSION WITH JINZHOU'S CODE, ADAPTED BY JANA
-get_bootstrap_replicate <- function(original_time_series, block_size = 10) {
+get_bootstrap_replicate <- function(original_time_series, block_size = 10, days_incl = 21) {
   tmp <- original_time_series
   
   tmp$log_value <- ifelse(tmp$value != 0, log(tmp$value), 0)
 
   smoothed_incidence_data <- tmp %>%
     complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(log_value = 0)) %>%
-    mutate(log_loess = getLOESSCases(dates = date, count_data = log_value),
+    mutate(log_loess = getLOESSCases(dates = date, count_data = log_value, days_incl),
          log_diff = ifelse(log_value != 0, log_value - log_loess, 0))
 
   log_diff_boot <- block_boot_overlap_func(smoothed_incidence_data$log_diff, block_size)
   log_smoothed_data <- smoothed_incidence_data$log_loess
   
-  ts_boot <- exp(log_diff_boot + log_smoothed_data)  
+  ts_boot <- exp(log_diff_boot + log_smoothed_data) -1
   ts_boot[ts_boot<0] <- 0
   ts_boot <- round(ts_boot)
   
@@ -389,7 +389,7 @@ do_deconvolution <- function(
   
   # use mode of 'constant_delay_distribution'. -1 because indices are offset by one as the delay can be 0.
   
-  first_guess_delay <- initial_delta
+  first_guess_delay <- ceiling(initial_delta)
   
   if (verbose) {
     cat("\tDelay on first guess: ", first_guess_delay, "\n")

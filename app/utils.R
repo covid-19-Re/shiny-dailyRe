@@ -52,7 +52,7 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
   if (!is_empty(OxCGRTPath)) {
 
     OxCGRTData <- readRDS(file.path(dataDir, OxCGRTPath)) %>%
-      select(countryIso3, region, date, matches("\\w\\d_"))
+      dplyr::select(countryIso3, region, date, matches("\\w\\d_"))
     names(OxCGRTData)
   }
 
@@ -65,10 +65,22 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
     estimateRanges <- NULL
   )
 
+  if (!is.null(caseData)) {
+    updateData <- caseData %>%
+        group_by(countryIso3, country, region, source, data_type) %>%
+        dplyr::summarize(lastData = max(date), .groups = "keep") %>%
+        mutate(
+          lastChanged = file.mtime(file.path(dataDir, dataPath)),
+          lastChecked = file.mtime(file.path(dataDir, dataPath)))
+  } else (
+    updateData <- NULL
+  )
+
   countryData <- list(
     caseData = caseData,
     estimates = estimates,
-    estimateRanges = estimateRanges)
+    estimateRanges = estimateRanges,
+    updateData = updateData)
 
   return(countryData)
 }
