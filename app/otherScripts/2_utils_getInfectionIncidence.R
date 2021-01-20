@@ -285,7 +285,9 @@ get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_de
 get_bootstrap_replicate <- function(original_time_series, block_size = 10, days_incl = 21) {
   tmp <- original_time_series
   
-  tmp$log_value <- ifelse(tmp$value != 0, log(tmp$value), 0)
+  # Change introduced after meeting on 19.1
+  #tmp$log_value <- ifelse(tmp$value != 0, log(tmp$value), 0)
+  tmp$log_value <- ifelse(tmp$value != 0, log(tmp$value + 1), 0)
 
   smoothed_incidence_data <- tmp %>%
     complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(log_value = 0)) %>%
