@@ -54,12 +54,14 @@ max_date <- date(maximum_file_date)
 max_date_plotting <- date(maximum_file_date)
 min_date <- as.Date("2020-02-01")
 
-additionalTruncation <- case_when(
-  lubridate::wday(max_date) == 3 ~ 1, # 3 = Tue, exclude Sat,
-  lubridate::wday(max_date) == 4 ~ 2, # 4 = Wed, exclude Sun and Sat,
-  lubridate::wday(max_date) == 5 ~ 3, # 5 = Thu, exclude Mon, Sun and Sat,
-  TRUE ~ 0                                # otherwise don't exclude more days
-)
+# additionalTruncation <- case_when(
+#   lubridate::wday(max_date) == 3 ~ 1, # 3 = Tue, exclude Sat,
+#   lubridate::wday(max_date) == 4 ~ 2, # 4 = Wed, exclude Sun and Sat,
+#   lubridate::wday(max_date) == 5 ~ 3, # 5 = Thu, exclude Mon, Sun and Sat,
+#   TRUE ~ 0                                # otherwise don't exclude more days
+# )
+
+additionalTruncation <- 0
 
 right_truncation <- list()
 right_truncation[["Confirmed cases"]] <- 3 + additionalTruncation

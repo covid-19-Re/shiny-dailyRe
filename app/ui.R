@@ -34,6 +34,17 @@ dashboardPage(title = "COVID-19 Re",
         #     p("Due to data corruption, Re estimates are currently not available. Data is being reanalyzed now. We expect the full data set to be available again at 18:00 CEST")
         # ))),
         fluidRow(
+          column(12,
+            HTML(
+              "<div class='moreImportantBox'>
+                <div class='inner'>"
+            ),
+            includeMarkdown("md/testBranchDisclaimer.md"),
+            HTML(
+                "</div>
+              </div>"
+            )
+          ),
           column(6, uiOutput("avgR")),
           column(6, uiOutput("currentR")),
           conditionalPanel(
