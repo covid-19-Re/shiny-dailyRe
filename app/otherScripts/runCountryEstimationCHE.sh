@@ -39,25 +39,11 @@ runRScript format_linelist_data.R
 runRScript ReCountry.R "CHE"
 runRScript ReCountry.R "LIE"
 
+# summarize data in both apps
+cd ../../../dailyRe/app/otherScripts/
 runRScript sumData.R
-runRScript makeCHPlots.R
-
-# reload data by restarting R shiny process
-touch ../restart.txt
-
-echo "updating covid19-Data ..."
-cd "../../../dailyRe-Data"
-git add .
-git commit -m "update data"
-git push
-
-# update plots on eth cms
-cd "../dailyRe/app/www/cantonPlots"
-curl -nT "{$(echo *.png | tr ' ' ',')}" https://cms-author.ethz.ch/content/dam/ethz/special-interest/usys/ibz/theoreticalbiology/plots/
-
-# copy csv files of test server into www dir so tey are accessible
-cp /home/covid-19-re/test-dailyRe/app/data/countryData/csv/CHE-confCasesSWestimates.csv /home/covid-19-re/test-dailyRe/app/www/CHE-confCasesSWestimates-TEST.csv
-cp /home/covid-19-re/test-dailyRe/app/data/countryData/csv/LIE-confCasesSWestimates.csv /home/covid-19-re/test-dailyRe/app/www/LIE-confCasesSWestimates-TEST.csv
+cd ../../../test-dailyRe/app/otherScripts/
+runRScript sumData.R
 
 # reactivate crontab
 if  [ ! -z "$cr" ]; then

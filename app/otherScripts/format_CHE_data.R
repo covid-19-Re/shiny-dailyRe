@@ -34,6 +34,8 @@ bagFiles <- c(
              full.names = TRUE,
              recursive = TRUE))
 
+bagFiles <- bagFiles[!str_detect(bagFiles, "_old")]
+
 bagFileDates <- strptime(
   stringr::str_match(bagFiles, ".*\\/(\\d*-\\d*-\\d*_\\d*-\\d*-\\d*)")[, 2],
   format = "%Y-%m-%d_%H-%M-%S")
@@ -507,3 +509,4 @@ allBAGdata <- bind_rows(list(allBAGdata_plotting), list(allBAGdata_calculations)
 ## end of remove
 
 readr::write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CHE.csv"))
+

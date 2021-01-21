@@ -96,7 +96,7 @@ timeSpan <- 21
 plotTheme <- theme_bw() +
   theme(
     # overall text size
-    text = element_text(size = 8),
+    text = element_text(size = 7),
     # legend
     legend.position = "right",
     legend.key = element_rect(color = NA),
@@ -122,7 +122,7 @@ plotColors <-  c(
 
 translator$set_translation_language("en-gb")
 
-yAxisTitle <- bquote(Reproductive~number~R[e])
+yAxisTitle <- bquote("Reproductive number"~R[e]~"(95% CI)")
 
 regionLoop <- countryData$estimates %>%
   filter(str_detect(region, "grR", negate = TRUE)) %>%
@@ -193,3 +193,7 @@ for (iregion in regionLoop) {
 }
 
 cat("done making CH plots for ncs-tf website.\n")
+
+
+
+

@@ -52,12 +52,8 @@ if (!dir.exists(basePath)) {
 }
 
 # fetch stringency data
-stringencyData <- getDataOxfordStringency(countries = args["country"],
-    tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300) %>%
-    mutate(source = "BSG Covidtracker")
-
 if (args["country"] == "CHE") {
-  stringencyDataRegional <- read_csv(
+  stringencyData <- read_csv(
     "https://raw.githubusercontent.com/KOF-ch/economic-monitoring/master/data/ch.kof.stringency.csv",
     col_types = cols(
       time = col_date(format = ""),
@@ -66,16 +62,18 @@ if (args["country"] == "CHE") {
       value = col_double()
     )) %>%
     filter(
-      variable == "stringency_plus",
-      geo != "ch") %>%
+      variable == "stringency") %>%
     dplyr::transmute(
       date = time,
       countryIso3 = "CHE",
-      region = toupper(geo),
+      region = recode(toupper(geo), "CH" = "CHE"),
       source = "KOF",
       StringencyIndex = value
     )
-  stringencyData <- bind_rows(stringencyData, stringencyDataRegional)
+} else {
+  stringencyData <- getDataOxfordStringency(countries = args["country"],
+    tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300) %>%
+    mutate(source = "BSG Covidtracker")
 }
 
 stringencyDataPath <- file.path(basePath, str_c(args["country"], "-OxCGRT.rds"))
@@ -119,9 +117,9 @@ interval_ends[["default"]] <- interval_ends[[args["country"]]]
 # Fetch Country Data
 countryData <- getCountryData(
   args["country"],
-  ECDCtemp = here::here("app/data/temp/ECDCdata.csv"),
+  tempFile = here::here("app/data/temp/ECDCdata.csv"),
   HMDtemp = here::here("app/data/temp/HMDdata.csv"),
-  tReload = 30) %>%
+  tReload = 300) %>%
   left_join(
     popData,
     by = c("countryIso3", "region")
@@ -400,13 +398,30 @@ if (dim(countryData)[1] > 0) {
         )
         # save simpler csvs for CHE, LIE
         if (args["country"] %in% c("CHE", "LIE")) {
-          countryEstimates %>%
+          simpleCsv <- countryEstimates %>%
             filter(data_type == "Confirmed cases", estimate_type == "Cori_slidingWindow") %>%
             select(region, date, median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
-            mutate(across(.cols = median_R_mean:median_R_lowHPD, .fns = round, digits = 2)) %>%
+            mutate(across(.cols = median_R_mean:median_R_lowHPD, .fns = round, digits = 2))
+
+          # write to csv directory
+          readr::write_csv(
+            simpleCsv,
+            file = file.path(basePath, "csv", str_c(args["country"], "-confCasesSWestimates.csv"))
+          )
+          if (Sys.info()["nodename"] == "ibz-shiny.ethz.ch") {
+            # write to test directory
             readr::write_csv(
-              file = file.path(basePath, "csv", str_c(args["country"], "-confCasesSWestimates.csv"))
+              simpleCsv,
+              file = str_c("/home/covid-19-re/test-dailyRe/app/www/", args["country"], "-confCasesSWestimates.csv")
             )
+            if (str_detect(here(), "test")) {
+              # write estimates to main app for publication
+              saveRDS(countryEstimates,
+                file = str_c("/home/covid-19-re/dailyRe/app/data/countryData/",
+                  args["country"], "-estimates.rds")
+              )
+            }
+          }
         }
       }
     } else {
