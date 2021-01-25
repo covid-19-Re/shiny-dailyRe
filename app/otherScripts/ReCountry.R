@@ -333,39 +333,15 @@ if (dim(countryData)[1] > 0) {
           deconvolvedCountryData,
           slidingWindow = window,
           methods = "Cori",
+          variationTypes = c("step", "slidingWindow"),
+          #variationTypes = c("slidingWindow"),
           all_delays = all_delays,
           truncations = truncations,
           interval_ends = interval_ends,
           swissRegions = swissRegions)
 
-        countryEstimates <- as_tibble(countryEstimatesRaw) %>%
-          mutate(
-            data_type = factor(
-              data_type,
-              levels = c(
-                "infection_Confirmed cases",
-                "infection_Confirmed cases / tests",
-                "infection_Hospitalized patients",
-                "infection_Deaths",
-                "infection_Excess deaths"),
-              labels = c(
-                "Confirmed cases",
-                "Confirmed cases / tests",
-                "Hospitalized patients",
-                "Deaths",
-                "Excess deaths"))) %>%
-          pivot_wider(names_from = "variable", values_from = "value") %>%
-          dplyr::group_by(date, country, region, data_type, source, estimate_type) %>%
-          dplyr::summarize(
-            median_R_mean = median(R_mean),
-            median_R_highHPD = median(R_highHPD),
-            median_R_lowHPD = median(R_lowHPD),
-            .groups = "keep"
-          ) %>%
-          dplyr::select(country, region, source, data_type, estimate_type, date,
-                        median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
-          arrange(country, region, source, data_type, estimate_type, date) %>%
-          ungroup() %>%
+        
+        countryEstimates <- cleanCountryReEstimate(countryEstimatesRaw, method = 'bootstrap') %>%
           left_join(
             dplyr::select(popData, region, countryIso3),
             by = c("region")

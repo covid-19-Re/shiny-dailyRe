@@ -55,7 +55,7 @@ filterRegions <- function(df, thresholdConfirmedCases = 500, thresholdHospitaliz
 }
 
 # smooth time series with LOESS method
-getLOESSCases <- function(dates, count_data, days_incl = 21, degree = 1, truncation = 0) {
+getLOESSCases <- function(dates, count_data, days_incl = 14, degree = 1, truncation = 0) {
   
   if (truncation != 0) {
     dates <- dates[1:(length(dates) - truncation)]
@@ -264,21 +264,80 @@ get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_de
 
 
 
-get_bootstrap_replicate <- function(original_time_series) {
+# get_bootstrap_replicate <- function(original_time_series) {
+#   replicate <- original_time_series %>%
+#     dplyr::slice_sample(n = sum(original_time_series$value, na.rm = T),
+#                         weight_by = replace_na(value, 0),
+#                         replace = T) %>%
+#     dplyr::group_by(country, region, source, data_type, date_type, local_infection, date) %>%
+#     dplyr::mutate(value = n()) %>%
+#     distinct(date, .keep_all = T) %>%
+#     ungroup() %>%
+#     dplyr::group_by(country, region, source, data_type, local_infection, date_type) %>%
+#     complete(date = seq.Date(min(date), max(date), by = "days"),
+#              fill = list(value = 0)) %>%
+#     arrange(date)
+#   
+#   return(replicate)
+# }
+
+# NEW VERSION WITH JINZHOU'S CODE, ADAPTED BY JANA
+get_bootstrap_replicate <- function(original_time_series, block_size = 10, days_incl = 14) {
+  tmp <- original_time_series
+  
+  # Change introduced after meeting on 19.1
+  #tmp$log_value <- ifelse(tmp$value != 0, log(tmp$value), 0)
+  tmp$log_value <- ifelse(tmp$value != 0, log(tmp$value + 1), 0)
+
+  smoothed_incidence_data <- tmp %>%
+    complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(log_value = 0)) %>%
+    mutate(log_loess = getLOESSCases(dates = date, count_data = log_value, days_incl),
+         log_diff = ifelse(log_value != 0, log_value - log_loess, 0))
+
+  log_diff_boot <- block_boot_overlap_func(smoothed_incidence_data$log_diff, block_size)
+  log_smoothed_data <- smoothed_incidence_data$log_loess
+  
+  ts_boot <- exp(log_diff_boot + log_smoothed_data) -1
+  ts_boot[ts_boot<0] <- 0
+  ts_boot <- round(ts_boot)
+  
   replicate <- original_time_series %>%
-    dplyr::slice_sample(n = sum(original_time_series$value, na.rm = T),
-                        weight_by = replace_na(value, 0),
-                        replace = T) %>%
-    dplyr::group_by(country, region, source, data_type, date_type, local_infection, date) %>%
-    dplyr::mutate(value = n()) %>%
-    distinct(date, .keep_all = T) %>%
-    ungroup() %>%
-    dplyr::group_by(country, region, source, data_type, local_infection, date_type) %>%
-    complete(date = seq.Date(min(date), max(date), by = "days"),
-             fill = list(value = 0)) %>%
+    complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(value = 0)) %>%
+    dplyr::mutate(value = ts_boot) %>%
     arrange(date)
   
   return(replicate)
+}
+
+### overlapping block bootstrap
+block_boot_overlap_func <- function(ts, block_size = 10){
+  
+  # get the weekdays for each position of ts
+  weekdays_index <- (1:length(ts)) %% 7
+  weekdays_index[which(weekdays_index==0)] <- 7
+  
+  ts_boot <-c()
+  last_day_index <- 7
+  
+  ###### get the ts_boot: make sure glue wrt the correct days
+  while(length(ts_boot) < length(ts)){
+    start_index <- sample(1:(length(ts)-block_size+1), 1)
+    sampled_index <- start_index:(start_index+block_size-1)
+    sampled_weekdays <- weekdays_index[sampled_index]
+    
+    # make sure the day related to the first sample is after the previous ts_boot
+    first_day_index <- which(sampled_weekdays==last_day_index)[1] + 1
+    ts_boot_index <- sampled_index[first_day_index:block_size]
+    
+    last_day_index <- tail(weekdays_index[ts_boot_index],1)
+    
+    ts_boot <- c(ts_boot, ts[ts_boot_index])
+  }
+  
+  # take the same length as previous ts
+  ts_boot <- ts_boot[1:length(ts)]
+  
+  return(ts_boot)
 }
 
 iterate_RL <- function(
@@ -383,6 +442,7 @@ get_infection_incidence_by_deconvolution <- function(
   is_onset_data = F,
   is_local_cases = T,
   smooth_incidence = T,
+  days_incl = 14,
   empirical_delays  = tibble(),
   n_bootstrap = 5,
   days_further_in_the_past = 30,
@@ -491,7 +551,7 @@ get_infection_incidence_by_deconvolution <- function(
     if (smooth_incidence == T) {
       smoothed_incidence_data <- time_series %>%
         complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(value = 0)) %>% 
-        mutate(value = getLOESSCases(dates = date, count_data = value))
+        mutate(value = getLOESSCases(dates = date, count_data = value, days_incl))
       
       raw_total_incidence <- sum(time_series$value, na.rm = TRUE)
       smoothed_total_incidence <- sum(smoothed_incidence_data$value, na.rm = T)
