@@ -105,6 +105,7 @@ getDataECDC <- function(countries = NULL, tempFileName = NULL, tReload = 15) {
   return(longData)
 }
 
+
 ##### Our World in Data
 getDataOWID <- function(countries = NULL, tempFileName = NULL, tReload = 300) {
   urlfile <- "https://covid.ourworldindata.org/data/owid-covid-data.csv"
@@ -471,7 +472,7 @@ getDataEST <- function(tempFile = NULL, tReload = 15) {
   case_data <- getCaseDataEST()
   hosp_data <- getHospDataEST()
   death_data <- getDataOWID(countries = "EST", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "deaths")
-  
+
   all_data <- rbind(case_data, hosp_data, death_data)
   
   return(all_data)
@@ -1118,6 +1119,7 @@ getCaseDataESP <- function(){
   
   return(confirmed_onsets)
 }
+
 
 getDataESP <- function(tempFile = NULL, tReload = 15) {
   #deathData <- getDataECDC(countries = "ESP", tempFileName = tempFile, tReload = tReload) %>%  filter(data_type == "death")

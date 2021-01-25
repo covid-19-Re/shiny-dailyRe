@@ -491,7 +491,21 @@ server <- function(input, output, session) {
   })
 
   estimationTypeChoices <- reactive({
-    estimationTypeChoices <- c("sliding window" = "Cori_slidingWindow", "step-wise constant" = "Cori_step")
+    estimationTypeChoices <- c("bagged HPD" = "Cori_slidingWindow", 
+                               "MM w. orig mean" = "Cori_slidingWindow_MM", 
+                               "MM w. bagged median" = "Cori_slidingWindow_MM_baggedMedian", 
+                               "MM w. bagged mean" = "Cori_slidingWindow_MM_baggedMean", 
+                               #"Union of bagged HPD and orig. MM" = "Cori_slidingWindow_simple_Union", 
+                               #"Union of bagged HPD and bagged mean MM" = "Cori_slidingWindow_bag_Union", 
+                               #"bootstrapped HPD" = "Cori_slidingWindow_wideHPDs",
+                               "STEP: bagged HPD" = "Cori_step", 
+                               "STEP: MM w. orig mean" = "Cori_step_MM", 
+                               "STEP: MM w. bagged median" = "Cori_step_MM_baggedMedian", 
+                               "STEP: MM w. bagged mean" = "Cori_step_MM_baggedMean" 
+                               #"STEP: Union of bagged HPD and orig. MM" = "Cori_step_simple_Union", 
+                               #"STEP: Union of bagged HPD and bagged mean MM" = "Cori_step_bag_Union", 
+                               #"STEP: bootstrapped HPD" = "Cori_step_wideHPDs"
+                               )
     names(estimationTypeChoices) <- sapply(names(estimationTypeChoices), i18n()$t,  USE.NAMES = FALSE)
     return(estimationTypeChoices)
   })

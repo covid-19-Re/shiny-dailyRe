@@ -4,7 +4,7 @@ source,sourceLong,url
 "RIVM","Data from the Dutch National Institute for Public Health and the Environment","https://github.com/J535D165/CoronaWatchNL"
 "ECDC","Data from the European Center for Disease Prevention and Control","https://opendata.ecdc.europa.eu/covid19/casedistribution/"
 "SpF-DMI","Data from the French National Public Health Agency","https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/"
-"ECDC - SpF-DMI","Mix between ECDC data (before May 13th) and French National Public Health Agency (after May 13th)","https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/"
+"OWID - SpF-DMI","Mix between OWID data (before May 13th) and French National Public Health Agency (after May 13th)","https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/"
 "Sciensano","Data from the Belgian Institute for Health","https://epistat.wiv-isp.be/covid/"
 "DSFSI", "Data provided by the <a href='https://github.com/dsfsi/covid19za'>Data Science and Social Impact Research Group @ U Pretoria</a> and the <a href='https://www.krisp.org.za/ngs-sa/'>Network for Genomics Surveillance in South Africa (NGS-SA)</a>", "https://github.com/dsfsi/covid19za"
 "PCM-DPC","Data from Presidenza del Consiglio dei Ministri - Dipartimento della Protezione Civile","https://github.com/pcm-dpc/COVID-19"
