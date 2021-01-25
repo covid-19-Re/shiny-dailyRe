@@ -55,7 +55,7 @@ filterRegions <- function(df, thresholdConfirmedCases = 500, thresholdHospitaliz
 }
 
 # smooth time series with LOESS method
-getLOESSCases <- function(dates, count_data, days_incl = 14, degree = 1, truncation = 0) {
+getLOESSCases <- function(dates, count_data, days_incl = 21, degree = 1, truncation = 0) {
   
   if (truncation != 0) {
     dates <- dates[1:(length(dates) - truncation)]
@@ -282,7 +282,7 @@ get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_de
 # }
 
 # NEW VERSION WITH JINZHOU'S CODE, ADAPTED BY JANA
-get_bootstrap_replicate <- function(original_time_series, block_size = 10, days_incl = 14) {
+get_bootstrap_replicate <- function(original_time_series, block_size = 10, days_incl = 21) {
   tmp <- original_time_series
   
   # Change introduced after meeting on 19.1
@@ -442,7 +442,7 @@ get_infection_incidence_by_deconvolution <- function(
   is_onset_data = F,
   is_local_cases = T,
   smooth_incidence = T,
-  days_incl = 14,
+  days_incl = 21,
   empirical_delays  = tibble(),
   n_bootstrap = 5,
   days_further_in_the_past = 30,
