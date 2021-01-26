@@ -84,7 +84,8 @@
 }
 
 .importantBox >* a {
-  color: black !important;
+  color:rgb(42, 53, 179) !important;
+  font-weight: 600;
 }
 
 .moreImportantBox {
