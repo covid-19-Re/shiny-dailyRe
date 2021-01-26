@@ -39,3 +39,7 @@ The R<sub>e</sub> estimates are available in `csv` format at https://github.com/
   - Swiss Canton Borders: https://www.bfs.admin.ch/bfs/de/home/statistiken/regionalstatistik/kartengrundlagen/basisgeometrien.assetdetail.11927607.html
   - South African Provinces Borders: https://data.humdata.org/dataset/south-africa-admin-level-1-boundaries
   - Map Tiles: https://www.openstreetmap.org/
+
+#### Dis­claimer
+ - Al­though ETH Zurich takes all pos­sible care to en­sure the cor­rect­ness of pub­lished in­form­a­tion, no war­ranty can be ac­cep­ted re­gard­ing the cor­rect­ness, ac­cur­acy, up­tod­ate­ness, re­li­ab­il­ity and com­plete­ness of the con­tent of this in­form­a­tion.
+ - Li­ab­il­ity claims against ETH Zurich be­cause of tan­gible or in­tan­gible dam­age arising from ac­cess­ing, us­ing or not us­ing the pub­lished in­form­a­tion, through mis­use of the con­nec­tion or as a res­ult of tech­nical break­downs are ex­cluded.
