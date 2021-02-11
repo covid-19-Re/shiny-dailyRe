@@ -264,22 +264,22 @@ get_matrix_empirical_waiting_time_distr <- function(onset_to_report_empirical_de
 
 
 
-# get_bootstrap_replicate <- function(original_time_series) {
-#   replicate <- original_time_series %>%
-#     dplyr::slice_sample(n = sum(original_time_series$value, na.rm = T),
-#                         weight_by = replace_na(value, 0),
-#                         replace = T) %>%
-#     dplyr::group_by(country, region, source, data_type, date_type, local_infection, date) %>%
-#     dplyr::mutate(value = n()) %>%
-#     distinct(date, .keep_all = T) %>%
-#     ungroup() %>%
-#     dplyr::group_by(country, region, source, data_type, local_infection, date_type) %>%
-#     complete(date = seq.Date(min(date), max(date), by = "days"),
-#              fill = list(value = 0)) %>%
-#     arrange(date)
-#   
-#   return(replicate)
-# }
+get_bootstrap_replicate_legacy <- function(original_time_series) {
+  replicate <- original_time_series %>%
+    dplyr::slice_sample(n = sum(original_time_series$value, na.rm = T),
+                        weight_by = replace_na(value, 0),
+                        replace = T) %>%
+    dplyr::group_by(country, region, source, data_type, date_type, local_infection, date) %>%
+    dplyr::mutate(value = n()) %>%
+    distinct(date, .keep_all = T) %>%
+    ungroup() %>%
+    dplyr::group_by(country, region, source, data_type, local_infection, date_type) %>%
+    complete(date = seq.Date(min(date), max(date), by = "days"),
+             fill = list(value = 0)) %>%
+    arrange(date)
+
+  return(replicate)
+}
 
 # NEW VERSION WITH JINZHOU'S CODE, ADAPTED BY JANA
 get_bootstrap_replicate <- function(original_time_series, block_size = 10, days_incl = 21) {
@@ -291,7 +291,7 @@ get_bootstrap_replicate <- function(original_time_series, block_size = 10, days_
 
   smoothed_incidence_data <- tmp %>%
     complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(log_value = 0)) %>%
-    mutate(log_loess = getLOESSCases(dates = date, count_data = log_value, days_incl),
+    mutate(log_loess = getLOESSCases(dates = date, count_data = log_value, days_incl = days_incl),
          log_diff = ifelse(log_value != 0, log_value - log_loess, 0))
 
   log_diff_boot <- block_boot_overlap_func(smoothed_incidence_data$log_diff, block_size)
@@ -443,6 +443,7 @@ get_infection_incidence_by_deconvolution <- function(
   is_local_cases = T,
   smooth_incidence = T,
   days_incl = 21,
+  bootstrap_setting = "block_bootstrap",
   empirical_delays  = tibble(),
   n_bootstrap = 5,
   days_further_in_the_past = 30,
@@ -545,13 +546,17 @@ get_infection_incidence_by_deconvolution <- function(
     if (bootstrap_replicate_i == 0) {
       time_series <- data_subset
     } else {
-      time_series <- get_bootstrap_replicate(data_subset)
+      if (bootstrap_setting == "legacy"){
+        time_series <- get_bootstrap_replicate_legacy(data_subset)
+      } else {
+        time_series <- get_bootstrap_replicate(data_subset, block_size = 10, days_incl = days_incl)
+      }
     }
     
     if (smooth_incidence == T) {
       smoothed_incidence_data <- time_series %>%
         complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(value = 0)) %>% 
-        mutate(value = getLOESSCases(dates = date, count_data = value, days_incl))
+        mutate(value = getLOESSCases(dates = date, count_data = value, days_incl = days_incl))
       
       raw_total_incidence <- sum(time_series$value, na.rm = TRUE)
       smoothed_total_incidence <- sum(smoothed_incidence_data$value, na.rm = T)
@@ -629,6 +634,8 @@ get_all_infection_incidence <- function(data,
                                         constant_delay_distributions,
                                         onset_to_count_empirical_delays = tibble(),
                                         data_types,
+                                        days_incl = 21, 
+                                        bootstrap_setting = "block_bootstrap",
                                         n_bootstrap = 100,
                                         verbose = FALSE) {
   
@@ -691,6 +698,8 @@ get_all_infection_incidence <- function(data,
               is_local_cases = local_infection_i,
               smooth_incidence = smooth,
               empirical_delays = empirical_delays,
+              days_incl = days_incl, 
+              bootstrap_setting = bootstrap_setting,
               n_bootstrap = n_bootstrap,
               verbose = verbose)
             
@@ -707,6 +716,8 @@ get_all_infection_incidence <- function(data,
               is_onset_data = T,
               is_local_cases = local_infection_i,
               smooth_incidence = smooth,
+              days_incl = days_incl, 
+              bootstrap_setting = bootstrap_setting,
               empirical_delays = empirical_delays,
               n_bootstrap = n_bootstrap,
               verbose = verbose)

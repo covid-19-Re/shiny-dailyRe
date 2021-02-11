@@ -39,6 +39,7 @@ allData$estimates <- bind_rows(allData$estimates) %>%
   # remove stringency index if it exists
   filter(data_type != "Stringency Index") %>%
   group_by(countryIso3, data_type) %>%
+  filter(!is.null(estimatePlotRanges[[countryIso3[1]]])) %>%
   filter(
       between(date,
         left = estimatePlotRanges[[countryIso3[1]]][[countryIso3[1]]][["start"]][[as.character(data_type[1])]],

@@ -492,18 +492,24 @@ server <- function(input, output, session) {
 
   estimationTypeChoices <- reactive({
     estimationTypeChoices <- c(#"Sliding window" = "Cori_slidingWindow", 
-                              "Bagged HPDs" = "Cori_slidingWindow", 
-                               "MM w. orig mean" = "Cori_slidingWindow_MM", 
-                               "MM w. bagged median" = "Cori_slidingWindow_MM_baggedMedian", 
-                               "MM w. bagged mean" = "Cori_slidingWindow_MM_baggedMean", 
+                              "14 Day Bagged HPDs, iid bootstrap" = "14_Cori_slidingWindow_legacy", 
+                              "14 Day Bagged HPDs" = "14_Cori_slidingWindow", 
+                               "14 Day MM w. orig mean" = "14_Cori_slidingWindow_MM", 
+                               "14 Day MM w. bagged median" = "14_Cori_slidingWindow_MM_baggedMedian", 
+                               "14 Day MM w. bagged mean" = "14_Cori_slidingWindow_MM_baggedMean", 
+                              "21 Day Bagged HPDs, iid bootstrap" = "Cori_slidingWindow_legacy", 
+                              "21 Day Bagged HPDs" = "Cori_slidingWindow", 
+                              "21 Day MM w. orig mean" = "Cori_slidingWindow_MM", 
+                              "21 Day MM w. bagged median" = "Cori_slidingWindow_MM_baggedMedian", 
+                              "21 Day MM w. bagged mean" = "Cori_slidingWindow_MM_baggedMean"#, 
                                #"Union of bagged HPD and orig. MM" = "Cori_slidingWindow_simple_Union", 
                                #"Union of bagged HPD and bagged mean MM" = "Cori_slidingWindow_bag_Union", 
                                #"bootstrapped HPD" = "Cori_slidingWindow_wideHPDs",
                                #"Step-wise constant" = "Cori_step" #, 
-                              "STEP: Bagged HPDs" = "Cori_step",
-                               "STEP: MM w. orig mean" = "Cori_step_MM", 
-                               "STEP: MM w. bagged median" = "Cori_step_MM_baggedMedian", 
-                               "STEP: MM w. bagged mean" = "Cori_step_MM_baggedMean" 
+                              #"STEP: Bagged HPDs" = "Cori_step",
+                               #"STEP: MM w. orig mean" = "Cori_step_MM", 
+                               #"STEP: MM w. bagged median" = "Cori_step_MM_baggedMedian", 
+                               #"STEP: MM w. bagged mean" = "Cori_step_MM_baggedMean" 
                                #"STEP: Union of bagged HPD and orig. MM" = "Cori_step_simple_Union", 
                                #"STEP: Union of bagged HPD and bagged mean MM" = "Cori_step_bag_Union", 
                                #"STEP: bootstrapped HPD" = "Cori_step_wideHPDs"
@@ -550,7 +556,7 @@ server <- function(input, output, session) {
     return(ui)
   })
 
-# Map plot
+# Map plot ####
   # palettes
     cases14pal <- reactive({
       cases14pal <- divergentColorPal(
@@ -819,7 +825,7 @@ server <- function(input, output, session) {
       })
 
 
-# about page
+# about page ####
 
   # outputs
     output$sourcesTable <- renderDataTable({
