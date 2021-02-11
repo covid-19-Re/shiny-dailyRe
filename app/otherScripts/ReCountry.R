@@ -310,6 +310,18 @@ if (dim(countryData)[1] > 0) {
         ### Window
         window <- 3
 
+        ### add additional interval 7 days before last Re estimate, for country level only
+        # discarding interval ends more recent than that.
+        lastIntervalEnd <- deconvolvedCountryData %>%
+          filter(data_type == "infection_Confirmed cases", region == "CHE", replicate == 0) %>%
+          slice_max(date) %>%
+          pull(date)
+        lastIntervalStart <- lastIntervalEnd - 7
+
+        interval_ends[[args["country"]]] <- c(
+          interval_ends[[args["country"]]][interval_ends[[args["country"]]] != lastIntervalStart],
+          lastIntervalStart)
+
         ##TODO this all_delays could be removed because we always deconvolve
         ### Delays applied
         all_delays <- list(
@@ -334,13 +346,11 @@ if (dim(countryData)[1] > 0) {
           slidingWindow = window,
           methods = "Cori",
           variationTypes = c("step", "slidingWindow"),
-          #variationTypes = c("slidingWindow"),
           all_delays = all_delays,
           truncations = truncations,
           interval_ends = interval_ends,
           swissRegions = swissRegions)
 
-        
         countryEstimates <- cleanCountryReEstimate(countryEstimatesRaw, method = 'bootstrap') %>%
           left_join(
             dplyr::select(popData, region, countryIso3),
@@ -350,7 +360,7 @@ if (dim(countryData)[1] > 0) {
         # add extra truncation of 4 days for all Swiss cantonal estimates due to consolidation
         if (args["country"] %in% c("CHE")) {
           days_truncated <- 4
-          canton_list <- c("AG", "BE", "BL","BS", "FR", "GE", "GR", "JU", "LU", "NE", "SG", "SO", "SZ", "TG", "TI",
+          canton_list <- c("AG", "BE", "BL", "BS", "FR", "GE", "GR", "JU", "LU", "NE", "SG", "SO", "SZ", "TG", "TI",
             "VD", "VS", "ZG", "ZH", "SH", "AR", "GL", "NW", "OW", "UR", "AI")
 
           countryEstimates_cantons <- countryEstimates %>%
