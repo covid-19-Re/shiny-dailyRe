@@ -34,7 +34,7 @@ names(args) <- "country"
 popDataWorldBank <- getCountryPopData(here::here("app/data/temp/pop_sizes.xls"), 300) %>%
   filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
   mutate(region = countryIso3)
-popDataCH <- read_csv(
+popDataAdditional <- read_csv(
   file = here::here("app/data/additionalPopSizes.csv"),
   col_types = cols(
     .default = col_character(),
@@ -42,7 +42,7 @@ popDataCH <- read_csv(
   )
 )
 
-popData <- bind_rows(popDataWorldBank, popDataCH) %>%
+popData <- bind_rows(popDataWorldBank, popDataAdditional) %>%
   dplyr::select(country, countryIso3, region, populationSize) %>%
   filter(!is.na(countryIso3))
 
@@ -119,18 +119,19 @@ countryData <- getCountryData(
   args["country"],
   tempFile = here::here("app/data/temp/ECDCdata.csv"),
   HMDtemp = here::here("app/data/temp/HMDdata.csv"),
-  tReload = 300) %>%
-  left_join(
-    popData,
-    by = c("countryIso3", "region")
-  ) %>%
-  bind_rows(
-    mutate(stringencyIndex,
-      date_type = if_else(
-        args["country"] %in% c("CHE", "DEU", "HKG"), "report_plotting", "report"))
-  )
+  tReload = 300)
 
 if (dim(countryData)[1] > 0) {
+  countryData <- countryData %>%
+    left_join(
+      popData,
+      by = c("countryIso3", "region")
+    ) %>%
+    bind_rows(
+      mutate(stringencyIndex,
+        date_type = if_else(
+          args["country"] %in% c("CHE", "DEU", "HKG"), "report_plotting", "report"))
+    )
   # check for changes in country data
   countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.rds"))
   if (file.exists(countryDataPath)) {
