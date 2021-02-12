@@ -181,21 +181,21 @@ estimatesSubPlot <- function (
     estimatesPlot <- estimates %>%
       group_by(countryIso3, region, source, series) %>%
       filter(
-        date >= max(date) - reUncertainDays
-      ) %>%
-      mutate(series_plot = str_c(series, " truncated"))
+        date <= max(date) - reUncertainDays
+      )
     estimatesPlot2 <- estimates %>%
       group_by(countryIso3, region, source, series) %>%
       filter(
-        date <= max(date) - reUncertainDays
-      )
+        date >= max(date) - reUncertainDays
+      ) %>%
+      mutate(series_plot = str_c(series, " truncated"))
   } else {
     estimatesPlot <- estimates
   }
 
   pEstimates <- plot_ly(data = estimatesPlot) %>%
     add_trace(
-      x = ~date, y = ~median_R_mean, color = ~series_plot, colors = seriesColors,
+      x = ~date, y = ~median_R_mean, color = ~series, colors = seriesColors,
       type = "scatter", mode = "lines",
       legendgroup = ~series, showlegend = FALSE,
       text = ~str_c("<i>", format(date, dateFormatLong),
@@ -205,7 +205,7 @@ estimatesSubPlot <- function (
       hovertemplate = "%{text}") %>%
     add_ribbons(
       x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
-      color = ~series_plot, colors = seriesColors,
+      color = ~series, colors = seriesColors,
       line = list(color = "transparent"), opacity = 0.5,
       legendgroup = ~series, showlegend = FALSE,
       hoverinfo = "none") %>%
@@ -214,7 +214,7 @@ estimatesSubPlot <- function (
     add_trace(
       x = ~as.POSIXct(date) + 10 * 60 * 60, y = ~median_R_mean,
       type = "scatter", mode = "markers",
-      color = ~series_plot, colors = seriesColors,
+      color = ~series, colors = seriesColors,
       legendgroup = ~series,
       marker = list(symbol = "asterisk-open"),
       text = ~str_c("<i>", format(date, dateFormatLong), " (", format(date, "%a"), ")",
@@ -228,7 +228,7 @@ estimatesSubPlot <- function (
       pEstimates <- pEstimates %>%
         add_trace(
           data = estimatesPlot2,
-          x = ~date, y = ~median_R_mean, color = ~series, colors = seriesColors,
+          x = ~date, y = ~median_R_mean, color = ~series_plot, colors = seriesColors,
           type = "scatter", mode = "lines",
           legendgroup = ~series, showlegend = FALSE,
           text = ~str_c("<i>", format(date, dateFormatLong),
@@ -239,7 +239,7 @@ estimatesSubPlot <- function (
         add_ribbons(
           data = estimatesPlot2,
           x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
-          color = ~series, colors = seriesColors,
+          color = ~series_plot, colors = seriesColors,
           line = list(color = "transparent"), opacity = 0.5,
           legendgroup = ~series, showlegend = FALSE,
           hoverinfo = "none")
