@@ -176,8 +176,7 @@ estimatesSubPlot <- function (
   translator,
   dateFormat,
   dateFormatLong) {
-  
-  print(estimates)
+
   if (reUncertainDays > 0) {
     estimatesPlot <- estimates %>%
       group_by(countryIso3, region, source, series) %>%
@@ -245,7 +244,7 @@ estimatesSubPlot <- function (
           legendgroup = ~series, showlegend = FALSE,
           hoverinfo = "none")
     }
-    
+
     pEstimates <- pEstimates %>%
       add_annotations(
         text = c(
@@ -700,7 +699,7 @@ dataUpdatesString <- function(latestData, name = "Data Source", dateFormat = "%Y
     summarize(
       data_type = str_c(data_type, collapse = ", "),
       .groups = "keep")
-  
+
   outList <- list(str_c(name, ": "))
   nSources <- dim(latestDataSum)[1]
   if (nSources == 1) {
