@@ -164,21 +164,39 @@ casesSubPlot <- function(
   return(pCases)
 }
 
-estimatesSubPlot <- function(
+estimatesSubPlot <- function (
   estimates,
   seriesColors,
   seriesTitle,
   startDate,
   endDate,
+  reUncertainDays = 4,
   fixedRangeX = TRUE,
   fixedRangeY = TRUE,
   translator,
   dateFormat,
   dateFormatLong) {
+  
+  print(estimates)
+  if (reUncertainDays > 0) {
+    estimatesPlot <- estimates %>%
+      group_by(countryIso3, region, source, series) %>%
+      filter(
+        date >= max(date) - reUncertainDays
+      ) %>%
+      mutate(series_plot = str_c(series, " truncated"))
+    estimatesPlot2 <- estimates %>%
+      group_by(countryIso3, region, source, series) %>%
+      filter(
+        date <= max(date) - reUncertainDays
+      )
+  } else {
+    estimatesPlot <- estimates
+  }
 
-  pEstimates <- plot_ly(data = estimates) %>%
+  pEstimates <- plot_ly(data = estimatesPlot) %>%
     add_trace(
-      x = ~date, y = ~median_R_mean, color = ~series, colors = seriesColors,
+      x = ~date, y = ~median_R_mean, color = ~series_plot, colors = seriesColors,
       type = "scatter", mode = "lines",
       legendgroup = ~series, showlegend = FALSE,
       text = ~str_c("<i>", format(date, dateFormatLong),
@@ -188,7 +206,7 @@ estimatesSubPlot <- function(
       hovertemplate = "%{text}") %>%
     add_ribbons(
       x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
-      color = ~series, colors = seriesColors,
+      color = ~series_plot, colors = seriesColors,
       line = list(color = "transparent"), opacity = 0.5,
       legendgroup = ~series, showlegend = FALSE,
       hoverinfo = "none") %>%
@@ -197,7 +215,7 @@ estimatesSubPlot <- function(
     add_trace(
       x = ~as.POSIXct(date) + 10 * 60 * 60, y = ~median_R_mean,
       type = "scatter", mode = "markers",
-      color = ~series, colors = seriesColors,
+      color = ~series_plot, colors = seriesColors,
       legendgroup = ~series,
       marker = list(symbol = "asterisk-open"),
       text = ~str_c("<i>", format(date, dateFormatLong), " (", format(date, "%a"), ")",
@@ -205,55 +223,78 @@ estimatesSubPlot <- function(
       " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
       " <br>(", series, ")"),
       hoverinfo = "text",
-      showlegend = FALSE) %>%
-    add_annotations(
-      text = c(
-        translator$t("Exponential increase<br>in number of new cases"),
-        translator$t("Decrease in number of new cases")
+      showlegend = FALSE)
+
+    if (reUncertainDays > 0) {
+      pEstimates <- pEstimates %>%
+        add_trace(
+          data = estimatesPlot2,
+          x = ~date, y = ~median_R_mean, color = ~series, colors = seriesColors,
+          type = "scatter", mode = "lines",
+          legendgroup = ~series, showlegend = FALSE,
+          text = ~str_c("<i>", format(date, dateFormatLong),
+            "</i> <br> R<sub>e</sub>: ", round(median_R_mean, 2),
+            " (", round(median_R_lowHPD, 2), "-", round(median_R_highHPD, 2), ")",
+            " <br>(", series, ")<extra></extra>"),
+          hovertemplate = "%{text}") %>%
+        add_ribbons(
+          data = estimatesPlot2,
+          x = ~date, ymin = ~median_R_lowHPD, ymax = ~median_R_highHPD,
+          color = ~series, colors = seriesColors,
+          line = list(color = "transparent"), opacity = 0.5,
+          legendgroup = ~series, showlegend = FALSE,
+          hoverinfo = "none")
+    }
+    
+    pEstimates <- pEstimates %>%
+      add_annotations(
+        text = c(
+          translator$t("Exponential increase<br>in number of new cases"),
+          translator$t("Decrease in number of new cases")
+          ),
+        font = list(color = "red"),
+        x = startDate,
+        y = c(1.30, 0.85),
+        textangle = 0,
+        align = "left",
+        xanchor = "left",
+        yanchor = "middle",
+        showarrow = FALSE,
+        inherit = FALSE) %>%
+      add_annotations(
+        text =  translator$t(str_c(
+          "<b>*</b>&nbsp;This is the most recent possible R<sub>e</sub> estimate due to ",
+          "delays between infection and ",
+          "the last data observation.")),
+        font = list(size = 10, color = "#505050"),
+        x = endDate,
+        y = 0,
+        textangle = 0,
+        align = "left",
+        xanchor = "right",
+        yanchor = "bottom",
+        showarrow = FALSE,
+        inherit = FALSE) %>%
+      layout(
+        xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
+        yaxis = plotlyYaxis(
+          title = translator$t("Reproductive number R<sub>e</sub> (95% CI)"),
+          range = c(0, 4),
+          fixedRange = fixedRangeY,
+          zeroline = TRUE),
+        legend = list(
+          title = list(
+            text = str_c("<b>", translator$t(seriesTitle), "</b>"))
         ),
-      font = list(color = "red"),
-      x = startDate,
-      y = c(1.30, 0.85),
-      textangle = 0,
-      align = "left",
-      xanchor = "left",
-      yanchor = "middle",
-      showarrow = FALSE,
-      inherit = FALSE) %>%
-    add_annotations(
-      text =  translator$t(str_c(
-        "<b>*</b>&nbsp;This is the most recent possible R<sub>e</sub> estimate due to ",
-        "delays between infection and ",
-        "the last data observation.")),
-      font = list(size = 10, color = "#505050"),
-      x = endDate,
-      y = 0,
-      textangle = 0,
-      align = "left",
-      xanchor = "right",
-      yanchor = "bottom",
-      showarrow = FALSE,
-      inherit = FALSE) %>%
-    layout(
-      xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
-      yaxis = plotlyYaxis(
-        title = translator$t("Reproductive number R<sub>e</sub> (95% CI)"),
-        range = c(0, 4),
-        fixedRange = fixedRangeY,
-        zeroline = TRUE),
-      legend = list(
-        title = list(
-          text = str_c("<b>", translator$t(seriesTitle), "</b>"))
-      ),
-      shapes = list(
-        list(
-          type = "line",
-          x0 = startDate, x1 = endDate,
-          y0 = 1, y1 = 1,
-          line = list(color = "red", width = 0.5)
+        shapes = list(
+          list(
+            type = "line",
+            x0 = startDate, x1 = endDate,
+            y0 = 1, y1 = 1,
+            line = list(color = "red", width = 0.5)
+          )
         )
       )
-    )
   return(pEstimates)
 }
 
@@ -455,6 +496,7 @@ rEffPlotly <- function(
     seriesTitle,
     startDate,
     endDate,
+    reUncertainDays = 4,
     fixedRangeX = fixedRangeX[2],
     fixedRangeY = fixedRangeY[2],
     translator,
