@@ -286,10 +286,9 @@ if (dim(countryData)[1] > 0) {
         countryData,
         constant_delay_distributions = constant_delay_distributions,
         onset_to_count_empirical_delays = delays_onset_to_count,
-        data_types = c("Confirmed cases"
-                       #,
-                       #"Hospitalized patients",
-                       #"Deaths"
+        data_types = c("Confirmed cases",
+                       "Hospitalized patients",
+                       "Deaths"
         ),
         days_incl = days_incl,
         bootstrap_setting = bootstrap_setting,
@@ -357,8 +356,8 @@ if (dim(countryData)[1] > 0) {
         deconvolvedCountryData,
         slidingWindow = window,
         methods = "Cori",
-        #variationTypes = c("step", "slidingWindow"),
-        variationTypes = c("slidingWindow"),
+        variationTypes = c("step", "slidingWindow"),
+        #variationTypes = c("slidingWindow"),
         all_delays = all_delays,
         truncations = truncations,
         interval_ends = interval_ends,
