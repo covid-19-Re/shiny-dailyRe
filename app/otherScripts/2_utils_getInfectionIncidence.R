@@ -287,12 +287,12 @@ get_bootstrap_replicate <- function(original_time_series, block_size = 10, days_
   
   # Change introduced after meeting on 19.1
   #tmp$log_value <- ifelse(tmp$value != 0, log(tmp$value), 0)
-  tmp$log_value <- ifelse(tmp$value != 0, log(tmp$value + 1), 0)
+  tmp$log_value <- log(tmp$value + 1)
 
   smoothed_incidence_data <- tmp %>%
     complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(log_value = 0)) %>%
     mutate(log_loess = getLOESSCases(dates = date, count_data = log_value, days_incl),
-         log_diff = ifelse(log_value != 0, log_value - log_loess, 0))
+         log_diff = log_value - log_loess)
 
   log_diff_boot <- block_boot_overlap_func(smoothed_incidence_data$log_diff, block_size)
   log_smoothed_data <- smoothed_incidence_data$log_loess
