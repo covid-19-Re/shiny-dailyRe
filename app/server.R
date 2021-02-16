@@ -402,13 +402,13 @@ server <- function(input, output, session) {
         filter(
           region %in% countrySelectValue,
           data_type == "Confirmed cases",
-          estimate_type == "Cori_slidingWindow") %>%
+          estimate_type == "Cori_step") %>%
         group_by(country, region) %>%
-        filter(date >= max(date) - 7) %>%
+        filter(date >= max(date) - 6) %>%
         summarize(
-          mean = mean(median_R_mean),
-          low = min(median_R_lowHPD),
-          high = max(median_R_highHPD),
+          mean = median_R_mean[1],
+          low = median_R_lowHPD[1],
+          high = median_R_highHPD[1],
           date = str_c(format(min(date), translator$t("%b-%d")), " - ", format(max(date), translator$t("%b-%d"))),
           .groups = "drop"
         ) %>%

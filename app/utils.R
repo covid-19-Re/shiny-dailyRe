@@ -53,7 +53,7 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
 
     OxCGRTData <- readRDS(file.path(dataDir, OxCGRTPath)) %>%
       dplyr::select(countryIso3, region, date, matches("\\w\\d_"))
-    names(OxCGRTData)
+  
   }
 
   if (!is.null(caseData)) {

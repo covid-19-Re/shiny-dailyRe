@@ -28,6 +28,7 @@ for (iCountry in allCountries) {
   setTxtProgressBar(pb, pb_i)
 }
 close(pb)
+
 allData$caseData <- bind_rows(allData$caseData) %>%
   # fix country names
   dplyr::select(-country) %>%
