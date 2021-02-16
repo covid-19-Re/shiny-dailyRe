@@ -56,7 +56,7 @@ casesSubPlot <- function(
     caseData <- caseData %>%
       group_by(region, data_type) %>%
       mutate(
-        value = slide_index_dbl(value, date, mean, .before = lubridate::days(caseAverage))
+        value = slide_index_dbl(value, date, mean, .before = lubridate::days(caseAverage) - 1)
       ) %>%
       ungroup()
     pCasesTitle <- str_c(pCasesTitle, "\n(", translator$t("7 day average"), ")")
