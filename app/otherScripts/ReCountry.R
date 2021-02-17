@@ -319,9 +319,13 @@ if (dim(countryData)[1] > 0) {
           pull(date)
         lastIntervalStart <- lastIntervalEnd - 7
 
-        interval_ends[[args["country"]]] <- c(
-          interval_ends[[args["country"]]][interval_ends[[args["country"]]] != lastIntervalStart],
-          lastIntervalStart)
+        if (length(interval_ends) == 0) {
+          interval_ends[[args["country"]]] <- lastIntervalStart
+        } else {
+          interval_ends[[args["country"]]] <- c(
+            interval_ends[[args["country"]]][interval_ends[[args["country"]]] != lastIntervalStart],
+            lastIntervalStart)
+        }
 
         ##TODO this all_delays could be removed because we always deconvolve
         ### Delays applied
