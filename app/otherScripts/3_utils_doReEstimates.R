@@ -374,24 +374,31 @@ doAllReEstimations <- function(
 # across bootstrap replicates
 
 cleanCountryReEstimate <- function(countryEstimatesRaw, method = 'bootstrap',
+                                   rename_types = T,
+                                   report_sd = F,
                                    alpha=0.95){
   
-  cleanEstimate <- as_tibble(countryEstimatesRaw) %>%
-    mutate(
-      data_type = factor(
-        data_type,
-        levels = c(
-          "infection_Confirmed cases",
-          "infection_Confirmed cases / tests",
-          "infection_Hospitalized patients",
-          "infection_Deaths",
-          "infection_Excess deaths"),
-        labels = c(
-          "Confirmed cases",
-          "Confirmed cases / tests",
-          "Hospitalized patients",
-          "Deaths",
-          "Excess deaths")))
+  if (rename_types){
+    cleanEstimate <- as_tibble(countryEstimatesRaw) %>%
+      mutate(
+        data_type = factor(
+          data_type,
+          levels = c(
+            "infection_Confirmed cases",
+            "infection_Confirmed cases / tests",
+            "infection_Hospitalized patients",
+            "infection_Deaths",
+            "infection_Excess deaths"),
+          labels = c(
+            "Confirmed cases",
+            "Confirmed cases / tests",
+            "Hospitalized patients",
+            "Deaths",
+            "Excess deaths")))
+  } else {
+    cleanEstimate <- as_tibble(countryEstimatesRaw)
+  }
+  
   
   legacy_ReEstimates <- cleanEstimate %>%
     pivot_wider(names_from = "variable", values_from = "value") %>%
@@ -504,17 +511,28 @@ cleanCountryReEstimate <- function(countryEstimatesRaw, method = 'bootstrap',
     #          median_R_lowHPD = min(median_R_lowHPD.x, median_R_lowHPD.y),
     #          estimate_type = paste0(estimate_type, '_bag_Union'))
     
-    ReEstimates <- bind_rows(#legacy_ReEstimates, 
+    unsortedReEstimates <- bind_rows(#legacy_ReEstimates, 
                              #MM_ReEstimates #%>% mutate(estimate_type = paste0(estimate_type, '_MM')),
                              #MM_baggedMedian %>% mutate(estimate_type = paste0(estimate_type, '_MM_baggedMedian')),
                              #MM_baggedMean #%>% mutate(estimate_type = paste0(estimate_type, '_MM_baggedMean'))
                              simple_Union #, bag_Union,
                              #wideHPDs
-                             ) %>%
-      dplyr::select(country, region, source, data_type, estimate_type, date,
-                    median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
-      arrange(country, region, source, data_type, estimate_type, date) %>%
-      ungroup()
+                             ) 
+    
+    if (report_sd){
+      ReEstimates <- unsortedReEstimates %>%
+        dplyr::select(country, region, source, data_type, estimate_type, date,
+                      median_R_mean, median_R_highHPD, median_R_lowHPD, sd_mean) %>%
+        arrange(country, region, source, data_type, estimate_type, date) %>%
+        ungroup()
+    } else {
+      ReEstimates <- unsortedReEstimates %>%
+        dplyr::select(country, region, source, data_type, estimate_type, date,
+                      median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
+        arrange(country, region, source, data_type, estimate_type, date) %>%
+        ungroup()
+    }
+    
   }
   return(ReEstimates)
 }
