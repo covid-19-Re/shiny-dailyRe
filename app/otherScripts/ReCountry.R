@@ -314,7 +314,7 @@ if (dim(countryData)[1] > 0) {
         ### add additional interval 7 days before last Re estimate, for country level only
         # discarding interval ends more recent than that.
         lastIntervalEnd <- deconvolvedCountryData %>%
-          filter(data_type == "infection_Confirmed cases", region == "CHE", replicate == 0) %>%
+          filter(data_type == "infection_Confirmed cases", region == args["country"], replicate == 0) %>%
           slice_max(date) %>%
           pull(date)
         lastIntervalStart <- lastIntervalEnd - 7
