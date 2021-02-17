@@ -1,8 +1,8 @@
 <h4>Méthodes</h4>
 
-Le R<sub>e</sub>  rapporté pour un jour en particulier correspond à une moyenne sur les trois derniers jours. Nous communiquons la médiane des estimations ainsi que l’intervalle d’incertitude à 95%. 
-La méthode d'estimation de R<sub>e</sub> est expliquée en détails [ici](https://www.medrxiv.org/content/10.1101/2020.11.26.20239368v1.article-info) (en anglais).). 
-We further provide a 7-day estimate. This estimate is obtained by assuming a constant R<sub>e</sub> over the last seven days. The results of such a piecewise constant procedure can be viewed visually using the option "Step-wise constant".
+Le R<sub>e</sub>  rapporté pour un jour en particulier correspond à une moyenne sur les trois derniers jours. Nous communiquons la médiane des estimations ainsi que l’intervalle d’incertitude à 95%.
+La méthode d'estimation de R<sub>e</sub> est expliquée en détails [ici](https://www.medrxiv.org/content/10.1101/2020.11.26.20239368v1.article-info) (en anglais).
+Nous produisons aussi une estimation de R<sub>e</sub> sur 7 jours. Celle-ci est faite en supposant le R<sub>e</sub> constant sur les 7 derniers jours. Les résultats de cette procédure d'estimation constante-par-morceau peuvent être visualisés en cliquant sur l'option "Step-wise constant".
 
 Depuis juin, nous lissons d’abord les données brutes par une étape reposant sur la méthode dite LOESS, nous inférons ensuite les dates d’infections des malades grâce à une étape de [déconvolution](https://www.pnas.org/content/106/51/21825) comme présentée dans deux pre-prints récents [(1)](https://smw.ch/article/doi/smw.2020.20307)[(2)](https://journals.plos.org/ploscompbiol/article/comments?id=10.1371/journal.pcbi.1008409) (en anglais).  Nous estimons ensuite le nombre de reproduction effectif R<sub>e</sub> grâce au software [EpiEstim](https://cran.r-project.org/web/packages/EpiEstim/index.html) auquel nous fournissons les dates estimées d’infection. Les résultats utilisant les données disponibles du 26 juin 2020 et reposant sur la méthode précédente sont accessibles [ici](https://smw.ch/article/doi/smw.2020.20271).
 
