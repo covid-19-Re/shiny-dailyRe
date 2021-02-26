@@ -44,4 +44,10 @@ ZA,ZAF,South_Africa,Northern Cape,2016,1193780
 ZA,ZAF,South_Africa,North West,2016,3748435
 ZA,ZAF,South_Africa,Western Cape,2016,6279730
 ZA,ZAF,South_Africa,Unknown,2016,NA
-EH,ESH,Western Sahara,Western Sahara,2019,567402
+EH,ESH,Western_Sahara,Western Sahara,2019,567402
+TW,TWN,Taiwan,Taiwan,2020,23568378
+JE,JEY,Jersey,Jersey,2019,107800
+GB,GBR,United_Kingdom,England,2019,56286961
+GB,GBR,United_Kingdom,Northern Ireland,2019,1893700
+GB,GBR,United_Kingdom,Scotland,2019,5463300
+GB,GBR,United_Kingdom,Wales,2019,3153000
