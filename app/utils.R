@@ -43,7 +43,10 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
 
   estimatesPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Estimates.rds"))
   if (!is_empty(estimatesPath)) {
-    estimates <- readRDS(file.path(dataDir, estimatesPath))
+    estimates <- readRDS(file.path(dataDir, estimatesPath)) %>%
+      mutate(
+        countryIso3 = replace_na(countryIso3, iso3)
+      )
   } else {
     estimates <- NULL
   }
