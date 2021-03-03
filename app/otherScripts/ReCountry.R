@@ -327,6 +327,13 @@ if (dim(countryData)[1] > 0) {
             lastIntervalStart)
         }
 
+        if (args["country"] == "CHE") {
+          additionalRegions <- setdiff(swissRegions, names(interval_ends))
+          for (iregion in additionalRegions) {
+            interval_ends[[iregion]] <- interval_ends[[args["country"]]]
+          }
+        }
+
         ##TODO this all_delays could be removed because we always deconvolve
         ### Delays applied
         all_delays <- list(
