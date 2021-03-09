@@ -323,7 +323,7 @@ if (dim(countryData)[1] > 0) {
           interval_ends[[args["country"]]] <- lastIntervalStart
         } else {
           interval_ends[[args["country"]]] <- c(
-            interval_ends[[args["country"]]][interval_ends[[args["country"]]] != lastIntervalStart],
+            interval_ends[[args["country"]]][interval_ends[[args["country"]]] < lastIntervalStart],
             lastIntervalStart)
         }
 
