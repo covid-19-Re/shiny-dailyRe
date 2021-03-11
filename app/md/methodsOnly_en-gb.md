@@ -10,6 +10,7 @@ Since June, we first smooth the data with a LOESS step, and then estimate the in
 **Update (15.2.2021)**: We now take the R<sub>e</sub> estimate on the original data as the R<sub>e</sub> point estimate, replacing the mean of the bootstrap replicates. The aim is to make the point estimate more stable. 
 Further, we use the uncertainty intervals from EpiEstim in case it is larger than the bootstrapping interval in order to obtain conservative uncertainty intervals.
 Updated code is available [here](https://github.com/covid-19-Re/shiny-dailyRe).
+
 **Disclaimer**: The quality of the R<sub>e</sub> estimate for a particular country or region relies on the quality of raw data. We can only check the quality of data for some countries, in particular Switzerland and some surrounding countries.  Before drawing conclusions for a particular country, please check the data quality, even visually. In particular, sudden spikes in reporting on particular days or missing data on many days can bias R<sub>e</sub> estimates.
 
 If you are working on the epidemic in a country for which we use data of bad quality, but have access to better data, please file an issue on https://github.com/covid-19-Re/shiny-dailyRe/issues, this would be extremely helpful!

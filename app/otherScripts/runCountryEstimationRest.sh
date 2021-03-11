@@ -72,6 +72,10 @@ done
 
 runRScript sumData.R
 
+# move files to live folder
+cd "$parent_path"
+mv ../data/temp/*.qs ../data/serialized/
+
 # reload data by restarting R shiny process
 touch ../restart.txt
 
