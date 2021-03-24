@@ -1,4 +1,5 @@
 library(tidyverse)
+library(lubridate)
 library(here)
 library(qs)
 cat(str_c(Sys.time(), " | summarizing data ...\n"))
@@ -181,6 +182,12 @@ qsave(zafCasesLabels, file = here("app/data/temp/zafCasesLabels.qs"))
 zafReLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "re")
 qsave(zafReLabels, file = here("app/data/temp/zafReLabels.qs"))
 
+source(here::here("app/otherScripts/1_utils_getRawData.R"))
+
+vaccinationData <- getVaccinationDataOWID(tempFileName = here("app/data/temp/owidVaccinationData.csv")) %>%
+  left_join(countryNames, by = "countryIso3")
+qsave(vaccinationData, file = here("app/data/temp/vaccinationData.qs"))
+
 # update updateData
 sourceInfo <- read_csv(here("app/data/dataSources.csv"),
   col_types = cols(.default = col_character()))
@@ -198,10 +205,14 @@ dataSources <- updateDataRaw %>%
   dplyr::summarize(
     countries = if_else(length(unique(country)) > 5, "other Countries", str_c(unique(country), collapse = ", ")),
     data_type = str_c(as.character(unique(data_type)), collapse = ", "),
-    .groups = "drop_last") %>%
+    .groups = "drop") %>%
+  add_row(source = "OWID", sourceLong = "Data on Vaccinations from Our World in Data",
+    url = "https://github.com/owid/covid-19-data/tree/master/public/data",
+    countries = "see link",
+    data_type = "Vaccinations") %>%
   mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
   dplyr::select("Source" = source, "Description" = sourceLong,
-    "Countries" = countries, "Data types" = data_type, "URL" = url)
+    "Countries" = countries, "Data types" = data_type, "URL" = url) 
 
 qsave(dataSources, file = here("app/data/temp/dataSources.qs"))
 qsave(updateDataRaw, file = here("app/data/temp/updateDataRaw.qs"))

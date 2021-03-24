@@ -30,6 +30,8 @@ countryList <- qs::qread("data/serialized/countryList.qs")
 
 interventionsData <- qs::qread("data/serialized/interventionsData.qs")
 
+allVaccinationData <- qs::qread("data/serialized/vaccinationData.qs")
+
 updateDataRaw <-  qs::qread("data/serialized/updateDataRaw.qs")
 dataSources <-  qs::qread("data/serialized/dataSources.qs")
 

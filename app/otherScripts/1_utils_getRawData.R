@@ -106,7 +106,7 @@ getDataECDC <- function(countries = NULL, tempFileName = NULL, tReload = 15) {
 }
 
 
-##### Our World in Data
+##### Our World in Data #####
 getDataOWID <- function(countries = NULL, tempFileName = NULL, tReload = 300) {
   urlfile <- "https://covid.ourworldindata.org/data/owid-covid-data.csv"
 
@@ -162,6 +162,63 @@ getDataOWID <- function(countries = NULL, tempFileName = NULL, tReload = 300) {
   }
 
   longData[longData$value < 0, "value"] <- 0
+  return(longData)
+}
+
+getVaccinationDataOWID <- function(countries = NULL, tempFileName = NULL, tReload = 300) {
+  urlfile <- "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/vaccinations.csv"
+
+  if (is.null(tempFileName)) {
+    csvPath <- urlfile
+  } else {
+    fileMod <- file.mtime(tempFileName)
+    fileReload <- if_else(file.exists(tempFileName), now() > fileMod + minutes(tReload), TRUE)
+    if (fileReload) {
+      downloadOK <- try(download.file(urlfile, destfile = tempFileName))
+      if ("try-error" %in% class(downloadOK)) {
+        if (file.exists(tempFileName)) {
+          warning("Couldn't fetch new OWID Vaccination data. Using data from ", fileMod)
+        } else {
+          warning("Couldn't fetch new OWID Vaccination data.")
+          return(NULL)
+        }
+      }
+    }
+    csvPath <- tempFileName
+  }
+
+  world_data <- try(read_csv(csvPath,
+    col_types = cols_only(
+      iso_code = col_character(),
+      date = col_date(format = ""),
+      total_vaccinations = col_double(),
+      people_vaccinated = col_double(),
+      people_fully_vaccinated = col_double(),
+      daily_vaccinations_raw = col_double(),
+      daily_vaccinations = col_double(),
+      total_vaccinations_per_hundred = col_double(),
+      people_vaccinated_per_hundred = col_double(),
+      people_fully_vaccinated_per_hundred = col_double(),
+      daily_vaccinations_per_million = col_double()
+    )
+  ))
+
+  if ("try-error" %in% class(world_data)) {
+    warning(str_c("couldn't get OWID Vaccination data from ", url, "."))
+    return(NULL)
+  }
+
+  longData <- world_data %>%
+    rename(countryIso3 = iso_code) %>%
+    pivot_longer(cols = total_vaccinations:daily_vaccinations_per_million, names_to = "data_type") %>%
+    mutate(
+      source = "OWID") %>%
+    filter(!is.na(value))
+
+  if (!is.null(countries)) {
+    longData <- longData %>%
+      filter(countryIso3 %in% countries)
+  }
   return(longData)
 }
 

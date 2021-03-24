@@ -84,6 +84,31 @@ server <- function(input, output, session) {
       return(countryData)
     })
 
+    vaccinations <- reactive({
+      validate(need(countrySelectValue() != "", "Please select a country"))
+      countrySelectValue <- countrySelectValue()
+
+      if ("showVaccinations" %in% input$plotOptions) {
+        vaccinations <- allVaccinationData %>%
+            filter(
+              countryIso3 %in% countrySelectValue,
+              data_type == input$vaccinationTypeSelect) %>%
+            mutate(
+              tooltip = str_c(
+                if_else(
+                  input$vaccinationTypeSelect == "people_fully_vaccinated_per_hundred",
+                  "Fully Vaccinated / 100 people: ",
+                  "Part. Vaccinated / 100 people: "
+                ),
+                value
+              )
+            )
+      } else {
+        vaccinations <- NULL
+      }
+      return(vaccinations)
+    })
+
     rightTruncation <- reactive({
       validate(need(countrySelectValue() != "", "Please select a country"))
       countrySelectValue <- countrySelectValue()
@@ -157,7 +182,9 @@ server <- function(input, output, session) {
       interventions <- interventions()
       plotSize <- stateVals$plotSize
       rightTruncation <- rightTruncation()
-      rEffPlotlyShiny(countryData, updateData, interventions, "data_type", input,
+      vaccinations <- vaccinations()
+
+      rEffPlotlyShiny(countryData, updateData, interventions, vaccinations, "data_type", input,
         rightTruncation, i18n(), plotSize)
     })
 
@@ -167,8 +194,9 @@ server <- function(input, output, session) {
       interventions <- interventions()
       plotSize <- stateVals$plotSize
       rightTruncation <- rightTruncation()
+      vaccinations <- NULL
 
-      rEffPlotlyShiny(countryData, updateData, interventions, "region", input,
+      rEffPlotlyShiny(countryData, updateData, interventions, vaccinations, "region", input,
         rightTruncation, i18n(), plotSize)
     })
 
@@ -178,8 +206,9 @@ server <- function(input, output, session) {
       interventions <- interventions()
       plotSize <- stateVals$plotSize
       rightTruncation <- rightTruncation()
+      vaccinations <- NULL
 
-      rEffPlotlyShiny(countryData, updateData, interventions, "greaterRegion", input,
+      rEffPlotlyShiny(countryData, updateData, interventions, vaccinations, "greaterRegion", input,
         rightTruncation, i18n(), plotSize)
     })
 
@@ -530,14 +559,22 @@ server <- function(input, output, session) {
         radioButtons("caseAverage", i18n()$t("Display case data as ..."),
           choices = caseAverageChoices(),
           selected = 1, inline = FALSE),
+        radioButtons("vaccinationTypeSelect",
+          HTML(i18n()$t("Vaccinations"),
+            tooltip("Show number of people vaccinated (at least one shot received) per 100 or number of fully vaccinated people per 100?")
+          ),
+          choices = c(
+            "Fully vaccinated" = "people_fully_vaccinated_per_hundred",
+            "Partially vaccinated" = "people_vaccinated_per_hundred"),
+          selected = "people_fully_vaccinated_per_hundred", inline = FALSE),
         checkboxGroupInput("plotOptions", label = i18n()$t("More Options"),
           choices = c(
             "Logarithmic axis for cases" = "logCases",
             "Normalize cases to per 100'000 inhabitants" = "caseNormalize",
             "Show smoothed data (Loess Fit)" = "caseLoess",
             "Show estimated infection times (deconvolution)" = "caseDeconvoluted",
-            "Show individual interventions (where applicable)" = "indInterventions"),
-          selected = "indInterventions"
+            "Show / Hide vaccination data" = "showVaccinations"),
+          selected = "showVaccinations"
         )
       )
     } else {
