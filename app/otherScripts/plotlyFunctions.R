@@ -260,6 +260,7 @@ estimatesSubPlot <- function(
 interventionsSubPlot <- function(
   stringencyData,
   interventions,
+  vaccinations,
   startDate,
   endDate,
   seriesName,
@@ -270,6 +271,12 @@ interventionsSubPlot <- function(
 
     pIntervention <- plot_ly(data = stringencyData)
     maxValue <- 100 # max(stringencyData$value, na.rm = TRUE)
+
+    if (!is.null(vaccinations)) {
+      yAxisTitle <- "Oxford Stringency Index /\n Vaccinations"
+    } else {
+      yAxisTitle <- "Oxford Stringency Index"
+    }
 
     if (seriesName == "data_type") {
       pIntervention <- pIntervention %>%
@@ -284,14 +291,9 @@ interventionsSubPlot <- function(
           "Oxford Stringency Index: ", value),
         hoveron = "lines",
         hoverinfo = "text") %>%
-      # add_text(
-      #   data = top_n(stringencyData, 1, date), x = ~date, y = ~value - 2, color = I("rgba(205, 12, 24, 0.5)"),
-      #   text = "Oxford Stringency Index",
-      #   textposition = "bottomleft", showlegend = FALSE
-      # ) %>%
       layout(
         xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
-        yaxis = plotlyYaxis(title = "Interventions /\nOxford Stringency Index", range = c(0, 100),
+        yaxis = plotlyYaxis(title = yAxisTitle, range = c(0, 100),
           visible = TRUE, fixedRange = fixedRangeY))
     } else {
       pIntervention <- pIntervention %>%
@@ -305,14 +307,9 @@ interventionsSubPlot <- function(
           if_else(source == "KOF", "KOF Stringency Index: ", "Oxford Stringency Index: "), value),
         hoveron = "lines",
         hoverinfo = "text") %>%
-      # add_text(
-      #   data = top_n(stringencyData, 1, date), x = ~date, y = ~value - 2, color = I("rgba(205, 12, 24, 0.5)"),
-      #   text = "Oxford Stringency Index",
-      #   textposition = "bottomleft", showlegend = FALSE
-      # ) %>%
       layout(
         xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
-        yaxis = plotlyYaxis(title = "Interventions /\nOxford Stringency Index", range = c(0, 100),
+        yaxis = plotlyYaxis(title = yAxisTitle, range = c(0, 100),
           visible = TRUE, fixedRange = fixedRangeY))
     }
 
@@ -325,6 +322,7 @@ interventionsSubPlot <- function(
           data = group_by(interventionsPlot, name),
           x = ~date, y = ~y, color = I("rgba(50, 50, 50, 1)"),
           type = "scatter", mode = "markers+lines",
+          fillcolor = "rgba(50, 50, 50, 1)",
           showlegend = FALSE,
           text = ~str_c("<i>", date, " (", format(date, "%a"), ")", "</i><br>", tooltip),
           hoveron = "points",
@@ -334,6 +332,30 @@ interventionsSubPlot <- function(
           textposition = ~plotTextPosition, showlegend = FALSE, textfont = list(size = 10))
     }
 
+    if (!is.null(vaccinations)) {
+      if (seriesName == "data_type") {
+        pIntervention <- pIntervention %>%
+          add_trace(
+            data = vaccinations,
+            x = ~date, y = ~value,  color = I("rgba(122, 209, 81, 1)"),
+            type = "scatter", mode = "lines", fill = "tozeroy",
+            showlegend = FALSE,
+            text = ~str_c("<i>", date, " (", format(date, "%a"), ")", "</i><br>", tooltip),
+            hoveron = "points",
+            hoverinfo = "text")
+      } else {
+        pIntervention <- pIntervention %>%
+          add_trace(
+            data = vaccinations,
+            x = ~date, y = ~value, color = ~series, colors = seriesColors,
+            type = "scatter", mode = "lines", line = list(dash = "dash"),
+            showlegend = FALSE,
+            text = ~str_c("<i>", date, " (", format(date, "%a"), ")", "</i><br>", tooltip),
+            hoveron = "points",
+            hoverinfo = "text")
+      }
+    }
+
     return(pIntervention)
 }
 
@@ -341,6 +363,7 @@ rEffPlotly <- function(
   caseData,
   estimates,
   interventions,
+  vaccinations,
   seriesName = "data_type",
   seriesColors,
   seriesTitle = "Data types",
@@ -461,7 +484,7 @@ rEffPlotly <- function(
     dateFormat,
     dateFormatLong)
 
-  if (!is.null(interventions) | ("Stringency Index" %in% unique(caseData$data_type))) {
+  if (!is.null(interventions) | ("Stringency Index" %in% unique(caseData$data_type)) | !is.null(vaccinations)) {
 
     stringencyData <- caseData %>%
       filter(
@@ -469,9 +492,14 @@ rEffPlotly <- function(
         data_type == "Stringency Index") %>%
       dplyr::select(countryIso3, country, source, series, date, value)
 
+    if (seriesName %in% colnames(vaccinations)) {
+      vaccinations$series <- vaccinations[[seriesName]]
+    }
+
     pIntervention <- interventionsSubPlot(
       stringencyData,
       interventions,
+      vaccinations,
       startDate,
       endDate,
       seriesName,
@@ -692,8 +720,17 @@ renameRegionTotal <- function(caseData, countries, countryNames, regionSort) {
   return(renamedData)
 }
 
-rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect, input, rightTruncation, translator,
-  plotSize = "large", showHelpBox = FALSE) {
+rEffPlotlyShiny <- function(
+  countryData,
+  updateData,
+  interventions,
+  vaccinations,
+  seriesSelect,
+  input,
+  rightTruncation,
+  translator,
+  plotSize = "large",
+  showHelpBox = FALSE) {
 
   countries <- unique(countryData$caseData$countryIso3)
   countryNames <- unique(countryData$caseData$country)
@@ -829,6 +866,7 @@ rEffPlotlyShiny <- function(countryData, updateData, interventions, seriesSelect
     caseData = caseData,
     estimates = estimates,
     interventions = interventions,
+    vaccinations = vaccinations,
     seriesName = seriesName,
     seriesColors = seriesColors,
     seriesTitle = seriesTitle,
