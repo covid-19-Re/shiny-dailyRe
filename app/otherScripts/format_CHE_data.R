@@ -369,7 +369,7 @@ if (!dir.exists(basePath)) {
 testsDataPath <- file.path(basePath, str_c("CHE-Tests.rds"))
 
 bagFiles <- list.files(here::here("app", "data", "BAG"),
-                       pattern = "*Time_series_tests.csv",
+                       pattern = "*Timeseries_tests_akl.csv",
                        full.names = TRUE,
                        recursive = TRUE)
 
@@ -378,12 +378,40 @@ bagFileDates <- strptime(
   format = "%Y-%m-%d_%H-%M-%S")
 
 newestFile <- bagFiles[which(bagFileDates == max(bagFileDates))[1]]
-nTests <- read_delim(file = newestFile, delim = ";",
-                     col_types = cols_only(
-                       Datum = col_date(format = ""),
-                       `Positive Tests` = col_double(),
-                       `Negative Tests` = col_double()
-                     )) %>%
+
+nTestsKtn <- read_delim(
+  file = newestFile, delim = ";",
+  col_types = cols_only(
+    Altersklasse = col_character(),
+    ktn = col_character(),
+    Datum = col_date(format = ""),
+    Positive = col_double(),
+    Negative = col_double()
+  )) %>%
+  group_by(ktn, Datum) %>%
+  summarise(
+    Positive = sum(Positive),
+    Negative = sum(Negative),
+    .groups = "drop"
+  ) %>%
+  transmute(
+    date = Datum,
+    countryIso3 = if_else(ktn == "FL", "LIE", "CHE"),
+    region = ktn,
+    positiveTests = Positive,
+    negativeTests = Negative,
+    totalTests = positiveTests + negativeTests,
+    testPositivity = positiveTests / totalTests
+  )
+
+nTestsCHE <- read_delim(
+    file = str_replace(newestFile, "Timeseries_tests_akl", "Time_series_tests"),
+    delim = ";",
+    col_types = cols_only(
+      Datum = col_date(format = ""),
+      `Positive Tests` = col_double(),
+      `Negative Tests` = col_double()
+    )) %>%
   transmute(
     date = Datum,
     countryIso3 = "CHE",
@@ -394,81 +422,32 @@ nTests <- read_delim(file = newestFile, delim = ";",
     testPositivity = positiveTests / totalTests
   )
 
+nTests <- bind_rows(nTestsKtn, nTestsCHE)
+
 saveRDS(nTests, testsDataPath)
 
-confirmedCHEDataTests <- data_hospitalization %>%
-  filter(!is.na(fall_dt)) %>% 
-  dplyr::select(fall_dt, ktn, exp_ort) %>%
-  mutate(date = ymd(fall_dt),
-         local_infection = if_else(is.na(exp_ort) | exp_ort != 2, "TRUE", "FALSE")) %>% 
-  filter(between(date, min_date, max_date - right_truncation[["Confirmed cases / tests"]])) %>% 
-  dplyr::group_by(date, local_infection) %>%
-  dplyr::count() %>%
-  ungroup() %>% 
-  dplyr::mutate(
-    countryIso3 = "CHE",
-    region = "CHE",
-    source = "FOPH",
-    data_type = "confirmed",
-    value = n,
-    date_type = "report",
-    .keep  = "unused"
-  ) %>% 
-  dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
-  complete(date = seq(min(date), max_date - right_truncation[["Confirmed cases / tests"]], by = "days"), 
-           local_infection,
-           region, 
-           countryIso3, 
-           source, 
-           data_type, 
-           date_type,
-           fill = list(value = 0)) %>% 
-  ungroup() %>% 
-  arrange(date) %>% 
+confirmedCHEDataTests <- allBAGdata %>%
+  filter(data_type == "confirmed", date_type == "report") %>%
   left_join(
     mutate(nTests, data_type = "confirmed"),
-    by = c("date", "region", "countryIso3", "data_type")) %>% 
+    by = c("date", "region", "countryIso3", "data_type")) %>%
   mutate(
     data_type = "Confirmed cases / tests",
     value = value / totalTests * mean(totalTests, na.rm = T)
-  )
+  ) %>%
+  filter(!is.na(value))
 
 
-plotting_confirmedCHEDataTests <- data_hospitalization %>%
-  filter(!is.na(fall_dt)) %>% 
-  dplyr::select(fall_dt, ktn) %>%
-  mutate(date = ymd(fall_dt)) %>% 
-  filter(between(date, min_date, max_date_plotting)) %>% 
-  dplyr::group_by(date) %>%
-  dplyr::count() %>%
-  ungroup() %>% 
-  dplyr::mutate(
-    countryIso3 = "CHE",
-    region = "CHE",
-    source = "FOPH",
-    data_type = "confirmed",
-    value = n,
-    date_type = "report_plotting",
-    local_infection = NA,
-    .keep  = "unused"
-  ) %>% 
-  dplyr::group_by(region, countryIso3, source, data_type, date_type) %>% 
-  complete(date = seq(min(date), max_date_plotting, by = "days"), 
-           local_infection,
-           region, 
-           countryIso3, 
-           source, 
-           data_type, 
-           date_type,
-           fill = list(value = 0)) %>% 
-  arrange(date) %>% 
+plotting_confirmedCHEDataTests <- allBAGdata %>%
+  filter(data_type == "confirmed", date_type == "report_plotting") %>%
   left_join(
     mutate(nTests, data_type = "confirmed"),
     by = c("date", "region", "countryIso3", "data_type")) %>%
   mutate(
     data_type = "Confirmed cases / tests",
     value = value / totalTests
-  )
+  ) %>%
+  filter(!is.na(value))
 
 allBAGdata <- bind_rows(confirmedCHEDataTests, plotting_confirmedCHEDataTests, allBAGdata)
 
