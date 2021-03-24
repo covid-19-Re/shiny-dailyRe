@@ -95,6 +95,7 @@ server <- function(input, output, session) {
               data_type == input$vaccinationTypeSelect) %>%
             mutate(
               tooltip = str_c(
+                country, "<br>",
                 if_else(
                   input$vaccinationTypeSelect == "people_fully_vaccinated_per_hundred",
                   "Fully Vaccinated / 100 people: ",
