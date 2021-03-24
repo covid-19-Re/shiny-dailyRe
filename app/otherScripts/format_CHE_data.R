@@ -189,29 +189,6 @@ plotting_confirmed_case_data <-  data_hospitalization %>%
   ungroup() %>% 
   arrange(region, date, date_type)
 
-# death_data <- data_hospitalization %>%
-#   filter(!is.na(pttoddat)) %>% 
-#   dplyr::select(manifestation_dt, pttoddat, ktn) %>%
-#   mutate(across(c(manifestation_dt, pttoddat), ymd)) %>% 
-#   mutate(across(c(manifestation_dt, pttoddat), ~ if_else(between(.x, min_date, max_date), .x, as.Date(NA)))) %>%
-#   filter(!is.na(pttoddat)) %>%
-#   mutate(manifestation_dt = if_else(between(pttoddat - manifestation_dt, 0, max_delay_death), manifestation_dt, as.Date(NA))) %>%
-#   mutate(date_type = if_else(is.na(manifestation_dt), "report", "onset"),
-#          date = if_else(is.na(manifestation_dt), pttoddat, manifestation_dt),
-#          region = ktn,
-#          .keep = "none") %>% 
-#   dplyr::group_by(region, date, date_type) %>%
-#   dplyr::count() %>%
-#   ungroup() %>%
-#   dplyr::mutate(
-#     countryIso3 = "CHE",
-#     source = "FOPH",
-#     data_type = "deaths",
-#     incidence = n,
-#     .keep  = "unused"
-#   ) %>% 
-#   arrange(region, date, date_type)
-
 ## only use death dates
 death_data <- data_hospitalization %>%
   filter(!is.na(pttoddat)) %>% 
