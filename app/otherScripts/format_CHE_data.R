@@ -111,7 +111,7 @@ final_delay_data_FOPH <- restructured_data_FOPH %>%
          countryIso3 = "CHE",
          source = "FOPH")
 
-normalized_test_delays <- final_delay_data_FOPH %>% filter(data_type == "Confirmed cases") %>% 
+normalized_test_delays <- final_delay_data_FOPH %>% filter(data_type == "Confirmed cases") %>%
   mutate(data_type = "Confirmed cases / tests")
 
 final_delay_data_FOPH <- bind_rows(final_delay_data_FOPH, normalized_test_delays)
