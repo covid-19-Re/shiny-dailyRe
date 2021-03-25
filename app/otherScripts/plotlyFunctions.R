@@ -683,6 +683,7 @@ plotlyShowTraces <- function(plot, traceName, mode = "only") {
 
 dataUpdatesString <- function(latestData, name = "Data Source", dateFormat = "%Y-%m-%d") {
   latestDataSum <- latestData %>%
+    mutate(lastChanged = format(lastChanged, dateFormat)) %>%
     group_by(source, lastChanged) %>%
     summarize(
       data_type = str_c(data_type, collapse = ", "),
@@ -692,12 +693,12 @@ dataUpdatesString <- function(latestData, name = "Data Source", dateFormat = "%Y
   nSources <- dim(latestDataSum)[1]
   if (nSources == 1) {
     outList[[2]] <- str_c(
-      latestDataSum$source, ", ", format(latestDataSum$lastChanged, dateFormat),
+      latestDataSum$source, ", ", latestDataSum$lastChanged,
       "; ")
   } else {
     for (i in seq_len(nSources)) {
       outList[[i + 1]] <- str_c(
-        latestDataSum[i, ]$source, ", ", format(latestDataSum[i, ]$lastChanged, dateFormat),
+        latestDataSum[i, ]$source, ", ", latestDataSum[i, ]$lastChanged,
         " (", latestDataSum[i, ]$data_type, ")",
         "; ")
     }
@@ -854,6 +855,10 @@ rEffPlotlyShiny <- function(
     showRegions <- NULL
   )
 
+  if (!is.null(vaccinations) & "showVaccinations" %in% input$plotOptions) {
+    dataTypeSelect <- c(dataTypeSelect, "Vaccinations")
+  }
+
   updateDataPlot <- updateData %>%
     filter(
       data_type %in% dataTypeSelect,
@@ -865,7 +870,7 @@ rEffPlotlyShiny <- function(
       lastChanged = max(lastChanged),
       .groups = "keep") %>%
     ungroup()
-
+  print(updateDataPlot)
   startDate <- if_else(dim(estimates)[1] != 0,
     min(estimates$date) - 14,
     min(caseData$date) - 7
