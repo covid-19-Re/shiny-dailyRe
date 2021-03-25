@@ -14,6 +14,22 @@ allCountries <- str_match(
   string = list.files(path = pathToCountryData, pattern = ".*-Data", recursive = TRUE),
   pattern = "(.*)-.*")[, 2]
 
+source(here::here("app/otherScripts/1_utils_getRawData.R"))
+
+vaccinationDataWorld <- getVaccinationDataOWID(tempFileName = here("app/data/temp/owidVaccinationData.csv")) %>%
+  left_join(countryNames, by = "countryIso3")
+vaccinationDataCHE <- getVaccinationDataCHE() %>%
+  left_join(countryNames, by = "countryIso3")
+# only use BAG vaccination data if it exists (safety, since data fetching is undocumented)
+if (!is.null(vaccinationDataCHE)) {
+  vaccinationDataWorld <- vaccinationDataWorld %>%
+    filter(!(countryIso3 %in% c("CHE", "LIE")))
+}
+
+vaccinationData <- bind_rows(vaccinationDataWorld, vaccinationDataCHE)
+
+qsave(vaccinationData, file = here("app/data/temp/vaccinationData.qs"))
+
 allData <- list(caseData = list(), estimates = list())
 estimatePlotRanges <- list()
 updateDataRaw <- list()
@@ -24,7 +40,20 @@ for (iCountry in allCountries) {
   allData$caseData[[iCountry]] <- iCountryData$caseData
   allData$estimates[[iCountry]] <- iCountryData$estimates
   estimatePlotRanges[[iCountry]] <- iCountryData$estimateRanges[[iCountry]]
-  updateDataRaw[[iCountry]] <- iCountryData$updateData
+
+  updateDataRaw[[iCountry]] <- bind_rows(
+    iCountryData$updateData,
+      vaccinationData %>%
+      filter(countryIso3 == iCountry) %>%
+      group_by(countryIso3, country, region, source,) %>%
+      summarize(
+        data_type = "Vaccinations",
+        lastData = max(date),
+        lastChanged = now(),
+        lastChecked = now(),
+        .groups = "drop"
+      ))
+
   pb_i <- pb_i + 1
   setTxtProgressBar(pb, pb_i)
 }
@@ -182,22 +211,6 @@ qsave(zafCasesLabels, file = here("app/data/temp/zafCasesLabels.qs"))
 zafReLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "re")
 qsave(zafReLabels, file = here("app/data/temp/zafReLabels.qs"))
 
-source(here::here("app/otherScripts/1_utils_getRawData.R"))
-
-vaccinationDataWorld <- getVaccinationDataOWID(tempFileName = here("app/data/temp/owidVaccinationData.csv")) %>%
-  left_join(countryNames, by = "countryIso3")
-vaccinationDataCHE <- getVaccinationDataCHE() %>%
-  left_join(countryNames, by = "countryIso3")
-# only use BAG vaccination data if it exists (safety, since data fetching is undocumented)
-if (!is.null(vaccinationDataCHE)) {
-  vaccinationDataWorld <- vaccinationDataWorld %>%
-    filter(!(countryIso3 %in% c("CHE", "LIE")))
-}
-
-vaccinationData <- bind_rows(vaccinationDataWorld, vaccinationDataCHE)
-
-qsave(vaccinationData, file = here("app/data/temp/vaccinationData.qs"))
-
 # update updateData
 sourceInfo <- read_csv(here("app/data/dataSources.csv"),
   col_types = cols(.default = col_character()))
@@ -207,7 +220,7 @@ dataSources <- updateDataRaw %>%
   ungroup() %>%
   dplyr::select(countryIso3, source, data_type, lastData) %>%
   filter(
-    data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths", "Stringency Index")
+    data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths", "Stringency Index", "Vaccinations")
   ) %>%
   left_join(dplyr::select(continents, countryIso3, country), by = "countryIso3") %>%
   left_join(sourceInfo, by = "source") %>%
@@ -216,10 +229,10 @@ dataSources <- updateDataRaw %>%
     countries = if_else(length(unique(country)) > 5, "other Countries", str_c(unique(country), collapse = ", ")),
     data_type = str_c(as.character(unique(data_type)), collapse = ", "),
     .groups = "drop") %>%
-  add_row(source = "OWID", sourceLong = "Data on Vaccinations from Our World in Data",
-    url = "https://github.com/owid/covid-19-data/tree/master/public/data",
-    countries = "see link",
-    data_type = "Vaccinations") %>%
+  # add_row(source = "OWID", sourceLong = "Data on Vaccinations from Our World in Data",
+  #   url = "https://github.com/owid/covid-19-data/tree/master/public/data",
+  #   countries = "see link",
+  #   data_type = "Vaccinations") %>%
   mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
   dplyr::select("Source" = source, "Description" = sourceLong,
     "Countries" = countries, "Data types" = data_type, "URL" = url) 
