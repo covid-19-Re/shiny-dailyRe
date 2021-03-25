@@ -1532,9 +1532,9 @@ getVaccinationDataCHE <- function() {
       date = date,
       daily_vaccinations_raw = entries,
       total_vaccinations = sumTotal,
-      people_vaccinated_per_hundred = per100PersonsTotal
+      total_vaccinations_per_hundred = per100PersonsTotal
     ) %>%
-    pivot_longer(cols = daily_vaccinations_raw:people_vaccinated_per_hundred, names_to = "data_type") %>%
+    pivot_longer(cols = daily_vaccinations_raw:total_vaccinations_per_hundred, names_to = "data_type") %>%
     mutate(source = "BAG")
 
   totalFullyVaccLong <- bind_rows(totalFullyVacc, totalFullyVaccGrRegions) %>%
