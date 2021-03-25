@@ -184,8 +184,18 @@ qsave(zafReLabels, file = here("app/data/temp/zafReLabels.qs"))
 
 source(here::here("app/otherScripts/1_utils_getRawData.R"))
 
-vaccinationData <- getVaccinationDataOWID(tempFileName = here("app/data/temp/owidVaccinationData.csv")) %>%
+vaccinationDataWorld <- getVaccinationDataOWID(tempFileName = here("app/data/temp/owidVaccinationData.csv")) %>%
   left_join(countryNames, by = "countryIso3")
+vaccinationDataCHE <- getVaccinationDataCHE() %>%
+  left_join(countryNames, by = "countryIso3")
+# only use BAG vaccination data if it exists (safety, since data fetching is undocumented)
+if (!is.null(vaccinationDataCHE)) {
+  vaccinationDataWorld <- vaccinationDataWorld %>%
+    filter(!(countryIso3 %in% c("CHE", "LIE")))
+}
+
+vaccinationData <- bind_rows(vaccinationDataWorld, vaccinationDataCHE)
+
 qsave(vaccinationData, file = here("app/data/temp/vaccinationData.qs"))
 
 # update updateData
