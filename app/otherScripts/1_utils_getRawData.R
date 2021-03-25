@@ -212,6 +212,7 @@ getVaccinationDataOWID <- function(countries = NULL, tempFileName = NULL, tReloa
     rename(countryIso3 = iso_code) %>%
     pivot_longer(cols = total_vaccinations:daily_vaccinations_per_million, names_to = "data_type") %>%
     mutate(
+      region = countryIso3,
       source = "OWID") %>%
     filter(!is.na(value))
 
@@ -1432,12 +1433,125 @@ getDataCHE <- function(data_path) {
   return(swissData)
 }
 
-
 getDataLIE <- function(data_path) {
   bagDataLIE <- getDataCHEBAG(path = data_path, country = "LIE") %>%
     mutate(
       region = recode(region, "FL" = "LIE"))
   return(bagDataLIE)
+}
+
+getVaccinationDataCHE <- function() {
+  urlfile <- jsonlite::fromJSON("https://www.covid19.admin.ch/api/data/context")
+
+  # load total vaccinations
+  totalVacc <- read_csv(
+    urlfile$sources$individual$csv$vaccDosesAdministered,
+    col_types = cols_only(
+      date = col_date(format = ""),
+      geoRegion = col_character(),
+      entries = col_double(),
+      pop = col_double(),
+      sumTotal = col_double(),
+      per100PersonsTotal = col_double()
+    )
+  )
+
+  if ("try-error" %in% class(totalVacc)) {
+    warning(str_c(
+      "couldn't get total Vaccination data from ",
+      urlfile$sources$individual$csv$vaccDosesAdministered, "."
+    ))
+    return(NULL)
+  }
+
+  # load full vaccinations
+  totalFullyVacc <- read_csv(
+    urlfile$sources$individual$csv$fullyVaccPersons,
+    col_types = cols_only(
+      date = col_date(format = ""),
+      geoRegion = col_character(),
+      entries = col_double(),
+      pop = col_double(),
+      sumTotal = col_double(),
+      per100PersonsTotal = col_double()
+    )
+  )
+
+  if ("try-error" %in% class(totalFullyVacc)) {
+    warning(str_c(
+      "couldn't get total Vaccination data from ",
+      urlfile$sources$individual$csv$vaccDosesAdministered, "."
+    ))
+    return(NULL)
+  }
+
+  # calculate vaccinations for greater Regions
+  greaterRegions <- tribble(
+    ~greaterRegion,             ~region,
+    "grR Lake Geneva Region",       c("VD", "VS", "GE"),
+    "grR Espace Mittelland",        c("BE", "FR", "SO", "NE", "JU"),
+    "grR Northwestern Switzerland", c("BS", "BL", "AG"),
+    "grR Zurich",                   c("ZH"),
+    "grR Eastern Switzerland",      c("GL", "SH", "AR", "AI", "SG", "GR", "TG"),
+    "grR Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
+    "grR Ticino",                   c("TI")
+  ) %>% unnest(cols = c(region))
+
+  totalVaccGrRegions <- totalVacc %>%
+    filter(geoRegion %in% unique(greaterRegions$region)) %>%
+    left_join(greaterRegions, by = c("geoRegion" = "region")) %>%
+    ungroup() %>%
+    mutate(geoRegion = greaterRegion) %>%
+    dplyr::select(-greaterRegion) %>%
+    group_by(date, geoRegion) %>%
+    dplyr::summarize(
+      entries = sum(entries),
+      pop = sum(pop),
+      sumTotal = sum(sumTotal),
+      .groups = "drop") %>%
+    mutate(per100PersonsTotal = (sumTotal / pop) * 100)
+
+  totalFullyVaccGrRegions <- totalFullyVacc %>%
+    filter(geoRegion %in% unique(greaterRegions$region)) %>%
+    left_join(greaterRegions, by = c("geoRegion" = "region")) %>%
+    ungroup() %>%
+    mutate(geoRegion = greaterRegion) %>%
+    dplyr::select(-greaterRegion) %>%
+    group_by(date, geoRegion) %>%
+    dplyr::summarize(
+      entries = sum(entries),
+      pop = sum(pop),
+      sumTotal = sum(sumTotal),
+      .groups = "drop") %>%
+    mutate(per100PersonsTotal = (sumTotal / pop) * 100)
+
+  totalVaccLong <- bind_rows(totalVacc, totalVaccGrRegions) %>%
+    transmute(
+      countryIso3 = if_else(geoRegion == "FL", "LIE", "CHE"),
+      region = recode(geoRegion, CH = "CHE", FL = "LIE"),
+      date = date,
+      daily_vaccinations_raw = entries,
+      total_vaccinations = sumTotal,
+      people_vaccinated_per_hundred = per100PersonsTotal
+    ) %>%
+    pivot_longer(cols = daily_vaccinations_raw:people_vaccinated_per_hundred, names_to = "data_type") %>%
+    mutate(source = "BAG")
+
+  totalFullyVaccLong <- bind_rows(totalFullyVacc, totalFullyVaccGrRegions) %>%
+    transmute(
+      countryIso3 = if_else(geoRegion == "FL", "LIE", "CHE"),
+      region = recode(geoRegion, CH = "CHE", FL = "LIE"),
+      date = date,
+      people_fully_vaccinated = sumTotal,
+      people_fully_vaccinated_per_hundred = per100PersonsTotal
+    ) %>%
+    pivot_longer(cols = people_fully_vaccinated:people_fully_vaccinated_per_hundred, names_to = "data_type") %>%
+    mutate(source = "BAG")
+
+  longData <- bind_rows(totalVaccLong, totalFullyVaccLong) %>%
+    arrange(countryIso3, region, data_type, date) %>%
+    filter(region != "CHFL") %>%
+    filter(!is.na(value))
 }
 
 ##### United Kingdom #####
