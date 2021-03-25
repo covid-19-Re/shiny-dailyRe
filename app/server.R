@@ -92,13 +92,13 @@ server <- function(input, output, session) {
         vaccinations <- allVaccinationData %>%
             filter(
               countryIso3 %in% countrySelectValue,
-              data_type == input$vaccinationTypeSelect) %>%
+              data_type == input$vacSelect) %>%
             mutate(
               tooltip = str_c(
-                if_else(
-                  input$vaccinationTypeSelect == "people_fully_vaccinated_per_hundred",
-                  "Fully Vaccinated / 100 people: ",
-                  "Part. Vaccinated / 100 people: "
+                case_when(
+                  input$vacSelect == "people_fully_vaccinated_per_hundred" ~ "Fully Vaccinated / 100 people: ",
+                  input$vacSelect == "total_vaccinations_per_hundred" ~ "Number of administered doses / 100 people: "
+                  # input$vacSelect == "people_vaccinated_per_hundred" ~ "Part. Vaccinated / 100 people: "
                 ),
                 round(value, 2)
               )
@@ -557,13 +557,20 @@ server <- function(input, output, session) {
         radioButtons("caseAverage", i18n()$t("Display case data as ..."),
           choices = caseAverageChoices(),
           selected = 1, inline = FALSE),
-        radioButtons("vaccinationTypeSelect",
+        radioButtons("vacSelect",
           HTML(i18n()$t("Vaccinations"),
-            tooltip("Show number of people vaccinated (at least one shot received) per 100 or number of fully vaccinated people per 100?")
+            tooltip(str_c(
+              "Show number of people fully vaccinated per 100 ",
+              "or the number of administered doses per 100",
+              # "or number of people partially vaccinated (at least one shot received) (not available for CHE)",
+              "?"
+            ))
           ),
           choices = c(
             "Fully vaccinated" = "people_fully_vaccinated_per_hundred",
-            "Partially vaccinated" = "people_vaccinated_per_hundred"),
+            "Number of administered doses" = "total_vaccinations_per_hundred"
+            # "Partially vaccinated (not available for CHE)" = "people_vaccinated_per_hundred"
+          ),
           selected = "people_fully_vaccinated_per_hundred", inline = FALSE),
         checkboxGroupInput("plotOptions", label = i18n()$t("More Options"),
           choices = c(
