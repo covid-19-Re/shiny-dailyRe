@@ -1535,7 +1535,7 @@ getVaccinationDataCHE <- function() {
       total_vaccinations_per_hundred = per100PersonsTotal
     ) %>%
     pivot_longer(cols = daily_vaccinations_raw:total_vaccinations_per_hundred, names_to = "data_type") %>%
-    mutate(source = "BAG")
+    mutate(source = "FOPH")
 
   totalFullyVaccLong <- bind_rows(totalFullyVacc, totalFullyVaccGrRegions) %>%
     transmute(
@@ -1546,7 +1546,7 @@ getVaccinationDataCHE <- function() {
       people_fully_vaccinated_per_hundred = per100PersonsTotal
     ) %>%
     pivot_longer(cols = people_fully_vaccinated:people_fully_vaccinated_per_hundred, names_to = "data_type") %>%
-    mutate(source = "BAG")
+    mutate(source = "FOPH")
 
   longData <- bind_rows(totalVaccLong, totalFullyVaccLong) %>%
     arrange(countryIso3, region, data_type, date) %>%
