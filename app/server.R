@@ -95,13 +95,12 @@ server <- function(input, output, session) {
               data_type == input$vaccinationTypeSelect) %>%
             mutate(
               tooltip = str_c(
-                country, "<br>",
                 if_else(
                   input$vaccinationTypeSelect == "people_fully_vaccinated_per_hundred",
                   "Fully Vaccinated / 100 people: ",
                   "Part. Vaccinated / 100 people: "
                 ),
-                value
+                round(value, 2)
               )
             )
       } else {
@@ -138,7 +137,6 @@ server <- function(input, output, session) {
         }
         return(rt)
       })
-
 
       names(rightTruncation) <- countrySelectValue
       return(rightTruncation)
@@ -194,7 +192,7 @@ server <- function(input, output, session) {
       interventions <- interventions()
       plotSize <- stateVals$plotSize
       rightTruncation <- rightTruncation()
-      vaccinations <- NULL
+      vaccinations <- vaccinations()
 
       rEffPlotlyShiny(countryData, updateData, interventions, vaccinations, "region", input,
         rightTruncation, i18n(), plotSize)
@@ -206,7 +204,7 @@ server <- function(input, output, session) {
       interventions <- interventions()
       plotSize <- stateVals$plotSize
       rightTruncation <- rightTruncation()
-      vaccinations <- NULL
+      vaccinations <- vaccinations()
 
       rEffPlotlyShiny(countryData, updateData, interventions, vaccinations, "greaterRegion", input,
         rightTruncation, i18n(), plotSize)

@@ -280,37 +280,37 @@ interventionsSubPlot <- function(
 
     if (seriesName == "data_type") {
       pIntervention <- pIntervention %>%
-      add_trace(
-        data = stringencyData,
-        x = ~date, y = ~value,
-        type = "scatter", mode = "lines", fill = "tozeroy",
-        fillcolor = "rgba(205, 12, 24, 0.2)",
-        line = list(color = "rgba(205, 12, 24, 1)", width = 1),
-        showlegend = FALSE,
-        text = ~str_c("<i>", date, "</i><br>",
-          "Oxford Stringency Index: ", value),
-        hoveron = "lines",
-        hoverinfo = "text") %>%
-      layout(
-        xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
-        yaxis = plotlyYaxis(title = yAxisTitle, range = c(0, 100),
-          visible = TRUE, fixedRange = fixedRangeY))
+        add_trace(
+          data = stringencyData,
+          x = ~date, y = ~value,
+          type = "scatter", mode = "lines", fill = "tozeroy",
+          fillcolor = "rgba(205, 12, 24, 0.2)",
+          line = list(color = "rgba(205, 12, 24, 1)", width = 1),
+          showlegend = FALSE,
+          text = ~str_c("<i>", date, " (", format(date, "%a"), ")", "</i><br>",
+            "Oxford Stringency Index: ", value),
+          hoveron = "lines",
+          hoverinfo = "text") %>%
+        layout(
+          xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
+          yaxis = plotlyYaxis(title = yAxisTitle, range = c(0, 100),
+            visible = TRUE, fixedRange = fixedRangeY))
     } else {
       pIntervention <- pIntervention %>%
-      add_trace(
-        data = stringencyData,
-        x = ~date, y = ~value, color = ~series, colors = seriesColors,
-        type = "scatter", mode = "lines",
-        showlegend = FALSE,
-        legendgroup = ~series,
-        text = ~str_c("<i>", date, "</i><br>", series, "<br>",
-          if_else(source == "KOF", "KOF Stringency Index: ", "Oxford Stringency Index: "), value),
-        hoveron = "lines",
-        hoverinfo = "text") %>%
-      layout(
-        xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
-        yaxis = plotlyYaxis(title = yAxisTitle, range = c(0, 100),
-          visible = TRUE, fixedRange = fixedRangeY))
+        add_trace(
+          data = stringencyData,
+          x = ~date, y = ~value, color = ~series, colors = seriesColors,
+          type = "scatter", mode = "lines",
+          showlegend = FALSE,
+          legendgroup = ~series,
+          text = ~str_c("<i>", date, " (", format(date, "%a"), ")", "</i><br>", series, "<br>",
+            if_else(source == "KOF", "KOF Stringency Index: ", "Oxford Stringency Index: "), value),
+          hoveron = "lines",
+          hoverinfo = "text") %>%
+        layout(
+          xaxis = plotlyXaxis(startDate, endDate, dateFormat, fixedRangeX),
+          yaxis = plotlyYaxis(title = yAxisTitle, range = c(0, 100),
+            visible = TRUE, fixedRange = fixedRangeY))
     }
 
     if (!is.null(interventions)) {
@@ -350,7 +350,8 @@ interventionsSubPlot <- function(
             x = ~date, y = ~value, color = ~series, colors = seriesColors,
             type = "scatter", mode = "lines", line = list(dash = "dash"),
             showlegend = FALSE,
-            text = ~str_c("<i>", date, " (", format(date, "%a"), ")", "</i><br>", tooltip),
+            legendgroup = ~series,
+            text = ~str_c("<i>", date, " (", format(date, "%a"), ")", "</i><br>", series, "<br>", tooltip),
             hoveron = "points",
             hoverinfo = "text")
       }
@@ -810,6 +811,12 @@ rEffPlotlyShiny <- function(
       estimate_type == input$estimationTypeSelect,
       region %in% regionSelect)
 
+  if (!is.null(vaccinations)) {
+    vaccinations <- vaccinations %>%
+      filter(region %in% regionSelect)
+  }
+
+
   if (seriesSelect == "region") {
     regionSort <- estimates %>%
         group_by(region) %>%
@@ -826,6 +833,8 @@ rEffPlotlyShiny <- function(
     caseData <- caseData %>%
       mutate(region = str_replace(region, pattern = "grR ", replacement = ""))
     estimates <- estimates %>%
+      mutate(region = str_replace(region, pattern = "grR ", replacement = ""))
+    vaccinations <- vaccinations %>%
       mutate(region = str_replace(region, pattern = "grR ", replacement = ""))
     names(seriesColors) <- str_replace(names(seriesColors), pattern = "grR ", replacement = "")
     regionSort <- estimates %>%
