@@ -30,6 +30,7 @@ pathToInterventionData <- here::here("../covid19-additionalData/interventions/in
 pathToContinentsData <- file.path(dataDir, "continents.csv")
 continents <- read_csv(pathToContinentsData, col_types = cols(.default = col_character()))
 
+allVaccinationData <- qs::qread(file.path(dataDir, "serialized", "vaccinationData.qs"))
 allData <- qs::qread(pathToCountryData)
 countryData <- list(
   caseData = filter(allData$caseData, countryIso3 %in% countrySelectValue),
@@ -42,14 +43,7 @@ updateData <- bind_rows(updateDataRaw[countrySelectValue]) %>%
   dplyr::select(-country) %>%
   left_join(dplyr::select(continents, countryIso3, country), by = "countryIso3")
 
-interventions <- read_csv(
-  str_c(pathToInterventionData),
-  col_types = cols(
-    .default = col_character(),
-    date = col_date(format = ""),
-    y = col_double()
-  )) %>%
-  split(f = .$countryIso3)
+interventions <- NULL
 
 translator <- Translator$new(translation_json_path = file.path(dataDir, "covid19reTranslations.json"))
 availableLanguages <- translator$get_languages()
@@ -61,6 +55,20 @@ rightTruncation <- list(
     "Hospitalized patients" = 5,
     "Deaths" = 5)
 )
+vacSelect <- "total_vaccinations_per_hundred"
+vaccinations <- allVaccinationData %>%
+            filter(
+              countryIso3 %in% countrySelectValue,
+              data_type == vacSelect) %>%
+            mutate(
+              tooltip = str_c(
+                case_when(
+                  vacSelect == "people_fully_vaccinated_per_hundred" ~ "Fully Vaccinated / 100 people: ",
+                  vacSelect == "total_vaccinations_per_hundred" ~ "Number of administered doses / 100 people: "
+                ),
+                round(value, 2)
+              )
+            )
 
 for (i in availableLanguages) {
 
@@ -70,6 +78,7 @@ for (i in availableLanguages) {
     countryData,
     updateData,
     interventions,
+    vaccinations,
     seriesSelect = "data_type",
     input = list(
       estimationTypeSelect = "Cori_slidingWindow",
