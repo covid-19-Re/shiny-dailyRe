@@ -8,5 +8,9 @@
 # international
 0 0 * * * /home/covid-19-re/dailyRe/app/otherScripts/runCountryEstimationZAF.sh
 0 2 * * * /home/covid-19-re/dailyRe/app/otherScripts/runCountryEstimationRest.sh
-# override
+# overrides
 # * * * * 1-5 /home/covid-19-re/dailyRe/app/otherScripts/updateBAGdata.sh
+# holidays
+# 15-45 11 * * * /home/covid-19-re/test-dailyRe/app/otherScripts/updateBAGdata.sh
+# 30 15 * * * /home/covid-19-re/test-dailyRe/app/otherScripts/putSwissDataLive.sh
+# 30 15 * * * /home/covid-19-re/dailyRe/app/otherScripts/putSwissDataLive.sh
