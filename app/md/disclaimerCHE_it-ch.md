@@ -3,3 +3,4 @@
 Eseguiamo nuovi calcoli ogni volta che sono disponibili nuovi dati dall'UFSP. 
 Martedì, mercoledì e giovedì, non vengono aggiunte ulteriore stime di R<sub>e</sub> per piu' giorni a causa degli effetti del fine settimana. Di conseguenza, il venerdi' sono disponibili quattro giorni supplementari con i valori R<sub>e</sub>. Il valore R<sub>e</sub> più recente è contrassegnato da un asterisco nella figura.
 - **ATTENZIONE**: in generale, le stime degli ultimi giorni possono subire delle leggere variazioni, che si verificano in particolare nelle piccole regioni in caso di dinamiche dall’andamento variabile o di numeri di casi inferiori. Per i metodi e le riserve sull’interpretazione dei risultati rimandiamo al sito https://ibz-shiny.ethz.ch/covid-19-re-international/.
+- **IMPORTANT**: Due to fewer reported cases over the Easter holidays, the Re estimate based on confirmed cases is likely to be an underestimate currently.
