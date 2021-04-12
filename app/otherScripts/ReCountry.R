@@ -416,7 +416,7 @@ if (dim(countryData)[1] > 0) {
               # write estimates to main app for publication
               saveRDS(countryEstimates,
                 file = str_c("/home/covid-19-re/dailyRe/app/data/countryData/",
-                  args["country"], "-estimates.rds")
+                  args["country"], "-Estimates.rds")
               )
             }
           }
