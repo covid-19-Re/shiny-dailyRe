@@ -1812,11 +1812,12 @@ getDataOxfordStringency <- function(
   }
 
   oxfordStringencyData <- try(read_csv(csvPath, col_types = cols(
-    .default = col_guess(),
+    .default = col_double(),
     CountryName = col_character(),
     CountryCode = col_character(),
     RegionName = col_character(),
     RegionCode = col_character(),
+    Jurisdiction = col_character(),
     Date = col_date(format = "%Y%m%d"),
     M1_Wildcard = col_character()
   ))) %>%
