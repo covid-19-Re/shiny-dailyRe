@@ -363,6 +363,8 @@ if (dim(countryData)[1] > 0) {
           interval_ends = interval_ends,
           swissRegions = swissRegions)
 
+        cat("raw estimates done for ", args["country"], "\n")
+
         countryEstimates <- cleanCountryReEstimate(countryEstimatesRaw, method = 'bootstrap') %>%
           left_join(
             dplyr::select(popData, region, countryIso3),
