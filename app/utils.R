@@ -4,9 +4,9 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
 
   allPaths <- list.files(path = dataDir, recursive = TRUE)
 
-  dataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Data.rds"))
+  dataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Data.qs"))
   if (!is_empty(dataPath)) {
-    caseData <- readRDS(file.path(dataDir, dataPath))
+    caseData <- qread(file.path(dataDir, dataPath))
     if ("report_plotting" %in% caseData$date_type) {
       caseData <- caseData %>%
         filter(date_type == "report_plotting", is.na(local_infection))
@@ -21,10 +21,10 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
     caseData <- NULL
   }
 
-  deconvolutedDataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-DeconvolutedData.rds"))
+  deconvolutedDataPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-DeconvolutedData.qs"))
   if (!is_empty(deconvolutedDataPath)) {
 
-    deconvolutedData <- readRDS(file.path(dataDir, deconvolutedDataPath)) %>%
+    deconvolutedData <- qread(file.path(dataDir, deconvolutedDataPath)) %>%
       mutate(data_type = str_sub(data_type, 11)) %>%
       group_by(date, region, country, source, data_type, replicate) %>%
       dplyr::summarise(value = sum(value), .groups = "drop") %>%
@@ -41,9 +41,9 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
       arrange(countryIso3, region, source, data_type, date)
   }
 
-  estimatesPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Estimates.rds"))
+  estimatesPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-Estimates.qs"))
   if (!is_empty(estimatesPath)) {
-    estimates <- readRDS(file.path(dataDir, estimatesPath)) %>%
+    estimates <- qread(file.path(dataDir, estimatesPath)) %>%
       mutate(
         countryIso3 = replace_na(countryIso3, iso3)
       )
@@ -51,10 +51,10 @@ loadCountryData <- function(iso3, dataDir = "data/countryData") {
     estimates <- NULL
   }
 
-  OxCGRTPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-OxCGRT.rds"))
+  OxCGRTPath <- str_subset(string = allPaths, pattern = str_c(iso3, "-OxCGRT.qs"))
   if (!is_empty(OxCGRTPath)) {
 
-    OxCGRTData <- readRDS(file.path(dataDir, OxCGRTPath)) %>%
+    OxCGRTData <- qread(file.path(dataDir, OxCGRTPath)) %>%
       dplyr::select(countryIso3, region, date, matches("\\w\\d_"))
   
   }

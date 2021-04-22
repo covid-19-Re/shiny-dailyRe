@@ -229,10 +229,6 @@ dataSources <- updateDataRaw %>%
     countries = if_else(length(unique(country)) > 5, "other Countries", str_c(unique(country), collapse = ", ")),
     data_type = str_c(as.character(unique(data_type)), collapse = ", "),
     .groups = "drop") %>%
-  # add_row(source = "OWID", sourceLong = "Data on Vaccinations from Our World in Data",
-  #   url = "https://github.com/owid/covid-19-data/tree/master/public/data",
-  #   countries = "see link",
-  #   data_type = "Vaccinations") %>%
   mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
   dplyr::select("Source" = source, "Description" = sourceLong,
     "Countries" = countries, "Data types" = data_type, "URL" = url) 
