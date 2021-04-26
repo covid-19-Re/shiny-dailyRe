@@ -648,22 +648,23 @@ getCaseDataFRA <- function() {
 
   min_date_SPF <- min(longData$date)
 
-  #ecdcData <- getDataECDC(countries = "FRA", tempFileName = NULL, tReload = 15)
+  ## For early data, we use the legacy ECDC data
+  ecdcData <- getDataECDC(countries = "FRA", tempFileName = NULL, tReload = 15)
 
-  # ecdcData <- ecdcData %>%
-  #   filter(data_type == "confirmed", date <  min_date_SPF) %>%
-  #   arrange(date) %>% 
-  #   mutate(source = "ECDC - SpF-DMI")
+  ecdcData <- ecdcData %>%
+    filter(data_type == "confirmed", date <  min_date_SPF) %>%
+    arrange(date) %>%
+    mutate(source = "ECDC - SpF-DMI")
   
-  owidData <- getDataOWID(countries = "FRA", tempFileName = NULL, tReload = 15)
+  #owidData <- getDataOWID(countries = "FRA", tempFileName = NULL, tReload = 15)
   # this is quite ugly (non standardised data)
-  owidData <- owidData %>%
-       filter(data_type == "confirmed", date <  min_date_SPF) %>%
-       arrange(date) %>% 
-       mutate(source = "OWID - SpF-DMI")
+  #owidData <- owidData %>%
+  #     filter(data_type == "confirmed", date <  min_date_SPF) %>%
+  #     arrange(date) %>% 
+  #     mutate(source = "OWID - SpF-DMI")
   
-  #return(bind_rows(ecdcData, longData))
-  return(bind_rows(owidData, longData))
+  return(bind_rows(ecdcData, longData))
+  #return(bind_rows(owidData, longData))
 }
 
 
@@ -1158,7 +1159,8 @@ getDataNLD <- function() {
 
 getCaseDataESP <- function(){
   #url_csv_file <- "https://cnecovid.isciii.es/covid19/resources/datos_ccaas.csv"
-  url_csv_file <- "https://cnecovid.isciii.es/covid19/resources/casos_diagnostico_ccaa.csv"
+  #url_csv_file <- "https://cnecovid.isciii.es/covid19/resources/casos_diagnostico_ccaa.csv"
+  url_csv_file <- "https://cnecovid.isciii.es/covid19/resources/casos_diag_ccaadecl.csv"
   
   raw_data <- try(read_csv(url_csv_file))
   
@@ -1687,8 +1689,8 @@ getCountryData <- function(countries, tempFile = NULL, HMDtemp = NULL, tReload =
       allDataList[[i]] <- getDataCZE()
     } else if (countries[i] == "DEU") {
       allDataList[[i]] <- getDataDEU(tempFile = tempFile, tReload = tReload)
-    # } else if (countries[i] == "ESP") {
-    #   allDataList[[i]] <- getDataESP()
+    } else if (countries[i] == "ESP") {
+       allDataList[[i]] <- getDataESP()
     } else if (countries[i] == "EST") {
       allDataList[[i]] <- getDataEST()
     } else if (countries[i] == "FRA") {
