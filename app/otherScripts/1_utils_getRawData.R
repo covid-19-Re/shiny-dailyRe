@@ -1687,8 +1687,8 @@ getCountryData <- function(countries, tempFile = NULL, HMDtemp = NULL, tReload =
       allDataList[[i]] <- getDataCZE()
     } else if (countries[i] == "DEU") {
       allDataList[[i]] <- getDataDEU(tempFile = tempFile, tReload = tReload)
-    } else if (countries[i] == "ESP") {
-      allDataList[[i]] <- getDataESP()
+    # } else if (countries[i] == "ESP") {
+    #   allDataList[[i]] <- getDataESP()
     } else if (countries[i] == "EST") {
       allDataList[[i]] <- getDataEST()
     } else if (countries[i] == "FRA") {
