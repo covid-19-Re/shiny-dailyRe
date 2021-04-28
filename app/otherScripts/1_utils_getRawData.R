@@ -644,7 +644,7 @@ getCaseDataFRA <- function() {
            local_infection = TRUE,
            region = "FRA",
            #source = "ECDC - SpF-DMI")
-           source = "OWID - SpF-DMI")
+           source = "ECDC - SpF-DMI")
 
   min_date_SPF <- min(longData$date)
 
