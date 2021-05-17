@@ -870,7 +870,6 @@ rEffPlotlyShiny <- function(
       lastChanged = max(lastChanged),
       .groups = "keep") %>%
     ungroup()
-  print(updateDataPlot)
   startDate <- if_else(dim(estimates)[1] != 0,
     min(estimates$date) - 14,
     min(caseData$date) - 7
