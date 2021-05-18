@@ -56,7 +56,7 @@ casesSubPlot <- function(
     caseData <- caseData %>%
       group_by(region, data_type) %>%
       mutate(
-        value = slide_index_dbl(value, date, mean, .before = lubridate::days(caseAverage) - 1)
+        value = slide_index_dbl(value, date, mean, .before = lubridate::days(as.integer(caseAverage) - 1))
       ) %>%
       ungroup()
     pCasesTitle <- str_c(pCasesTitle, "\n(", translator$t("7 day average"), ")")
@@ -688,7 +688,7 @@ dataUpdatesString <- function(latestData, name = "Data Source", dateFormat = "%Y
     summarize(
       data_type = str_c(data_type, collapse = ", "),
       .groups = "keep")
-  
+
   outList <- list(str_c(name, ": "))
   nSources <- dim(latestDataSum)[1]
   if (nSources == 1) {
