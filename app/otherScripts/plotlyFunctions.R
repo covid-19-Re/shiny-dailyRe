@@ -80,7 +80,7 @@ casesSubPlot <- function(
           ""
         ),
         if_else(data_type == "Confirmed cases / tests",
-          str_c("<br>", value * totalTests, " cases",
+          str_c("<br>", round(value * totalTests, 3), " cases",
             "<br>Test positivity ", round(testPositivity, 3), " (", positiveTests, " / ", negativeTests, ")"
           ),
           ""
