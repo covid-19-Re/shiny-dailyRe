@@ -330,8 +330,9 @@ server <- function(input, output, session) {
           tabList <- list(
             c(name = "data_type", title = i18n()$t("Switzerland")),
             c(name = "region", title = i18n()$t("Canton")),
-            c(name = "greaterRegion", title = i18n()$t("Greater regions")),
-            c(name = "sentinellaRegion", title = i18n()$t("Sentinella regions")))
+            c(name = "greaterRegion", title = i18n()$t("Greater regions")) #,
+            # c(name = "sentinellaRegion", title = i18n()$t("Sentinella regions"))
+          )
         } else if (countrySelectValue() == "ZAF") {
           tabList <- list(
             c(name = "data_type", title = i18n()$t("South Africa")),
