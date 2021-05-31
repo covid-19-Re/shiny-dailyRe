@@ -783,6 +783,19 @@ rEffPlotlyShiny <- function(
       seriesColorsTrunc <- saturation(seriesColors1, value = 0.1)
       names(seriesColorsTrunc) <- str_c(names(seriesColors1), " truncated")
       seriesColors <- c(seriesColors1, seriesColorsTrunc)
+    } else if (seriesName == "sentinellaRegion") {
+      seriesName <- "region"
+      seriesTitle <- "Sentinella Region"
+
+      validate(need(!is.null(input$dataTypeSelect), message = "loading..."))
+      dataTypeSelect <- input$dataTypeSelect
+
+      regionSelect <- c(str_subset(unique(countryData$estimates$region), pattern = "seR", negate = FALSE), countries)
+      seriesColors1 <- viridis(length(regionSelect))
+      names(seriesColors1) <- regionSelect
+      seriesColorsTrunc <- saturation(seriesColors1, value = 0.1)
+      names(seriesColorsTrunc) <- str_c(names(seriesColors1), " truncated")
+      seriesColors <- c(seriesColors1, seriesColorsTrunc)
     }
   } else {
     seriesName <- "country"
@@ -851,6 +864,26 @@ rEffPlotlyShiny <- function(
       pattern = countries, replacement = str_c(countryNames, " (Total)"))
     seriesColors[str_c(countryNames, " (Total)")] <- "#666666"
     showRegions <- c(regionSort[1:5], str_c(countryNames, " (Total)"))
+  } else if (seriesSelect == "sentinellaRegion") {
+    caseData <- caseData %>%
+      mutate(region = str_replace(region, pattern = "seR ", replacement = ""))
+    estimates <- estimates %>%
+      mutate(region = str_replace(region, pattern = "seR ", replacement = ""))
+    vaccinations <- vaccinations %>%
+      mutate(region = str_replace(region, pattern = "seR ", replacement = ""))
+    names(seriesColors) <- str_replace(names(seriesColors), pattern = "seR ", replacement = "")
+    regionSort <- estimates %>%
+        group_by(region) %>%
+        slice_max(order_by = date, n = 1) %>%
+        pull(region)
+
+    caseData <- renameRegionTotal(caseData, countries, countryNames, regionSort)
+    estimates <- renameRegionTotal(estimates, countries, countryNames, regionSort)
+
+    names(seriesColors) <- str_replace(names(seriesColors),
+      pattern = countries, replacement = str_c(countryNames, " (Total)"))
+    seriesColors[str_c(countryNames, " (Total)")] <- "#666666"
+    showRegions <- NULL
   } else (
     showRegions <- NULL
   )

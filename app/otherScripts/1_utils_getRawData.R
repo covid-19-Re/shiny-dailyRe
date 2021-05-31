@@ -1356,12 +1356,12 @@ sumGreaterRegions <- function(chData) {
 sumSentinellaRegions <- function(chData) {
   greaterRegions <- tribble(
     ~greaterRegion,      ~region,
-    "grR Sentinella 1",  c("GE", "NE", "VD", "VS"),
-    "grR Sentinella 2",  c("BE", "FR", "JU"),
-    "grR Sentinella 3",  c("AG", "BL", "BS", "SO"),
-    "grR Sentinella 4",  c("LU", "NW", "OW", "SZ", "UR", "ZG"),
-    "grR Sentinella 5",  c("AI", "AR", "GL", "SG", "SH", "TG", "ZH"),
-    "grR Sentinella 6",  c("GR", "TI")
+    "seR Sentinella 1",  c("GE", "NE", "VD", "VS"),
+    "seR Sentinella 2",  c("BE", "FR", "JU"),
+    "seR Sentinella 3",  c("AG", "BL", "BS", "SO"),
+    "seR Sentinella 4",  c("LU", "NW", "OW", "SZ", "UR", "ZG"),
+    "seR Sentinella 5",  c("AI", "AR", "GL", "SG", "SH", "TG", "ZH"),
+    "seR Sentinella 6",  c("GR", "TI")
   ) %>% unnest(cols = c(region))
 
   greaterRegionsData <- chData %>%
