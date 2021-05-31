@@ -134,7 +134,7 @@ translator$set_translation_language("en-gb")
 yAxisTitle <- bquote("Reproductive number"~R[e]~"(95% CI)")
 
 regionLoop <- countryData$estimates %>%
-  filter(str_detect(region, "grR", negate = TRUE)) %>%
+  filter(str_detect(region, "grR|seR", negate = TRUE)) %>%
   pull(region) %>%
   unique()
 
