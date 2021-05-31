@@ -1338,7 +1338,32 @@ sumGreaterRegions <- function(chData) {
     "grR Central Switzerland",      c("LU", "UR", "SZ", "OW", "NW", "ZG"),
     "grR Ticino",                   c("TI")
   ) %>% unnest(cols = c(region))
-  
+
+  greaterRegionsData <- chData %>%
+    filter(countryIso3 == "CHE") %>%
+    left_join(greaterRegions, by = "region") %>%
+    ungroup() %>%
+    mutate(region = greaterRegion) %>%
+    dplyr::select(-greaterRegion) %>%
+    group_by(date, region, source, data_type, date_type, local_infection) %>%
+    dplyr::summarize(
+      value = sum(value),
+      countryIso3 = "CHE",
+      .groups = "keep")
+  return(greaterRegionsData)
+}
+
+sumSentinellaRegions <- function(chData) {
+  greaterRegions <- tribble(
+    ~greaterRegion,      ~region,
+    "grR Sentinella 1",  c("GE", "NE", "VD", "VS"),
+    "grR Sentinella 2",  c("BE", "FR", "JU"),
+    "grR Sentinella 3",  c("AG", "BL", "BS", "SO"),
+    "grR Sentinella 4",  c("LU", "NW", "OW", "SZ", "UR", "ZG"),
+    "grR Sentinella 5",  c("AI", "AR", "GL", "SG", "SH", "TG", "ZH"),
+    "grR Sentinella 6",  c("GR", "TI")
+  ) %>% unnest(cols = c(region))
+
   greaterRegionsData <- chData %>%
     filter(countryIso3 == "CHE") %>%
     left_join(greaterRegions, by = "region") %>%
@@ -1372,8 +1397,9 @@ getDataCHEBAG <- function(path = here::here("app/data/CHE"), country = "CHE", fi
     filter(countryIso3 == country)
   
   bagDataGreaterRegions <- sumGreaterRegions(filter(bagData, region != "CHE"))
+  bagDataSentinellaRegions <- sumSentinellaRegions(filter(bagData, region != "CHE"))
   
-  bagDataAll <- bind_rows(bagData, bagDataGreaterRegions)
+  bagDataAll <- bind_rows(bagData, bagDataGreaterRegions, bagDataSentinellaRegions)
   
   return(bagDataAll)
 }
