@@ -211,6 +211,18 @@ server <- function(input, output, session) {
         rightTruncation, i18n(), plotSize)
     })
 
+    output$rePlot_sentinellaRegion <- renderPlotly({
+      countryData <- countryData()
+      updateData <- updateData()
+      interventions <- interventions()
+      plotSize <- stateVals$plotSize
+      rightTruncation <- rightTruncation()
+      vaccinations <- vaccinations()
+
+      rEffPlotlyShiny(countryData, updateData, interventions, vaccinations, "sentinellaRegion", input,
+        rightTruncation, i18n(), plotSize)
+    })
+
   # ui
     output$timeSeriesPlotOptionsUI <- renderUI({
       validate(need(input$tabs, ""))
@@ -319,7 +331,8 @@ server <- function(input, output, session) {
           tabList <- list(
             c(name = "data_type", title = i18n()$t("Switzerland")),
             c(name = "region", title = i18n()$t("Canton")),
-            c(name = "greaterRegion", title = i18n()$t("Greater regions")))
+            c(name = "greaterRegion", title = i18n()$t("Greater regions")),
+            c(name = "sentinellaRegion", title = i18n()$t("Sentinella regions")))
         } else if (countrySelectValue() == "ZAF") {
           tabList <- list(
             c(name = "data_type", title = i18n()$t("South Africa")),

@@ -348,7 +348,7 @@ iterate_RL <- function(
   max_iterations = 100,
   max_delay,
   verbose = FALSE) {
-  
+
   current_estimate <- initial_estimate
   N <- length(current_estimate)
   N0 <- N - max_delay
