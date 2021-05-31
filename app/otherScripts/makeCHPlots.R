@@ -202,7 +202,3 @@ for (iregion in regionLoop) {
 }
 
 cat("done making CH plots for ncs-tf website.\n")
-
-
-
-
