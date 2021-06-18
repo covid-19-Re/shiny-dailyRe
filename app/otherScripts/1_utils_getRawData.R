@@ -1494,16 +1494,17 @@ getVaccinationDataCHE <- function() {
 
   # load full vaccinations
   totalFullyVacc <- read_csv(
-    urlfile$sources$individual$csv$fullyVaccPersons,
+    urlfile$sources$individual$csv$vaccPersons,
     col_types = cols_only(
       date = col_date(format = ""),
       geoRegion = col_character(),
       entries = col_double(),
       pop = col_double(),
       sumTotal = col_double(),
-      per100PersonsTotal = col_double()
+      per100PersonsTotal = col_double(),
+      type = col_character()
     )
-  )
+  ) %>% filter(type == "COVID19FullyVaccPersons")
 
   if ("try-error" %in% class(totalFullyVacc)) {
     warning(str_c(
