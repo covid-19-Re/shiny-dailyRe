@@ -4,7 +4,7 @@ The R<sub>e</sub> for a particular day is the average R<sub>e</sub> over the thr
 
 https://ibz-shiny.ethz.ch/covid-19-re-international
 
-We show estimated median R<sub>e</sub> values together with 95% uncertainty intervals. The method for estimating R<sub>e</sub> is explained [here](https://www.medrxiv.org/content/10.1101/2020.11.26.20239368v1.article-info).
+We show estimated median R<sub>e</sub> values together with 95% uncertainty intervals. The method for estimating R<sub>e</sub> is explained [here](https://www.medrxiv.org/content/10.1101/2020.11.26.20239368v2.full-text).
 
 **Contributors**: 
   - Jérémie Scire, ETH Zürich, D-BSSE: method development (*equal contributions)
