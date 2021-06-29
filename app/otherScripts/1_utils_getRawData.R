@@ -1148,8 +1148,9 @@ getExcessDeathNLD <- function(startAt = as.Date("2020-02-20")) {
   return(longData)
 }
 
+#outdated
 getDataNLD <- function() {
-  caseData <- getCaseDataNLD()
+  caseData <- getCaseDataNLD() # coronawatchNL shut down April 2021
   excessDeath <- NULL#getExcessDeathNLD()
   allData <- bind_rows(caseData, excessDeath)
   return(allData)
@@ -1734,8 +1735,8 @@ getCountryData <- function(countries, tempFile = NULL, HMDtemp = NULL, tReload =
       allDataList[[i]] <- getDataLIE(data_path = here::here("app/data/CHE"))
     } else if (countries[i] == "LVA") {
       allDataList[[i]] <- getDataLVA()
-    } else if (countries[i] == "NLD") {
-      allDataList[[i]] <- getDataNLD()
+    # } else if (countries[i] == "NLD") {
+    #   allDataList[[i]] <- getDataNLD()
     } else if (countries[i] == "QAT") {
       allDataList[[i]] <- getDataQAT()
     } else if (countries[i] == "ZAF") {
