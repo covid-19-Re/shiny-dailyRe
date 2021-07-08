@@ -399,26 +399,24 @@ cleanCountryReEstimate <- function(countryEstimatesRaw, method = 'bootstrap',
     cleanEstimate <- as_tibble(countryEstimatesRaw)
   }
   
-  
-  legacy_ReEstimates <- cleanEstimate %>%
-    pivot_wider(names_from = "variable", values_from = "value") %>%
-    dplyr::group_by(date, country, region, data_type, source, estimate_type) %>%
-    dplyr::summarize(
-      median_R_mean = median(R_mean),
-      median_R_highHPD = median(R_highHPD),
-      median_R_lowHPD = median(R_lowHPD),
-      mean_R_mean = mean(R_mean),
-      .groups = "keep"
-    ) %>%
-    dplyr::select(country, region, source, data_type, estimate_type, date,
-                  median_R_mean, median_R_highHPD, median_R_lowHPD,
-                  mean_R_mean) %>%
-    arrange(country, region, source, data_type, estimate_type, date) %>%
-    ungroup()
-  
   if (method == 'legacy'){
+    legacy_ReEstimates <- cleanEstimate %>%
+      pivot_wider(names_from = "variable", values_from = "value") %>%
+      dplyr::group_by(date, country, region, data_type, source, estimate_type) %>%
+      dplyr::summarize(
+        median_R_mean = median(R_mean),
+        median_R_highHPD = median(R_highHPD),
+        median_R_lowHPD = median(R_lowHPD),
+        mean_R_mean = mean(R_mean),
+        .groups = "keep"
+      ) %>%
+      dplyr::select(country, region, source, data_type, estimate_type, date,
+                    median_R_mean, median_R_highHPD, median_R_lowHPD,
+                    mean_R_mean) %>%
+      arrange(country, region, source, data_type, estimate_type, date) %>%
+      ungroup()
     ReEstimates <- legacy_ReEstimates
-  } else if (method == 'bootstrap'){
+  } else if (method == 'bootstrap') {
     
     #low_quan <- (1-alpha)/2
     high_quan <- 1-(1-alpha)/2
