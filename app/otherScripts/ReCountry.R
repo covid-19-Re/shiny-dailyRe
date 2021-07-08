@@ -362,10 +362,12 @@ if (dim(countryData)[1] > 0) {
           truncations = truncations,
           interval_ends = interval_ends,
           swissRegions = swissRegions)
-        
+
+        gc()
         cat("raw estimates done for ", args["country"], "\n")
         qs::qsave(countryEstimatesRaw, file = here::here("app/data/temp/countryEstimatesRaw.qs"))
         rm(deconvolvedCountryData)
+        gc()
 
         countryEstimates <- cleanCountryReEstimate(countryEstimatesRaw, method = 'bootstrap') %>%
           left_join(
