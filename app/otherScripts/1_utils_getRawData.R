@@ -1495,7 +1495,7 @@ getVaccinationDataCHE <- function() {
 
   # load full vaccinations
   totalFullyVacc <- read_csv(
-    urlfile$sources$individual$csv$vaccPersons,
+    urlfile$sources$individual$csv$vaccPersonsV2,
     col_types = cols_only(
       date = col_date(format = ""),
       geoRegion = col_character(),
