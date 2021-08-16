@@ -1478,6 +1478,7 @@ getVaccinationDataCHE <- function() {
     col_types = cols_only(
       date = col_date(format = ""),
       geoRegion = col_character(),
+      type = col_character(),
       entries = col_double(),
       pop = col_double(),
       sumTotal = col_double(),
@@ -1505,7 +1506,8 @@ getVaccinationDataCHE <- function() {
       per100PersonsTotal = col_double(),
       type = col_character()
     )
-  ) %>% filter(type == "COVID19FullyVaccPersons")
+  ) %>%
+  filter(type %in% c("COVID19FullyVaccPersons", "COVID19AtLeastOneDosePersons"))
 
   if ("try-error" %in% class(totalFullyVacc)) {
     warning(str_c(
@@ -1533,7 +1535,7 @@ getVaccinationDataCHE <- function() {
     ungroup() %>%
     mutate(geoRegion = greaterRegion) %>%
     dplyr::select(-greaterRegion) %>%
-    group_by(date, geoRegion) %>%
+    group_by(date, geoRegion, type) %>%
     dplyr::summarize(
       entries = sum(entries),
       pop = sum(pop),
@@ -1547,7 +1549,7 @@ getVaccinationDataCHE <- function() {
     ungroup() %>%
     mutate(geoRegion = greaterRegion) %>%
     dplyr::select(-greaterRegion) %>%
-    group_by(date, geoRegion) %>%
+    group_by(date, geoRegion, type) %>%
     dplyr::summarize(
       entries = sum(entries),
       pop = sum(pop),
@@ -1555,33 +1557,32 @@ getVaccinationDataCHE <- function() {
       .groups = "drop") %>%
     mutate(per100PersonsTotal = (sumTotal / pop) * 100)
 
-  totalVaccLong <- bind_rows(totalVacc, totalVaccGrRegions) %>%
+  longData <- bind_rows(totalVacc, totalVaccGrRegions, totalFullyVacc, totalFullyVaccGrRegions) %>%
     transmute(
       countryIso3 = if_else(geoRegion == "FL", "LIE", "CHE"),
       region = recode(geoRegion, CH = "CHE", FL = "LIE"),
       date = date,
-      daily_vaccinations_raw = entries,
-      total_vaccinations = sumTotal,
-      total_vaccinations_per_hundred = per100PersonsTotal
+      data_type1 = type,
+      total = sumTotal,
+      total_per_hundred = per100PersonsTotal
     ) %>%
-    pivot_longer(cols = daily_vaccinations_raw:total_vaccinations_per_hundred, names_to = "data_type") %>%
-    mutate(source = "FOPH")
-
-  totalFullyVaccLong <- bind_rows(totalFullyVacc, totalFullyVaccGrRegions) %>%
-    transmute(
-      countryIso3 = if_else(geoRegion == "FL", "LIE", "CHE"),
-      region = recode(geoRegion, CH = "CHE", FL = "LIE"),
-      date = date,
-      people_fully_vaccinated = sumTotal,
-      people_fully_vaccinated_per_hundred = per100PersonsTotal
-    ) %>%
-    pivot_longer(cols = people_fully_vaccinated:people_fully_vaccinated_per_hundred, names_to = "data_type") %>%
-    mutate(source = "FOPH")
-
-  longData <- bind_rows(totalVaccLong, totalFullyVaccLong) %>%
+    pivot_longer(cols = total:total_per_hundred, names_to = "unit") %>%
+    unite("data_type", data_type1, unit) %>%
+    mutate(
+      data_type = recode(data_type,
+        COVID19AtLeastOneDosePersons_total = "people_vaccinated",
+        COVID19AtLeastOneDosePersons_total_per_hundred = "people_vaccinated_per_hundred",
+        COVID19FullyVaccPersons_total = "people_fully_vaccinated",
+        COVID19FullyVaccPersons_total_per_hundred = "people_fully_vaccinated_per_hundred",
+        COVID19VaccDosesAdministered_total = "total_vaccinations",
+        COVID19VaccDosesAdministered_total_per_hundred = "total_vaccinations_per_hundred"
+      ),
+      source = "FOPH") %>%
     arrange(countryIso3, region, data_type, date) %>%
     filter(region != "CHFL") %>%
     filter(!is.na(value))
+
+  return(longData)
 }
 
 ##### United Kingdom #####
