@@ -89,7 +89,8 @@ countriesWithRegions <- allData$caseData %>%
   filter(nRegions > 1)
 
 allMobilityDataGoogle <- getMobilityDataGoogle(
-    tempFile = "app/data/temp/mobilityDataGoogle.csv", tReload = 8 * 60 * 60) %>%
+    tempFile = here("app/data/temp/mobilityDataGoogle.csv"),
+    tReload = 8 * 60 * 60) %>%
   mutate(data_type = placeCategory %>%
     str_replace_all("_", " ") %>%
     str_to_title(),
@@ -98,12 +99,14 @@ allMobilityDataGoogle <- getMobilityDataGoogle(
   select(-placeCategory)
 qsave(allMobilityDataGoogle, here("app/data/temp/allMobilityDataGoogle.qs"))
 
-allMobilityDataApple <- getMobilityDataApple(tempFile = "app/data/temp/mobilityDataApple.csv", tReload = 8 * 60 * 60) %>%
+allMobilityDataApple <- getMobilityDataApple(
+    tempFile = here("app/data/temp/mobilityDataApple.csv"),
+    tReload = 8 * 60 * 60) %>%
   mutate(
     data_type = str_to_title(transportationType),
     change = change * 100) %>%
   select(-percent, -transportationType) %>%
-  filter(countryIso3 == region | countryIso3 %in% countriesWithRegions$countryIso3) 
+  filter(countryIso3 == region | countryIso3 %in% countriesWithRegions$countryIso3)
 qsave(allMobilityDataApple, here("app/data/temp/allMobilityDataApple.qs"))
 
 # prep Data for app
