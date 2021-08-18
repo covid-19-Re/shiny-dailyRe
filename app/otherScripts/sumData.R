@@ -32,7 +32,7 @@ qsave(vaccinationData, file = here("app/data/temp/vaccinationData.qs"))
 
 allData <- list(caseData = list(), estimates = list())
 estimatePlotRanges <- list()
-updateDataRaw <- list()
+updateDataRaw_1 <- list()
 pb <- txtProgressBar(min = 0, max = length(allCountries))
 pb_i <- 0
 for (iCountry in allCountries) {
@@ -41,7 +41,7 @@ for (iCountry in allCountries) {
   allData$estimates[[iCountry]] <- iCountryData$estimates
   estimatePlotRanges[[iCountry]] <- iCountryData$estimateRanges[[iCountry]]
 
-  updateDataRaw[[iCountry]] <- bind_rows(
+  updateDataRaw_1[[iCountry]] <- bind_rows(
     iCountryData$updateData,
       vaccinationData %>%
       filter(countryIso3 == iCountry) %>%
@@ -96,15 +96,15 @@ allMobilityDataGoogle <- getMobilityDataGoogle(
     change = change * 100) %>%
   filter(countryIso3 == region | countryIso3 %in% countriesWithRegions$countryIso3) %>%
   select(-placeCategory)
-qsave(allMobilityDataGoogle, "data/serialized/allMobilityDataGoogle.qs")
+qsave(allMobilityDataGoogle, here("app/data/temp/allMobilityDataGoogle.qs"))
 
-allMobilityDataApple <- getMobilityDataApple(tempFile = "data/temp/mobilityDataApple.csv", tReload = 8 * 60 * 60) %>%
+allMobilityDataApple <- getMobilityDataApple(tempFile = "app/data/temp/mobilityDataApple.csv", tReload = 8 * 60 * 60) %>%
   mutate(
     data_type = str_to_title(transportationType),
     change = change * 100) %>%
   select(-percent, -transportationType) %>%
   filter(countryIso3 == region | countryIso3 %in% countriesWithRegions$countryIso3) 
-qsave(allMobilityDataApple, "data/serialized/allMobilityDataApple.qs")
+qsave(allMobilityDataApple, here("app/data/temp/allMobilityDataApple.qs"))
 
 # prep Data for app
 continents <- read_csv(here("app/data/continents.csv"),
@@ -242,27 +242,60 @@ qsave(zafReLabels, file = here("app/data/temp/zafReLabels.qs"))
 sourceInfo <- read_csv(here("app/data/dataSources.csv"),
   col_types = cols(.default = col_character()))
 
+updateDataRaw <- updateDataRaw_1 %>%
+  bind_rows() %>%
+  bind_rows(
+    allMobilityDataApple %>%
+      filter(countryIso3 %in% names(updateDataRaw)) %>%
+      group_by(countryIso3, region) %>%
+      summarise(
+        lastData = max(date),
+        lastChanged = lastData,
+        .groups = "drop") %>%
+      mutate(
+        source = "Apple",
+        data_type = "Apple Mobility Data", lastChecked = now())
+  ) %>%
+  bind_rows(
+    allMobilityDataGoogle %>%
+      filter(countryIso3 %in% names(updateDataRaw)) %>%
+      group_by(countryIso3, region) %>%
+      summarise(
+        lastData = max(date),
+        lastChanged = lastData,
+        .groups = "drop") %>%
+      mutate(
+        source = "Google",
+        data_type = "Google Mobility Data",
+        lastChecked = now())
+  ) %>%
+  ungroup() %>%
+  select(-country) %>%
+  left_join(dplyr::select(continents, countryIso3, country), by = "countryIso3") %>%
+  split(~countryIso3)
+
+nCountries <- length(updateDataRaw)
+
 dataSources <- updateDataRaw %>%
   bind_rows() %>%
   ungroup() %>%
-  dplyr::select(countryIso3, source, data_type, lastData) %>%
+  dplyr::select(countryIso3, country, source, data_type, lastData) %>%
   filter(
-    data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths", "Excess deaths", "Stringency Index", "Vaccinations")
+    data_type %in% c("Confirmed cases", "Hospitalized patients", "Deaths",
+      "Excess deaths", "Stringency Index", "Vaccinations", "Apple Mobility Data", "Google Mobility Data")
   ) %>%
-  left_join(dplyr::select(continents, countryIso3, country), by = "countryIso3") %>%
   left_join(sourceInfo, by = "source") %>%
   group_by(source, sourceLong, url) %>%
   dplyr::summarize(
-    countries = if_else(length(unique(country)) > 5, "other Countries", str_c(unique(country), collapse = ", ")),
+    countries = case_when(
+      length(unique(country)) == nCountries ~ "all countries",
+      length(unique(country)) > 5 ~ "other countries",
+      TRUE ~ str_c(unique(country), collapse = ", ")),
     data_type = str_c(as.character(unique(data_type)), collapse = ", "),
     .groups = "drop") %>%
-  # add_row(source = "OWID", sourceLong = "Data on Vaccinations from Our World in Data",
-  #   url = "https://github.com/owid/covid-19-data/tree/master/public/data",
-  #   countries = "see link",
-  #   data_type = "Vaccinations") %>%
   mutate(url = if_else(url != "", str_c("<a href=", url, ">link</a>"), "")) %>%
   dplyr::select("Source" = source, "Description" = sourceLong,
-    "Countries" = countries, "Data types" = data_type, "URL" = url) 
+    "Countries" = countries, "Data types" = data_type, "URL" = url)
 
 qsave(dataSources, file = here("app/data/temp/dataSources.qs"))
 qsave(updateDataRaw, file = here("app/data/temp/updateDataRaw.qs"))
