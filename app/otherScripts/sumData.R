@@ -274,7 +274,7 @@ updateDataRaw <- updateDataRaw_1 %>%
   bind_rows() %>%
   bind_rows(
     allMobilityDataApple %>%
-      filter(countryIso3 %in% names(updateDataRaw)) %>%
+      filter(countryIso3 %in% names(updateDataRaw_1)) %>%
       group_by(countryIso3, region) %>%
       summarise(
         lastData = max(date),
@@ -288,7 +288,7 @@ updateDataRaw <- updateDataRaw_1 %>%
   ) %>%
   bind_rows(
     allMobilityDataGoogle %>%
-      filter(countryIso3 %in% names(updateDataRaw)) %>%
+      filter(countryIso3 %in% names(updateDataRaw_1)) %>%
       group_by(countryIso3, region) %>%
       summarise(
         lastData = max(date),
