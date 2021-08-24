@@ -15,7 +15,7 @@ if (interactive()) {
 }
 
 source(here::here("app", "otherScripts", "plotlyFunctions.R"))
-source(here::here("app", "utils.R"))
+source(here::here("app", "otherScripts", "utils.R"))
 
 countrySelectValue <- "CHE"
 cat(str_c("making ", countrySelectValue, " plots for ncs-tf website ...\n"))

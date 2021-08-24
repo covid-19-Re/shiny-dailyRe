@@ -4,7 +4,7 @@ library(here)
 library(qs)
 cat(str_c(Sys.time(), " | summarizing data ...\n"))
 
-source(here("app/utils.R"))
+source(here("app/otherScripts/utils.R"))
 
 pathToCountryData <- here("app", "data", "countryData")
 countryNames <- read_csv(here("app", "data", "continents.csv"), col_types = cols(.default = col_character())) %>%
@@ -341,7 +341,6 @@ qsave(updateDataRaw, file = here("app/data/temp/updateDataRaw.qs"))
 # send notifications
 if (file.exists(here("app/otherScripts/sendNotifications.txt")) &&
   file.exists(here("app/otherScripts/notificationsToSend.txt"))) {
-  source(here("app/otherScripts/utils.R"))
   countries <- scan(here("app/otherScripts/notificationsToSend.txt"), what = "character")
   urls <- scan(here("app/otherScripts/slackWebhook.txt"), what = "character")
 
