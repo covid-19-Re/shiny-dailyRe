@@ -266,6 +266,17 @@ if (dim(countryData)[1] > 0) {
         dplyr::select(-countryIso3, -populationSize) %>%
         ungroup()
 
+      if (args["country"] == "CHE") {
+        cat("Complete Data Range:\n")
+        print(range(countryData$date))
+        # only calculate starting from dateCutoffAdj
+        dateCutoff <- "2021-04-01"
+        dateCutoffAdj <- "2021-03-01"
+
+        countryData <- filter(countryData, date >= dateCutoffAdj)
+        cat("Truncated data range:\n")
+        print(range(countryData$date))
+      }
       # Deconvolution
       deconvolvedData <- list()
 
@@ -299,7 +310,7 @@ if (dim(countryData)[1] > 0) {
       } else {
         saveRDS(deconvolvedCountryData, file = countryDataPath)
         # Re Estimation
-        cleanEnv(keepObjects = c("basePath", "deconvolvedCountryData", "args", "popData", "interval_ends"))
+        cleanEnv(keepObjects = c("basePath", "deconvolvedCountryData", "args", "popData", "interval_ends", "dateCutoff"))
         source(here::here("app/otherScripts/3_utils_doReEstimates.R"))
 
         swissRegions <- deconvolvedCountryData %>%
@@ -395,6 +406,19 @@ if (dim(countryData)[1] > 0) {
         }
 
         countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
+
+        if (args["country"] == "CHE") {
+          previousEstimates <- readRDS(countryDataPath) %>%
+            filter(date < dateCutoff)
+          newEstimates <- countryEstimates %>%
+            filter(date >= dateCutoff)
+
+          countryEstimates <- bind_rows(
+            previousEstimates,
+            newEstimates
+          )
+        }
+
         saveRDS(countryEstimates, file = countryDataPath)
         # Save as .csv for data upload
         readr::write_csv(countryEstimates,
