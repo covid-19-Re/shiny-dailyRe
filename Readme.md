@@ -1,4 +1,4 @@
-# R Shiny app to calculate and display R<sub>e</sub> estimates 
+# R app to calculate and display R<sub>e</sub> estimates 
 
 The R<sub>e</sub> for a particular day is the average R<sub>e</sub> over the three most recent days.
 
