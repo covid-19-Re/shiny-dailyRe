@@ -37,7 +37,8 @@ cd "$parent_path"
 mv ../data/temp/*.qs ../data/serialized/
 
 # reload data by restarting R shiny process
-touch ../restart.txt
+touch ../../../../covidReShiny/public/app/restart.txt
+touch ../../../../covidReShiny/private/app/restart.txt
 
 # make plots
 runRScript makeCHPlots.R
