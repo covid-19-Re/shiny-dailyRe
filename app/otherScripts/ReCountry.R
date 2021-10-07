@@ -168,7 +168,7 @@ if (dim(countryData)[1] > 0) {
 
       sendSlackNotification(
         country = args["country"],
-        event = "newData", url = urls[1], eTcompletion = Sys.time() + 160 * 60, webhookUrl = urls[2])
+        event = "newData", url = urls[1], eTcompletion = Sys.time() + 105 * 60, webhookUrl = urls[2])
     }
     # get Infection Incidence
     # load functions
