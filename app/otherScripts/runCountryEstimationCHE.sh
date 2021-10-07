@@ -42,8 +42,8 @@ runRScript ReCountry.R "LIE"
 # summarize data in both apps
 cd ../../../dailyRe/app/otherScripts/
 runRScript sumData.R
-cd ../../../test-dailyRe/app/otherScripts/
-runRScript sumData.R
+# cd ../../../test-dailyRe/app/otherScripts/
+# runRScript sumData.R
 
 # reactivate crontab
 if  [ ! -z "$cr" ]; then
