@@ -1703,10 +1703,14 @@ getVaccinationDataCHE <- function() {
       pop = col_double(),
       sumTotal = col_double(),
       per100PersonsTotal = col_double(),
-      type = col_character()
+      type = col_character(),
+      age_group = col_character()
     )
   ) %>%
-  filter(type %in% c("COVID19FullyVaccPersons", "COVID19AtLeastOneDosePersons"))
+  filter(
+    type %in% c("COVID19FullyVaccPersons", "COVID19AtLeastOneDosePersons"),
+    age_group == "total_population") %>%
+  select(-age_group)
 
   if ("try-error" %in% class(totalFullyVacc)) {
     warning(str_c(
