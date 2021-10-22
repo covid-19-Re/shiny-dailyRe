@@ -31,7 +31,7 @@ if (length(args) == 0) {
 names(args) <- "country"
 
 # Fetch Population Data (do once)
-popDataWorldBank <- getCountryPopData(here::here("app/data/temp/pop_sizes.xls"), 300) %>%
+popDataWorldBank <- getCountryPopData(here::here(tempPath, "pop_sizes.xls"), 300) %>%
   filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
   mutate(region = countryIso3)
 popDataAdditional <- read_csv(
@@ -49,6 +49,10 @@ popData <- bind_rows(popDataWorldBank, popDataAdditional) %>%
 basePath <- here::here("app", "data", "countryData")
 if (!dir.exists(basePath)) {
   dir.create(basePath)
+}
+tempPath <- here::here("app", "data", "temp")
+if (!dir.exists(tempPath)) {
+  dir.create(tempPath)
 }
 
 # fetch stringency data
@@ -72,7 +76,7 @@ if (args["country"] == "CHE") {
     )
 } else {
   stringencyData <- getDataOxfordStringency(countries = args["country"],
-    tempFileName = here::here("app/data/temp/oxfordStringency.csv"), tReload = 300) %>%
+    tempFileName = here::here(tempPath, "oxfordStringency.csv"), tReload = 300) %>%
     mutate(source = "BSG Covidtracker")
 }
 
@@ -117,8 +121,8 @@ interval_ends[["default"]] <- interval_ends[[args["country"]]]
 # Fetch Country Data
 countryData <- getCountryData(
   args["country"],
-  tempFile = here::here("app/data/temp/ECDCdata.csv"),
-  HMDtemp = here::here("app/data/temp/HMDdata.csv"),
+  tempFile = here::here(tempPath, "ECDCdata.csv"),
+  HMDtemp = here::here(tempPath, "HMDdata.csv"),
   tReload = 300)
 
 if (dim(countryData)[1] > 0) {
@@ -376,7 +380,7 @@ if (dim(countryData)[1] > 0) {
 
         gc()
         cat("raw estimates done for ", args["country"], "\n")
-        qs::qsave(countryEstimatesRaw, file = here::here("app/data/temp/countryEstimatesRaw.qs"))
+        qs::qsave(countryEstimatesRaw, file = here::here(tempPath, "countryEstimatesRaw.qs"))
         rm(deconvolvedCountryData)
         gc()
 
