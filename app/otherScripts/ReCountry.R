@@ -30,6 +30,15 @@ if (length(args) == 0) {
 }
 names(args) <- "country"
 
+basePath <- here::here("app", "data", "countryData")
+if (!dir.exists(basePath)) {
+  dir.create(basePath)
+}
+tempPath <- here::here("app", "data", "temp")
+if (!dir.exists(tempPath)) {
+  dir.create(tempPath)
+}
+
 # Fetch Population Data (do once)
 popDataWorldBank <- getCountryPopData(here::here(tempPath, "pop_sizes.xls"), 300) %>%
   filter(!(countryIso3 %in% c("LIE", "CHE"))) %>%
@@ -46,14 +55,6 @@ popData <- bind_rows(popDataWorldBank, popDataAdditional) %>%
   dplyr::select(country, countryIso3, region, populationSize) %>%
   filter(!is.na(countryIso3))
 
-basePath <- here::here("app", "data", "countryData")
-if (!dir.exists(basePath)) {
-  dir.create(basePath)
-}
-tempPath <- here::here("app", "data", "temp")
-if (!dir.exists(tempPath)) {
-  dir.create(tempPath)
-}
 
 # fetch stringency data
 if (args["country"] == "CHE") {
