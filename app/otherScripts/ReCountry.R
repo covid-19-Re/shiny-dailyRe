@@ -156,7 +156,7 @@ if (dim(countryData)[1] > 0) {
     }
   }
 
-  cleanEnv(keepObjects = c("basePath", "countryData", "dataUnchanged", "args", "popData", "interval_ends"))
+  cleanEnv(keepObjects = c("basePath", "tempPath", "countryData", "dataUnchanged", "args", "popData", "interval_ends"))
 
   # calculate Re
   # only if (data has changed OR forceUpdate.txt exists) AND countryData is not null
@@ -312,7 +312,7 @@ if (dim(countryData)[1] > 0) {
       } else {
         saveRDS(deconvolvedCountryData, file = countryDataPath)
         # Re Estimation
-        cleanEnv(keepObjects = c("basePath", "deconvolvedCountryData", "args", "popData", "interval_ends", "dateCutoff"))
+        cleanEnv(keepObjects = c("basePath", "tempPath", "deconvolvedCountryData", "args", "popData", "interval_ends", "dateCutoff"))
         source(here::here("app/otherScripts/3_utils_doReEstimates.R"))
 
         swissRegions <- deconvolvedCountryData %>%
