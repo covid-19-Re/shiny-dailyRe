@@ -288,24 +288,22 @@ if (dim(countryData)[1] > 0) {
         countryData,
         constant_delay_distributions = constant_delay_distributions,
         onset_to_count_empirical_delays = delays_onset_to_count,
-        data_types = c("Confirmed cases",
-                       "Hospitalized patients",
-                       "Deaths"),
+        data_types = c("Confirmed cases"),
         n_bootstrap = 100,
         verbose = FALSE)
 
-      if (args["country"] %in% c("CHE")) {
-        countryDataTests <- countryData %>%
-          filter(data_type == "Confirmed cases / tests")
+      # if (args["country"] %in% c("CHE")) {
+      #   countryDataTests <- countryData %>%
+      #     filter(data_type == "Confirmed cases / tests")
 
-        deconvolvedData[[2]] <- get_all_infection_incidence(
-          countryDataTests,
-          constant_delay_distributions = constant_delay_distributions,
-          onset_to_count_empirical_delays = delays_onset_to_count,
-          data_types = c("Confirmed cases / tests"),
-          n_bootstrap = 100,
-          verbose = FALSE)
-      }
+      #   deconvolvedData[[2]] <- get_all_infection_incidence(
+      #     countryDataTests,
+      #     constant_delay_distributions = constant_delay_distributions,
+      #     onset_to_count_empirical_delays = delays_onset_to_count,
+      #     data_types = c("Confirmed cases / tests"),
+      #     n_bootstrap = 100,
+      #     verbose = FALSE)
+      # }
 
       deconvolvedCountryData <- bind_rows(deconvolvedData)
       countryDataPath <- file.path(basePath, str_c(args["country"], "-DeconvolutedData.rds"))
@@ -372,7 +370,7 @@ if (dim(countryData)[1] > 0) {
           deconvolvedCountryData,
           slidingWindow = window,
           methods = "Cori",
-          variationTypes = c("step", "slidingWindow"),
+          variationTypes = c("slidingWindow"),
           all_delays = all_delays,
           truncations = truncations,
           interval_ends = interval_ends,
