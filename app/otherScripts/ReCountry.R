@@ -380,7 +380,7 @@ if (dim(countryData)[1] > 0) {
           swissRegions = swissRegions)
 
         gc()
-        cat("raw estimates done for ", args["country"], "\n")
+        cat("  raw estimates done for ", args["country"], "\n")
         qs::qsave(countryEstimatesRaw, file = here::here(tempPath, "countryEstimatesRaw.qs"))
         rm(deconvolvedCountryData)
         gc()
