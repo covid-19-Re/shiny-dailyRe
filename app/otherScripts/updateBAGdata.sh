@@ -21,7 +21,7 @@ if [ "$latestFile" != "$lastFile" ]; then
   # check if the data is from today
   latestFileDate=${latestFile:37:10}
   currentDate=`date "+%Y-%m-%d"`
-  if [ "$currentdate" == "$thisdate" ]; then
+  if [ "$currentdate" == "$latestFileDate" ]; then
       ./runCountryEstimationCHE.sh
       echo "$latestFile">/home/covid-19-re/lastBAGFile.txt
   fi
