@@ -55,70 +55,6 @@ popData <- bind_rows(popDataWorldBank, popDataAdditional) %>%
   dplyr::select(country, countryIso3, region, populationSize) %>%
   filter(!is.na(countryIso3))
 
-
-# fetch stringency data
-if (args["country"] == "CHE") {
-  stringencyData <- read_csv(
-    "https://raw.githubusercontent.com/KOF-ch/economic-monitoring/master/data/ch.kof.stringency.csv",
-    col_types = cols(
-      time = col_date(format = ""),
-      geo = col_character(),
-      variable = col_character(),
-      value = col_double()
-    )) %>%
-    filter(
-      variable == "stringency") %>%
-    dplyr::transmute(
-      date = time,
-      countryIso3 = "CHE",
-      region = recode(toupper(geo), "CH" = "CHE"),
-      source = "KOF",
-      StringencyIndex = value
-    )
-} else {
-  stringencyData <- getDataOxfordStringency(countries = args["country"],
-    tempFileName = here::here(tempPath, "oxfordStringency.csv"), tReload = 300) %>%
-    mutate(source = "BSG Covidtracker")
-}
-
-stringencyDataPath <- file.path(basePath, str_c(args["country"], "-OxCGRT.rds"))
-
-if (file.exists(stringencyDataPath)) {
-  stringencyDataOld <- readRDS(stringencyDataPath)
-  # if new data is null, keep old data (can happen because of error in reading new data)
-  if (is.null(stringencyData)) {
-    stringencyData <- stringencyDataOld
-  }
-  stringencyUnchanged <- all.equal(stringencyData, stringencyDataOld)
-} else {
-  stringencyUnchanged <- FALSE
-}
-
-if (!isTRUE(stringencyUnchanged)) {
-  saveRDS(stringencyData, file = stringencyDataPath)
-}
-
-stringencyIndex <- stringencyData %>%
-  dplyr::transmute(
-    date,
-    countryIso3,
-    region,
-    data_type = "Stringency Index",
-    source = source,
-    value = StringencyIndex
-  ) %>%
-  filter(!is.na(value)) %>%
-  arrange(countryIso3, region, date)
-
-# in Re estimation, the interval starts on interval_end + 1
-# so the intervention start dates need to be shifted to - 1
-interval_ends_df <- stringencyIndex %>%
-  filter(c(0, diff(stringencyIndex$value, 1, 1)) != 0) %>%
-  mutate(interval_ends = date - 1) %>%
-  dplyr::select(region, interval_ends)
-
-interval_ends <- split(interval_ends_df$interval_ends, interval_ends_df$region)
-interval_ends[["default"]] <- interval_ends[[args["country"]]]
 # Fetch Country Data
 countryData <- getCountryData(
   args["country"],
@@ -131,11 +67,6 @@ if (dim(countryData)[1] > 0) {
     left_join(
       popData,
       by = c("countryIso3", "region")
-    ) %>%
-    bind_rows(
-      mutate(stringencyIndex,
-        date_type = if_else(
-          args["country"] %in% c("CHE", "DEU", "HKG"), "report_plotting", "report"))
     )
   # check for changes in country data
   countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.rds"))
@@ -157,7 +88,7 @@ if (dim(countryData)[1] > 0) {
     }
   }
 
-  cleanEnv(keepObjects = c("basePath", "tempPath", "countryData", "dataUnchanged", "args", "popData", "interval_ends"))
+  cleanEnv(keepObjects = c("basePath", "tempPath", "countryData", "dataUnchanged", "args", "popData"))
 
   # calculate Re
   # only if (data has changed OR forceUpdate.txt exists) AND countryData is not null
@@ -166,15 +97,7 @@ if (dim(countryData)[1] > 0) {
 
   if (condition) {
     cat(str_c("\n", Sys.time(), " | ", args["country"], ": New data available. Calculating Re ...\n"))
-    # send notification
-    if (args["country"] %in% c("CHE") &
-        file.exists(here::here("app/otherScripts/sendNotifications.txt"))) {
-      urls <- scan(here::here("app/otherScripts/slackWebhook.txt"), what = "character")
 
-      sendSlackNotification(
-        country = args["country"],
-        event = "newData", url = urls[1], eTcompletion = Sys.time() + 105 * 60, webhookUrl = urls[2])
-    }
     # get Infection Incidence
     # load functions
     source(here::here("app/otherScripts/2_utils_getInfectionIncidence.R"))
@@ -211,16 +134,13 @@ if (dim(countryData)[1] > 0) {
 
       constant_delay_symptom_to_report_distributions <- c(constant_delay_symptom_to_report_distributions, list(m))
     }
-    names(constant_delay_symptom_to_report_distributions) <- paste0('Onset to ',  unique(names(shape_onset_to_count)))
+    names(constant_delay_symptom_to_report_distributions) <- paste0("Onset to ",  unique(names(shape_onset_to_count)))
 
     constant_delay_distributions <- c(constant_delay_distributions, constant_delay_symptom_to_report_distributions)
 
     # filter out regions with too few cases for estimation
     countryData <- countryData %>%
       filterRegions(thresholdConfirmedCases = 500)
-    # remove Oxford Stringenxy Index for Re calculation
-    countryData <- countryData %>%
-      filter(data_type != "Stringency Index")
 
     # filter out data_types with 0 total cases
     data_type0 <- countryData %>%
@@ -230,16 +150,13 @@ if (dim(countryData)[1] > 0) {
       .$data_type
 
     countryData <- filter(countryData, !(data_type %in% data_type0))
-    # country specific data filtering
-    if (args["country"] == "ESP") {
-      countryData <- countryData %>%
-        filter(data_type != "Deaths")
-      cat("ignoring data_type Deaths\n")
-    } else if (args["country"] == "AUT") {
-      countryData <- countryData %>%
-        filter(data_type != "Deaths")
-      cat("ignoring data_type Deaths\n")
-    }
+
+    # Filter for BAG
+    countryData <- countryData %>%
+      # Only Confirmed cases
+      filter(data_type == "Confirmed cases") %>%
+      # only country and cantons
+      filter(!str_detect(region, "grR|seR"))
 
     if (nrow(countryData) > 0) {
 
@@ -251,14 +168,8 @@ if (dim(countryData)[1] > 0) {
       right_truncation <- list()
       if (args["country"] %in% c("CHE", "LIE", "DEU", "HKG")) {
         right_truncation[["Confirmed cases"]] <- 0
-        right_truncation[["Confirmed cases / tests"]] <- 0
-        right_truncation[["Hospitalized patients"]] <- 0
-        right_truncation[["Deaths"]] <- 0
       } else {
         right_truncation["Confirmed cases"] <- 3
-        right_truncation["Confirmed cases / tests"] <- 3
-        right_truncation["Hospitalized patients"] <- 3
-        right_truncation["Deaths"] <- 3
       }
 
       right_truncate <- function(df, data_type, right_truncation) {
@@ -268,10 +179,12 @@ if (dim(countryData)[1] > 0) {
       countryData <- countryData %>%
         group_by(country, region, source, data_type) %>%
         right_truncate(data_type, right_truncation) %>%
-        dplyr::select(-countryIso3, -populationSize) %>%
+        dplyr::select(-countryIso3) %>%
         ungroup()
 
-      if (args["country"] == "CHE") {
+      if (file.exists(file.path(basePath, str_c(args["country"], "-Estimates.rds"))) &
+          args["country"] == "CHE") {
+        cat("Only updating recent estimates ...\n")
         cat("Complete Data Range:\n")
         print(range(countryData$date))
         # only calculate starting from dateCutoffAdj
@@ -281,11 +194,13 @@ if (dim(countryData)[1] > 0) {
         countryData <- filter(countryData, date >= dateCutoffAdj)
         cat("Truncated data range:\n")
         print(range(countryData$date))
+      } else {
+        cat("New estimates. Calculating whole data series...\n")
       }
       # Deconvolution
       deconvolvedData <- list()
 
-      deconvolvedData[[1]] <- get_all_infection_incidence(
+      deconvolvedCountryData <- get_all_infection_incidence(
         countryData,
         constant_delay_distributions = constant_delay_distributions,
         onset_to_count_empirical_delays = delays_onset_to_count,
@@ -293,27 +208,13 @@ if (dim(countryData)[1] > 0) {
         n_bootstrap = 100,
         verbose = FALSE)
 
-      # if (args["country"] %in% c("CHE")) {
-      #   countryDataTests <- countryData %>%
-      #     filter(data_type == "Confirmed cases / tests")
-
-      #   deconvolvedData[[2]] <- get_all_infection_incidence(
-      #     countryDataTests,
-      #     constant_delay_distributions = constant_delay_distributions,
-      #     onset_to_count_empirical_delays = delays_onset_to_count,
-      #     data_types = c("Confirmed cases / tests"),
-      #     n_bootstrap = 100,
-      #     verbose = FALSE)
-      # }
-
-      deconvolvedCountryData <- bind_rows(deconvolvedData)
       countryDataPath <- file.path(basePath, str_c(args["country"], "-DeconvolutedData.rds"))
       if (dim(deconvolvedCountryData)[1] == 0) {
         print("no data remaining")
       } else {
         saveRDS(deconvolvedCountryData, file = countryDataPath)
         # Re Estimation
-        cleanEnv(keepObjects = c("basePath", "tempPath", "deconvolvedCountryData", "args", "popData", "interval_ends", "dateCutoff"))
+        cleanEnv(keepObjects = c("basePath", "tempPath", "deconvolvedCountryData", "args", "popData", "dateCutoff"))
         source(here::here("app/otherScripts/3_utils_doReEstimates.R"))
 
         swissRegions <- deconvolvedCountryData %>%
@@ -325,42 +226,10 @@ if (dim(countryData)[1] > 0) {
         ### Window
         window <- 3
 
-        ### add additional interval 7 days before last Re estimate, for country level only
-        # discarding interval ends more recent than that.
-        lastIntervalEnd <- deconvolvedCountryData %>%
-          filter(data_type == "infection_Confirmed cases", region == args["country"], replicate == 0) %>%
-          slice_max(date) %>%
-          pull(date)
-        lastIntervalStart <- lastIntervalEnd - 7
-
-        if (length(interval_ends) == 0) {
-          interval_ends[[args["country"]]] <- lastIntervalStart
-        } else {
-          interval_ends[[args["country"]]] <- c(
-            interval_ends[[args["country"]]][interval_ends[[args["country"]]] < lastIntervalStart],
-            lastIntervalStart)
-        }
-
-        if (args["country"] == "CHE") {
-          additionalRegions <- setdiff(swissRegions, names(interval_ends))
-          for (iregion in additionalRegions) {
-            interval_ends[[iregion]] <- interval_ends[[args["country"]]]
-          }
-        }
-
-        ##TODO this all_delays could be removed because we always deconvolve
         ### Delays applied
         all_delays <- list(
           "infection_Confirmed cases" = c(Cori = 0, WallingaTeunis = -5),
-          "infection_Confirmed cases / tests" = c(Cori = 0, WallingaTeunis = -5),
-          "infection_Deaths" = c(Cori = 0, WallingaTeunis = -5),
-          "infection_Hospitalized patients" = c(Cori = 0, WallingaTeunis = -5),
-          "Confirmed cases" = c(Cori = 10, WallingaTeunis = 5),
-          "Confirmed cases / tests" = c(Cori = 10, WallingaTeunis = 5),
-          "Deaths" = c(Cori = 20, WallingaTeunis = 15),
-          "Hospitalized patients" = c(Cori = 8, WallingaTeunis = 3),
-          "infection_Excess deaths" = c(Cori = 0, WallingaTeunis = -5),
-          "Excess deaths" = c(Cori = 20, WallingaTeunis = 15))
+          "Confirmed cases" = c(Cori = 10, WallingaTeunis = 5))
 
         truncations <- list(
           left = c(Cori = 5, WallingaTeunis = 0),
@@ -374,7 +243,6 @@ if (dim(countryData)[1] > 0) {
           variationTypes = c("slidingWindow"),
           all_delays = all_delays,
           truncations = truncations,
-          interval_ends = interval_ends,
           swissRegions = swissRegions)
 
         gc()
@@ -383,7 +251,7 @@ if (dim(countryData)[1] > 0) {
         rm(deconvolvedCountryData)
         gc()
 
-        countryEstimates <- cleanCountryReEstimate(countryEstimatesRaw, method = 'bootstrap') %>%
+        countryEstimates <- cleanCountryReEstimate(countryEstimatesRaw, method = "bootstrap") %>%
           left_join(
             dplyr::select(popData, region, countryIso3),
             by = c("region")
@@ -410,7 +278,7 @@ if (dim(countryData)[1] > 0) {
 
         countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
 
-        if (args["country"] == "CHE") {
+        if (file.exists(file.path(countryDataPath)) & args["country"] == "CHE") {
           previousEstimates <- readRDS(countryDataPath) %>%
             filter(date < dateCutoff)
           newEstimates <- countryEstimates %>%
@@ -439,29 +307,10 @@ if (dim(countryData)[1] > 0) {
             simpleCsv,
             file = file.path(basePath, "csv", str_c(args["country"], "-confCasesSWestimates.csv"))
           )
-          if (Sys.info()["nodename"] == "ibz-shiny.ethz.ch") {
-            # write to test directory
-            readr::write_csv(
-              simpleCsv,
-              file = str_c("/home/covid-19-re/test-dailyRe/app/www/", args["country"], "-confCasesSWestimates.csv")
-            )
-            if (str_detect(here(), "test")) {
-              # write estimates to main app for publication
-              saveRDS(countryEstimates,
-                file = str_c("/home/covid-19-re/dailyRe/app/data/countryData/",
-                  args["country"], "-Estimates.rds")
-              )
-            }
-          }
         }
       }
     } else {
       cat(str_c(Sys.time(), " | ", args["country"], ": Not enough cases. Skipping Re calculation.\n"))
-    }
-    # send notification
-    if (args["country"] %in% c("CHE") &
-        file.exists(here::here("app/otherScripts/sendNotifications.txt"))) {
-      write(args["country"], file = here::here("app/otherScripts/notificationsToSend.txt"), append = TRUE)
     }
   } else {
     cat(str_c(Sys.time(), " | ", args["country"], ": No new data available. Skipping Re calculation.\n"))
