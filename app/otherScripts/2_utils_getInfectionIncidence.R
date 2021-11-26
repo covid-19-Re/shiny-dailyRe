@@ -485,31 +485,36 @@ get_infection_incidence_by_deconvolution <- function(
     initial_delta_incubation <- min(which(cumsum(constant_delay_distribution_incubation) > 0.5)) - 1 # take median value (-1 because index 1 corresponds to zero days)
     
     
-    # account for additional right-truncation of onset data (needs to be reported first)
-    if(is_empirical) {
-      delay_distribution_matrix_onset_to_report <- get_matrix_empirical_waiting_time_distr(
-        empirical_delays,
-        seq.Date(min(data_subset$date), max(data_subset$date), by = "days"))
-    } else {
-      delay_distribution_matrix_onset_to_report <- get_matrix_constant_waiting_time_distr(
-        constant_delay_distribution,
-        seq.Date(min(data_subset$date), max(data_subset$date), by = "days"))
+    if(unique(data_subset$region)[1] != "ESP") { # hack to workaround weirdness of Spanish data
+      
+      # account for additional right-truncation of onset data (needs to be reported first)
+      if(is_empirical) {
+        delay_distribution_matrix_onset_to_report <- get_matrix_empirical_waiting_time_distr(
+          empirical_delays,
+          seq.Date(min(data_subset$date), max(data_subset$date), by = "days"))
+      } else {
+        delay_distribution_matrix_onset_to_report <- get_matrix_constant_waiting_time_distr(
+          constant_delay_distribution,
+          seq.Date(min(data_subset$date), max(data_subset$date), by = "days"))
+      }
+      
+      data_subset <- data_subset %>%
+        complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(value = 0))
+      
+      Q_vector_onset_to_report <- apply(delay_distribution_matrix_onset_to_report, MARGIN = 2, sum)
+      
+      #TODO remove
+      # if(unique(data_subset$region)[1] == "ESP") { # hack to work around spanish data between symptom onset dates only
+      #   right_truncation <- 3
+      #   # need to offset the Q vector by how many days were truncated off originally
+      #   Q_vector_onset_to_report <- c(rep(1, right_truncation), Q_vector_onset_to_report[1:(length(Q_vector_onset_to_report) - right_truncation)] )
+      # }
+      
+      data_subset <- data_subset %>%
+        mutate(value = value / Q_vector_onset_to_report) %>% 
+        mutate(value = if_else(value == Inf, 0, value))
+      
     }
-    
-    data_subset <- data_subset %>%
-      complete(date = seq.Date(min(date), max(date), by = "days"), fill = list(value = 0))
-    
-    Q_vector_onset_to_report <- apply(delay_distribution_matrix_onset_to_report, MARGIN = 2, sum)
-    
-    if(unique(data_subset$region)[1] == "ESP") { # hack to work around spanish data between symptom onset dates only
-      right_truncation <- 3
-      # need to offset the Q vector by how many days were truncated off originally
-      Q_vector_onset_to_report <- c(rep(1, right_truncation), Q_vector_onset_to_report[1:(length(Q_vector_onset_to_report) - right_truncation)] )
-    }
-    
-    data_subset <- data_subset %>%
-      mutate(value = value / Q_vector_onset_to_report) %>% 
-      mutate(value = if_else(value == Inf, 0, value))
     
   } else {
     if(is_empirical) {
