@@ -221,6 +221,8 @@ getVaccinationDataOWID <- function(countries = NULL, tempFileName = NULL, tReloa
       total_vaccinations_per_hundred = col_double(),
       people_vaccinated_per_hundred = col_double(),
       people_fully_vaccinated_per_hundred = col_double(),
+      total_boosters = col_double(),
+      total_boosters_per_hundred = col_double(),
       daily_vaccinations_per_million = col_double()
     )
   ))
@@ -1708,7 +1710,7 @@ getVaccinationDataCHE <- function() {
     )
   ) %>%
   filter(
-    type %in% c("COVID19FullyVaccPersons", "COVID19AtLeastOneDosePersons"),
+    type %in% c("COVID19FullyVaccPersons", "COVID19AtLeastOneDosePersons", "COVID19FirstBoosterPersons"),
     age_group == "total_population") %>%
   select(-age_group)
 
@@ -1777,6 +1779,8 @@ getVaccinationDataCHE <- function() {
         COVID19AtLeastOneDosePersons_total_per_hundred = "people_vaccinated_per_hundred",
         COVID19FullyVaccPersons_total = "people_fully_vaccinated",
         COVID19FullyVaccPersons_total_per_hundred = "people_fully_vaccinated_per_hundred",
+        COVID19FirstBoosterPersons_total = "people_first_booster",
+        COVID19FirstBoosterPersons_total_per_hundred = "people_first_booster_per_hundred",
         COVID19VaccDosesAdministered_total = "total_vaccinations",
         COVID19VaccDosesAdministered_total_per_hundred = "total_vaccinations_per_hundred"
       ),
