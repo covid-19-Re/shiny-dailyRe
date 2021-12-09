@@ -209,7 +209,7 @@ countriesShape <- left_join(
 
 qsave(countriesShape, file = here("app/data/temp/countriesShape.qs"))
 
-CHEregionsShape <- sf::st_read(
+cheRegionsShape <- sf::st_read(
   here("app/data/geoData/swissBOUNDARIES3D_1_3_TLM_KANTONSGEBIET.shp"),
   quiet = TRUE
 ) %>%
@@ -237,15 +237,15 @@ CHEregionsShape <- sf::st_read(
     worldMapData,
     by = c("ADM0_A3_IS", "region")
   )
-qsave(CHEregionsShape, file = here("app/data/temp/CHEregionsShape.qs"))
+qsave(cheRegionsShape, file = here("app/data/temp/cheRegionsShape.qs"))
 
-cheCasesLabels <- mapLabels(shapeFileData = CHEregionsShape, mainLabel = "cases14d")
+cheCasesLabels <- mapLabels(shapeFileData = cheRegionsShape, mainLabel = "cases14d")
 qsave(cheCasesLabels, file = here("app/data/temp/cheCasesLabels.qs"))
 
-cheReLabels <- mapLabels(shapeFileData = CHEregionsShape, mainLabel = "re")
+cheReLabels <- mapLabels(shapeFileData = cheRegionsShape, mainLabel = "re")
 qsave(cheReLabels, file = here("app/data/temp/cheReLabels.qs"))
 
-ZAFregionsShape <- sf::st_read(
+zafRegionsShape <- sf::st_read(
   here("app/data/geoData/zaf_admbnda_adm1_2016SADB_OCHA.shp"),
   quiet = TRUE
 ) %>%
@@ -258,11 +258,11 @@ ZAFregionsShape <- sf::st_read(
     worldMapData,
     by = c("ADM0_A3_IS", "region")
   )
-qsave(ZAFregionsShape, file = here("app/data/temp/ZAFregionsShape.qs"))
+qsave(zafRegionsShape, file = here("app/data/temp/zafRegionsShape.qs"))
 
-zafCasesLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "cases14d")
+zafCasesLabels <- mapLabels(shapeFileData = zafRegionsShape, mainLabel = "cases14d")
 qsave(zafCasesLabels, file = here("app/data/temp/zafCasesLabels.qs"))
-zafReLabels <- mapLabels(shapeFileData = ZAFregionsShape, mainLabel = "re")
+zafReLabels <- mapLabels(shapeFileData = zafRegionsShape, mainLabel = "re")
 qsave(zafReLabels, file = here("app/data/temp/zafReLabels.qs"))
 
 # update updateData
