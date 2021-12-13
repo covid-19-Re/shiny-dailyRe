@@ -1469,6 +1469,8 @@ getConfirmedCasesZAF <- function(
   # replace negative numbers by 0
   confirmedCases$value[confirmedCases$value < 0] <- 0
 
+  # Ugly Fix for Data Blib in DSFSI Data on 2021-11-23. Corrected Data are personal communication
+  # by Tulio de Oliveira on 2021-12-01
   nCases20211123 <- confirmedCases[confirmedCases$date == "2021-11-23" & confirmedCases$region == "ZAF",]$value
   if (nCases20211123 == 18586) {
     confirmedCases[confirmedCases$date == "2021-11-23", ] <-
