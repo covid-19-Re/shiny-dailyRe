@@ -1468,7 +1468,21 @@ getConfirmedCasesZAF <- function(
     )
   # replace negative numbers by 0
   confirmedCases$value[confirmedCases$value < 0] <- 0
-  
+
+  nCases20211123 <- confirmedCases[confirmedCases$date == "2021-11-23" & confirmedCases$region == "ZAF",]$value
+  if (nCases20211123 == 18586) {
+    confirmedCases[confirmedCases$date == "2021-11-23", ] <-
+      tibble(
+        date = as.Date("2021-11-23"),
+        countryIso3 = "ZAF",
+        region = c("Eastern Cape", "Free State", "Gauteng", "KwaZulu-Natal", "Limpopo", "Mpumalanga",
+          "Northern Cape", "North West", "ZAF", "Unknown", "Western Cape"),
+        data_type = "confirmed",
+        value = c(22, 24, 1823, 62, 44, 57, 26, 98, 2230, 0, 74),
+        date_type = "report",
+        local_infection = TRUE, source = "DSFSI")
+  }
+
   return(confirmedCases)
 }
 
