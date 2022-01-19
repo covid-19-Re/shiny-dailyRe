@@ -353,7 +353,6 @@ if (file.exists(here("app/otherScripts/sendNotifications.txt")) &&
     )
   }
   cat(str_c(Sys.time(), " | Slack notifications sent.\n"))
-  system(str_c("rm ", here("app/otherScripts/notificationsToSend.txt")))
 }
 
 cat(str_c(Sys.time(), " | summarizing data done.\n"))
