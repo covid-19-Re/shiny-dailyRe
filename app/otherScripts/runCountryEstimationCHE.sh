@@ -46,7 +46,8 @@ runRScript sumData.R
 # runRScript sumData.R
 
 # put data live if allready after 13:30
-if [[ milTime -gt 1330 ]]; then
+currTime=`date +%k%M`
+if [[ currTime -gt 1330 ]]; then
   cd "$parent_path"
   ./putSwissDataLive.sh
   echo "date live!"
