@@ -37,12 +37,12 @@ min_date <- as.Date("2020-01-01")
 max_delay_confirm <- 30
 
 first_curation_data_Hong_Kong <- data_Hong_Kong %>%
-  filter(`Confirmed/probable` == "Confirmed") %>% 
+  filter(`Case status*` == "Confirmed") %>% 
   mutate(`Date of onset` =  as.Date(`Date of onset`, format = "%d/%m/%Y"),
-         `Case classification*` = if_else(`Case classification*` == "Imported case", "TRUE", "FALSE")) %>% 
+         `Classification*` = if_else(`Classification*` == "Imported case", "TRUE", "FALSE")) %>% 
   transmute(count_date = as.Date(`Report date`, format = "%d/%m/%Y"),
             onset_date = `Date of onset`,
-            local_infection =  `Case classification*`) %>% 
+            local_infection =  `Classification*`) %>% 
   mutate(onset_date = if_else(between((count_date - onset_date), 0, max_delay_confirm), onset_date, as.Date(NA))) %>% 
   mutate(across(c(count_date, onset_date), ~ if_else(between(.x, min_date, max_date_plotting), .x, as.Date(NA)))) %>% 
   mutate(data_type = "Confirmed cases",
