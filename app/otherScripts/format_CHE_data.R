@@ -25,7 +25,7 @@ dir.create(outDir, showWarnings = FALSE)
 bagFiles <- c(
   # polybox
   list.files(BAG_data_dir,
-             pattern = "*FOPH_COVID19_data_extract.rds",
+             pattern = "*FOPH_COVID19_data_extract.csv",
              full.names = TRUE,
              recursive = TRUE),
   # git (legacy)
@@ -45,7 +45,9 @@ newestFile <- bagFiles[which(bagFileDates == maximum_file_date)[1]]
 
 ### Load file data
 cat("reading file", newestFile, "...\n")
-data_hospitalization <- readRDS(newestFile)
+data_hospitalization <- read.csv(
+  newestFile,
+  sep = ";", stringsAsFactors = F, header = T)
 
 
 max_date <- date(maximum_file_date)
@@ -463,3 +465,4 @@ allBAGdata <- bind_rows(list(allBAGdata_plotting), list(allBAGdata_calculations)
 ## end of remove
 
 readr::write_csv(allBAGdata, path = file.path(outDir, "incidence_data_CHE.csv"))
+
