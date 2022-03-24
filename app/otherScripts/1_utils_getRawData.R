@@ -1598,29 +1598,72 @@ sumSentinellaRegions <- function(chData) {
   return(greaterRegionsData)
 }
 
-getDataCHEBAG <- function(path = here::here("app/data/CHE"), country = "CHE", filename = "incidence_data_CHE.csv") {
-  filePath <- file.path(path, filename)
-  bagData <- read_csv(filePath,
-                      col_types = cols(
-                        date = col_date(format = ""),
-                        region = col_character(),
-                        countryIso3 = col_character(),
-                        source = col_character(),
-                        data_type = col_character(),
-                        value = col_double(),
-                        positiveTests = col_double(),
-                        negativeTests = col_double(),
-                        totalTests = col_double(),
-                        testPositivity = col_double(),
-                        date_type = col_character(),
-                        local_infection = col_logical())) %>%
+getDataCHEBAG <- function(country = "CHE") {
+  urlfile <- jsonlite::fromJSON("https://www.covid19.admin.ch/api/data/context")
+  
+  rawDataEpi <- read_csv(
+    urlfile$sources$individual$csv$rawData$dailyEpi,
+    col_types = cols(
+      date = col_date(format = ""),
+      geoRegion = col_character(),
+      .default = col_double()
+    ))
+  
+  rawDataTests <- read_csv(
+    urlfile$sources$individual$csv$daily$test,
+    col_types = cols_only(
+      datum = col_date(format = ""),
+      geoRegion = col_character(),
+      entries = col_double(),
+      entries_pos = col_double(),
+      entries_neg = col_double()
+    )) %>%
+    rename(
+      date = datum,
+      positiveTests = entries_pos,
+      negativeTests = entries_neg,
+      totalTests = entries
+      ) %>%
+    mutate(
+      testPositivity = positiveTests / totalTests
+    )
+
+  bagData <- rawDataEpi %>%
+    left_join(rawDataTests, by = c("date", "geoRegion")) %>%
+    mutate(
+      `Confirmed cases / tests` = cases / totalTests * mean(totalTests, na.rm = T)
+    ) %>%
+    filter(
+      !is.na(`Confirmed cases / tests`),
+      geoRegion != "CHFL") %>%
+    rename(
+      confirmed = cases,
+      deaths = deaths,
+      hospitalized = hosps,
+      region = geoRegion
+    ) %>%
+    pivot_longer(
+      c(confirmed, hospitalized, deaths, `Confirmed cases / tests`),
+      names_to = "data_type") %>%
+    transmute(
+      date = date,
+      region = recode(region, FL = "LIE"),
+      countryIso3 = if_else(region == "LIE", "LIE", "CHE"),
+      source = "FOPH",
+      data_type,
+      value,
+      positiveTests,
+      negativeTests,
+      totalTests,
+      testPositivity,
+      date_type = "report",
+      local_infection = TRUE) %>%
     filter(countryIso3 == country)
   
   bagDataGreaterRegions <- sumGreaterRegions(filter(bagData, region != "CHE"))
   bagDataSentinellaRegions <- sumSentinellaRegions(filter(bagData, region != "CHE"))
   
   bagDataAll <- bind_rows(bagData, bagDataGreaterRegions, bagDataSentinellaRegions)
-  
   return(bagDataAll)
 }
 
@@ -1669,8 +1712,8 @@ getDataCHEexcessDeath <- function(startAt = as.Date("2020-02-20")) {
   return(longData)
 }
 
-getDataCHE <- function(data_path) {
-  bagData <- getDataCHEBAG(path = data_path, country = "CHE")
+getDataCHE <- function() {
+  bagData <- getDataCHEBAG(country = "CHE")
   swissExcessDeath <- NULL #getDataCHEexcessDeath(startAt = as.Date("2020-02-20"))
   swissData <- bind_rows(
     bagData,
@@ -1681,8 +1724,8 @@ getDataCHE <- function(data_path) {
   return(swissData)
 }
 
-getDataLIE <- function(data_path) {
-  bagDataLIE <- getDataCHEBAG(path = data_path, country = "LIE") %>%
+getDataLIE <- function() {
+  bagDataLIE <- getDataCHEBAG(country = "LIE") %>%
     mutate(
       region = recode(region, "FL" = "LIE"))
   return(bagDataLIE)
@@ -1938,7 +1981,7 @@ getCountryData <- function(countries, tempFile = NULL, HMDtemp = NULL, tReload =
     if (countries[i] == "BEL") {
       allDataList[[i]] <- getDataBEL()
     } else if (countries[i] == "CHE") {
-      allDataList[[i]] <- getDataCHE(data_path = here::here("app/data/CHE"))
+      allDataList[[i]] <- getDataCHE()
     } else if (countries[i] == "CZE") {
       allDataList[[i]] <- getDataCZE()
     } else if (countries[i] == "DEU") {
@@ -1958,7 +2001,7 @@ getCountryData <- function(countries, tempFile = NULL, HMDtemp = NULL, tReload =
     } else if (countries[i] == "ITA") {
       allDataList[[i]] <- getDataITA(tempFile = tempFile)
     } else if (countries[i] == "LIE") {
-      allDataList[[i]] <- getDataLIE(data_path = here::here("app/data/CHE"))
+      allDataList[[i]] <- getDataLIE()
     } else if (countries[i] == "LVA") {
       allDataList[[i]] <- getDataLVA()
     # } else if (countries[i] == "NLD") {

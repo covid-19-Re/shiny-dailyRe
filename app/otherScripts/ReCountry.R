@@ -249,11 +249,23 @@ if (dim(countryData)[1] > 0) {
         )
 
       right_truncation <- list()
-      if (args["country"] %in% c("CHE", "LIE", "DEU", "HKG")) {
+      if (args["country"] %in% c("DEU", "HKG")) {
         right_truncation[["Confirmed cases"]] <- 0
         right_truncation[["Confirmed cases / tests"]] <- 0
         right_truncation[["Hospitalized patients"]] <- 0
         right_truncation[["Deaths"]] <- 0
+      } else if (args["country"] %in% c("CHE", "LIE")) {
+        max_date <- max(countryData$date)
+        additionalTruncation <- case_when(
+          lubridate::wday(max_date) == 3 ~ 1, # 3 = Tue, exclude Sat,
+          lubridate::wday(max_date) == 4 ~ 2, # 4 = Wed, exclude Sun and Sat,
+          lubridate::wday(max_date) == 5 ~ 3, # 5 = Thu, exclude Mon, Sun and Sat,
+          TRUE ~ 0                                # otherwise don't exclude more days
+        )
+        right_truncation[["Confirmed cases"]] <- 3 + additionalTruncation
+        right_truncation[["Confirmed cases / tests"]] <- 3 + additionalTruncation
+        right_truncation[["Hospitalized patients"]] <- 5
+        right_truncation[["Deaths"]] <- 5
       } else {
         right_truncation["Confirmed cases"] <- 3
         right_truncation["Confirmed cases / tests"] <- 3
@@ -271,17 +283,17 @@ if (dim(countryData)[1] > 0) {
         dplyr::select(-countryIso3, -populationSize) %>%
         ungroup()
 
-      if (args["country"] == "CHE") {
-        cat("Complete Data Range:\n")
-        print(range(countryData$date))
-        # only calculate starting from dateCutoffAdj
-        dateCutoff <- "2021-04-01"
-        dateCutoffAdj <- "2021-03-01"
+      # if (args["country"] == "CHE") {
+      #   cat("Complete Data Range:\n")
+      #   print(range(countryData$date))
+      #   # only calculate starting from dateCutoffAdj
+      #   dateCutoff <- "2021-04-01"
+      #   dateCutoffAdj <- "2021-03-01"
 
-        countryData <- filter(countryData, date >= dateCutoffAdj)
-        cat("Truncated data range:\n")
-        print(range(countryData$date))
-      }
+      #   countryData <- filter(countryData, date >= dateCutoffAdj)
+      #   cat("Truncated data range:\n")
+      #   print(range(countryData$date))
+      # }
       # Deconvolution
       deconvolvedData <- list()
 
