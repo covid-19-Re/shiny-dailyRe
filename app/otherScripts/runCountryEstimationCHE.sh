@@ -45,13 +45,11 @@ runRScript sumData.R
 # cd ../../../test-dailyRe/app/otherScripts/
 # runRScript sumData.R
 
-# put data live if allready after 13:30
-currTime=`date +%k%M`
-if [[ currTime -gt 1330 ]]; then
-  cd "$parent_path"
-  ./putSwissDataLive.sh
-  echo "date live!"
-fi
+# put data live 
+cd "$parent_path"
+./putSwissDataLive.sh
+echo "date live!"
+
 
 # reactivate crontab
 if  [ ! -z "$cr" ]; then
