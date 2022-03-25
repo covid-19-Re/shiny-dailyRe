@@ -28,7 +28,8 @@ if (length(args) == 0) {
   args <- c("CHE")
   warning(str_c("Testing mode!! Country: ", args))
 }
-names(args) <- "country"
+args <- c(args, "TRUE")
+names(args) <- c("country", "regenerateTS")
 
 basePath <- here::here("app", "data", "countryData")
 if (!dir.exists(basePath)) {
@@ -135,7 +136,7 @@ if (dim(countryData)[1] > 0) {
     bind_rows(
       mutate(stringencyIndex,
         date_type = if_else(
-          args["country"] %in% c("CHE", "DEU", "HKG"), "report_plotting", "report"))
+          args["country"] %in% c("DEU", "HKG"), "report_plotting", "report"))
     )
   # check for changes in country data
   countryDataPath <- file.path(basePath, str_c(args["country"], "-Data.rds"))
@@ -283,17 +284,20 @@ if (dim(countryData)[1] > 0) {
         dplyr::select(-countryIso3, -populationSize) %>%
         ungroup()
 
-      # if (args["country"] == "CHE") {
-      #   cat("Complete Data Range:\n")
-      #   print(range(countryData$date))
-      #   # only calculate starting from dateCutoffAdj
-      #   dateCutoff <- "2021-04-01"
-      #   dateCutoffAdj <- "2021-03-01"
+      if (args["country"] == "CHE" & !as.logical(args["regenerateTS"])) {
+        cat("Complete Data Range:\n")
+        print(range(countryData$date))
+        # only calculate starting from dateCutoffAdj
+        dateCutoff <- "2021-04-01"
+        dateCutoffAdj <- "2021-03-01"
 
-      #   countryData <- filter(countryData, date >= dateCutoffAdj)
-      #   cat("Truncated data range:\n")
-      #   print(range(countryData$date))
-      # }
+        countryData <- filter(countryData, date >= dateCutoffAdj)
+        cat("calculating for truncated data range:\n")
+        print(range(countryData$date))
+      } else {
+        cat("calculating for complete Data Range:\n")
+        print(range(countryData$date))
+      }
       # Deconvolution
       deconvolvedData <- list()
 
@@ -424,7 +428,7 @@ if (dim(countryData)[1] > 0) {
 
         countryDataPath <- file.path(basePath, str_c(args["country"], "-Estimates.rds"))
 
-        if (args["country"] == "CHE") {
+        if (args["country"] == "CHE" & !as.logical(args["regenerateTS"])) {
           previousEstimates <- readRDS(countryDataPath) %>%
             filter(date < dateCutoff)
           newEstimates <- countryEstimates %>%
