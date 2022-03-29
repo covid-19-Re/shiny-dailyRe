@@ -300,8 +300,8 @@ if (dim(countryData)[1] > 0) {
         cat("Complete data range:\n")
         print(range(countryData$date))
         # only calculate starting from dateCutoffAdj
-        dateCutoff <- "2021-04-01"
-        dateCutoffAdj <- "2021-03-01"
+        dateCutoff <- "2021-08-01"
+        dateCutoffAdj <- "2021-07-01"
 
         countryData <- filter(countryData, date >= dateCutoffAdj)
         cat("calculating for truncated data range:\n")
