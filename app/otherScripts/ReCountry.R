@@ -275,8 +275,8 @@ if (dim(countryData)[1] > 0) {
           lubridate::wday(max_date) == 5 ~ 3, # 5 = Thu, exclude Mon, Sun and Sat,
           TRUE ~ 0                                # otherwise don't exclude more days
         )
-        right_truncation[["Confirmed cases"]] <- 3 + (additionalTruncation - 1)
-        right_truncation[["Confirmed cases / tests"]] <- 3 + (additionalTruncation - 1)
+        right_truncation[["Confirmed cases"]] <- 3 + additionalTruncation
+        right_truncation[["Confirmed cases / tests"]] <- 3 + additionalTruncation
         right_truncation[["Hospitalized patients"]] <- 5
         right_truncation[["Deaths"]] <- 5
       } else {
