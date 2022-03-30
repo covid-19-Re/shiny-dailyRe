@@ -493,6 +493,7 @@ if (dim(countryData)[1] > 0) {
         file.exists(here::here("app/otherScripts/sendNotifications.txt"))) {
       write(args$country, file = here::here("app/otherScripts/notificationsToSend.txt"), append = TRUE)
     }
+    cat(str_c("\n", Sys.time(), " | ", args$country, ": calculations done.\n"))
   } else {
     cat(str_c(Sys.time(), " | ", args$country, ": No new data available. Skipping Re calculation.\n"))
   }
