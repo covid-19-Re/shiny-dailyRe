@@ -1626,7 +1626,8 @@ getDataCHEBAG <- function(country = "CHE") {
       ) %>%
     mutate(
       testPositivity = positiveTests / totalTests
-    )
+    ) %>%
+    filter(totalTests != 0)
 
   bagData <- rawDataEpi %>%
     left_join(rawDataTests, by = c("date", "geoRegion")) %>%
