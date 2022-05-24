@@ -148,7 +148,7 @@ if (dim(countryData)[1] > 0) {
     bind_rows(
       mutate(stringencyIndex,
         date_type = if_else(
-          args$country %in% c("DEU", "HKG"), "report_plotting", "report"))
+          args$country %in% c("HKG"), "report_plotting", "report"))
     )
   # check for changes in country data
   countryDataPath <- file.path(basePath, str_c(args$country, "-Data.rds"))
@@ -262,7 +262,7 @@ if (dim(countryData)[1] > 0) {
         )
 
       right_truncation <- list()
-      if (args$country %in% c("DEU", "HKG")) {
+      if (args$country %in% c("HKG")) {
         right_truncation[["Confirmed cases"]] <- 0
         right_truncation[["Confirmed cases / tests"]] <- 0
         right_truncation[["Hospitalized patients"]] <- 0

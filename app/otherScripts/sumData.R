@@ -37,7 +37,7 @@ updateDataRaw_1 <- list()
 pb <- txtProgressBar(min = 0, max = length(allCountries))
 pb_i <- 0
 for (iCountry in allCountries) {
-  iCountryData <- loadCountryData(iCountry, dataDir = pathToCountryData)
+  iCountryData <- loadCountryData(iso3 = iCountry, dataDir = pathToCountryData)
   allData$caseData[[iCountry]] <- iCountryData$caseData
   allData$estimates[[iCountry]] <- iCountryData$estimates
   estimatePlotRanges[[iCountry]] <- iCountryData$estimateRanges[[iCountry]]
