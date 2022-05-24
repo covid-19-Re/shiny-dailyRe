@@ -272,20 +272,20 @@ sourceInfo <- read_csv(here("app/data/dataSources.csv"),
 
 updateDataRaw <- updateDataRaw_1 %>%
   bind_rows() %>%
-  bind_rows(
-    allMobilityDataApple %>%
-      filter(countryIso3 %in% names(updateDataRaw_1)) %>%
-      group_by(countryIso3, region) %>%
-      summarise(
-        lastData = max(date),
-        lastChanged = lastData,
-        .groups = "drop"
-      ) %>%
-      mutate(
-        source = "Apple",
-        data_type = "Apple Mobility Data", lastChecked = now()
-      )
-  ) %>%
+  # bind_rows(
+  #   allMobilityDataApple %>%
+  #     filter(countryIso3 %in% names(updateDataRaw_1)) %>%
+  #     group_by(countryIso3, region) %>%
+  #     summarise(
+  #       lastData = max(date),
+  #       lastChanged = lastData,
+  #       .groups = "drop"
+  #     ) %>%
+  #     mutate(
+  #       source = "Apple",
+  #       data_type = "Apple Mobility Data", lastChecked = now()
+  #     )
+  # ) %>%
   bind_rows(
     allMobilityDataGoogle %>%
       filter(countryIso3 %in% names(updateDataRaw_1)) %>%
