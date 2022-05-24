@@ -116,6 +116,7 @@ qsave(allMobilityDataGoogle, here("app/data/temp/allMobilityDataGoogle.qs"))
 #   select(-percent, -transportationType) %>%
 #   filter(countryIso3 == region | countryIso3 %in% countriesWithRegions$countryIso3)
 # qsave(allMobilityDataApple, here("app/data/temp/allMobilityDataApple.qs"))
+allMobilityDataApple <- qread(here("app/data/temp/allMobilityDataApple.qs"))
 
 # prep Data for app
 continents <- read_csv(here("app/data/continents.csv"),
@@ -272,20 +273,20 @@ sourceInfo <- read_csv(here("app/data/dataSources.csv"),
 
 updateDataRaw <- updateDataRaw_1 %>%
   bind_rows() %>%
-  # bind_rows(
-  #   allMobilityDataApple %>%
-  #     filter(countryIso3 %in% names(updateDataRaw_1)) %>%
-  #     group_by(countryIso3, region) %>%
-  #     summarise(
-  #       lastData = max(date),
-  #       lastChanged = lastData,
-  #       .groups = "drop"
-  #     ) %>%
-  #     mutate(
-  #       source = "Apple",
-  #       data_type = "Apple Mobility Data", lastChecked = now()
-  #     )
-  # ) %>%
+  bind_rows(
+    allMobilityDataApple %>%
+      filter(countryIso3 %in% names(updateDataRaw_1)) %>%
+      group_by(countryIso3, region) %>%
+      summarise(
+        lastData = max(date),
+        lastChanged = lastData,
+        .groups = "drop"
+      ) %>%
+      mutate(
+        source = "Apple",
+        data_type = "Apple Mobility Data", lastChecked = now()
+      )
+  ) %>%
   bind_rows(
     allMobilityDataGoogle %>%
       filter(countryIso3 %in% names(updateDataRaw_1)) %>%
