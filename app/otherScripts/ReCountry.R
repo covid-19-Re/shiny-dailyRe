@@ -180,7 +180,7 @@ if (dim(countryData)[1] > 0) {
   if (condition) {
     cat(str_c("\n", Sys.time(), " | ", args$country, ": New data available. Calculating Re ...\n"))
     # send notification
-    if (args$country %in% c("CHE") &
+    if (args$country %in% c("CHE") &&
         file.exists(here::here("app/otherScripts/sendNotifications.txt"))) {
       urls <- scan(here::here("app/otherScripts/slackWebhook.txt"), what = "character")
 
@@ -224,7 +224,7 @@ if (dim(countryData)[1] > 0) {
 
       constant_delay_symptom_to_report_distributions <- c(constant_delay_symptom_to_report_distributions, list(m))
     }
-    names(constant_delay_symptom_to_report_distributions) <- paste0('Onset to ',  unique(names(shape_onset_to_count)))
+    names(constant_delay_symptom_to_report_distributions) <- paste0("Onset to ",  unique(names(shape_onset_to_count)))
 
     constant_delay_distributions <- c(constant_delay_distributions, constant_delay_symptom_to_report_distributions)
 
@@ -296,7 +296,7 @@ if (dim(countryData)[1] > 0) {
         dplyr::select(-countryIso3, -populationSize) %>%
         ungroup()
 
-      if (args$country == "CHE" & !args$regenerateTS) {
+      if (args$country == "CHE" && !args$regenerateTS) {
         cat("Complete data range:\n")
         print(range(countryData$date))
         # only calculate starting from dateCutoffAdj
@@ -343,7 +343,8 @@ if (dim(countryData)[1] > 0) {
       } else {
         saveRDS(deconvolvedCountryData, file = countryDataPath)
         # Re Estimation
-        cleanEnv(keepObjects = c("basePath", "tempPath", "deconvolvedCountryData", "args", "popData", "interval_ends", "dateCutoff"))
+        cleanEnv(keepObjects = c("basePath", "tempPath", "deconvolvedCountryData",
+          "args", "popData", "interval_ends", "dateCutoff"))
         source(here::here("app/otherScripts/3_utils_doReEstimates.R"))
 
         swissRegions <- deconvolvedCountryData %>%
@@ -413,7 +414,7 @@ if (dim(countryData)[1] > 0) {
         rm(deconvolvedCountryData)
         gc()
 
-        countryEstimates <- cleanCountryReEstimate(countryEstimatesRaw, method = 'bootstrap') %>%
+        countryEstimates <- cleanCountryReEstimate(countryEstimatesRaw, method = "bootstrap") %>%
           left_join(
             dplyr::select(popData, region, countryIso3),
             by = c("region")
@@ -440,7 +441,7 @@ if (dim(countryData)[1] > 0) {
 
         countryDataPath <- file.path(basePath, str_c(args$country, "-Estimates.rds"))
 
-        if (args$country == "CHE" & !args$regenerateTS) {
+        if (args$country == "CHE" && !args$regenerateTS) {
           previousEstimates <- readRDS(countryDataPath) %>%
             filter(date < dateCutoff)
           newEstimates <- countryEstimates %>%
@@ -489,7 +490,7 @@ if (dim(countryData)[1] > 0) {
       cat(str_c(Sys.time(), " | ", args$country, ": Not enough cases. Skipping Re calculation.\n"))
     }
     # send notification
-    if (args$country %in% c("CHE") &
+    if (args$country %in% c("CHE") &&
         file.exists(here::here("app/otherScripts/sendNotifications.txt"))) {
       write(args$country, file = here::here("app/otherScripts/notificationsToSend.txt"), append = TRUE)
     }
