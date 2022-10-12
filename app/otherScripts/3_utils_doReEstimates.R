@@ -19,9 +19,9 @@ estimateRe <- function(
   variationType = "slidingWindow",
   interval_ends = c("2020-03-13", "2020-03-16", "2020-03-20"),
   minimumCumul = 5,
-  windowLength= 4,
-  mean_si = 4.8,
-  std_si  = 2.3) {
+  windowLength = 4,
+  mean_si = 3,
+  std_si  = 2.4) {
 
   offset <- 1
   cumulativeIncidence <- 0

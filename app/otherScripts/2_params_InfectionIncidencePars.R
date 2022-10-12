@@ -1,8 +1,13 @@
 ### Waiting time distributions ##
 ## hardcoded for now, but to be taken outside of script
+# until 1.1.2022
 # incubation: mean = 5.3, sd = 3.2 (Linton et al., best gamma distr fit)
-mean_incubation <- 5.3
-sd_incubation <- 3.2
+# mean_incubation <- 5.3
+# sd_incubation <- 3.2
+# from 1.1.2022 (Omicron),  (https://wwwnc.cdc.gov/eid/article/28/8/22-0220_article
+#  https://www.eurosurveillance.org/content/10.2807/1560-7917.ES.2022.27.6.2200042 )
+mean_incubation <- 3.5
+sd_incubation <- 1.2
 
 # onset to test:
 mean_onset_to_test <- 5.5 #Bi et al.
