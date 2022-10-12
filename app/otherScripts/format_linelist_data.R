@@ -12,8 +12,8 @@ outDir <- here::here("app", "data")
 
 linelist_codes <- c("HKG")
 
-for(code in linelist_codes) {
-  source(here::here("app", "otherScripts", paste0("format_",code,"_data.R")))
+for (code in linelist_codes) {
+  source(here::here("app", "otherScripts", paste0("format_", code, "_data.R")))
 }
 
 delay_data <- c()
