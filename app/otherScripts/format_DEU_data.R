@@ -92,16 +92,13 @@ confirmed_case_data <- first_curation_DEU_data %>%
 start_date <- min(confirmed_case_data$date)
 end_date <- max(confirmed_case_data$date)
 
-confirmed_case_data <- confirmed_case_data %>% 
-  dplyr::group_by(region, source, countryIso3, date_type, local_infection) %>% 
-  complete(date = seq(start_date, end_date, by = "days"), 
-           local_infection,
-           region,
-           countryIso3,
-           source,
-           data_type,
-           date_type,
-           fill = list(value = 0)) %>% 
+confirmed_case_data <- confirmed_case_data %>%
+  dplyr::group_by(region, source, countryIso3, date_type, local_infection) %>%
+  complete(
+    date = seq(start_date, end_date, by = "days"),
+    data_type,
+    fill = list(value = 0)
+  ) %>%
   ungroup() %>%
   arrange(region, date, date_type)
 
