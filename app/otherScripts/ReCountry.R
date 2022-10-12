@@ -296,18 +296,18 @@ if (dim(countryData)[1] > 0) {
         dplyr::select(-countryIso3, -populationSize) %>%
         ungroup()
 
-      if (args$country == "CHE" && !args$regenerateTS) {
+      if (args$regenerateTS) {
+        cat("calculating for complete data range:\n")
+        print(range(countryData$date))
+      } else {
         cat("Complete data range:\n")
         print(range(countryData$date))
         # only calculate starting from dateCutoffAdj
-        dateCutoff <- "2021-08-01"
-        dateCutoffAdj <- "2021-07-01"
+        dateCutoff <- "2022-01-01"
+        dateCutoffAdj <- "2021-12-01"
 
         countryData <- filter(countryData, date >= dateCutoffAdj)
         cat("calculating for truncated data range:\n")
-        print(range(countryData$date))
-      } else {
-        cat("calculating for complete data range:\n")
         print(range(countryData$date))
       }
       # Deconvolution
@@ -441,7 +441,7 @@ if (dim(countryData)[1] > 0) {
 
         countryDataPath <- file.path(basePath, str_c(args$country, "-Estimates.rds"))
 
-        if (args$country == "CHE" && !args$regenerateTS) {
+        if (!args$regenerateTS) {
           previousEstimates <- readRDS(countryDataPath) %>%
             filter(date < dateCutoff)
           newEstimates <- countryEstimates %>%
@@ -456,7 +456,7 @@ if (dim(countryData)[1] > 0) {
         saveRDS(countryEstimates, file = countryDataPath)
         # Save as .csv for data upload
         readr::write_csv(countryEstimates,
-                  path = file.path(basePath, "csv", str_c(args$country, "-estimates.csv"))
+                  file = file.path(basePath, "csv", str_c(args$country, "-estimates.csv"))
         )
         # save simpler csvs for CHE, LIE
         if (args$country %in% c("CHE", "LIE")) {
