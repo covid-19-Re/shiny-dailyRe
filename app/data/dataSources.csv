@@ -10,7 +10,7 @@ DSFSI,"Data provided by the <a href='https://github.com/dsfsi/covid19za'>Data Sc
 PCM-DPC,Data from Presidenza del Consiglio dei Ministri - Dipartimento della Protezione Civile,https://github.com/pcm-dpc/COVID-19
 RENAVE,"Data from Spanish Red Nacional de Vigilancia Epidemiológica","https://cnecovid.isciii.es/covid19/#documentaci%C3%B3n-y-datos"
 Gov.UK,"Data from UK government coronavirus database","https://coronavirus.data.gov.uk/"
-BSG Covidtracker,"Oxford Stringency Index from the Blavatnik School of Government","https://covidtracker.bsg.ox.ac.uk/about-api"
+BSG Covidtracker,"Oxford Stringency Index (Legacy) from the Blavatnik School of Government","https://covidtracker.bsg.ox.ac.uk/about-api"
 OWID,"Data from Our World in Data","https://github.com/owid/covid-19-data/tree/master/public/data"
 Google, "Community Mobility Reports from Google", "https://www.google.com/covid19/mobility/"
 Apple, "Mobility Trends Reports from Apple", "https://covid19.apple.com/mobility"

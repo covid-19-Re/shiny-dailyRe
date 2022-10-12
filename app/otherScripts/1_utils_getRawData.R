@@ -132,6 +132,7 @@ getDataECDC <- function(countries = NULL, tempFileName = NULL, tReload = 15) {
 
 ##### Our World in Data #####
 getDataOWID <- function(countries = NULL, tempFileName = NULL, tReload = 300) {
+  cat("getting Data from OWID...\n")
   urlfile <- "https://covid.ourworldindata.org/data/owid-covid-data.csv"
 
   if (is.null(tempFileName)) {
@@ -2264,7 +2265,7 @@ getCountryPopData <- function(tempFileName = here::here("app/data/pop_sizes.xls"
 #' @family fetchData
 getDataOxfordStringency <- function(countries = NULL,
                                     tempFileName = NULL, tReload = 15) {
-  url <- "https://raw.githubusercontent.com/OxCGRT/covid-policy-tracker/master/data/OxCGRT_latest.csv"
+  url <- "https://raw.githubusercontent.com/OxCGRT/covid-policy-tracker-legacy/main/legacy_data_202207/OxCGRT_latest.csv"
 
   if (is.null(tempFileName)) {
     csvPath <- url
@@ -2293,7 +2294,9 @@ getDataOxfordStringency <- function(countries = NULL,
     RegionCode = col_character(),
     Jurisdiction = col_character(),
     Date = col_date(format = "%Y%m%d"),
-    M1_Wildcard = col_character()
+    M1_Wildcard = col_character(),
+    `V2B_Vaccine age eligibility/availability age floor (general population summary)` = col_character(),
+    `V2C_Vaccine age eligibility/availability age floor (at risk summary)` = col_character()
   ))) %>%
     dplyr::rename(
       date = Date,
