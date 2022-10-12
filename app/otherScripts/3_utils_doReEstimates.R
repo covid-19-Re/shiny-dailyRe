@@ -9,20 +9,18 @@
 ##    attempted (if too low, EpiEstim can crash)
 ## 'windowLength' is the size of the sliding window used in EpiEstim
 ## 'mean_si' and 'std_si' are the mean and SD of the serial interval distribution used by EpiEstim
-estimateRe <- function(
-  dates,
-  incidenceData,
-  estimateOffsetting = 10,
-  rightTruncation = 0,
-  leftTruncation = 5,
-  method = "Cori",
-  variationType = "slidingWindow",
-  interval_ends = c("2020-03-13", "2020-03-16", "2020-03-20"),
-  minimumCumul = 5,
-  windowLength = 4,
-  mean_si = 3,
-  std_si  = 2.4) {
-
+estimateRe <- function(dates,
+                       incidenceData,
+                       estimateOffsetting = 10,
+                       rightTruncation = 0,
+                       leftTruncation = 5,
+                       method = "Cori",
+                       variationType = "slidingWindow",
+                       interval_ends = c("2020-03-13", "2020-03-16", "2020-03-20"),
+                       minimumCumul = 5,
+                       windowLength = 4,
+                       mean_si = 3,
+                       std_si = 2.4) {
   offset <- 1
   cumulativeIncidence <- 0
   while (cumulativeIncidence < minimumCumul) {
@@ -32,7 +30,7 @@ estimateRe <- function(
     cumulativeIncidence <- cumulativeIncidence + incidenceData[offset, 1]
     offset <- offset + 1
   }
-  
+
   ## offset needs to be at least two for EpiEstim
   offset <- max(2, offset)
 
@@ -53,7 +51,7 @@ estimateRe <- function(
       }
     )
 
-    #starts and end indices of the intervals (numeric vector)
+    # starts and end indices of the intervals (numeric vector)
     # t_start = interval_end + 1
     t_start <- c(offset, na.omit(interval_end_indices) + 1)
     t_end <- c(na.omit(interval_end_indices), nrow(incidenceData))
@@ -77,7 +75,6 @@ estimateRe <- function(
     }
 
     outputDates <- dates[t_start[1]:t_end[length(t_end)]]
-
   } else if (variationType == "slidingWindow") {
     # computation intervals corresponding to every position of the
     # sliding window
@@ -102,7 +99,8 @@ estimateRe <- function(
           std_si = std_si,
           t_start = t_start,
           t_end = t_end,
-          mean_prior = 1)
+          mean_prior = 1
+        )
       )
     )
   } else if (method == "WallingaTeunis") {
@@ -113,7 +111,8 @@ estimateRe <- function(
         mean_si = mean_si, std_si = std_si,
         t_start = t_start,
         t_end = t_end,
-        n_sim = 10)
+        n_sim = 10
+      )
     )
   } else {
     print("Unknown estimation method")
@@ -121,20 +120,23 @@ estimateRe <- function(
   }
 
   if (variationType == "step") {
-    R_mean <- unlist(lapply(seq_along(t_start),
-                            function(x) {
-                              rep(R_instantaneous$R$`Mean(R)`[x], t_end[x] - t_start[x] + 1)
-                            }
+    R_mean <- unlist(lapply(
+      seq_along(t_start),
+      function(x) {
+        rep(R_instantaneous$R$`Mean(R)`[x], t_end[x] - t_start[x] + 1)
+      }
     ))
-    R_highHPD <- unlist(lapply(seq_along(t_start),
-                               function(x) {
-                                 rep(R_instantaneous$R$`Quantile.0.975(R)`[x], t_end[x] - t_start[x] + 1)
-                               }
+    R_highHPD <- unlist(lapply(
+      seq_along(t_start),
+      function(x) {
+        rep(R_instantaneous$R$`Quantile.0.975(R)`[x], t_end[x] - t_start[x] + 1)
+      }
     ))
-    R_lowHPD <- unlist(lapply(seq_along(t_start),
-                              function(x) {
-                                rep(R_instantaneous$R$`Quantile.0.025(R)`[x], t_end[x] - t_start[x] + 1)
-                              }
+    R_lowHPD <- unlist(lapply(
+      seq_along(t_start),
+      function(x) {
+        rep(R_instantaneous$R$`Quantile.0.025(R)`[x], t_end[x] - t_start[x] + 1)
+      }
     ))
   } else {
     R_mean <- R_instantaneous$R$`Mean(R)`
@@ -168,7 +170,8 @@ estimateRe <- function(
     date = outputDates,
     R_mean = R_mean,
     R_highHPD = R_highHPD,
-    R_lowHPD = R_lowHPD)
+    R_lowHPD = R_lowHPD
+  )
 
   result <- reshape2::melt(result, id.vars = "date")
   colnames(result) <- c("date", "variable", "value")
@@ -177,31 +180,36 @@ estimateRe <- function(
   return(result)
 }
 
-doReEstimation <- function(
-  data_subset,
-  slidingWindow = 1,
-  methods,
-  variationTypes,
-  interval_ends = c("2020-04-01"),
-  delays,
-  truncations) {
-
-  end_result <-  data.frame()
+doReEstimation <- function(data_subset,
+                           slidingWindow = 1,
+                           methods,
+                           variationTypes,
+                           interval_ends = c("2020-04-01"),
+                           delays,
+                           truncations) {
+  end_result <- data.frame()
 
   for (method_i in methods) {
     for (variation_i in variationTypes) {
-      
-      if(nrow(data_subset %>% filter(local_infection == F)) > 0) {
-        incidence_data_local <- data_subset %>% filter(local_infection == T) %>% pull(value)
-        incidence_data_import <- data_subset %>% filter(local_infection == F) %>% pull(value)
-        
-        incidence_data <- data.frame(local = incidence_data_local,
-                            imported = incidence_data_import)
+      if (nrow(data_subset %>% filter(local_infection == FALSE)) > 0) {
+        incidence_data_local <- data_subset %>%
+          filter(local_infection == TRUE) %>%
+          pull(value)
+        incidence_data_import <- data_subset %>%
+          filter(local_infection == FALSE) %>%
+          pull(value)
+
+        incidence_data <- data.frame(
+          local = incidence_data_local,
+          imported = incidence_data_import
+        )
       } else {
-        incidence_data <- data.frame(I = data_subset %>% filter(local_infection == T) %>% pull(value))
+        incidence_data <- data.frame(I = data_subset %>% filter(local_infection == TRUE) %>% pull(value))
       }
-      
-      dates <- data_subset %>% filter(local_infection == T) %>% pull(date)
+
+      dates <- data_subset %>%
+        filter(local_infection == TRUE) %>%
+        pull(date)
 
       offsetting <- delays[method_i]
 
@@ -211,13 +219,14 @@ doReEstimation <- function(
       result <- estimateRe(
         dates = dates,
         incidenceData = incidence_data,
-        windowLength =  slidingWindow,
+        windowLength = slidingWindow,
         estimateOffsetting = offsetting,
         rightTruncation = rightTrunc,
         leftTruncation = leftTrunc,
         method = method_i,
         variationType = variation_i,
-        interval_ends = interval_ends)
+        interval_ends = interval_ends
+      )
       if (nrow(result) > 0) {
         result$region <- unique(data_subset$region)[1]
         result$country <- unique(data_subset$country)[1]
@@ -227,7 +236,8 @@ doReEstimation <- function(
         ## need to reorder columns in 'results' dataframe to do the same as in data
         result <- result[, c(
           "date", "region", "country", "source", "data_type", "estimate_type",
-          "replicate", "value", "variable")]
+          "replicate", "value", "variable"
+        )]
         end_result <- bind_rows(end_result, result)
       }
     }
@@ -236,80 +246,22 @@ doReEstimation <- function(
   return(end_result)
 }
 
-## DEPRECATED Intervention Dates for the European countries
-# getIntervalEnds <- function(
-#   interval_ends,
-#   region_i,
-#   swissRegions = c("LIE", "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL",
-#                    "GR", "grR Central Switzerland", "grR Eastern Switzerland",
-#                    "grR Espace Mittelland", "grR Lake Geneva Region", "grR Northwestern Switzerland",
-#                    "grR Ticino", "grR Zurich", "JU", "LU", "NE", "NW", "OW", "SG",
-#                    "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH")) {
-  
-#   if ("data.frame" %in% class(interval_ends)) {
-#     if (region_i %in% swissRegions) {
-#       region_i <- "CHE"
-#     }
-
-#     # in Re estimation, the interval starts on interval_end + 1
-#     # so the intervention start dates need to be shifted to -1
-#     interventionDataSubset <- interval_ends %>%
-#       mutate(shift_date = as_date(ifelse(type == "end", date, date - 1))) %>%
-#       filter(region == region_i,
-#              measure != "testing",
-#              shift_date != "9999-01-01")
-
-#     region_interval_ends <- sort(unique(pull(interventionDataSubset, "shift_date")))
-
-#   } else {
-#     region_interval_ends <- interval_ends
-#   }
-#   if (length(region_interval_ends) < 1) {
-#     region_interval_ends <- c(Sys.Date())
-#   }
-#   return(region_interval_ends)
-# }
-
-# DEPRECATED
-# addCustomIntervalEnds <- function(region_interval_ends,
-#                                   additional_interval_ends,
-#                                   region_i,
-#                                   data_type_i,
-#                                   swissRegions = c("LIE", "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL",
-#                                                    "GR", "grR Central Switzerland", "grR Eastern Switzerland",
-#                                                    "grR Espace Mittelland", "grR Lake Geneva Region", "grR Northwestern Switzerland",
-#                                                    "grR Ticino", "grR Zurich", "JU", "LU", "NE", "NW", "OW", "SG",
-#                                                    "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH")) {
-  
-#   if (region_i %in% swissRegions) {
-#     region_i <- "CHE"
-#   }
-#   interventionDataSubset <- additional_interval_ends %>%
-#     filter(region == region_i &
-#            (data_type == data_type_i | data_type == "all"))
-  
-#   all_interval_ends <- sort(unique(c(region_interval_ends, pull(interventionDataSubset, "date"))))
-#   return(all_interval_ends)
-# }
-
 
 
 ## Perform R(t) estimations with EpiEstim on each 'region' of the data, with each 'method' and on each 'data_type'
 ## 'region' is the geographical region
 ## 'data_type' can be 'confirmed' for confirmed cases, 'deaths' for fatalities,
 ##    'hospitalized' for hospitalization data directly from hospitals (not via openZH here)
-doAllReEstimations <- function(
-  data,
-  slidingWindow = 3,
-  methods = c("Cori", "WallingaTeunis"),
-  variationTypes = c("step", "slidingWindow"),
-  all_delays,
-  truncations,
-  interval_ends = list(default = c("2020-04-01")),
-  ...) {
-  
+doAllReEstimations <- function(data,
+                               slidingWindow = 3,
+                               methods = c("Cori", "WallingaTeunis"),
+                               variationTypes = c("step", "slidingWindow"),
+                               all_delays,
+                               truncations,
+                               interval_ends = list(default = c("2020-04-01")),
+                               ...) {
   results_list <- list()
-  
+
   for (source_i in unique(data$source)) {
     cat("estimating Re for data source: ", source_i, "...\n")
     for (region_i in unique(data$region)) {
@@ -343,27 +295,28 @@ doAllReEstimations <- function(
         cat("    Data type: ", data_type_i, "\n")
 
         delay_i <- all_delays[[data_type_i]]
-        
+
         for (replicate_i in unique(unique(subset_data$replicate))) {
           subset_data_rep <- subset(subset_data, subset_data$replicate == replicate_i)
-          results_list <- c(results_list,
-                            list(
-                              doReEstimation(
-                                subset_data_rep,
-                                slidingWindow = slidingWindow,
-                                methods = methods,
-                                variationTypes = variationTypes,
-                                interval_ends = region_interval_ends,
-                                delays = delay_i,
-                                truncations = truncations
-                              )
-                            )
+          results_list <- c(
+            results_list,
+            list(
+              doReEstimation(
+                subset_data_rep,
+                slidingWindow = slidingWindow,
+                methods = methods,
+                variationTypes = variationTypes,
+                interval_ends = region_interval_ends,
+                delays = delay_i,
+                truncations = truncations
+              )
+            )
           )
         }
       }
     }
   }
-  
+
   return(bind_rows(results_list))
 }
 
@@ -373,12 +326,11 @@ doAllReEstimations <- function(
 # Clean up Re Estimates and summarise the confidence intervals
 # across bootstrap replicates
 
-cleanCountryReEstimate <- function(countryEstimatesRaw, method = 'bootstrap',
-                                   rename_types = T,
-                                   report_sd = F,
-                                   alpha=0.95){
-  
-  if (rename_types){
+cleanCountryReEstimate <- function(countryEstimatesRaw, method = "bootstrap",
+                                   rename_types = TRUE,
+                                   report_sd = FALSE,
+                                   alpha = 0.95) {
+  if (rename_types) {
     cleanEstimate <- as_tibble(countryEstimatesRaw) %>%
       mutate(
         data_type = factor(
@@ -388,18 +340,22 @@ cleanCountryReEstimate <- function(countryEstimatesRaw, method = 'bootstrap',
             "infection_Confirmed cases / tests",
             "infection_Hospitalized patients",
             "infection_Deaths",
-            "infection_Excess deaths"),
+            "infection_Excess deaths"
+          ),
           labels = c(
             "Confirmed cases",
             "Confirmed cases / tests",
             "Hospitalized patients",
             "Deaths",
-            "Excess deaths")))
+            "Excess deaths"
+          )
+        )
+      )
   } else {
     cleanEstimate <- as_tibble(countryEstimatesRaw)
   }
-  
-  if (method == 'legacy'){
+
+  if (method == "legacy") {
     legacy_ReEstimates <- cleanEstimate %>%
       pivot_wider(names_from = "variable", values_from = "value") %>%
       dplyr::group_by(date, country, region, data_type, source, estimate_type) %>%
@@ -410,81 +366,91 @@ cleanCountryReEstimate <- function(countryEstimatesRaw, method = 'bootstrap',
         mean_R_mean = mean(R_mean),
         .groups = "keep"
       ) %>%
-      dplyr::select(country, region, source, data_type, estimate_type, date,
-                    median_R_mean, median_R_highHPD, median_R_lowHPD,
-                    mean_R_mean) %>%
+      dplyr::select(
+        country, region, source, data_type, estimate_type, date,
+        median_R_mean, median_R_highHPD, median_R_lowHPD,
+        mean_R_mean
+      ) %>%
       arrange(country, region, source, data_type, estimate_type, date) %>%
       ungroup()
     ReEstimates <- legacy_ReEstimates
-  } else if (method == 'bootstrap') {
-    
-    #low_quan <- (1-alpha)/2
-    high_quan <- 1-(1-alpha)/2
-    
+  } else if (method == "bootstrap") {
+
+    # low_quan <- (1-alpha)/2
+    high_quan <- 1 - (1 - alpha) / 2
+
     orig_ReEstimate <- cleanEstimate %>%
-      filter(replicate == 0 ) %>%
+      filter(replicate == 0) %>%
       pivot_wider(names_from = "variable", values_from = "value") %>%
       rename(median_R_mean = R_mean)
     # this is called median to be compatible with legacy code
 
     MM_ReEstimates <- cleanEstimate %>%
-      filter(replicate != 0 ) %>%
+      filter(replicate != 0) %>%
       pivot_wider(names_from = "variable", values_from = "value") %>%
       dplyr::group_by(date, country, region, data_type, source, estimate_type) %>%
       dplyr::summarize(
-        sd_mean = sd(R_mean), #across all bootstrap replicates
-        #sd_highHPD = sd(R_highHPD), #across all bootstrap replicates
-        #sd_lowHPD = sd(R_lowHPD), #across all bootstrap replicates
+        sd_mean = sd(R_mean), # across all bootstrap replicates
+        # sd_highHPD = sd(R_highHPD), #across all bootstrap replicates
+        # sd_lowHPD = sd(R_lowHPD), #across all bootstrap replicates
         .groups = "drop"
       ) %>%
-      right_join(orig_ReEstimate, by = c('date', 'country', 'region',
-                                         'data_type', 'source', 'estimate_type')) %>%
-      dplyr::mutate(median_R_highHPD = median_R_mean + qnorm(high_quan)*sd_mean,
-                    median_R_lowHPD = median_R_mean - qnorm(high_quan)*sd_mean#,
-                    # R_highHPD_top = R_highHPD + qnorm(high_quan)*sd_highHPD,
-                    # R_highHPD_bot = R_highHPD - qnorm(high_quan)*sd_highHPD,
-                    # R_lowHPD_top = R_lowHPD + qnorm(high_quan)*sd_lowHPD,
-                    # R_lowHPD_bot = R_lowHPD - qnorm(high_quan)*sd_lowHPD
-                    ) %>%
-      mutate(median_R_highHPD = ifelse(median_R_highHPD <0, 0, median_R_highHPD),
-             median_R_lowHPD = ifelse(median_R_lowHPD <0, 0, median_R_lowHPD)#,
-             #R_highHPD_top = ifelse(R_highHPD_top <0, 0, R_highHPD_top),
-             #R_highHPD_bot = ifelse(R_highHPD_bot <0, 0, R_highHPD_bot),
-             #R_lowHPD_top = ifelse(R_lowHPD_top <0, 0, R_lowHPD_top),
-             #R_lowHPD_bot = ifelse(R_lowHPD_bot <0, 0, R_lowHPD_bot)
-             )
+      right_join(orig_ReEstimate, by = c(
+        "date", "country", "region",
+        "data_type", "source", "estimate_type"
+      )) %>%
+      dplyr::mutate(
+        median_R_highHPD = median_R_mean + qnorm(high_quan) * sd_mean,
+        median_R_lowHPD = median_R_mean - qnorm(high_quan) * sd_mean # ,
+        # R_highHPD_top = R_highHPD + qnorm(high_quan)*sd_highHPD,
+        # R_highHPD_bot = R_highHPD - qnorm(high_quan)*sd_highHPD,
+        # R_lowHPD_top = R_lowHPD + qnorm(high_quan)*sd_lowHPD,
+        # R_lowHPD_bot = R_lowHPD - qnorm(high_quan)*sd_lowHPD
+      ) %>%
+      mutate(
+        median_R_highHPD = ifelse(median_R_highHPD < 0, 0, median_R_highHPD),
+        median_R_lowHPD = ifelse(median_R_lowHPD < 0, 0, median_R_lowHPD) # ,
+        # R_highHPD_top = ifelse(R_highHPD_top <0, 0, R_highHPD_top),
+        # R_highHPD_bot = ifelse(R_highHPD_bot <0, 0, R_highHPD_bot),
+        # R_lowHPD_top = ifelse(R_lowHPD_top <0, 0, R_lowHPD_top),
+        # R_lowHPD_bot = ifelse(R_lowHPD_bot <0, 0, R_lowHPD_bot)
+      )
     # we add the estimate-type extension later, because simpleUnion and
     # wideHPDs still derive from this df
-    
+
     simple_Union <- MM_ReEstimates %>%
-      left_join(orig_ReEstimate, by = c('date', 'country', 'region',
-                                        'data_type', 'source', 'estimate_type')) %>%
+      left_join(orig_ReEstimate, by = c(
+        "date", "country", "region",
+        "data_type", "source", "estimate_type"
+      )) %>%
       rowwise() %>%
-      mutate(median_R_mean = median_R_mean.x,
-             median_R_highHPD = max(median_R_highHPD, R_highHPD.y),
-             median_R_lowHPD = min(median_R_lowHPD, R_lowHPD.y))#,
-             #estimate_type = paste0(estimate_type, '_simple_Union'))
-    
+      mutate(
+        median_R_mean = median_R_mean.x,
+        median_R_highHPD = max(median_R_highHPD, R_highHPD.y),
+        median_R_lowHPD = min(median_R_lowHPD, R_lowHPD.y)
+      ) # ,
+    # estimate_type = paste0(estimate_type, '_simple_Union'))
+
     # wideHPDs <- MM_ReEstimates %>%
     #   mutate(median_R_highHPD = R_highHPD_top,
     #          median_R_lowHPD = R_lowHPD_bot,
     #          estimate_type = paste0(estimate_type, '_wideHPDs'))
-    # 
+    #
     # MM_baggedMedian <- cleanEstimate %>%
-    #   filter(replicate != 0 ) %>% 
+    #   filter(replicate != 0 ) %>%
     #   pivot_wider(names_from = "variable", values_from = "value") %>%
     #   dplyr::group_by(date, country, region, data_type, source, estimate_type) %>%
     #   dplyr::summarize(
     #     sd_mean = sd(R_mean),
     #     .groups = "drop"
     #   ) %>%
-    #   left_join(legacy_ReEstimates, by = c('date', 'country', 'region', 
+    #   left_join(legacy_ReEstimates, by = c('date', 'country', 'region',
     #                                      'data_type', 'source', 'estimate_type')) %>%
     #   dplyr::mutate(median_R_highHPD = median_R_mean + qnorm(high_quan)*sd_mean,
     #                 median_R_lowHPD = median_R_mean - qnorm(high_quan)*sd_mean) %>%
     #   mutate(median_R_highHPD = ifelse(median_R_highHPD <0, 0, median_R_highHPD),
-    #          median_R_lowHPD = ifelse(median_R_lowHPD <0, 0, median_R_lowHPD)) 
-    
+    #          median_R_lowHPD = ifelse(median_R_lowHPD <0, 0, median_R_lowHPD))
+
     # MM_baggedMean <- cleanEstimate %>%
     #   #filter(replicate != 0 ) %>%
     #   pivot_wider(names_from = "variable", values_from = "value") %>%
@@ -499,43 +465,41 @@ cleanCountryReEstimate <- function(countryEstimatesRaw, method = 'bootstrap',
     #                 median_R_lowHPD = mean_R_mean - qnorm(high_quan)*sd_mean) %>%
     #   mutate(median_R_highHPD = ifelse(median_R_highHPD <0, 0, median_R_highHPD),
     #          median_R_lowHPD = ifelse(median_R_lowHPD <0, 0, median_R_lowHPD))
-    
+
     # bag_Union <- MM_baggedMean %>%
-    #   left_join(legacy_ReEstimates, by = c('date', 'country', 'region', 
+    #   left_join(legacy_ReEstimates, by = c('date', 'country', 'region',
     #                                        'data_type', 'source', 'estimate_type')) %>%
     #   rowwise() %>%
     #   mutate(median_R_mean = median_R_mean.x,
     #          median_R_highHPD = max(median_R_highHPD.x, median_R_highHPD.y),
     #          median_R_lowHPD = min(median_R_lowHPD.x, median_R_lowHPD.y),
     #          estimate_type = paste0(estimate_type, '_bag_Union'))
-    
-    unsortedReEstimates <- bind_rows(#legacy_ReEstimates, 
-                             #MM_ReEstimates #%>% mutate(estimate_type = paste0(estimate_type, '_MM')),
-                             #MM_baggedMedian %>% mutate(estimate_type = paste0(estimate_type, '_MM_baggedMedian')),
-                             #MM_baggedMean #%>% mutate(estimate_type = paste0(estimate_type, '_MM_baggedMean'))
-                             simple_Union #, bag_Union,
-                             #wideHPDs
-                             ) 
-    
-    if (report_sd){
+
+    unsortedReEstimates <- bind_rows( # legacy_ReEstimates,
+      # MM_ReEstimates #%>% mutate(estimate_type = paste0(estimate_type, '_MM')),
+      # MM_baggedMedian %>% mutate(estimate_type = paste0(estimate_type, '_MM_baggedMedian')),
+      # MM_baggedMean #%>% mutate(estimate_type = paste0(estimate_type, '_MM_baggedMean'))
+      simple_Union # , bag_Union,
+      # wideHPDs
+    )
+
+    if (report_sd) {
       ReEstimates <- unsortedReEstimates %>%
-        dplyr::select(country, region, source, data_type, estimate_type, date,
-                      median_R_mean, median_R_highHPD, median_R_lowHPD, sd_mean) %>%
+        dplyr::select(
+          country, region, source, data_type, estimate_type, date,
+          median_R_mean, median_R_highHPD, median_R_lowHPD, sd_mean
+        ) %>%
         arrange(country, region, source, data_type, estimate_type, date) %>%
         ungroup()
     } else {
       ReEstimates <- unsortedReEstimates %>%
-        dplyr::select(country, region, source, data_type, estimate_type, date,
-                      median_R_mean, median_R_highHPD, median_R_lowHPD) %>%
+        dplyr::select(
+          country, region, source, data_type, estimate_type, date,
+          median_R_mean, median_R_highHPD, median_R_lowHPD
+        ) %>%
         arrange(country, region, source, data_type, estimate_type, date) %>%
         ungroup()
     }
-    
   }
   return(ReEstimates)
 }
-
-
-
-
-
