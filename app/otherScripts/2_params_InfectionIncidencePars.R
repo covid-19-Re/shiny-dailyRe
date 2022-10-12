@@ -10,7 +10,7 @@ mean_incubation <- 3.5
 sd_incubation <- 1.2
 
 # onset to test:
-mean_onset_to_test <- 5.5 #Bi et al.
+mean_onset_to_test <- 5.5 # Bi et al.
 sd_onset_to_test <- 3.8
 
 # onset to hospitalization report: Pellis et al. 2020
@@ -30,13 +30,15 @@ mean_onset_to_count <- c(
   "Confirmed cases / tests" = mean_onset_to_test,
   "Deaths" = mean_onset_to_death,
   "Hospitalized patients" = mean_onset_to_hosp,
-  "Excess deaths" = mean_onset_to_death)
+  "Excess deaths" = mean_onset_to_death
+)
 sd_onset_to_count <- c(
   "Confirmed cases" = sd_onset_to_test,
   "Confirmed cases / tests" = sd_onset_to_test,
   "Deaths" = sd_onset_to_death,
   "Hospitalized patients" = sd_onset_to_hosp,
-  "Excess deaths" = sd_onset_to_death)
+  "Excess deaths" = sd_onset_to_death
+)
 
 ### parameters for gamma distribution between symptom onset and report
 shape_onset_to_count <- c(mean_onset_to_count^2 / (sd_onset_to_count^2), "Symptoms" = 0)
